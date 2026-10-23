@@ -85,11 +85,12 @@ export default function HomeworkAssignmentBuilder({
   }, [activeGrade, branchId, activeLesson, mcqCount, essayCount]);
 
   const handlePublishOnlineHomework = () => {
-    const parsedQuestions = parseNotebookLMExamQuestionsToIR(notebookReply, {
-      defaultBranchId: branchId,
-      defaultUnitId: activeUnit?.id || "u1",
-      defaultLessonId: activeLesson?.id || "l1",
-      defaultLessonTitleArabic: activeLesson?.titleArabic || "الدرس الأول",
+    const parsedQuestions = parseNotebookLMExamQuestionsToIR({
+      rawText: notebookReply,
+      branchId,
+      unitId: activeUnit?.id || "u1",
+      lessonId: activeLesson?.id || "l1",
+      lessonTitleArabic: activeLesson?.titleArabic || "الدرس الأول",
     });
 
     const newAssignment: PublishedOnlineHomeworkAssignment = {

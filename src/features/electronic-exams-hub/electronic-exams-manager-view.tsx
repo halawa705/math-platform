@@ -35,6 +35,7 @@ import {
   refreshExamSubmissionsFromSupabaseSSOT,
   type OnlineExamSubmissionRecord,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import { subscribeToSupabaseRealtimeTables } from "@/core/supabase/supabase-realtime-submissions-channel";
 
 export const MODULE_ID_ELECTRONIC_EXAMS_MANAGER_VIEW =
   "electronic_exams_manager_view" as const;
@@ -67,9 +68,14 @@ export default function ElectronicExamsManagerView() {
     refresh();
     void refreshPublishedExamsFromSupabaseSSOT();
     void refreshExamSubmissionsFromSupabaseSSOT();
+    const unsubscribeRealtime = subscribeToSupabaseRealtimeTables({
+      onExamSubmissionsChanged: () => void refreshExamSubmissionsFromSupabaseSSOT(),
+      onPublishedExamsChanged: () => void refreshPublishedExamsFromSupabaseSSOT(),
+    });
     window.addEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, refresh);
     window.addEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, refresh);
     return () => {
+      unsubscribeRealtime();
       window.removeEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, refresh);
       window.removeEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, refresh);
     };

@@ -12,7 +12,10 @@ import { useEffect, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
-import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
+import {
+  convertQuestionAssessmentIRToPrintableItem,
+  type PrintableMathQuestionItem,
+} from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
 import { publishOnlineExamSSOT } from "@/features/electronic-exams-hub/published-online-exams-store";
 
@@ -78,27 +81,17 @@ export default function StudioExamGeneratorTab({
 
   const handleConvertReplyToA4Sheet = () => {
     onApplyExamTitleToSheet(`اختبار تقييمي — ${lessonTitle}`);
-    const parsedIR = parseNotebookLMExamQuestionsToIR(notebookRawReply, {
-      defaultBranchId: branchId,
-      defaultLessonTitleArabic: lessonTitle,
+    const parsedIR = parseNotebookLMExamQuestionsToIR({
+      rawText: notebookRawReply,
+      branchId,
+      unitId: "exam-unit",
+      lessonId: "exam-lesson",
+      lessonTitleArabic: lessonTitle,
     });
     if (parsedIR.length > 0 && onApplyParsedQuestionsToSheet) {
-      const mapped: PrintableMathQuestionItem[] = parsedIR.map((q) => ({
-        id: q.questionId,
-        questionNumber: q.displayOrderNumber,
-        kind:
-          q.patternKind === "mcq"
-            ? "mcq"
-            : q.attachedGeometryFigure
-            ? "essay_geometry"
-            : "essay_algebra",
-        branchBadgeAr: branchNameAr,
-        marks: q.allocatedMarks,
-        promptAr: q.promptArabic,
-        mcqChoicesAr: q.mcqChoicesArabic,
-        modelAnswerAr: q.modelSolutionStepsArabic.join(" "),
-        geometryFigure: q.attachedGeometryFigure,
-      }));
+      const mapped = parsedIR.map((q) =>
+        convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)
+      );
       onApplyParsedQuestionsToSheet(mapped);
     }
   };
@@ -109,9 +102,12 @@ export default function StudioExamGeneratorTab({
       : Number(availabilityPreset);
 
   const handlePublishAsOnlineExam = () => {
-    const parsed = parseNotebookLMExamQuestionsToIR(notebookRawReply, {
-      defaultBranchId: branchId,
-      defaultLessonTitleArabic: lessonTitle,
+    const parsed = parseNotebookLMExamQuestionsToIR({
+      rawText: notebookRawReply,
+      branchId,
+      unitId: "exam-unit",
+      lessonId: "exam-lesson",
+      lessonTitleArabic: lessonTitle,
     });
     if (parsed.length === 0) {
       setPublishMessage("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة، ثم انشر الاختبار.");

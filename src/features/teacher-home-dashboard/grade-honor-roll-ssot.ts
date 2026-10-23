@@ -11,6 +11,7 @@ import {
   pullExamSubmissionsFromSupabaseCloud,
   syncExamSubmissionToSupabaseCloud,
 } from "@/core/supabase/supabase-cloud-sync-ssot";
+import { notifyRealtimeTableUpdated } from "@/core/supabase/supabase-realtime-submissions-channel";
 import {
   loadActiveExamsForGradeSSOT,
   loadAllPublishedExamsSSOT,
@@ -143,6 +144,7 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
       )
   );
   persistSubmissions([record, ...others]);
+  notifyRealtimeTableUpdated("exam_submissions");
   void syncExamSubmissionToSupabaseCloud(record);
   return record;
 }

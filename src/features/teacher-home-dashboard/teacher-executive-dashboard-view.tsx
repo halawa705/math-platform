@@ -34,6 +34,7 @@ import {
   refreshExamSubmissionsFromSupabaseSSOT,
   type GradeAnalyticsMetric,
 } from "./grade-honor-roll-ssot";
+import { subscribeToSupabaseRealtimeTables } from "@/core/supabase/supabase-realtime-submissions-channel";
 import HonorRollPodium from "./honor-roll-podium";
 
 type ChartKind = "grades" | "participation" | "distribution";
@@ -63,6 +64,7 @@ export default function TeacherExecutiveDashboardView() {
   const [selectedGradeId, setSelectedGradeId] = useState<string>("");
   const [chartKind, setChartKind] = useState<ChartKind>("grades");
   const [refreshTick, setRefreshTick] = useState<number>(0);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState<boolean>(false);
 
   useEffect(() => {
     const syncIdentityAndGrades = () => {
@@ -82,6 +84,12 @@ export default function TeacherExecutiveDashboardView() {
     };
     syncIdentityAndGrades();
     pullCloud();
+    const unsubscribeRealtime = subscribeToSupabaseRealtimeTables({
+      onExamSubmissionsChanged: () => void refreshExamSubmissionsFromSupabaseSSOT(),
+      onPublishedExamsChanged: () => void refreshPublishedExamsFromSupabaseSSOT(),
+      onStudentsChanged: () => void refreshRegisteredStudentsFromSupabaseSSOT(),
+      onConnectionStatusChange: setIsRealtimeConnected,
+    });
     const intervalId = window.setInterval(pullCloud, 15000);
     window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, syncIdentityAndGrades);
     window.addEventListener(STUDENTS_REGISTRY_UPDATED_EVENT, bump);
@@ -89,6 +97,7 @@ export default function TeacherExecutiveDashboardView() {
     window.addEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, bump);
     window.addEventListener("storage", bump);
     return () => {
+      unsubscribeRealtime();
       window.clearInterval(intervalId);
       window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, syncIdentityAndGrades);
       window.removeEventListener(STUDENTS_REGISTRY_UPDATED_EVENT, bump);
@@ -146,8 +155,22 @@ export default function TeacherExecutiveDashboardView() {
               {identity.teacherFullName}
               {identity.teacherNickname ? ` (${identity.teacherNickname})` : ""}
             </h1>
-            <p className="text-xs font-bold text-slate-500">
-              نظرة سريعة على {identity.platformBrandName}
+            <p className="text-xs font-bold text-slate-500 flex items-center gap-2">
+              <span>نظرة سريعة على {identity.platformBrandName}</span>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                  isRealtimeConnected
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                    : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isRealtimeConnected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                  }`}
+                />
+                {isRealtimeConnected ? "بث لحظي نشط (Realtime)" : "مزامنة دورية"}
+              </span>
             </p>
           </div>
           <div className="flex items-center gap-2">

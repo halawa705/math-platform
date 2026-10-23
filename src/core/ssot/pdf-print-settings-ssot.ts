@@ -34,7 +34,12 @@ export type PageColumnsLayoutMode = 1 | 2;
 
 export type AnswerSpaceStyleMode = "lined" | "dotted" | "grid" | "blank" | "hidden";
 
-export type PrintColorThemeId = "royal_indigo" | "math_teal" | "photocopy_black";
+export type PrintColorThemeId =
+  | "royal_indigo"
+  | "emerald_moasser"
+  | "math_teal"
+  | "amber_gold"
+  | "photocopy_black";
 
 export interface PrintFontFamilySpecification {
   readonly id: PrintFontFamilyId;

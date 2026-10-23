@@ -11,6 +11,7 @@ import {
   pullPublishedExamsFromSupabaseCloud,
   syncPublishedExamToSupabaseCloud,
 } from "@/core/supabase/supabase-cloud-sync-ssot";
+import { notifyRealtimeTableUpdated } from "@/core/supabase/supabase-realtime-submissions-channel";
 
 export interface PublishedOnlineExam {
   readonly examId: string;
@@ -190,6 +191,7 @@ export function publishOnlineExamSSOT(input: {
   };
 
   persistExams([created, ...existing]);
+  notifyRealtimeTableUpdated("electronic_exams");
   void syncPublishedExamToSupabaseCloud(created);
   return created;
 }
@@ -199,6 +201,7 @@ export function archiveOnlineExamSSOT(examId: string): void {
     e.examId === examId ? { ...e, status: "archived" as const } : e
   );
   persistExams(updated);
+  notifyRealtimeTableUpdated("electronic_exams");
   const target = updated.find((e) => e.examId === examId);
   if (target) {
     void syncPublishedExamToSupabaseCloud(target);

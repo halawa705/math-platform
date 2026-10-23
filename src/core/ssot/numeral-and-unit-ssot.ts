@@ -73,14 +73,80 @@ export function formatNumeralsByModeSSOT(
 }
 
 /**
- * يضمن وجود وحدة القياس العربية بعد العدد دائماً (مثل: "8 سم" بدلاً من "سم 8").
+ * يضمن وجود وحدة القياس العربية بعد العدد دائماً (مثل: "8 سم" بدلاً من "سم 8")،
+ * ويخرج الوحدات الإنجليزية/العربية المحبوسة داخل `$...$` لتظهر بالعربية السليمة بعد الرقم.
  */
 export function normalizeArabicUnitPlacementSSOT(text: string): string {
   if (!text) return "";
-  return text.replace(
-    /\b(سم²|سم³|م²|م³|سم|مم|كم|متر|لتر|جم|كجم|درجة|دقيقة|ثانية|جنيه|نيوتن)\s+(\d+(?:\.\d+)?|[٠-٩]+(?:\.[٠-٩]+)?)/g,
-    "$2 $1"
-  );
+  return text
+    .replace(
+      /\$\s*(-?\d+(?:\.\d+)?)\s*(?:\\text\{)?\s*(?:cm\^2|cm²|سم\^2|سم²)\s*\}?\s*\$/gi,
+      "$$$1$$ سم²"
+    )
+    .replace(
+      /\$\s*(-?\d+(?:\.\d+)?)\s*(?:\\text\{)?\s*(?:cm\^3|cm³|سم\^3|سم³)\s*\}?\s*\$/gi,
+      "$$$1$$ سم³"
+    )
+    .replace(
+      /\$\s*(-?\d+(?:\.\d+)?)\s*(?:\\text\{)?\s*(?:m\/s\^2|م\/ث\^2|م\/ث²)\s*\}?\s*\$/gi,
+      "$$$1$$ م/ث²"
+    )
+    .replace(
+      /\$\s*(-?\d+(?:\.\d+)?)\s*(?:\\text\{)?\s*(?:m\/s|م\/ث)\s*\}?\s*\$/gi,
+      "$$$1$$ م/ث"
+    )
+    .replace(
+      /\$\s*(-?\d+(?:\.\d+)?)\s*(?:\\text\{)?\s*(?:cm|سم)\s*\}?\s*\$/gi,
+      "$$$1$$ سم"
+    )
+    .replace(
+      /\b(سم²|سم³|م²|م³|سم|مم|كم|متر|لتر|جم|كجم|درجة|دقيقة|ثانية|جنيه|جنيهاً|قرش|قرشاً|نيوتن|داين|جول|وات|م\/ث²|م\/ث|كم\/س)\s+(\d+(?:\.\d+)?|[٠-٩]+(?:\.[٠-٩]+)?)/g,
+      "$2 $1"
+    )
+    .replace(/\b(\d+(?:\.\d+)?)\s*cm\^2\b/gi, "$1 سم²")
+    .replace(/\b(\d+(?:\.\d+)?)\s*cm\^3\b/gi, "$1 سم³")
+    .replace(/\b(\d+(?:\.\d+)?)\s*cm\b/gi, "$1 سم");
+}
+
+/**
+ * يحول الرموز والدوال والمجموعات داخل التعبير الرياضي بين الترميز العربي (س، ص، ح، جا، جتا، ظا)
+ * والترميز الإنجليزي (x, y, \mathbb{R}, \sin, \cos, \tan) وفق إعداد المستند.
+ */
+export function localizeMathExpressionNotationSSOT(
+  latex: string,
+  notation: MathNotationLanguage
+): string {
+  if (!latex) return "";
+  let out = latex
+    .replace(/\\setminus|\\smallsetminus/g, " - ")
+    .replace(/\\varnothing|\\emptyset/g, "\\phi");
+
+  if (notation === "arabic") {
+    out = out
+      .replace(/\\mathbb\{R\}\_\{\+\}/g, "ح_{+}")
+      .replace(/\\mathbb\{R\}\_\{\-\}/g, "ح_{-}")
+      .replace(/\\mathbb\{R\}\^\{\*\}/g, "ح^{*}")
+      .replace(/\\mathbb\{R\}/g, "ح")
+      .replace(/\\mathbb\{Z\}/g, "ص")
+      .replace(/\\mathbb\{N\}/g, "ط")
+      .replace(/\\mathbb\{Q\}/g, "ن")
+      .replace(/\\csc\b/g, "\\text{قتا}")
+      .replace(/\\sec\b/g, "\\text{قا}")
+      .replace(/\\cot\b/g, "\\text{ظتا}")
+      .replace(/\\tan\b/g, "\\text{ظا}")
+      .replace(/\\cos\b/g, "\\text{جتا}")
+      .replace(/\\sin\b/g, "\\text{جا}")
+      .replace(/\bsign\s*\(/gi, "\\text{إشارة}(");
+  } else {
+    out = out
+      .replace(/\\text\{قتا\}|\bقتا\b/g, "\\csc ")
+      .replace(/\\text\{قا\}|\bقا\b/g, "\\sec ")
+      .replace(/\\text\{ظتا\}|\bظتا\b/g, "\\cot ")
+      .replace(/\\text\{ظا\}|\bظا\b/g, "\\tan ")
+      .replace(/\\text\{جتا\}|\bجتا\b/g, "\\cos ")
+      .replace(/\\text\{جا\}|\bجا\b/g, "\\sin ");
+  }
+  return out;
 }
 
 const ARABIC_TO_ENGLISH_VERTEX_MAP: Record<string, string> = {

@@ -51,6 +51,10 @@ export default function PDFPreviewOrchestrator({
 }: PDFPreviewOrchestratorProps) {
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => ({
     ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
+    answerVisibilityMode:
+      customTitle?.includes("مذكرة") || customTitle?.includes("مراجعة")
+        ? "questions_with_answers"
+        : DEFAULT_PDF_PRINT_SETTINGS_SSOT.answerVisibilityMode,
     customDocumentTitle:
       customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
   }));
