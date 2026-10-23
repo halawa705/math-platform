@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file student-homework-interactive-solver.tsx
@@ -21,19 +21,37 @@ import {
 export const MODULE_ID_STUDENT_HOMEWORK_INTERACTIVE_SOLVER =
   "student_homework_interactive_solver" as const;
 
-export default function StudentHomeworkInteractiveSolver() {
+export interface StudentHomeworkInteractiveSolverProps {
+  readonly gradeId?: string;
+}
+
+export default function StudentHomeworkInteractiveSolver({
+  gradeId,
+}: StudentHomeworkInteractiveSolverProps = {}) {
   const [assignment, setAssignment] =
-    useState<PublishedOnlineHomeworkAssignment>(() =>
-      loadActiveOnlineHomeworkAssignment()
-    );
+    useState<PublishedOnlineHomeworkAssignment | null>(null);
   const [mcqSelections, setMcqSelections] = useState<Record<string, number>>({});
   const [writtenAnswers, setWrittenAnswers] = useState<Record<string, string>>({});
   const [activeKeypadQId, setActiveKeypadQId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
   useEffect(() => {
-    setAssignment(loadActiveOnlineHomeworkAssignment());
-  }, []);
+    setAssignment(loadActiveOnlineHomeworkAssignment(gradeId));
+  }, [gradeId]);
+
+  if (!assignment) {
+    return (
+      <div className="p-8 rounded-3xl bg-white dark:bg-[#111827] border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-1.5">
+        <div className="text-2xl">📝</div>
+        <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">
+          لا يوجد واجب منشور حالياً
+        </h3>
+        <p className="text-xs font-bold text-slate-500">
+          سيظهر الواجب هنا فور نشره من المعلم.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

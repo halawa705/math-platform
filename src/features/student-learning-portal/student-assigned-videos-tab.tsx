@@ -1,87 +1,94 @@
-﻿"use client";
+"use client";
 
 /**
  * @file student-assigned-videos-tab.tsx
- * @description تبويب محاضرات الفيديو المسجلة المخصصة للطالب مع الفصول الزمنية للنظريات.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
+ * @description تبويب محاضرات الفيديو الحقيقية التي أضافها المعلم لصف الطالب فقط.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  loadVideoLecturesSSOT,
+  resolveYoutubeEmbedUrl,
+  type PublishedVideoLecture,
+} from "@/features/electronic-exams-hub/published-video-lectures-store";
 
 export const MODULE_ID_STUDENT_ASSIGNED_VIDEOS_TAB =
   "student_assigned_videos_tab" as const;
 
-const STUDENT_VIDEO_LECTURES = [
-  {
-    id: "vid_1",
-    titleAr: "شرح نظرية القطعة الواصلة بين منتصفي ضلعين في مثلث",
-    branchAr: "هندسة مستوية",
-    durationAr: "٢٤ دقيقة",
-    chapters: [
-      { time: "٠٠:٠٠", label: "منطوق النظرية والبرهان الاستدلالي" },
-      { time: "٠٨:٣٠", label: "عكس النظرية وشروط التوازي" },
-      { time: "١٦:١٥", label: "حل مسائل كتاب الوزارة والمحافظات" },
-    ],
-  },
-  {
-    id: "vid_2",
-    titleAr: "حل معادلات الدرجة الثانية في متغير واحد جبرياً وبيانياً",
-    branchAr: "جبر ودوال",
-    durationAr: "٢٨ دقيقة",
-    chapters: [
-      { time: "٠٠:٠٠", label: "التحليل والقانون العام" },
-      { time: "١٢:٠٠", label: "نقاط تقاطع منحنى الدالة مع محور السينات" },
-    ],
-  },
-] as const;
+export default function StudentAssignedVideosTab({
+  gradeId,
+}: {
+  readonly gradeId?: string;
+}) {
+  const [lectures, setLectures] = useState<readonly PublishedVideoLecture[]>([]);
+  const [activeId, setActiveId] = useState<string>("");
 
-export default function StudentAssignedVideosTab() {
-  const [activeVideoId, setActiveVideoId] = useState<string>("vid_1");
-  const currentVideo =
-    STUDENT_VIDEO_LECTURES.find((v) => v.id === activeVideoId) ||
-    STUDENT_VIDEO_LECTURES[0];
+  useEffect(() => {
+    const list = loadVideoLecturesSSOT(gradeId);
+    setLectures(list);
+    setActiveId(list[0]?.lectureId || "");
+  }, [gradeId]);
+
+  if (lectures.length === 0) {
+    return (
+      <div className="p-8 rounded-3xl bg-white dark:bg-[#111827] border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-1.5">
+        <div className="text-2xl">🎬</div>
+        <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">
+          لا توجد محاضرات مضافة لصفك بعد
+        </h3>
+        <p className="text-xs font-bold text-slate-500">
+          ستظهر المحاضرات هنا فور إضافتها من المعلم.
+        </p>
+      </div>
+    );
+  }
+
+  const current = lectures.find((l) => l.lectureId === activeId) || lectures[0];
+  const embedUrl = resolveYoutubeEmbedUrl(current.videoUrl);
 
   return (
-    <div className="space-y-3">
-      <div className="p-4 rounded-2xl bg-indigo-950 text-white space-y-2 shadow-lg">
-        <div className="flex items-center justify-between text-xs font-black text-teal-300">
-          <span>🎬 {currentVideo.branchAr}</span>
-          <span>المدة: {currentVideo.durationAr}</span>
-        </div>
-        <h3 className="text-sm sm:text-base font-black">{currentVideo.titleAr}</h3>
-        <div className="pt-2 flex flex-wrap gap-1.5">
-          {currentVideo.chapters.map((ch, idx) => (
-            <span
-              key={idx}
-              className="px-2.5 py-1 rounded-xl bg-white/10 text-[11px] font-bold"
-            >
-              ⏱️ {ch.time} — {ch.label}
-            </span>
-          ))}
-        </div>
+    <div className="space-y-4">
+      <div className="p-4 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <h3 className="text-sm sm:text-base font-black">{current.titleAr}</h3>
+        {embedUrl ? (
+          <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black">
+            <iframe
+              src={embedUrl}
+              title={current.titleAr}
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
+          </div>
+        ) : (
+          <a
+            href={current.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[44px] px-5 items-center rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black"
+          >
+            ▶ فتح المحاضرة ↗
+          </a>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {STUDENT_VIDEO_LECTURES.map((vid) => (
-          <button
-            key={vid.id}
-            type="button"
-            onClick={() => setActiveVideoId(vid.id)}
-            className={`p-3.5 rounded-2xl border text-right cursor-pointer transition ${
-              vid.id === activeVideoId
-                ? "border-teal-600 bg-teal-50/70 dark:bg-teal-950/30"
-                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827]"
-            }`}
-          >
-            <div className="text-xs font-black text-slate-900 dark:text-white">
-              {vid.titleAr}
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 mt-1">
-              {vid.branchAr} • {vid.durationAr}
-            </div>
-          </button>
-        ))}
-      </div>
+      {lectures.length > 1 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {lectures.map((l) => (
+            <button
+              key={l.lectureId}
+              type="button"
+              onClick={() => setActiveId(l.lectureId)}
+              className={`p-3.5 rounded-2xl border text-right text-xs font-black cursor-pointer transition ${
+                l.lectureId === current.lectureId
+                  ? "border-teal-600 bg-teal-50/70 dark:bg-teal-950/30"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827]"
+              }`}
+            >
+              {l.titleAr}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

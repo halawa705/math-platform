@@ -27,7 +27,6 @@ import {
   type PrintableMathQuestionItem,
 } from "./a4-vector-html-sheet-renderer";
 import SideBySideDiagramDocker from "./side-by-side-diagram-docker";
-import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 
 export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER =
   "two_column_newspaper_packer" as const;
@@ -35,6 +34,7 @@ export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER =
 export interface TwoColumnNewspaperPackerProps {
   readonly settings: PDFPrintSettingsStateSSOT;
   readonly questions: readonly PrintableMathQuestionItem[];
+  readonly subtitleAr?: string;
   readonly sheetContainerRef: React.RefObject<HTMLDivElement | null>;
   readonly children?: React.ReactNode;
 }
@@ -42,6 +42,7 @@ export interface TwoColumnNewspaperPackerProps {
 export default function TwoColumnNewspaperPacker({
   settings,
   questions,
+  subtitleAr = "",
   sheetContainerRef,
   children,
 }: TwoColumnNewspaperPackerProps) {
@@ -156,17 +157,19 @@ export default function TwoColumnNewspaperPacker({
                     <div className="text-[11.5pt] font-black text-slate-950 leading-snug">
                       {settings.customDocumentTitle}
                     </div>
-                    <div>
-                      <span
-                        style={{
-                          backgroundColor: themePalette.primaryHex,
-                          color: "#ffffff",
-                        }}
-                        className="inline-block px-3 py-0.5 rounded-full text-[8.5pt] font-black"
-                      >
-                        الصف الثالث الإعدادي — الفصل الدراسي ١
-                      </span>
-                    </div>
+                    {subtitleAr && (
+                      <div>
+                        <span
+                          style={{
+                            backgroundColor: themePalette.primaryHex,
+                            color: "#ffffff",
+                          }}
+                          className="inline-block px-3 py-0.5 rounded-full text-[8.5pt] font-black"
+                        >
+                          {subtitleAr}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* اليسار: اسم المعلم والهاتف وعدد المسائل */}
@@ -177,13 +180,15 @@ export default function TwoColumnNewspaperPacker({
                         ? `(${identity.teacherNickname})`
                         : ""}
                     </div>
-                    <div className="text-slate-600 font-mono">
-                      هاتف:{" "}
-                      {formatNumeralsByModeSSOT(
-                        identity.teacherPhone,
-                        settings.numeralMode
-                      )}
-                    </div>
+                    {identity.teacherPhone && (
+                      <div className="text-slate-600 font-mono">
+                        هاتف:{" "}
+                        {formatNumeralsByModeSSOT(
+                          identity.teacherPhone,
+                          settings.numeralMode
+                        )}
+                      </div>
+                    )}
                     <div className="text-indigo-800 font-extrabold">
                       المسائل: (
                       {formatNumeralsByModeSSOT(
@@ -206,57 +211,26 @@ export default function TwoColumnNewspaperPacker({
                   <span>الفصل: ...............</span>
                   <span style={{ color: themePalette.primaryHex }}>
                     الدرجة: ...... /{" "}
-                    {formatNumeralsByModeSSOT(20, settings.numeralMode)}
+                    {formatNumeralsByModeSSOT(
+                      questions.reduce((sum, q) => sum + q.marks, 0),
+                      settings.numeralMode
+                    )}
                   </span>
                 </div>
               </header>
 
-              {/* ٢. شريط الفكرة الملكي + صندوقي المفهوم والقاعدة (كما في المذكرات الوزارية الفاخرة) */}
-              <div className="space-y-2">
-                <div
-                  style={{
-                    background: `linear-gradient(90deg, ${themePalette.secondaryHex} 0%, ${themePalette.primaryHex} 100%)`,
-                  }}
-                  className="px-3 py-1.5 rounded-xl text-white flex items-center justify-between gap-2 shadow-2xs"
-                >
-                  <span className="px-2.5 py-0.5 rounded-lg bg-white text-indigo-950 text-[9.5pt] font-black shrink-0">
-                    الفكرة ({formatNumeralsByModeSSOT(1, settings.numeralMode)})
-                  </span>
-                  <span className="text-[10.5pt] font-black text-center flex-1">
-                    القواعد الأساسية وتطبيقات الكسور الجبرية والبرهان الهندسي الاستدلالي
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-white/15 border border-white/30 text-[8.5pt] font-bold shrink-0">
-                    المستوى: تأسيسي ومتقدم
-                  </span>
-                </div>
-
-                {/* تقسيم المفهوم الرياضي (يمين) والقاعدة والقانون المعتمد (يسار) */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 rounded-xl bg-amber-50/70 border border-amber-300/90 space-y-1">
-                    <div className="text-[9.5pt] font-black text-amber-950 border-b border-amber-200 pb-0.5">
-                      💡 المفهوم الرياضي والشرح:
-                    </div>
-                    <p className="text-[9.5pt] font-bold text-slate-800 leading-relaxed">
-                      عند جمع أو طرح كسرين جبريين لهما نفس المقام نجمع أو نطرح البسطين فوق المقام المشترك، وفي المثلث طول القطعة الواصلة بين منتصفي ضلعين يساوي نصف طول الضلع الثالث.
-                    </p>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-indigo-50/60 border border-indigo-300/90 space-y-1 flex flex-col justify-between">
-                    <div className="text-[9.5pt] font-black text-indigo-950 border-b border-indigo-200 pb-0.5">
-                      📐 القاعدة والقانون المعتمد:
-                    </div>
-                    <div className="text-center py-0.5">
-                      <SafeKaTeXBiDiMathRenderer
-                        text="$$\\frac{أ(س)}{ب(س)} \\pm \\frac{جـ(س)}{ب(س)} = \\frac{أ(س) \\pm جـ(س)}{ب(س)} \\quad ، \\quad د هـ = \\frac{1}{2} ب جـ$$"
-                        numeralMode={settings.numeralMode}
-                        notationLanguage={settings.notationLanguage}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* ٣. شبكة الأمثلة والأسئلة المعبأة (عمودان متوازيان أو عمود واحد) */}
+              {questions.length === 0 ? (
+                <div className="py-24 text-center space-y-2 rounded-xl border-2 border-dashed border-slate-200">
+                  <div className="text-3xl">📄</div>
+                  <div className="text-sm font-black text-slate-500">
+                    لا توجد أسئلة في الورقة بعد
+                  </div>
+                  <div className="text-xs font-bold text-slate-400">
+                    ولّد المحتوى من الخطوة ١ ثم الصق رد NotebookLM وصيّره لتظهر الأسئلة هنا.
+                  </div>
+                </div>
+              ) : (
               <div
                 className={`grid ${
                   settings.columnsCount === 2 ? "grid-cols-2" : "grid-cols-1"
@@ -270,13 +244,7 @@ export default function TwoColumnNewspaperPacker({
                   />
                 ))}
               </div>
-
-              {/* فاصل نهاية الفكرة */}
-              <div className="flex items-center justify-center pt-0.5">
-                <span className="px-4 py-0.5 rounded-full border border-indigo-300 bg-indigo-50/70 text-[8.5pt] font-black text-indigo-950">
-                  ═══ نهاية الفكرة ({formatNumeralsByModeSSOT(1, settings.numeralMode)}) ═══
-                </span>
-              </div>
+              )}
 
               {children}
             </div>
@@ -290,15 +258,17 @@ export default function TwoColumnNewspaperPacker({
                     {identity.platformBrandName}
                   </div>
                 </div>
-                <div className="p-1 rounded-lg bg-white border border-slate-200/80">
-                  <div className="text-slate-400 font-bold">للتواصل والواتساب</div>
-                  <div className="font-black text-teal-800 font-mono">
-                    {formatNumeralsByModeSSOT(
-                      identity.teacherPhone,
-                      settings.numeralMode
-                    )}
+                {identity.teacherPhone && (
+                  <div className="p-1 rounded-lg bg-white border border-slate-200/80">
+                    <div className="text-slate-400 font-bold">للتواصل والواتساب</div>
+                    <div className="font-black text-teal-800 font-mono">
+                      {formatNumeralsByModeSSOT(
+                        identity.teacherPhone,
+                        settings.numeralMode
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="p-1 rounded-lg bg-white border border-slate-200/80">
                   <div className="text-slate-400 font-bold">معلم المادة</div>
                   <div className="font-black text-indigo-950">

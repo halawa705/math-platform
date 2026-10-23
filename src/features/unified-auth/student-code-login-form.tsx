@@ -98,15 +98,16 @@ export default function StudentCodeLoginForm({
       return;
     }
 
-    if (rememberMe) {
-      saveRememberedSessionSSOT({
+    saveRememberedSessionSSOT(
+      {
         role: "student",
         studentCode: matched.studentCode,
         studentNameAr: matched.fullNameAr,
         gradeId: matched.gradeId,
         savedAtIso: new Date().toISOString(),
-      });
-    }
+      },
+      rememberMe
+    );
 
     onStudentSubmit(matched);
   };
@@ -134,15 +135,16 @@ export default function StudentCodeLoginForm({
       gradeId: regGradeId,
     });
 
-    if (rememberMe) {
-      saveRememberedSessionSSOT({
+    saveRememberedSessionSSOT(
+      {
         role: "student",
         studentCode: created.studentCode,
         studentNameAr: created.fullNameAr,
         gradeId: created.gradeId,
         savedAtIso: new Date().toISOString(),
-      });
-    }
+      },
+      rememberMe
+    );
 
     setNewlyCreatedStudent(created);
   };

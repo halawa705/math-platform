@@ -60,13 +60,13 @@ const REMEMBERED_SESSION_STORAGE_KEY = "math_platform_remembered_session_v2" as 
 
 export const DEFAULT_OWNER_TEACHER_IDENTITY_SSOT: OwnerTeacherIdentity = {
   teacherFullName: "أ/ إسلام حلاوة",
-  teacherNickname: "عميد الرياضيات",
-  teacherTitle: "خبير تدريس الرياضيات للمرحلتين الابتدائية والإعدادية",
-  teacherPhone: "01000000000",
+  teacherNickname: "",
+  teacherTitle: "معلم الرياضيات",
+  teacherPhone: "",
   platformBrandName: "منصة الفارس",
   platformLogoUrl: "",
   platformLogoSymbol: "🛡️",
-  footerText: "منصة الفارس — أ/ إسلام حلاوة (عميد الرياضيات) • جميع الحقوق محفوظة",
+  footerText: "منصة الفارس — أ/ إسلام حلاوة • جميع الحقوق محفوظة",
   watermarkText: "منصة الفارس — أ/ إسلام حلاوة",
   governorateName: "جمهورية مصر العربية",
   customSecretLoginCode: "19842026",
@@ -123,11 +123,29 @@ export function loadTeacherIdentitySSOT(): OwnerTeacherIdentity {
         ? parsed.watermarkText
         : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.watermarkText;
 
+    // ترحيل القيم الوهمية القديمة (لقب وهاتف ومسمى وظيفي افتراضي) إلى قيم فارغة/محايدة
+    const legacyFakeNickname = "عميد الرياضيات";
+    const legacyFakePhone = "01000000000";
+    const cleanNickname =
+      parsed.teacherNickname === legacyFakeNickname ? "" : parsed.teacherNickname ?? "";
+    const cleanPhone =
+      parsed.teacherPhone === legacyFakePhone ? "" : parsed.teacherPhone ?? "";
+    const cleanTitle =
+      parsed.teacherTitle && !parsed.teacherTitle.startsWith("خبير تدريس")
+        ? parsed.teacherTitle
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherTitle;
+    const footerWithoutFake = resolvedFooter.includes(legacyFakeNickname)
+      ? DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText
+      : resolvedFooter;
+
     return {
       ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
       ...parsed,
+      teacherNickname: cleanNickname,
+      teacherPhone: cleanPhone,
+      teacherTitle: cleanTitle,
       platformBrandName: resolvedBrand,
-      footerText: resolvedFooter,
+      footerText: footerWithoutFake,
       watermarkText: resolvedWatermark,
       platformLogoUrl: parsed.platformLogoUrl ?? "",
       platformLogoSymbol:
@@ -286,10 +304,23 @@ export function authenticateStudentCodeOrPhoneSSOT(
   return found;
 }
 
-export function saveRememberedSessionSSOT(session: RememberedUserSessionSSOT): void {
+/**
+ * يحفظ هوية المستخدم الحالي دائماً: في `localStorage` عند اختيار «تذكرني» (دائم)،
+ * وإلا في `sessionStorage` (حتى إغلاق المتصفح) ليعرف النظام هوية الطالب أثناء الجلسة.
+ */
+export function saveRememberedSessionSSOT(
+  session: RememberedUserSessionSSOT,
+  persistent = true
+): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(REMEMBERED_SESSION_STORAGE_KEY, JSON.stringify(session));
+    const payload = JSON.stringify(session);
+    window.localStorage.removeItem(REMEMBERED_SESSION_STORAGE_KEY);
+    window.sessionStorage.removeItem(REMEMBERED_SESSION_STORAGE_KEY);
+    (persistent ? window.localStorage : window.sessionStorage).setItem(
+      REMEMBERED_SESSION_STORAGE_KEY,
+      payload
+    );
   } catch {
     // ignore
   }
@@ -298,7 +329,9 @@ export function saveRememberedSessionSSOT(session: RememberedUserSessionSSOT): v
 export function loadRememberedSessionSSOT(): RememberedUserSessionSSOT | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(REMEMBERED_SESSION_STORAGE_KEY);
+    const raw =
+      window.sessionStorage.getItem(REMEMBERED_SESSION_STORAGE_KEY) ||
+      window.localStorage.getItem(REMEMBERED_SESSION_STORAGE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as RememberedUserSessionSSOT;
   } catch {
@@ -310,6 +343,7 @@ export function clearRememberedSessionSSOT(): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(REMEMBERED_SESSION_STORAGE_KEY);
+    window.sessionStorage.removeItem(REMEMBERED_SESSION_STORAGE_KEY);
   } catch {
     // ignore
   }

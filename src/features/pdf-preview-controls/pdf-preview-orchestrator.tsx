@@ -15,7 +15,6 @@ import {
 } from "@/core/ssot/pdf-print-settings-ssot";
 import { formatNumeralsByModeSSOT } from "@/core/ssot/numeral-and-unit-ssot";
 import {
-  buildSampleHighDensityMathSheetQuestions,
   type PrintableMathQuestionItem,
 } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import TwoColumnNewspaperPacker from "@/core/pdf-layout-engine/two-column-newspaper-packer";
@@ -38,12 +37,16 @@ import {
 export interface PDFPreviewOrchestratorProps {
   readonly customTitle?: string;
   readonly customQuestions?: readonly PrintableMathQuestionItem[];
+  readonly gradeNameAr?: string;
+  readonly branchNameAr?: string;
   readonly children?: React.ReactNode;
 }
 
 export default function PDFPreviewOrchestrator({
   customTitle,
   customQuestions,
+  gradeNameAr = "",
+  branchNameAr = "",
   children,
 }: PDFPreviewOrchestratorProps) {
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => ({
@@ -57,9 +60,7 @@ export default function PDFPreviewOrchestrator({
   const sheetContainerRef = useRef<HTMLDivElement>(null);
 
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
-  const questions =
-    customQuestions ??
-    buildSampleHighDensityMathSheetQuestions(settings.notationLanguage);
+  const questions = customQuestions ?? [];
 
   const handlePrintNow = () => {
     const html = sheetContainerRef.current?.innerHTML || "";
@@ -77,9 +78,9 @@ export default function PDFPreviewOrchestrator({
     saveDocumentToOvermathDriveVault({
       titleAr: title,
       docKind,
-      branchAr: "الرياضيات",
-      gradeAr: "المرحلة الإعدادية والثانوية",
-      pagesCount: 2,
+      branchAr: branchNameAr || "الرياضيات",
+      gradeAr: gradeNameAr || "غير محدد",
+      pagesCount: 1,
       fontUsed: `${activeFont.nameArabic.split("—")[0].trim()} ${settings.exactFontSizePt}pt`,
       htmlContent: html,
     });
@@ -202,6 +203,7 @@ export default function PDFPreviewOrchestrator({
       <TwoColumnNewspaperPacker
         settings={settings}
         questions={questions}
+        subtitleAr={gradeNameAr}
         sheetContainerRef={sheetContainerRef}
       >
         {children}

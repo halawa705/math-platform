@@ -226,6 +226,8 @@ export default function TeacherGenerationStudioView() {
             key={sheetCustomTitle}
             customTitle={sheetCustomTitle}
             customQuestions={customSheetQuestions}
+            gradeNameAr={activeGrade.nameArabic}
+            branchNameAr={activeBranch.nameArabic}
           />
         )}
       </main>

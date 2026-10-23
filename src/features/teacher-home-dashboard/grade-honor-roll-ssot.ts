@@ -1,13 +1,24 @@
 /**
  * @file grade-honor-roll-ssot.ts
- * @description المصدر الموحد لإحصائيات أداء الصفوف وقاعة المتميزين الديناميكية الحية:
- * 1. تتحدث أوتوماتيكياً فور انتهاء أي طالب من الاختبار الأونلاين (`recordStudentOnlineExamSubmissionSSOT`).
- * 2. شرط صارم: لا يُدرج في قاعة المتميزين إلا من تخطى نسبة 70% (`percentage >= 70`).
- * 3. تظل قاعة المتميزين ظاهرة طوال بقاء الاختبار نشطاً، وبمجرد أرشفة الاختبار (`archiveActiveOnlineExamForGradeSSOT`)
- *    تختفي فوراً وتنتظر الطلاب الجدد الذين يحصلون على أعلى الدرجات (>= 70%) في الاختبار الجديد.
+ * @description المصدر الموحد لإحصائيات الصفوف وقاعة المتميزين، مبني بالكامل على بيانات حقيقية:
+ * - عدد المسجلين = الطلاب الذين سجلوا فعلاً في المنصة (بدون الحساب التجريبي).
+ * - المسلّمون والدرجات = تسليمات الطلاب الفعلية للاختبار النشط لكل صف.
+ * - قاعة المتميزين = أعلى ٣ درجات في الاختبار النشط بشرط ≥ ٧٠٪، وتختفي بمجرد أرشفة الاختبار.
  */
 
+import {
+  DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT,
+  loadRegisteredStudentsSSOT,
+} from "@/core/ssot/teacher-identity-ssot";
+import {
+  loadActiveExamForGradeSSOT,
+  loadAllPublishedExamsSSOT,
+  type PublishedOnlineExam,
+} from "@/features/electronic-exams-hub/published-online-exams-store";
+
 export const MIN_HONOR_ROLL_PERCENTAGE_SSOT = 70 as const;
+
+export const EXAM_SUBMISSIONS_UPDATED_EVENT = "math-platform-submissions-updated" as const;
 
 export interface HonorStudentEntry {
   readonly rank: 1 | 2 | 3;
@@ -15,8 +26,6 @@ export interface HonorStudentEntry {
   readonly studentCode: string;
   readonly gradeId: string;
   readonly averagePercentage: number;
-  readonly examsCompleted: number;
-  readonly submittedAtIso?: string;
 }
 
 export interface OnlineExamSubmissionRecord {
@@ -31,13 +40,6 @@ export interface OnlineExamSubmissionRecord {
   readonly isReviewedByTeacher: boolean;
 }
 
-export interface GradeActiveExamState {
-  readonly gradeId: string;
-  readonly activeExamId: string;
-  readonly activeExamTitleAr: string;
-  readonly status: "active" | "archived";
-}
-
 export interface GradeAnalyticsMetric {
   readonly gradeId: string;
   readonly gradeNameAr: string;
@@ -45,271 +47,169 @@ export interface GradeAnalyticsMetric {
   readonly completedExamsCount: number;
   readonly unreviewedSubmissionsCount: number;
   readonly averageScorePercentage: number;
-  readonly activeExamStatus: "active" | "archived";
+  readonly hasActiveExam: boolean;
   readonly activeExamTitleAr: string;
+  /** توزيع الدرجات: أقل من 50 / 50–69 / 70–84 / 85 فأكثر */
+  readonly scoreBuckets: readonly [number, number, number, number];
   readonly topThreeHonorRoll: readonly HonorStudentEntry[];
 }
 
-const SUBMISSIONS_STORAGE_KEY = "math_platform_live_exam_submissions_v1" as const;
-const EXAM_STATE_STORAGE_KEY = "math_platform_grade_exam_states_v1" as const;
+export interface StudentExamHistoryItem {
+  readonly examTitleAr: string;
+  readonly studentPercentage: number;
+  readonly classAveragePercentage: number;
+}
 
-const INITIAL_SEEDED_SUBMISSIONS: readonly OnlineExamSubmissionRecord[] = [
-  {
-    submissionId: "sub_prep3_1",
-    examId: "exam_active_prep-3",
-    examTitleAr: "اختبار الهندسة المستوية — نظريات المثلث",
-    gradeId: "prep-3",
-    studentCode: "1001",
-    studentNameAr: "أحمد محمد علي",
-    percentageScore: 98,
-    submittedAtIso: "2026-10-23T14:10:00Z",
-    isReviewedByTeacher: false,
-  },
-  {
-    submissionId: "sub_prep3_2",
-    examId: "exam_active_prep-3",
-    examTitleAr: "اختبار الهندسة المستوية — نظريات المثلث",
-    gradeId: "prep-3",
-    studentCode: "1002",
-    studentNameAr: "رقية محمد عبد العزيز",
-    percentageScore: 95,
-    submittedAtIso: "2026-10-23T14:20:00Z",
-    isReviewedByTeacher: false,
-  },
-  {
-    submissionId: "sub_prep3_3",
-    examId: "exam_active_prep-3",
-    examTitleAr: "اختبار الهندسة المستوية — نظريات المثلث",
-    gradeId: "prep-3",
-    studentCode: "1003",
-    studentNameAr: "مازن خالد إبراهيم",
-    percentageScore: 91,
-    submittedAtIso: "2026-10-23T14:30:00Z",
-    isReviewedByTeacher: true,
-  },
-  {
-    submissionId: "sub_prep3_below70",
-    examId: "exam_active_prep-3",
-    examTitleAr: "اختبار الهندسة المستوية — نظريات المثلث",
-    gradeId: "prep-3",
-    studentCode: "1009",
-    studentNameAr: "طالب تجريبي (أقل من 70%)",
-    percentageScore: 65,
-    submittedAtIso: "2026-10-23T14:40:00Z",
-    isReviewedByTeacher: false,
-  },
-];
+const SUBMISSIONS_STORAGE_KEY = "math_platform_exam_submissions_v2" as const;
 
 export function loadAllExamSubmissionsSSOT(): readonly OnlineExamSubmissionRecord[] {
-  if (typeof window === "undefined") return INITIAL_SEEDED_SUBMISSIONS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(SUBMISSIONS_STORAGE_KEY);
-    if (!raw) return INITIAL_SEEDED_SUBMISSIONS;
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as OnlineExamSubmissionRecord[];
-    return Array.isArray(parsed) ? parsed : INITIAL_SEEDED_SUBMISSIONS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return INITIAL_SEEDED_SUBMISSIONS;
+    return [];
   }
 }
 
-export function loadGradeExamStatesSSOT(): Readonly<Record<string, GradeActiveExamState>> {
-  if (typeof window === "undefined") return {};
+function persistSubmissions(list: readonly OnlineExamSubmissionRecord[]): void {
+  if (typeof window === "undefined") return;
   try {
-    const raw = window.localStorage.getItem(EXAM_STATE_STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as Record<string, GradeActiveExamState>;
+    window.localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(list));
+    window.dispatchEvent(new CustomEvent(EXAM_SUBMISSIONS_UPDATED_EVENT));
   } catch {
-    return {};
+    // ignore storage write error
   }
 }
 
-/**
- * تُستدعى أوتوماتيكياً فور انتهاء الطالب من الاختبار الأونلاين لتحديث قاعة المتميزين فوراً.
- * إذا كان الطالب قد حصل على >= 70% يدخل في المنافسة على المراكز الثلاثة الأولى؛ وإذا كان أقل من 70% يُستبعد تماماً.
- */
+/** تسجيل تسليم طالب (تسليم واحد لكل طالب في كل اختبار) وتحديث قاعة المتميزين فوراً. */
 export function recordStudentOnlineExamSubmissionSSOT(input: {
-  readonly gradeId: string;
+  readonly exam: PublishedOnlineExam;
   readonly studentCode: string;
   readonly studentNameAr: string;
   readonly percentageScore: number;
-  readonly examTitleAr?: string;
 }): OnlineExamSubmissionRecord {
-  const states = loadGradeExamStatesSSOT();
-  const currentState = states[input.gradeId];
-  const activeExamId =
-    currentState?.status === "active"
-      ? currentState.activeExamId
-      : `exam_active_${input.gradeId}`;
-  const activeExamTitle =
-    input.examTitleAr ||
-    currentState?.activeExamTitleAr ||
-    "الاختبار الإلكتروني النشط";
-
-  // تأكيد أن حالة الاختبار لهذا الصف نشطة عند استلام إجابة جديدة
-  if (typeof window !== "undefined") {
-    const nextStates: Record<string, GradeActiveExamState> = {
-      ...states,
-      [input.gradeId]: {
-        gradeId: input.gradeId,
-        activeExamId,
-        activeExamTitleAr: activeExamTitle,
-        status: "active",
-      },
-    };
-    window.localStorage.setItem(EXAM_STATE_STORAGE_KEY, JSON.stringify(nextStates));
-  }
-
-  const existing = loadAllExamSubmissionsSSOT().filter(
-    (s) =>
-      !(
-        s.gradeId === input.gradeId &&
-        s.examId === activeExamId &&
-        s.studentCode === input.studentCode
-      )
-  );
-
-  const newRecord: OnlineExamSubmissionRecord = {
+  const record: OnlineExamSubmissionRecord = {
     submissionId: `sub_${Date.now()}`,
-    examId: activeExamId,
-    examTitleAr: activeExamTitle,
-    gradeId: input.gradeId,
+    examId: input.exam.examId,
+    examTitleAr: input.exam.titleAr,
+    gradeId: input.exam.gradeId,
     studentCode: input.studentCode,
     studentNameAr: input.studentNameAr,
     percentageScore: Math.round(input.percentageScore),
     submittedAtIso: new Date().toISOString(),
     isReviewedByTeacher: false,
   };
-
-  const updated = [newRecord, ...existing];
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(updated));
-  }
-  return newRecord;
+  const others = loadAllExamSubmissionsSSOT().filter(
+    (s) => !(s.examId === input.exam.examId && s.studentCode === input.studentCode)
+  );
+  persistSubmissions([record, ...others]);
+  return record;
 }
 
-/**
- * أرشفة الاختبار الحالي لصف معين: تختفي قاعة المتميزين فوراً وتنتظر طلاب الاختبار الجديد (>= 70%).
- */
-export function archiveActiveOnlineExamForGradeSSOT(gradeId: string): void {
-  if (typeof window === "undefined") return;
-  const states = loadGradeExamStatesSSOT();
-  const nextStates: Record<string, GradeActiveExamState> = {
-    ...states,
-    [gradeId]: {
-      gradeId,
-      activeExamId: `exam_archived_${Date.now()}`,
-      activeExamTitleAr: "لا يوجد اختبار نشط (تمت الأرشفة)",
-      status: "archived",
-    },
-  };
-  window.localStorage.setItem(EXAM_STATE_STORAGE_KEY, JSON.stringify(nextStates));
+export function findStudentSubmissionForExamSSOT(
+  examId: string,
+  studentCode: string
+): OnlineExamSubmissionRecord | null {
+  return (
+    loadAllExamSubmissionsSSOT().find(
+      (s) => s.examId === examId && s.studentCode === studentCode
+    ) || null
+  );
 }
 
-/**
- * فتح اختبار جديد لصف معين لتبدأ قاعة المتميزين باستقبال الطلاب الجدد الحاصلين على >= 70%.
- */
-export function startNewOnlineExamForGradeSSOT(
-  gradeId: string,
-  examTitleAr: string
-): void {
-  if (typeof window === "undefined") return;
-  const states = loadGradeExamStatesSSOT();
-  const nextStates: Record<string, GradeActiveExamState> = {
-    ...states,
-    [gradeId]: {
-      gradeId,
-      activeExamId: `exam_active_${gradeId}_${Date.now()}`,
-      activeExamTitleAr: examTitleAr,
-      status: "active",
-    },
-  };
-  window.localStorage.setItem(EXAM_STATE_STORAGE_KEY, JSON.stringify(nextStates));
+export function markExamSubmissionsReviewedSSOT(examId: string): void {
+  persistSubmissions(
+    loadAllExamSubmissionsSSOT().map((s) =>
+      s.examId === examId ? { ...s, isReviewedByTeacher: true } : s
+    )
+  );
 }
-
-const BASE_REGISTERED_COUNTS: Readonly<Record<string, number>> = {
-  "prim-3": 28,
-  "prim-4": 34,
-  "prim-5": 31,
-  "prim-6": 40,
-  "prep-1": 45,
-  "prep-2": 38,
-  "prep-3": 52,
-};
 
 export function getGradeAnalyticsAndHonorRollSSOT(
   gradeId: string,
-  gradeNameFallback = "الصف الثالث الإعدادي"
+  gradeNameAr: string
 ): GradeAnalyticsMetric {
-  const states = loadGradeExamStatesSSOT();
-  const stateForGrade = states[gradeId] || {
-    gradeId,
-    activeExamId: `exam_active_${gradeId}`,
-    activeExamTitleAr: "اختبار الوحدة النشط",
-    status: "active" as const,
-  };
-
-  const allGradeSubmissions = loadAllExamSubmissionsSSOT().filter(
-    (s) =>
-      s.gradeId === gradeId &&
-      s.examId === stateForGrade.activeExamId
-  );
-
-  const registeredCount = BASE_REGISTERED_COUNTS[gradeId] ?? 30;
-  const completedExamsCount = allGradeSubmissions.length;
-  const unreviewedSubmissionsCount = allGradeSubmissions.filter(
-    (s) => !s.isReviewedByTeacher
+  const registeredCount = loadRegisteredStudentsSSOT().filter(
+    (s) => s.gradeId === gradeId && s.id !== DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT.id
   ).length;
 
+  const activeExam = loadActiveExamForGradeSSOT(gradeId);
+  const submissions = activeExam
+    ? loadAllExamSubmissionsSSOT().filter((s) => s.examId === activeExam.examId)
+    : [];
+
+  const completedExamsCount = submissions.length;
   const averageScorePercentage =
     completedExamsCount > 0
       ? Math.round(
-          allGradeSubmissions.reduce((acc, s) => acc + s.percentageScore, 0) /
+          submissions.reduce((acc, s) => acc + s.percentageScore, 0) /
             completedExamsCount
         )
       : 0;
 
-  // إذا كان الاختبار مؤرشفاً، تختفي قاعة المتميزين فوراً وتنتظر الاختبار الجديد
-  if (stateForGrade.status === "archived") {
-    return {
-      gradeId,
-      gradeNameAr: gradeNameFallback,
-      registeredCount,
-      completedExamsCount: 0,
-      unreviewedSubmissionsCount: 0,
-      averageScorePercentage: 0,
-      activeExamStatus: "archived",
-      activeExamTitleAr: stateForGrade.activeExamTitleAr,
-      topThreeHonorRoll: [],
-    };
-  }
+  const buckets: [number, number, number, number] = [0, 0, 0, 0];
+  submissions.forEach((s) => {
+    if (s.percentageScore < 50) buckets[0] += 1;
+    else if (s.percentageScore < MIN_HONOR_ROLL_PERCENTAGE_SSOT) buckets[1] += 1;
+    else if (s.percentageScore < 85) buckets[2] += 1;
+    else buckets[3] += 1;
+  });
 
-  // فلترة صارمة: فقط الطلاب الذين حصلوا على نسبة > 70% (أو >= 70%)
-  const eligibleAbove70 = allGradeSubmissions
+  const topThreeHonorRoll: HonorStudentEntry[] = submissions
     .filter((s) => s.percentageScore >= MIN_HONOR_ROLL_PERCENTAGE_SSOT)
-    .sort((a, b) => b.percentageScore - a.percentageScore)
-    .slice(0, 3);
-
-  const topThreeHonorRoll: HonorStudentEntry[] = eligibleAbove70.map(
-    (sub, idx) => ({
+    .sort(
+      (a, b) =>
+        b.percentageScore - a.percentageScore ||
+        a.submittedAtIso.localeCompare(b.submittedAtIso)
+    )
+    .slice(0, 3)
+    .map((s, idx) => ({
       rank: (idx + 1) as 1 | 2 | 3,
-      studentNameAr: sub.studentNameAr,
-      studentCode: sub.studentCode,
-      gradeId: sub.gradeId,
-      averagePercentage: sub.percentageScore,
-      examsCompleted: 1,
-      submittedAtIso: sub.submittedAtIso,
-    })
-  );
+      studentNameAr: s.studentNameAr,
+      studentCode: s.studentCode,
+      gradeId: s.gradeId,
+      averagePercentage: s.percentageScore,
+    }));
 
   return {
     gradeId,
-    gradeNameAr: gradeNameFallback,
+    gradeNameAr,
     registeredCount,
     completedExamsCount,
-    unreviewedSubmissionsCount,
+    unreviewedSubmissionsCount: submissions.filter((s) => !s.isReviewedByTeacher)
+      .length,
     averageScorePercentage,
-    activeExamStatus: "active",
-    activeExamTitleAr: stateForGrade.activeExamTitleAr,
+    hasActiveExam: Boolean(activeExam),
+    activeExamTitleAr: activeExam?.titleAr || "",
+    scoreBuckets: buckets,
     topThreeHonorRoll,
   };
+}
+
+/** سجل اختبارات الطالب الحقيقي مع متوسط زملائه في كل اختبار. */
+export function loadStudentExamHistorySSOT(
+  studentCode: string
+): readonly StudentExamHistoryItem[] {
+  const all = loadAllExamSubmissionsSSOT();
+  const titles = new Map(
+    loadAllPublishedExamsSSOT().map((e) => [e.examId, e.titleAr])
+  );
+  return all
+    .filter((s) => s.studentCode === studentCode)
+    .sort((a, b) => a.submittedAtIso.localeCompare(b.submittedAtIso))
+    .map((mine) => {
+      const peers = all.filter((s) => s.examId === mine.examId);
+      const avg = Math.round(
+        peers.reduce((acc, s) => acc + s.percentageScore, 0) /
+          Math.max(1, peers.length)
+      );
+      return {
+        examTitleAr: titles.get(mine.examId) || mine.examTitleAr,
+        studentPercentage: mine.percentageScore,
+        classAveragePercentage: avg,
+      };
+    });
 }

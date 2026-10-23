@@ -14,6 +14,7 @@ import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
+import { publishOnlineExamSSOT } from "@/features/electronic-exams-hub/published-online-exams-store";
 
 export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB =
   "studio_exam_generator_tab" as const;
@@ -47,6 +48,8 @@ export default function StudioExamGeneratorTab({
   const [editablePrompt, setEditablePrompt] = useState<string>("");
   const [notebookRawReply, setNotebookRawReply] = useState<string>("");
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  const [publishMessage, setPublishMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const generated = buildOfficialExamNotebookLMPrompt({
@@ -94,6 +97,27 @@ export default function StudioExamGeneratorTab({
       }));
       onApplyParsedQuestionsToSheet(mapped);
     }
+  };
+
+  const handlePublishAsOnlineExam = () => {
+    const parsed = parseNotebookLMExamQuestionsToIR(notebookRawReply, {
+      defaultBranchId: branchId,
+      defaultLessonTitleArabic: lessonTitle,
+    });
+    if (parsed.length === 0) {
+      setPublishMessage("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة، ثم انشر الاختبار.");
+      return;
+    }
+    publishOnlineExamSSOT({
+      gradeId,
+      gradeNameArabic: gradeNameAr,
+      titleAr: `اختبار — ${lessonTitle}`,
+      durationMinutes,
+      questions: parsed,
+    });
+    setPublishMessage(
+      `✓ تم نشر الاختبار (${parsed.length} أسئلة) لطلاب ${gradeNameAr}، وأُرشف أي اختبار سابق لنفس الصف.`
+    );
   };
 
   return (
@@ -197,6 +221,34 @@ export default function StudioExamGeneratorTab({
         >
           ⚡ تصيير الأسئلة والأشكال في معاينة ورقة الـ A4 الآن ⬅
         </button>
+
+        {/* نشر الاختبار إلكترونياً للطلاب */}
+        <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/60 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="text-xs font-extrabold text-teal-900 dark:text-teal-200">
+              ٣. أو انشره كاختبار إلكتروني لطلاب {gradeNameAr} — مدة الحل:
+            </label>
+            <input
+              type="number"
+              min={5}
+              max={180}
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(Number(e.target.value))}
+              className="w-20 px-2 py-1 rounded-lg border border-teal-300 bg-white dark:bg-slate-950 text-xs font-black"
+            />
+            <span className="text-xs font-bold text-slate-500">دقيقة</span>
+          </div>
+          <button
+            type="button"
+            onClick={handlePublishAsOnlineExam}
+            className="w-full min-h-[44px] py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm cursor-pointer"
+          >
+            🚀 نشر كاختبار إلكتروني للطلاب (يُؤرشف السابق تلقائياً)
+          </button>
+          {publishMessage && (
+            <p className="text-xs font-black text-teal-900 dark:text-teal-200">{publishMessage}</p>
+          )}
+        </div>
       </div>
     </div>
   );
