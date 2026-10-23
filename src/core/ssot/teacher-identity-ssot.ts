@@ -1,11 +1,11 @@
 /**
  * @file teacher-identity-ssot.ts
  * @description المصدر الوحيد للحقيقة (SSOT) القابل للتعديل الحي من صفحة الإعدادات (`/settings`):
- * ١. هوية المعلم المالك، اسم المنصة/السنتر، اسم الشهرة، الهاتف، التذييل (Footer)، والعلامة المائية.
+ * ١. هوية المعلم المالك، اسم المنصة/السنتر (منصة الفارس)، اللوجو (صورة مرفوعة أو رابط أو رمز)، اسم الشهرة، الهاتف، التذييل (Footer)، والعلامة المائية.
  * ٢. اسم/رمز الدخول السري للمعلم المالك (قابل للتغيير في الإعدادات) + حفظ الجلسة (تذكرني).
  * ٣. الصفوف الدراسية المفعّلة لهذا العام الدراسي (من الثالث الابتدائي حتى الثالث الثانوي) كمصدر وحيد للحقيقة في الموقع كله.
  * ٤. روابط دفاتر NotebookLM لكل صف دراسي لفتح الدفتر ونسخ البرومبت تلقائياً بضغطة واحدة.
- * ٥. سجل تسجيل الطلاب الذاتي (الاسم، الهاتف، الرقم السري، الكود السريع) مع مزامنة Supabase.
+ * ٥. إشعار حي فوري (`math-platform-identity-updated`) يحدث الشريط العلوي والتذييل والمطبوعات في نفس اللحظة عند الضغط على حفظ.
  */
 
 import {
@@ -14,12 +14,16 @@ import {
 } from "./curriculum-hierarchy-ssot";
 import { syncTeacherIdentityToSupabaseCloud } from "../supabase/supabase-cloud-sync-ssot";
 
+export const IDENTITY_UPDATED_EVENT_NAME = "math-platform-identity-updated" as const;
+
 export interface OwnerTeacherIdentity {
   readonly teacherFullName: string;
   readonly teacherNickname: string;
   readonly teacherTitle: string;
   readonly teacherPhone: string;
   readonly platformBrandName: string;
+  readonly platformLogoUrl: string;
+  readonly platformLogoSymbol: string;
   readonly footerText: string;
   readonly watermarkText: string;
   readonly governorateName: string;
@@ -50,7 +54,7 @@ export interface RememberedUserSessionSSOT {
   readonly savedAtIso: string;
 }
 
-const TEACHER_SETTINGS_STORAGE_KEY = "math_platform_teacher_settings_ssot_v3" as const;
+const TEACHER_SETTINGS_STORAGE_KEY = "math_platform_teacher_settings_ssot_v4" as const;
 const REGISTERED_STUDENTS_STORAGE_KEY = "math_platform_students_registry_ssot_v2" as const;
 const REMEMBERED_SESSION_STORAGE_KEY = "math_platform_remembered_session_v2" as const;
 
@@ -59,9 +63,11 @@ export const DEFAULT_OWNER_TEACHER_IDENTITY_SSOT: OwnerTeacherIdentity = {
   teacherNickname: "عميد الرياضيات",
   teacherTitle: "خبير تدريس الرياضيات للمرحلتين الابتدائية والإعدادية",
   teacherPhone: "01000000000",
-  platformBrandName: "منصة الخوارزمي للرياضيات",
-  footerText: "منصة الخوارزمي للرياضيات — أ/ إسلام حلاوة (عميد الرياضيات) • جميع الحقوق محفوظة",
-  watermarkText: "منصة الخوارزمي — أ/ إسلام حلاوة",
+  platformBrandName: "منصة الفارس",
+  platformLogoUrl: "",
+  platformLogoSymbol: "🛡️",
+  footerText: "منصة الفارس — أ/ إسلام حلاوة (عميد الرياضيات) • جميع الحقوق محفوظة",
+  watermarkText: "منصة الفارس — أ/ إسلام حلاوة",
   governorateName: "جمهورية مصر العربية",
   customSecretLoginCode: "19842026",
   stealthTriggerCodes: ["19842026", "Halawa#77.", "halawa#77", "#MATH-MASTER#"],
@@ -104,9 +110,29 @@ export function loadTeacherIdentitySSOT(): OwnerTeacherIdentity {
     const raw = window.localStorage.getItem(TEACHER_SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_OWNER_TEACHER_IDENTITY_SSOT;
     const parsed = JSON.parse(raw) as Partial<OwnerTeacherIdentity>;
+    const resolvedBrand =
+      parsed.platformBrandName && !parsed.platformBrandName.includes("الخوارزمي")
+        ? parsed.platformBrandName
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformBrandName;
+    const resolvedFooter =
+      parsed.footerText && !parsed.footerText.includes("الخوارزمي")
+        ? parsed.footerText
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText;
+    const resolvedWatermark =
+      parsed.watermarkText && !parsed.watermarkText.includes("الخوارزمي")
+        ? parsed.watermarkText
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.watermarkText;
+
     return {
       ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
       ...parsed,
+      platformBrandName: resolvedBrand,
+      footerText: resolvedFooter,
+      watermarkText: resolvedWatermark,
+      platformLogoUrl: parsed.platformLogoUrl ?? "",
+      platformLogoSymbol:
+        parsed.platformLogoSymbol ||
+        DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformLogoSymbol,
       enabledGradeIds:
         Array.isArray(parsed.enabledGradeIds) && parsed.enabledGradeIds.length > 0
           ? parsed.enabledGradeIds
@@ -121,13 +147,20 @@ export function loadTeacherIdentitySSOT(): OwnerTeacherIdentity {
   }
 }
 
-export function saveTeacherIdentitySSOT(updated: OwnerTeacherIdentity): void {
-  if (typeof window === "undefined") return;
+export function saveTeacherIdentitySSOT(updated: OwnerTeacherIdentity): boolean {
+  if (typeof window === "undefined") return false;
   try {
-    window.localStorage.setItem(TEACHER_SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+    window.localStorage.setItem(
+      TEACHER_SETTINGS_STORAGE_KEY,
+      JSON.stringify(updated)
+    );
+    window.dispatchEvent(
+      new CustomEvent(IDENTITY_UPDATED_EVENT_NAME, { detail: updated })
+    );
     void syncTeacherIdentityToSupabaseCloud(updated);
+    return true;
   } catch {
-    // ignore
+    return false;
   }
 }
 
@@ -145,7 +178,10 @@ export function isStealthTeacherTriggerCodeSSOT(rawInput: string): boolean {
   if (!rawInput) return false;
   const trimmed = rawInput.trim().toLowerCase();
   const settings = loadTeacherIdentitySSOT();
-  if (settings.customSecretLoginCode && trimmed === settings.customSecretLoginCode.trim().toLowerCase()) {
+  if (
+    settings.customSecretLoginCode &&
+    trimmed === settings.customSecretLoginCode.trim().toLowerCase()
+  ) {
     return true;
   }
   return settings.stealthTriggerCodes.some((c) => c.toLowerCase() === trimmed);
@@ -187,9 +223,10 @@ export function loadRegisteredStudentsSSOT(): readonly RegisteredStudentRecordSS
     const raw = window.localStorage.getItem(REGISTERED_STUDENTS_STORAGE_KEY);
     if (!raw) return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
     const parsed = JSON.parse(raw) as RegisteredStudentRecordSSOT[];
-    return Array.isArray(parsed) && parsed.length > 0
-      ? parsed
-      : [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
+    }
+    return parsed;
   } catch {
     return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
   }
@@ -201,11 +238,12 @@ export function registerNewStudentSSOT(input: {
   readonly passwordPin: string;
   readonly gradeId: string;
 }): RegisteredStudentRecordSSOT {
-  const current = loadRegisteredStudentsSSOT();
+  const existing = loadRegisteredStudentsSSOT();
+  const nextNumber = 1001 + existing.length;
   const gradeObj = EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === input.gradeId);
-  const nextNumber = 1001 + current.length;
+
   const newStudent: RegisteredStudentRecordSSOT = {
-    id: `stu_${Date.now()}`,
+    id: `student-${Date.now()}`,
     studentCode: `MATH-${nextNumber}`,
     altNumericCode: String(nextNumber),
     fullNameAr: input.fullNameAr.trim(),
@@ -217,24 +255,52 @@ export function registerNewStudentSSOT(input: {
   };
 
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(
-      REGISTERED_STUDENTS_STORAGE_KEY,
-      JSON.stringify([newStudent, ...current])
-    );
+    try {
+      window.localStorage.setItem(
+        REGISTERED_STUDENTS_STORAGE_KEY,
+        JSON.stringify([...existing, newStudent])
+      );
+    } catch {
+      // ignore
+    }
   }
   return newStudent;
 }
 
+export function authenticateStudentCodeOrPhoneSSOT(
+  identifier: string,
+  passwordPin?: string
+): RegisteredStudentRecordSSOT | null {
+  const clean = identifier.trim().toUpperCase();
+  const students = loadRegisteredStudentsSSOT();
+  const found = students.find(
+    (s) =>
+      s.studentCode.toUpperCase() === clean ||
+      s.altNumericCode === clean ||
+      s.studentPhone === clean
+  );
+  if (!found) return null;
+  if (passwordPin && passwordPin.trim().length > 0 && found.passwordPin !== passwordPin.trim()) {
+    return null;
+  }
+  return found;
+}
+
 export function saveRememberedSessionSSOT(session: RememberedUserSessionSSOT): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(REMEMBERED_SESSION_STORAGE_KEY, JSON.stringify(session));
+  try {
+    window.localStorage.setItem(REMEMBERED_SESSION_STORAGE_KEY, JSON.stringify(session));
+  } catch {
+    // ignore
+  }
 }
 
 export function loadRememberedSessionSSOT(): RememberedUserSessionSSOT | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(REMEMBERED_SESSION_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as RememberedUserSessionSSOT) : null;
+    if (!raw) return null;
+    return JSON.parse(raw) as RememberedUserSessionSSOT;
   } catch {
     return null;
   }
@@ -242,5 +308,9 @@ export function loadRememberedSessionSSOT(): RememberedUserSessionSSOT | null {
 
 export function clearRememberedSessionSSOT(): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(REMEMBERED_SESSION_STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(REMEMBERED_SESSION_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
 }

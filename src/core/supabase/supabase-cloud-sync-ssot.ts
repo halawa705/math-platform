@@ -66,7 +66,9 @@ export async function pullTeacherIdentityFromSupabaseCloud(): Promise<OwnerTeach
     );
     if (!res.ok) return null;
     const rows = (await res.json()) as Array<{ identity_json?: OwnerTeacherIdentity }>;
-    return rows[0]?.identity_json || null;
+    const candidate = rows[0]?.identity_json;
+    if (!candidate || !candidate.platformBrandName) return null;
+    return candidate;
   } catch {
     return null;
   }

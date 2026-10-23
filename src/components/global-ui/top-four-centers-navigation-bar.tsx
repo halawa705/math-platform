@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+  IDENTITY_UPDATED_EVENT_NAME,
   loadTeacherIdentitySSOT,
   clearRememberedSessionSSOT,
   type OwnerTeacherIdentity,
@@ -87,6 +88,15 @@ export default function TopFourCentersNavigationBar({
 
   useEffect(() => {
     setIdentity(loadTeacherIdentitySSOT());
+    const handleIdentityUpdated = () => {
+      setIdentity(loadTeacherIdentitySSOT());
+    };
+    window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, handleIdentityUpdated);
+    window.addEventListener("storage", handleIdentityUpdated);
+    return () => {
+      window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, handleIdentityUpdated);
+      window.removeEventListener("storage", handleIdentityUpdated);
+    };
   }, []);
 
   const isStudentMode = activeCenter === "student";
@@ -106,8 +116,16 @@ export default function TopFourCentersNavigationBar({
             href={isStudentMode ? "/student" : "/dashboard"}
             className="flex items-center gap-2.5 group focus:outline-none"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-teal-600 text-white flex items-center justify-center text-lg font-black shadow-sm">
-              ∑
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-teal-600 text-white flex items-center justify-center text-lg font-black shadow-sm overflow-hidden">
+              {identity.platformLogoUrl ? (
+                <img
+                  src={identity.platformLogoUrl}
+                  alt={identity.platformBrandName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>{identity.platformLogoSymbol || "🛡️"}</span>
+              )}
             </div>
             <div>
               <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">

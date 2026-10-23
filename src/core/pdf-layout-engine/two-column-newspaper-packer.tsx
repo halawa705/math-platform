@@ -18,6 +18,7 @@ import {
 } from "../ssot/pdf-print-settings-ssot";
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+  IDENTITY_UPDATED_EVENT_NAME,
   loadTeacherIdentitySSOT,
 } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";
@@ -50,6 +51,9 @@ export default function TwoColumnNewspaperPacker({
 
   useEffect(() => {
     setIdentity(loadTeacherIdentitySSOT());
+    const sync = () => setIdentity(loadTeacherIdentitySSOT());
+    window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, sync);
+    return () => window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, sync);
   }, []);
 
   useEffect(() => {
@@ -118,16 +122,32 @@ export default function TwoColumnNewspaperPacker({
                 className="rounded-xl border-2 bg-slate-50/70 overflow-hidden"
               >
                 <div className="grid grid-cols-12 items-center p-2.5 gap-2 border-b border-slate-200">
-                  {/* اليمين: اسم المنصة/السنتر */}
-                  <div className="col-span-4 border-l border-slate-200 pl-2 space-y-0.5">
+                  {/* اليمين: اللوجو واسم المنصة/السنتر */}
+                  <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2">
                     <div
-                      style={{ color: themePalette.primaryHex }}
-                      className="text-[11pt] font-black leading-tight"
+                      style={{ backgroundColor: themePalette.primaryHex }}
+                      className="w-9 h-9 rounded-lg text-white flex items-center justify-center text-sm font-black overflow-hidden shrink-0"
                     >
-                      {identity.platformBrandName}
+                      {identity.platformLogoUrl ? (
+                        <img
+                          src={identity.platformLogoUrl}
+                          alt={identity.platformBrandName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{identity.platformLogoSymbol || "🛡️"}</span>
+                      )}
                     </div>
-                    <div className="text-[8.5pt] font-extrabold text-teal-700">
-                      مذكرة الشرح والتأسيس والتقييمات المعتمدة
+                    <div className="space-y-0.5">
+                      <div
+                        style={{ color: themePalette.primaryHex }}
+                        className="text-[11pt] font-black leading-tight"
+                      >
+                        {identity.platformBrandName}
+                      </div>
+                      <div className="text-[8pt] font-extrabold text-teal-700">
+                        مذكرة الشرح والتأسيس والتقييمات المعتمدة
+                      </div>
                     </div>
                   </div>
 

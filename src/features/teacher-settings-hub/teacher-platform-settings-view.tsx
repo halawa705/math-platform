@@ -3,13 +3,13 @@
 /**
  * @file teacher-platform-settings-view.tsx
  * @description مركز إعدادات المعلم ومصدر الحقيقة الموحد (`/settings`):
- * ١. تعديل اسم المنصة/السنتر، اسم المعلم، اسم الشهرة، الهاتف، التذييل (Footer)، والعلامة المائية.
- * ٢. تعديل اسم/كود الدخول السري للمعلم المالك.
- * ٣. تحديد الصفوف الدراسية المفعّلة لهذا العام (من الثالث الابتدائي حتى الثالث الثانوي) لتكون المصدر الوحيد للحقيقة في الموقع كله.
- * ٤. ربط كل صف دراسي مفعّل برابط دفتر NotebookLM الخاص به.
+ * ١. تعديل اسم المنصة/السنتر (منصة الفارس)، وتغيير اللوجو (رفع صورة من الجهاز أو وضع رابط أو اختيار رمز).
+ * ٢. تعديل اسم المعلم، اسم الشهرة، الهاتف، التذييل (Footer)، والعلامة المائية.
+ * ٣. تعديل اسم/كود الدخول السري للمعلم المالك.
+ * ٤. تحديد الصفوف الدراسية المفعّلة لهذا العام وربط كل صف بدفتر NotebookLM الخاص به.
  */
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import {
@@ -20,6 +20,8 @@ import {
 } from "@/core/ssot/teacher-identity-ssot";
 import { pullTeacherIdentityFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
 
+const LOGO_SYMBOL_PRESETS = ["🛡️", "🐎", "∑", "👑", "📐", "🏆"] as const;
+
 export default function TeacherPlatformSettingsView() {
   const [formState, setFormState] = useState<OwnerTeacherIdentity>(
     DEFAULT_OWNER_TEACHER_IDENTITY_SSOT
@@ -27,11 +29,20 @@ export default function TeacherPlatformSettingsView() {
   const [saveBanner, setSaveBanner] = useState<string | null>(null);
 
   useEffect(() => {
-    setFormState(loadTeacherIdentitySSOT());
+    const localLoaded = loadTeacherIdentitySSOT();
+    setFormState(localLoaded);
     void pullTeacherIdentityFromSupabaseCloud().then((cloudIdentity) => {
-      if (cloudIdentity) {
-        setFormState(cloudIdentity);
-        saveTeacherIdentitySSOT(cloudIdentity);
+      if (
+        cloudIdentity &&
+        cloudIdentity.platformBrandName &&
+        !cloudIdentity.platformBrandName.includes("الخوارزمي")
+      ) {
+        const merged: OwnerTeacherIdentity = {
+          ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+          ...localLoaded,
+          ...cloudIdentity,
+        };
+        setFormState(merged);
       }
     });
   }, []);
@@ -41,7 +52,7 @@ export default function TeacherPlatformSettingsView() {
     const updated = exists
       ? formState.enabledGradeIds.filter((id) => id !== gradeId)
       : [...formState.enabledGradeIds, gradeId];
-    if (updated.length === 0) return; // ضمان بقاء صف واحد على الأقل مفعلاً
+    if (updated.length === 0) return;
     setFormState({ ...formState, enabledGradeIds: updated });
   };
 
@@ -55,11 +66,30 @@ export default function TeacherPlatformSettingsView() {
     });
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    saveTeacherIdentitySSOT(formState);
-    setSaveBanner("✓ تم حفظ إعدادات الهوية والصفوف وروابط NotebookLM وتعميمها كمصدر وحيد للحقيقة في المنصة!");
-    setTimeout(() => setSaveBanner(null), 4000);
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setFormState((prev) => ({
+          ...prev,
+          platformLogoUrl: reader.result as string,
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveSettings = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const ok = saveTeacherIdentitySSOT(formState);
+    if (ok) {
+      setSaveBanner(
+        "✓ تم حفظ جميع الإعدادات واللوجو واسم المنصة وتعميمها فوراً في الشريط العلوي والمطبوعات!"
+      );
+      setTimeout(() => setSaveBanner(null), 5000);
+    }
   };
 
   const enabledGradesList = EGYPTIAN_MATH_GRADES_SSOT.filter((g) =>
@@ -77,25 +107,129 @@ export default function TeacherPlatformSettingsView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              ⚙️ إعدادات الهوية والصفوف وروابط NotebookLM
+              ⚙️ إعدادات الهوية واللوجو والصفوف وروابط NotebookLM
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              أي تعديل هنا يُحفظ كمصدر وحيد للحقيقة (SSOT) وينعكس فوراً في التذييل والمطبوعات وقوائم الصفوف.
+              أي تعديل هنا يُحفظ فوراً كمصدر وحيد للحقيقة (SSOT) وينعكس في الشريط العلوي والتذييل والمطبوعات.
             </p>
           </div>
-          {saveBanner && (
-            <div className="px-4 py-2 rounded-2xl bg-emerald-600 text-white text-xs font-black shadow-md">
-              {saveBanner}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => handleSaveSettings()}
+            className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md cursor-pointer"
+          >
+            💾 حفظ سريع للإعدادات الآن
+          </button>
         </div>
 
+        {saveBanner && (
+          <div className="p-4 rounded-2xl bg-emerald-600 text-white text-xs sm:text-sm font-black shadow-md flex items-center justify-between">
+            <span>{saveBanner}</span>
+            <span>✅</span>
+          </div>
+        )}
+
         <form onSubmit={handleSaveSettings} className="space-y-6">
-          {/* ١. بطاقة هوية المعلم والمنصة والتذييل وكود الدخول */}
-          <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          {/* ١. بطاقة شعار المنصة (اللوجو) وهوية المعلم والمنصة والتذييل */}
+          <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
             <h2 className="text-base font-black text-indigo-900 dark:text-teal-300">
-              ١. بيانات المعلم والمنصة والتذييل ورمز الدخول السري
+              ١. شعار المنصة (اللوجو) وبيانات المعلم والتذييل وكود الدخول
             </h2>
+
+            {/* قسم تغيير اللوجو (رفع صورة أو رابط أو رمز) */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-4">
+              {/* معاينة اللوجو الحي */}
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-teal-600 text-white flex items-center justify-center text-3xl font-black shadow-md overflow-hidden shrink-0 border-2 border-white dark:border-slate-700">
+                {formState.platformLogoUrl ? (
+                  <img
+                    src={formState.platformLogoUrl}
+                    alt="شعار المنصة"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span>{formState.platformLogoSymbol || "🛡️"}</span>
+                )}
+              </div>
+
+              <div className="flex-1 w-full space-y-2.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="px-4 py-2 rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black cursor-pointer shadow-xs">
+                    📁 رفع صورة اللوجو من جهازك
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {formState.platformLogoUrl && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormState({ ...formState, platformLogoUrl: "" })
+                      }
+                      className="px-3 py-2 rounded-xl bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs font-black cursor-pointer"
+                    >
+                      حذف الصورة واستخدام الرمز
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                      أو ضع رابط مباشر لصورة اللوجو (اختياري):
+                    </label>
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={
+                        formState.platformLogoUrl.startsWith("data:")
+                          ? ""
+                          : formState.platformLogoUrl
+                      }
+                      onChange={(e) =>
+                        setFormState({
+                          ...formState,
+                          platformLogoUrl: e.target.value,
+                        })
+                      }
+                      placeholder="https://example.com/logo.png"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                      أو اختر رمز الشعار (عند عدم وجود صورة):
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      {LOGO_SYMBOL_PRESETS.map((sym) => (
+                        <button
+                          key={sym}
+                          type="button"
+                          onClick={() =>
+                            setFormState({
+                              ...formState,
+                              platformLogoUrl: "",
+                              platformLogoSymbol: sym,
+                            })
+                          }
+                          className={`w-9 h-9 rounded-xl border text-base flex items-center justify-center cursor-pointer ${
+                            !formState.platformLogoUrl &&
+                            formState.platformLogoSymbol === sym
+                              ? "border-indigo-900 bg-indigo-900 text-white"
+                              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950"
+                          }`}
+                        >
+                          {sym}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -243,7 +377,7 @@ export default function TeacherPlatformSettingsView() {
                 ٣. ربط كل صف دراسي مفعّل برابط دفتر NotebookLM الخاص به
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                ضع رابط الدفتر الذي رفعت فيه كتب ومصادر كل صف على NotebookLM؛ عند الضغط على زر «نسخ البرومبت وفتح NotebookLM» في أي أداة سيفتح لك هذا الرابط تلقائياً ويكون البرومبت منسوخاً في حافظتك!
+                ضع رابط الدفتر الذي رفعت فيه كتب ومصادر كل صف على NotebookLM؛ عند الضغط على زر «نسخ البرومبت وفتح NotebookLM» في أي أداة سيفتح لك هذا الرابط تلقائياً!
               </p>
             </div>
 
@@ -269,11 +403,18 @@ export default function TeacherPlatformSettingsView() {
             </div>
           </section>
 
+          {saveBanner && (
+            <div className="p-4 rounded-2xl bg-emerald-600 text-white text-xs sm:text-sm font-black shadow-md text-center">
+              {saveBanner}
+            </div>
+          )}
+
           <button
             type="submit"
+            onClick={() => handleSaveSettings()}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-teal-600 to-indigo-800 hover:from-teal-500 hover:to-indigo-700 text-white font-black text-sm shadow-lg cursor-pointer"
           >
-            💾 حفظ وتعميم جميع الإعدادات في المنصة الآن
+            💾 حفظ وتعميم جميع الإعدادات واللوجو في المنصة الآن
           </button>
         </form>
       </main>

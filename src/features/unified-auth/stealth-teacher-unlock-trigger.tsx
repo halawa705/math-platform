@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file stealth-teacher-unlock-trigger.tsx
@@ -7,8 +7,12 @@
  * أو كتابة البادئة السرية في حقل كود الطالب، فينبثق حقل المفتاح السري للمعلم المالك.
  */
 
-import { useState } from "react";
-import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "@/core/ssot/teacher-identity-ssot";
+import { useEffect, useState } from "react";
+import {
+  DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+  IDENTITY_UPDATED_EVENT_NAME,
+  loadTeacherIdentitySSOT,
+} from "@/core/ssot/teacher-identity-ssot";
 
 export interface StealthTeacherUnlockTriggerProps {
   readonly isUnlocked: boolean;
@@ -23,6 +27,14 @@ export default function StealthTeacherUnlockTrigger({
 }: StealthTeacherUnlockTriggerProps) {
   const [clickCount, setClickCount] = useState(0);
   const [passkey, setPasskey] = useState("");
+  const [identity, setIdentity] = useState(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
+
+  useEffect(() => {
+    setIdentity(loadTeacherIdentitySSOT());
+    const sync = () => setIdentity(loadTeacherIdentitySSOT());
+    window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, sync);
+    return () => window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, sync);
+  }, []);
 
   const handleEmblemClick = () => {
     const next = clickCount + 1;
@@ -39,9 +51,17 @@ export default function StealthTeacherUnlockTrigger({
       {/* الشعار الرياضي ∑ الذي يعمل كبوابة سرية عند النقر الخماسي */}
       <div
         onClick={handleEmblemClick}
-        className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-700 to-teal-600 text-white flex items-center justify-center text-3xl font-black shadow-lg select-none mb-3"
+        className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-700 to-teal-600 text-white flex items-center justify-center text-3xl font-black shadow-lg select-none mb-3 overflow-hidden cursor-pointer"
       >
-        ∑
+        {identity.platformLogoUrl ? (
+          <img
+            src={identity.platformLogoUrl}
+            alt={identity.platformBrandName}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span>{identity.platformLogoSymbol || "🛡️"}</span>
+        )}
       </div>
 
       {isUnlocked && (
