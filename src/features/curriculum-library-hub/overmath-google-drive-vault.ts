@@ -142,6 +142,36 @@ export function saveDocumentToOvermathDriveVault(input: {
       STORAGE_KEY_OVERMATH_DRIVE_ARCHIVE,
       JSON.stringify(updated)
     );
+
+    const webhookUrl = process.env.NEXT_PUBLIC_OVERMATH_DRIVE_WEBHOOK_URL;
+    if (webhookUrl && webhookUrl.startsWith("https://script.google.com/")) {
+      fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(input),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.ok && data.driveViewUrl) {
+            const syncedRecord: OvermathDriveArchivedRecord = {
+              ...newRecord,
+              driveViewUrl: data.driveViewUrl,
+              driveDownloadUrl: data.driveDownloadUrl || data.driveViewUrl,
+              driveFolderPathAr: data.folderPathAr || newRecord.driveFolderPathAr,
+            };
+            const latest = loadOvermathDriveArchive().map((r) =>
+              r.id === newRecord.id ? syncedRecord : r
+            );
+            window.localStorage.setItem(
+              STORAGE_KEY_OVERMATH_DRIVE_ARCHIVE,
+              JSON.stringify(latest)
+            );
+          }
+        })
+        .catch(() => {
+          // في حال عدم الاتصال بالإنترنت تبقى النسخة محفوظة محلياً
+        });
+    }
   }
 
   return newRecord;
