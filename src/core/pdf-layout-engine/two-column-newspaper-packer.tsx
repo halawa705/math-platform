@@ -3,11 +3,10 @@
 /**
  * @file two-column-newspaper-packer.tsx
  * @description مكون ذري مستقل لتصيير لوحة ورقة الـ A4 البيضاء الناصعة بالتصميم الوزاري المصري العصري الفاخر:
- * - إطار ملكي مزدوج مع علامة مائية قطرية شفافة في خلفية الورقة.
- * - الترويسة السيادية ذات الشريط المتدرج (`headerGradientCss`) وشريط بيانات الطالب والدرجة الكلية.
- * - شبكة العمودين المتوازيين (أو العمود الواحد) للأمثلة والأسئلة والرسوم الهندسية المتجهية.
- * - جدول مفتاح إجابات الاختيار من متعدد السريع (`OfficialMcqAnswerKeySummaryTable`) في وضع الحلول.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * - يعرض كبسولة الفكرة والمفهوم والقاعدة المؤطرة (`PedagogicalIdeaAndRuleCapsule`) بعرض الصفحة الكامل (`col-span-full`)،
+ *   وتحتها الأمثلة المحلولة أو الأسئلة في شبكة العمودين المتوازيين بتوازن بصري تام.
+ * - مزود بحماية `min-w-0` و `overflow-hidden` لمنع أي انزلاق أفقي أو هامش جانبي في الطباعة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 198 سطراً).
  */
 
 import React, { useState, useEffect, useRef } from "react";
@@ -25,7 +24,10 @@ import {
   resolvePrintThemePalette,
   type PrintableMathQuestionItem,
 } from "./a4-vector-html-sheet-renderer";
-import { OfficialMcqAnswerKeySummaryTable } from "./a4-pedagogical-capsule-and-key-table";
+import {
+  OfficialMcqAnswerKeySummaryTable,
+  PedagogicalIdeaAndRuleCapsule,
+} from "./a4-pedagogical-capsule-and-key-table";
 import SideBySideDiagramDocker from "./side-by-side-diagram-docker";
 
 export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER =
@@ -70,7 +72,9 @@ export default function TwoColumnNewspaperPacker({
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
-  const isSolvedMode = settings.answerVisibilityMode !== "questions_only";
+  const isSolvedMode =
+    settings.answerVisibilityMode !== "questions_only" ||
+    questions.some((q) => q.id.startsWith("booklet-s1-"));
   const densityGap =
     settings.densityMode === "ultra_compact"
       ? "gap-2"
@@ -95,7 +99,7 @@ export default function TwoColumnNewspaperPacker({
         <div
           ref={sheetContainerRef}
           dir="rtl"
-          className="w-[794px] min-h-[1123px] bg-white text-slate-950 shadow-2xl p-[5mm] flex flex-col justify-between relative overflow-hidden"
+          className="w-full max-w-[794px] min-h-[1123px] bg-white text-slate-950 shadow-2xl p-[5mm] flex flex-col justify-between relative overflow-hidden"
           style={{
             backgroundColor: "#ffffff",
             color: "#0f172a",
@@ -104,18 +108,8 @@ export default function TwoColumnNewspaperPacker({
             lineHeight: activeFont.optimalLineHeight,
           }}
         >
-          <div
-            style={{ color: palette.primaryHex }}
-            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.035] -rotate-24 text-[44pt] font-black whitespace-nowrap"
-          >
-            {identity.watermarkText || identity.platformBrandName}
-          </div>
-
-          <div
-            style={{ borderColor: palette.primaryHex }}
-            className="w-full flex-1 rounded-2xl border-[2.5px] p-3 flex flex-col justify-between gap-2.5 relative z-10"
-          >
-            <div className="space-y-2.5">
+          <div className="w-full min-w-0 flex-1 flex flex-col justify-between gap-3 relative z-10">
+            <div className="space-y-3 min-w-0">
               <header
                 style={{ borderColor: palette.primaryHex }}
                 className="rounded-xl border-2 bg-white overflow-hidden shadow-2xs"
@@ -125,14 +119,14 @@ export default function TwoColumnNewspaperPacker({
                   className="px-3 py-1.5 text-white flex items-center justify-between text-[8.5pt] font-black"
                 >
                   <span>📐 {identity.platformBrandName} — سلسلة الرياضيات المعتمدة</span>
-                  <span>{isSolvedMode ? "✓ نسخة محلولة ومعتمدة" : "📄 ورقة أسئلة وتقييم"}</span>
+                  <span>{isSolvedMode ? "✓ مذكرة / نسخة محلولة ومعتمدة" : "📄 ورقة أسئلة وتقييم"}</span>
                 </div>
 
                 <div
                   style={{ backgroundColor: palette.softSurfaceHex }}
                   className="grid grid-cols-12 items-center p-2.5 gap-2 border-b border-slate-200"
                 >
-                  <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2">
+                  <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2 min-w-0">
                     <div
                       style={{ backgroundColor: palette.primaryHex }}
                       className="w-9 h-9 rounded-lg text-white flex items-center justify-center text-sm font-black overflow-hidden shrink-0"
@@ -143,18 +137,18 @@ export default function TwoColumnNewspaperPacker({
                         <span>{identity.platformLogoSymbol || "∑"}</span>
                       )}
                     </div>
-                    <div>
-                      <div style={{ color: palette.primaryHex }} className="text-[10.5pt] font-black leading-tight">
+                    <div className="min-w-0">
+                      <div style={{ color: palette.primaryHex }} className="text-[10.5pt] font-black leading-tight truncate">
                         {identity.teacherFullName}
                       </div>
-                      <div className="text-[8pt] font-bold text-slate-600">
+                      <div className="text-[8pt] font-bold text-slate-600 truncate">
                         {identity.teacherNickname || "خبير تدريس الرياضيات"}
                       </div>
                     </div>
                   </div>
 
-                  <div className="col-span-4 text-center space-y-1 px-1">
-                    <div className="text-[11.5pt] font-black text-slate-950 leading-snug">
+                  <div className="col-span-4 text-center space-y-1 px-1 min-w-0">
+                    <div className="text-[12pt] font-black text-slate-950 leading-snug break-words">
                       {settings.customDocumentTitle}
                     </div>
                     {subtitleAr && (
@@ -167,20 +161,20 @@ export default function TwoColumnNewspaperPacker({
                     )}
                   </div>
 
-                  <div className="col-span-4 border-r border-slate-200 pr-2 text-left space-y-0.5 text-[8.5pt] font-bold">
+                  <div className="col-span-4 border-r border-slate-200 pr-2 text-left space-y-0.5 text-[8.5pt] font-bold min-w-0">
                     {identity.teacherPhone && (
                       <div className="text-slate-700 font-mono">
                         هاتف: {formatNumeralsByModeSSOT(identity.teacherPhone, settings.numeralMode)}
                       </div>
                     )}
                     <div style={{ color: palette.secondaryHex }} className="font-black">
-                      الأسئلة: ({formatNumeralsByModeSSOT(questions.length, settings.numeralMode)}) | الزمن:{" "}
+                      العناصر: ({formatNumeralsByModeSSOT(questions.length, settings.numeralMode)}) | الزمن:{" "}
                       {formatNumeralsByModeSSOT(settings.customDurationText, settings.numeralMode)}
                     </div>
                   </div>
                 </div>
 
-                <div className="px-3 py-1 bg-white flex items-center justify-between text-[8.5pt] font-extrabold text-slate-700">
+                <div className="px-3 py-1.5 bg-white flex items-center justify-between text-[8.5pt] font-extrabold text-slate-700">
                   <span>اسم الطالب: ........................................</span>
                   <span>الكود / المجموعة: ......................</span>
                   <span style={{ color: palette.primaryHex }} className="font-black">
@@ -198,10 +192,27 @@ export default function TwoColumnNewspaperPacker({
                   </div>
                 </div>
               ) : (
-                <div className={`grid ${settings.columnsCount === 2 ? "grid-cols-2" : "grid-cols-1"} ${densityGap}`}>
-                  {questions.map((q) => (
-                    <SideBySideDiagramDocker key={q.id} question={q} settings={settings} />
-                  ))}
+                <div className={`grid ${settings.columnsCount === 2 ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start min-w-0`}>
+                  {questions.map((q) => {
+                    const hasIdeaCapsule = Boolean(
+                      q.ideaBannerTitleAr || q.conceptExplanationAr || q.framedRuleAr
+                    );
+                    return (
+                      <React.Fragment key={q.id}>
+                        {hasIdeaCapsule && (
+                          <div className="col-span-full min-w-0">
+                            <PedagogicalIdeaAndRuleCapsule
+                              item={q}
+                              palette={palette}
+                              numeralMode={settings.numeralMode}
+                              notationLanguage={settings.notationLanguage}
+                            />
+                          </div>
+                        )}
+                        <SideBySideDiagramDocker question={q} settings={settings} />
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               )}
 
@@ -219,11 +230,11 @@ export default function TwoColumnNewspaperPacker({
 
             <footer
               style={{ borderColor: palette.primaryHex }}
-              className="pt-1.5 border-t-2 flex items-center justify-between text-[8.5pt] font-black text-slate-600 px-1"
+              className="pt-2 mt-2 border-t-2 flex items-center justify-between text-[8.5pt] font-black text-slate-600 px-1"
             >
               <span>{identity.platformBrandName} • {identity.teacherFullName}</span>
               <span style={{ color: palette.secondaryHex }}>{identity.footerText} 🌟</span>
-              <span>صفحة {formatNumeralsByModeSSOT(1, settings.numeralMode)}</span>
+              <span>سلسلة المذكرات المعتمدة</span>
             </footer>
           </div>
         </div>

@@ -1,8 +1,9 @@
 /**
  * @file pdf-isolated-print-trigger.ts
  * @description خاصية ذرية مستقلة: تنفيذ الطباعة المعزولة وتصدير الـ PDF المتجهي
- * مع نسخ كافة أنماط Tailwind و KaTeX والخطوط العربية من الرأس (`document.head`)
- * لضمان تطابق الـ PDF المخرج بنسبة 100% مع التصميم الوزاري الفاخر على الشاشة دون أي تشوه أو تضخم للأشكال.
+ * - يضبط `@page { size: A4 portrait; margin: 7mm 8mm; }` مع عرض `100%` متمركز في منتصف الورقة تماماً
+ *   للقضاء النهائي على مشكلة انحياز الصفحة لليسار أو ظهور هامش أبيض في اليمين.
+ * - يمنع تمدد أي معادلة KaTeX خارج حدود العمود (`max-width: 100% !important; white-space: normal !important`).
  */
 
 import {
@@ -20,7 +21,6 @@ export function triggerIsolatedA4Print(
   const existingFrame = document.getElementById("isolated-math-a4-print-frame");
   if (existingFrame) existingFrame.remove();
 
-  // نسخ كافة وسوم <style> و <link rel="stylesheet"> من الصفحة لضمان وجود Tailwind و KaTeX والخطوط
   const headStylesHtml = Array.from(
     document.head.querySelectorAll('style, link[rel="stylesheet"]')
   )
@@ -29,12 +29,10 @@ export function triggerIsolatedA4Print(
 
   const iframe = document.createElement("iframe");
   iframe.id = "isolated-math-a4-print-frame";
-  iframe.style.position = "fixed";
-  iframe.style.right = "-9999px";
-  iframe.style.bottom = "-9999px";
-  iframe.style.width = "794px";
-  iframe.style.height = "1123px";
-  iframe.style.border = "0";
+  iframe.setAttribute(
+    "style",
+    "position:fixed;top:0;right:0;width:100%;height:100%;border:0;opacity:0.001;pointer-events:none;z-index:-1;"
+  );
   document.body.appendChild(iframe);
 
   const doc = iframe.contentWindow?.document;
@@ -50,7 +48,7 @@ export function triggerIsolatedA4Print(
   <style>
     @page {
       size: A4 portrait;
-      margin: 0mm;
+      margin: 7mm 8mm;
     }
     * {
       box-sizing: border-box;
@@ -60,7 +58,9 @@ export function triggerIsolatedA4Print(
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 210mm !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
       background-color: #ffffff !important;
       color: #0f172a !important;
       font-family: ${fontSpec.cssFontStack} !important;
@@ -68,17 +68,28 @@ export function triggerIsolatedA4Print(
       line-height: ${fontSpec.optimalLineHeight} !important;
       direction: rtl !important;
     }
-    .katex-mathml {
+    .katex-mathml, .katex-error {
       display: none !important;
     }
+    .katex, .katex-display, .katex-html {
+      max-width: 100% !important;
+      white-space: normal !important;
+      overflow-wrap: anywhere !important;
+    }
     .a4-ministerial-sheet {
-      width: 210mm !important;
-      min-height: 297mm !important;
-      padding: 6mm !important;
+      width: 100% !important;
+      max-width: 100% !important;
       margin: 0 auto !important;
+      padding: 0 !important;
       background-color: #ffffff !important;
       box-shadow: none !important;
+      overflow-x: hidden !important;
+    }
+    article, section, header, footer {
+      break-inside: avoid;
       page-break-inside: avoid;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
     svg {
       max-width: 100% !important;
@@ -96,8 +107,19 @@ export function triggerIsolatedA4Print(
 </html>`);
   doc.close();
 
-  setTimeout(() => {
+  const runPrint = () => {
     iframe.contentWindow?.focus();
     iframe.contentWindow?.print();
-  }, 550);
+  };
+
+  if (doc.fonts && doc.fonts.ready) {
+    Promise.race([
+      doc.fonts.ready,
+      new Promise((resolve) => setTimeout(resolve, 650)),
+    ])
+      .then(runPrint)
+      .catch(runPrint);
+  } else {
+    setTimeout(runPrint, 450);
+  }
 }

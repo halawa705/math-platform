@@ -3,8 +3,8 @@
 /**
  * @file side-by-side-diagram-docker.tsx
  * @description مكون ذري مستقل لتصيير بطاقة المثال المحلول أو السؤال الرياضي داخل ورقة الـ A4
- * بتصميم عصري فاخر (المعاصر / الفارس المطوّر) مع كبسولات الفكرة، شارة المحافظة، الشكل الهندسي المتجهي،
- * وشبكة بدائل MCQ التكيفية (4 أو 2 أو 1 عمود).
+ * بتصميم عصري متوازن (المعاصر / الفارس المطوّر) مع شارة المثال المحلول (`مثال ١`، `مثال ٢`) أو السؤال (`س ١`)،
+ * الشكل الهندسي المتجهي، وشبكة بدائل MCQ التكيفية (4 أو 2 أو 1 عمود) مع حماية `min-w-0` لمنع التمدد الأفقي.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
@@ -18,10 +18,7 @@ import {
   resolveAdaptiveMCQColumnsCount,
   resolveMCQGridTailwindClass,
 } from "./adaptive-mcq-options-grid-solver";
-import {
-  PedagogicalIdeaAndRuleCapsule,
-  StructuredStepByStepSolutionBox,
-} from "./a4-pedagogical-capsule-and-key-table";
+import { StructuredStepByStepSolutionBox } from "./a4-pedagogical-capsule-and-key-table";
 import { projectGeometryFigureToSVGMarkup } from "../geometry-engine/vector-svg-figure-projector";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 
@@ -54,31 +51,24 @@ export default function SideBySideDiagramDocker({
   return (
     <article
       style={{ breakInside: "avoid", borderColor: isSolvedMode ? palette.borderHex : "#CBD5E1" }}
-      className="rounded-xl border bg-white flex flex-col justify-between overflow-hidden shadow-2xs"
+      className="min-w-0 w-full rounded-xl border bg-white flex flex-col justify-between overflow-hidden shadow-2xs"
     >
-      <div className="p-2.5 pb-2">
-        <PedagogicalIdeaAndRuleCapsule
-          item={question}
-          palette={palette}
-          numeralMode={settings.numeralMode}
-          notationLanguage={settings.notationLanguage}
-        />
-
+      <div className="p-2.5 pb-2 min-w-0">
         <div
           style={{ backgroundColor: palette.badgeBgHex, borderColor: palette.borderHex }}
           className="px-2 py-1 mb-2 rounded-lg border-r-4 flex flex-wrap items-center justify-between gap-1.5"
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             <span
               style={{ backgroundColor: palette.primaryHex }}
-              className="px-2 py-0.5 rounded-md text-white text-[0.85em] font-black"
+              className="px-2 py-0.5 rounded-md text-white text-[0.85em] font-black shrink-0"
             >
-              {question.ideaBannerTitleAr ? `مثال (${formattedQNum})` : `س (${formattedQNum})`}
+              {isBookletSolvedExample ? `مثال (${formattedQNum})` : `س (${formattedQNum})`}
             </span>
             {question.citationBadgeAr && (
               <span
                 style={{ color: palette.secondaryHex, borderColor: palette.borderHex }}
-                className="px-1.5 py-0.2 rounded bg-white border text-[0.76em] font-black"
+                className="px-1.5 py-0.2 rounded bg-white border text-[0.76em] font-black truncate"
               >
                 📍 {formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode)}
               </span>
@@ -86,16 +76,18 @@ export default function SideBySideDiagramDocker({
           </div>
           <span
             style={{ color: palette.primaryHex }}
-            className="text-[0.78em] font-black bg-white/90 px-1.5 py-0.2 rounded border border-slate-200"
+            className="text-[0.78em] font-black bg-white/90 px-1.5 py-0.2 rounded border border-slate-200 shrink-0"
           >
-            {formattedMarks} {question.marks === 1 ? "درجة" : "درجات"}
+            {isBookletSolvedExample
+              ? "مثال محلول"
+              : `${formattedMarks} ${question.marks === 1 ? "درجة" : "درجات"}`}
           </span>
         </div>
 
         {settings.answerVisibilityMode !== "answer_key_only" && (
-          <div>
-            <div className={question.geometryFigure ? "flex items-start justify-between gap-2.5" : "block"}>
-              <div className="flex-1 space-y-1 text-[0.98em] font-extrabold text-slate-900 leading-relaxed">
+          <div className="min-w-0">
+            <div className={question.geometryFigure ? "flex items-start justify-between gap-2.5 min-w-0" : "block min-w-0"}>
+              <div className="flex-1 min-w-0 space-y-1 text-[0.98em] font-extrabold text-slate-900 leading-relaxed break-words">
                 <div>
                   <SafeKaTeXBiDiMathRenderer
                     text={question.promptAr}
@@ -132,16 +124,16 @@ export default function SideBySideDiagramDocker({
               {question.geometryFigure && (
                 <div
                   style={{
-                    width: "146px",
-                    minWidth: "146px",
+                    width: "136px",
+                    minWidth: "136px",
                     borderColor: palette.borderHex,
                     backgroundColor: palette.softSurfaceHex,
                   }}
                   className="border rounded-lg p-1 flex items-center justify-center shrink-0"
                   dangerouslySetInnerHTML={{
                     __html: projectGeometryFigureToSVGMarkup(question.geometryFigure, {
-                      widthPx: 138,
-                      heightPx: 96,
+                      widthPx: 128,
+                      heightPx: 92,
                       strokeColorHex: palette.primaryHex,
                       accentColorHex: palette.accentHex,
                       numeralMode: settings.numeralMode,
@@ -162,7 +154,7 @@ export default function SideBySideDiagramDocker({
                         borderColor: isCorrect ? "#059669" : "#E2E8F0",
                         backgroundColor: isCorrect ? "#ECFDF5" : "#F8FAFC",
                       }}
-                      className="px-2 py-1 rounded-lg border flex items-center justify-between gap-1.5"
+                      className="min-w-0 px-2 py-1 rounded-lg border flex items-center justify-between gap-1.5"
                     >
                       <span
                         style={{ backgroundColor: isCorrect ? "#059669" : palette.primaryHex, color: "#ffffff" }}
@@ -170,7 +162,7 @@ export default function SideBySideDiagramDocker({
                       >
                         {CHOICE_LETTERS[cIdx]}
                       </span>
-                      <div className="flex-1 text-center font-bold">
+                      <div className="flex-1 min-w-0 text-center font-bold break-words">
                         <SafeKaTeXBiDiMathRenderer
                           text={choice}
                           numeralMode={settings.numeralMode}
@@ -211,7 +203,7 @@ export default function SideBySideDiagramDocker({
         )}
       </div>
 
-      {settings.answerVisibilityMode === "questions_only" && settings.answerSpaceStyle !== "hidden" && (
+      {settings.answerVisibilityMode === "questions_only" && settings.answerSpaceStyle !== "hidden" && !isBookletSolvedExample && (
         <div className="px-2.5 pb-2 pt-1 bg-slate-50/70 border-t border-dashed border-slate-200 space-y-1">
           {[1, 2].map((lineIdx) => (
             <div

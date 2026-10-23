@@ -1,11 +1,9 @@
 /**
  * @file notebooklm-exam-questions-parser.ts
  * @description محلل أسئلة الاختبارات والمراجعات وأوراق العمل الشامل (Universal Multi-Format Exam Parser):
- * يدعم كلاً من:
- * 1. القالب المرقم `[1] ... (أ) ... (ب) ... (جـ) ... (د) ... الإجابة الصحيحة: ...`
- * 2. قالب `#1 ... | معرف السؤال: homework-01-01` أو `practice-01-01`
- * 3. قالب `=== [QUESTION: N] ===` و `### [Q: N]` والترقيم الطبيعي `1)` و `السؤال الأول:`
- * 4. شبكة أمان شاملة (Zero-Empty-Sheet Guarantee) تحول أي فقرات علمية ملصقة إلى بطاقات أسئلة مصيّرة.
+ * - يستخرج البدائل الأربعة (أ، ب، جـ، د) سواء كُتبت في أسطر مستقلة أو مدمجة داخل سطر السؤال، ويحذفها من نص السؤال لمنع التكرار.
+ * - يدمج خطوات الحل المنطقية (بحيث لا تنفصل جملة التمهيد المنتهية بـ `:` عن معادلتها في السطر التالي).
+ * - يستخدم `matchOptionalGeometryFigureFromArabicDescription` لمنع إرفاق رسوم وهمية للمسائل اللفظية.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
@@ -14,11 +12,14 @@ import type {
   MathQuestionPatternKind,
 } from "../ir/question-assessment-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
-import { matchArabicDescriptionToCanonicalGeometryFigure } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { matchOptionalGeometryFigureFromArabicDescription } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER =
   "notebooklm_exam_questions_parser" as const;
+
+const INLINE_OPTION_SPLIT_REGEX =
+  /(?:^|\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])\s*([\s\S]*?)(?=(?:\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])|\n\s*(?:الإجابة|الحل|خطوات|الناتج|\|\s*معرف)|$)/gi;
 
 export function parseChoicesTupleFromBlock(
   rawBlock: string
@@ -28,6 +29,7 @@ export function parseChoicesTupleFromBlock(
     c
       .replace(/^(?:[أابجدABCD1-4][)\].:-]\s*|\([أابجدABCD1-4]\)\s*)/i, "")
       .replace(/\|\s*معرف\s*السؤال.*$/i, "")
+      .replace(/\s*---+\s*$/g, "")
       .trim();
 
   const explicitChoicesLine = rawBlock.match(
@@ -41,21 +43,57 @@ export function parseChoicesTupleFromBlock(
     }
   }
 
-  // استخراج البدائل المكتوبة في أسطر أو متجاورة بصيغة (أ) ... (ب) ... (جـ) ... (د) ...
-  const preAnswerText = rawBlock.split(
-    /\n\s*(?:الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i
-  )[0] || rawBlock;
+  const preAnswerText =
+    rawBlock.split(
+      /\n\s*(?:الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i
+    )[0] || rawBlock;
 
-  const optionMatches = Array.from(
-    preAnswerText.matchAll(
-      /(?:^|\n|\s)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])\s*([\s\S]*?)(?=(?:\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])|\n\s*(?:الإجابة|الحل|خطوات|\|\s*معرف)|$)/gi
-    )
-  ).map((m) => cleanChoice(m[1] || ""));
+  const optionMatches = Array.from(preAnswerText.matchAll(INLINE_OPTION_SPLIT_REGEX)).map(
+    (m) => cleanChoice(m[1] || "")
+  );
 
   if (optionMatches.length >= 4) {
     return [optionMatches[0], optionMatches[1], optionMatches[2], optionMatches[3]];
   }
   return undefined;
+}
+
+export function stripInlineChoicesFromPromptText(promptText: string): string {
+  if (!promptText) return "";
+  const firstOptIdx = promptText.search(
+    /(?:^|\n|\s+)(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])\s+\S[\s\S]*?(?:\(\s*ب\s*\)|ب\s*[)\].:-])\s+/i
+  );
+  if (firstOptIdx > 4) {
+    return promptText.slice(0, firstOptIdx).trim();
+  }
+  return promptText;
+}
+
+export function mergeLogicalSolutionSteps(rawStepsText: string): string[] {
+  if (!rawStepsText) return [];
+  const rawLines = rawStepsText
+    .split(/\||\r?\n+/)
+    .map((s) =>
+      s
+        .replace(/^\s*(?:[-•*]|\d+[.)-]|\(\d+\)|(?:الخطوة|خطوة)\s*(?:\d+|الأولى|الثانية|الثالثة|الرابعة)\s*[:.-]?)\s*/i, "")
+        .replace(/\s*---+\s*$/g, "")
+        .trim()
+    )
+    .filter((s) => s.length > 0 && !/^[-*_]{2,}$/.test(s));
+
+  const merged: string[] = [];
+  for (const line of rawLines) {
+    const prev = merged[merged.length - 1];
+    if (
+      prev &&
+      (/[:：]\s*$/.test(prev) || (line.startsWith("$") && line.endsWith("$") && prev.length < 55))
+    ) {
+      merged[merged.length - 1] = `${prev} ${line}`.replace(/\s{2,}/g, " ").trim();
+    } else {
+      merged.push(line);
+    }
+  }
+  return merged;
 }
 
 export function resolveCorrectChoiceIndex(
@@ -64,7 +102,7 @@ export function resolveCorrectChoiceIndex(
 ): 0 | 1 | 2 | 3 | undefined {
   if (!choices || !rawCorrect) return undefined;
   const trimmed = rawCorrect.trim();
-  const letterMatch = trimmed.match(/^\(?([أابجدABCD1-4]|جـ)\)?(?:\s|$|[).:-])/i);
+  const letterMatch = trimmed.match(/(?:^|\s)\(?([أابجدABCD1-4]|جـ)\)?(?:\s|$|[).:-])/i);
   const letterMap: Record<string, 0 | 1 | 2 | 3> = {
     أ: 0, ا: 0, A: 0, "1": 0, "١": 0,
     ب: 1, B: 1, "2": 1, "٢": 1,
@@ -75,17 +113,17 @@ export function resolveCorrectChoiceIndex(
     return letterMap[letterMatch[1]];
   }
   const exactIdx = choices.findIndex(
-    (c) => c === trimmed || trimmed.includes(c) || c.includes(trimmed)
+    (c) => c.length > 0 && (c === trimmed || trimmed.includes(c) || c.includes(trimmed))
   );
   return exactIdx >= 0 && exactIdx <= 3 ? (exactIdx as 0 | 1 | 2 | 3) : 0;
 }
 
 function extractFieldMultiline(block: string, fieldPattern: string): string {
   const regex = new RegExp(
-    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الإجابة_الصحيحة|الإجابة الصحيحة|خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح|الإجابة_النهائية|الإجابة النهائية|المحافظة|المصدر)\\s*:|$)`,
+    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الإجابة_الصحيحة|الإجابة الصحيحة|خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج النهائي|المحافظة|المصدر)\\s*:|$)`,
     "i"
   );
-  return block.match(regex)?.[1]?.trim() ?? "";
+  return (block.match(regex)?.[1] ?? "").replace(/\s*---+\s*$/g, "").trim();
 }
 
 export function parseNotebookLMExamQuestionsToIR(params: {
@@ -99,7 +137,6 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   if (!cleanedText) return [];
 
   let rawBlocks: string[] = [];
-
   if (/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\]/i.test(cleanedText)) {
     rawBlocks = cleanedText
       .split(/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\][^\n]*===/i)
@@ -117,7 +154,6 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .filter((b) => b.length > 8);
   }
 
-  // شبكة أمان: إذا لم ينقسم النص بأي نمط ترقيم، نقسمه بالفقرات حتى لا تخرج الورقة فارغة أبداً
   if (rawBlocks.length === 0) {
     rawBlocks = cleanedText
       .split(/\n{2,}/)
@@ -133,20 +169,12 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const rawGiven = extractFieldMultiline(block, "المعطيات");
     const rawRequired = extractFieldMultiline(block, "المطلوب");
     const rawCorrect = extractFieldMultiline(block, "الإجابة_الصحيحة|الإجابة الصحيحة");
-    const rawSteps = extractFieldMultiline(
-      block,
-      "خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح"
-    );
-    const rawFinalAnswer = extractFieldMultiline(
-      block,
-      "الإجابة_النهائية|الإجابة النهائية|الناتج النهائي"
-    );
+    const rawSteps = extractFieldMultiline(block, "خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح");
+    const rawFinalAnswer = extractFieldMultiline(block, "الإجابة_النهائية|الإجابة النهائية|الناتج النهائي");
     const rawGov = extractFieldMultiline(block, "المحافظة|المصدر");
 
     const fallbackPrompt = block
-      .split(
-        /\n\s*(?:البدائل|الاختيارات|الإجابة|خطوات|البرهان|الحل|الشرح|\(\s*[أابجدABCD]\s*\)|[أابجد][)\].:-]\s+)/i
-      )[0]
+      .split(/\n\s*(?:البدائل|الاختيارات|الإجابة|خطوات|البرهان|الحل|الشرح|\(\s*[أابجدABCD]\s*\)|[أابجد][)\].:-]\s+)/i)[0]
       ?.replace(/^(?:النمط|النوع|الدرجة)\s*:.*$/gm, "")
       .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
       .replace(/^\[(?:اختر|أكمل|مقالي)\]\s*/i, "")
@@ -155,16 +183,12 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const basePrompt = explicitPrompt || fallbackPrompt || block;
     const geoMatch = block.match(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
     const attachedGeometryFigure = geoMatch?.[1]
-      ? matchArabicDescriptionToCanonicalGeometryFigure(
-          geoMatch[1],
-          `geom_${params.lessonId}_${orderNumber}`
-        )
+      ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `geom_${params.lessonId}_${orderNumber}`)
       : undefined;
 
-    const cleanPrompt = basePrompt
-      .replace(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, "")
-      .trim();
     const mcqChoicesArabic = parseChoicesTupleFromBlock(block);
+    const rawCleanPrompt = basePrompt.replace(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, "").trim();
+    const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
 
     const patternKind: MathQuestionPatternKind =
       rawKind.includes("mcq") || rawKind.includes("اختر") || mcqChoicesArabic !== undefined
@@ -175,21 +199,14 @@ export function parseNotebookLMExamQuestionsToIR(params: {
             ? "completion"
             : "direct_answer";
 
-    const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect, mcqChoicesArabic);
+    const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect || rawFinalAnswer, mcqChoicesArabic);
     const modelSolutionStepsArabic = rawSteps
-      ? rawSteps
-          .split(/\||\n+/)
-          .map((s) => s.replace(/^\s*(?:[-•*]|\d+[.)-])\s*/, "").trim())
-          .filter(Boolean)
+      ? mergeLogicalSolutionSteps(rawSteps)
       : rawCorrect
         ? [rawCorrect]
         : [];
-
     const finalCanonicalAnswerArabic =
-      rawFinalAnswer ||
-      rawCorrect ||
-      modelSolutionStepsArabic[modelSolutionStepsArabic.length - 1] ||
-      "";
+      rawFinalAnswer || rawCorrect || modelSolutionStepsArabic[modelSolutionStepsArabic.length - 1] || "";
 
     return {
       questionId: `q-${params.lessonId}-${orderNumber}`,
@@ -199,29 +216,18 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       lessonId: params.lessonId,
       lessonTitleArabic: params.lessonTitleArabic,
       patternKind,
-      cognitiveDepth:
-        patternKind === "proof_reasoning" ? "deductive_proof" : "multi_step_analysis",
-      allocatedMarks:
-        Number.isFinite(rawMarks) && rawMarks > 0
-          ? rawMarks
-          : patternKind === "mcq"
-            ? 1
-            : 3,
+      cognitiveDepth: patternKind === "proof_reasoning" ? "deductive_proof" : "multi_step_analysis",
+      allocatedMarks: Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : patternKind === "mcq" ? 1 : 3,
       estimatedSolveMinutes: patternKind === "mcq" ? 2 : 5,
       promptArabic: cleanPrompt,
-      givenDataArabic: rawGiven
-        ? rawGiven.split(/[،|]/).map((s) => s.trim()).filter(Boolean)
-        : undefined,
+      givenDataArabic: rawGiven ? rawGiven.split(/[،|]/).map((s) => s.trim()).filter(Boolean) : undefined,
       requiredToProveOrFindArabic: rawRequired || undefined,
       mcqChoicesArabic,
       correctMcqChoiceIndex,
       modelSolutionStepsArabic,
       finalCanonicalAnswerArabic,
       attachedGeometryFigure,
-      authenticCitation:
-        rawGov && !rawGov.includes("غير مذكور")
-          ? { governorateNameArabic: rawGov }
-          : undefined,
+      authenticCitation: rawGov && !rawGov.includes("غير مذكور") ? { governorateNameArabic: rawGov } : undefined,
     };
   });
 }

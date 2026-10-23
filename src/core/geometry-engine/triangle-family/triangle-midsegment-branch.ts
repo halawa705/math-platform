@@ -12,7 +12,7 @@ import { createTriangleRootCore } from "./triangle-root-core";
 export interface TriangleMidsegmentParams {
   readonly figureId: string;
   readonly vertexLabelsArabic?: readonly [string, string, string];
-  readonly midpointLabelsArabic?: readonly [string, string]; // افتراضياً: ["د", "هـ"]
+  readonly midpointLabelsArabic?: readonly [string, string];
   readonly thirdSideLengthCm?: number;
   readonly notationLanguage?: MathNotationLanguage;
 }
@@ -33,6 +33,8 @@ export function buildTriangleMidsegmentFigure(
   const vertexD = root.getEdgeMidpoint("AB", midLabels[0]);
   const vertexE = root.getEdgeMidpoint("AC", midLabels[1]);
 
+  const hasExplicitLength =
+    typeof params.thirdSideLengthCm === "number" && params.thirdSideLengthCm > 0;
   const baseLength = params.thirdSideLengthCm ?? 10;
   const midsegmentLength = Number((baseLength / 2).toFixed(1));
 
@@ -44,7 +46,6 @@ export function buildTriangleMidsegmentFigure(
     notationLanguage: root.notationLanguage,
     vertices: [root.vertexTop, root.vertexRight, root.vertexLeft, vertexD, vertexE],
     segments: [
-      // جزأا الضلع الأول أ ب بعلامة تساوي (شرطة واحدة)
       {
         id: `${params.figureId}_seg_AD`,
         fromVertexId: root.vertexTop.id,
@@ -57,7 +58,6 @@ export function buildTriangleMidsegmentFigure(
         toVertexId: root.vertexRight.id,
         tickMarks: 1,
       },
-      // جزأا الضلع الثاني أ جـ بعلامة تساوي (شرطتان)
       {
         id: `${params.figureId}_seg_AE`,
         fromVertexId: root.vertexTop.id,
@@ -70,21 +70,19 @@ export function buildTriangleMidsegmentFigure(
         toVertexId: root.vertexLeft.id,
         tickMarks: 2,
       },
-      // القاعدة ب جـ مع سهم التوازي وطولها
       {
         id: `${params.figureId}_seg_BC`,
         fromVertexId: root.vertexRight.id,
         toVertexId: root.vertexLeft.id,
         parallelArrows: 1,
-        lengthLabel: { value: baseLength, unit: "سم" },
+        lengthLabel: hasExplicitLength ? { value: baseLength, unit: "سم" } : undefined,
       },
-      // القطعة الواصلة بين المنتصفين د هـ مع سهم التوازي ونصف طول القاعدة
       {
         id: `${params.figureId}_seg_DE`,
         fromVertexId: vertexD.id,
         toVertexId: vertexE.id,
         parallelArrows: 1,
-        lengthLabel: { value: midsegmentLength, unit: "سم" },
+        lengthLabel: hasExplicitLength ? { value: midsegmentLength, unit: "سم" } : undefined,
       },
     ],
     angles: [],

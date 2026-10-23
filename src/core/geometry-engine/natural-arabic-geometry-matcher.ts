@@ -1,8 +1,9 @@
 /**
  * @file natural-arabic-geometry-matcher.ts
  * @description المترجم الحتمي الموحد للوصف العربي الطبيعي (`[رسم هندسي: ...]`) إلى فروع السجل الهندسي القياسي (`CanonicalGeometryFigureIR`).
- * يقرأ الوصف العربي ويستدعي الفرع المنبثق المناسب من عائلات المثلث، الدائرة، الرباعي، الشبكة الديكارتية، أو الفراغية والميكانيكا.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * - يقرأ الوصف العربي ويستدعي الفرع المنبثق المناسب من عائلات المثلث، الدائرة، الرباعي، الشبكة الديكارتية، أو الفراغية والميكانيكا.
+ * - يمنع تماماً إرفاق مثلث وهمي للمسائل اللفظية الحياتية (شاشة، صورة، تمثال) أو المضلعات العامة غير المحددة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
@@ -33,12 +34,26 @@ import { buildInclinedPlaneForcesFigure } from "./spatial-3d-family/mechanics-fo
 export const MODULE_ID_NATURAL_ARABIC_GEOMETRY_MATCHER =
   "natural_arabic_geometry_matcher" as const;
 
-export function matchArabicDescriptionToCanonicalGeometryFigure(
+/**
+ * يطابق الوصف العربي مع شكل هندسي قياسي دقيق، أو يعيد `undefined` إذا كان الوصف مسألة لفظية
+ * أو مضلعاً عاماً لا ينطبق عليه شكل نظري قياسي (لمنع ظهور رسوم وهمية غير مطابقة للمسألة).
+ */
+export function matchOptionalGeometryFigureFromArabicDescription(
   arabicDescription: string,
   figureId = "matched_geom_fig",
   notationLanguage: MathNotationLanguage = "arabic"
-): CanonicalGeometryFigureIR {
+): CanonicalGeometryFigureIR | undefined {
   const desc = (arabicDescription || "").trim();
+  if (!desc) return undefined;
+
+  // استبعاد المسائل اللفظية الحياتية أو المضلعات الخماسية/السداسية العامة من الرسوم القياسية
+  if (
+    /شاشة|كمبيوتر|تلفاز|صورة|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|خماسي|سداسي|سباعي|ثماني|مضلعان/i.test(
+      desc
+    )
+  ) {
+    return undefined;
+  }
 
   // 1. عائلة المثلث وفروعها المنبثقة
   if (/إقليدس|عمود.*وتر|مسقط/i.test(desc)) {
@@ -47,7 +62,7 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   if (/متوسط|نقطة\s*تقاطع\s*المتوسطات/i.test(desc)) {
     return buildTriangleMediansCentroidFigure({ figureId, notationLanguage });
   }
-  if (/طاليس|يوازي\s*ب\s*ج/i.test(desc) && !/منتصف/i.test(desc)) {
+  if (/طاليس|يوازي/i.test(desc) && /مثلث/i.test(desc) && !/منتصف/i.test(desc)) {
     return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
   }
   if (/منصف\s*زاوية/i.test(desc)) {
@@ -55,6 +70,9 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   }
   if (/زاوية\s*خارجة/i.test(desc)) {
     return buildTriangleExteriorAngleFigure({ figureId, notationLanguage });
+  }
+  if (/منتصف/i.test(desc) && /مثلث/i.test(desc)) {
+    return buildTriangleMidsegmentFigure({ figureId, notationLanguage });
   }
 
   // 2. عائلة الدائرة وفروعها الـ 6 المنبثقة
@@ -84,10 +102,10 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   if (/ساعة\s*رملية|فراشة|تقاطع\s*قطعتين/i.test(desc)) {
     return buildHourglassButterflySimilarityFigure({ figureId, notationLanguage });
   }
-  if (/مستطيل|مربع|معين/i.test(desc)) {
+  if (/(?:^|\s)(?:مستطيل|مربع|معين)(?:\s|$|[،.])/i.test(desc) && !/مستطيلان|مربعان/i.test(desc)) {
     return buildRectangleSquareRhombusFigure({ figureId, notationLanguage });
   }
-  if (/متوازي\s*أضلاع/i.test(desc)) {
+  if (/متوازي\s*أضلاع/i.test(desc) && !/متوازيا/i.test(desc)) {
     return buildParallelogramDiagonalsFigure({ figureId, notationLanguage });
   }
 
@@ -112,7 +130,23 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   if (/مستوى\s*مائل|قوى|رد\s*الفعل/i.test(desc)) {
     return buildInclinedPlaneForcesFigure({ figureId, notationLanguage });
   }
+  if (/مثلث/i.test(desc)) {
+    return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
+  }
 
-  // الشكل القياسي الافتراضي: المثلث والقطعة الواصلة بين منتصفي ضلعين
-  return buildTriangleMidsegmentFigure({ figureId, notationLanguage });
+  return undefined;
+}
+
+export function matchArabicDescriptionToCanonicalGeometryFigure(
+  arabicDescription: string,
+  figureId = "matched_geom_fig",
+  notationLanguage: MathNotationLanguage = "arabic"
+): CanonicalGeometryFigureIR {
+  return (
+    matchOptionalGeometryFigureFromArabicDescription(
+      arabicDescription,
+      figureId,
+      notationLanguage
+    ) ?? buildTriangleMidsegmentFigure({ figureId, notationLanguage })
+  );
 }

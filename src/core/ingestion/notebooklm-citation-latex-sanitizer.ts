@@ -1,8 +1,8 @@
 /**
  * @file notebooklm-citation-latex-sanitizer.ts
  * @description مطهر ردود NotebookLM من أرقام الهوامش والاقتباس مثل `【1:2†source】` أو `[1]`،
- * مع حماية الفترات المغلقة والمفتوحة مثل `[2, 5]` و `]1, 4[` وأرقام الأسئلة في بداية السطر،
- * وتطبيع الرياضيات المصرية عبر `normalizeToEgyptianSchoolMath` وضبط الوحدات العربية.
+ * وعبارات المحادثة الذكية الختامية (`💡 خطوة تالية اقتراحية...`) وفواصل `---`،
+ * وفك هروب `\$` وتطبيع الرياضيات المصرية عبر `normalizeToEgyptianSchoolMath` وضبط الوحدات العربية.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
@@ -26,15 +26,15 @@ export function balanceInlineDollarDelimitersPerLine(input: string): string {
   return input
     .split("\n")
     .map((line) => {
-      const dollarMatches = line.match(/\$/g);
+      const cleanedLine = line.replace(/\\+\$/g, "$");
+      const dollarMatches = cleanedLine.match(/\$/g);
       if (!dollarMatches || dollarMatches.length % 2 === 0) {
-        return line;
+        return cleanedLine;
       }
-      // إذا كان هناك علامة $ يتيمة واحدة فقط في السطر بدون تعبير رياضي واضح، نحذفها؛ وإلا نغلقها في آخر السطر
-      if (dollarMatches.length === 1 && !/[=+\-^\\/]/.test(line)) {
-        return line.replace(/\$/, "");
+      if (dollarMatches.length === 1 && !/[=+\-^\\/]/.test(cleanedLine)) {
+        return cleanedLine.replace(/\$/, "");
       }
-      return `${line}$`;
+      return `${cleanedLine}$`;
     })
     .join("\n");
 }
@@ -56,8 +56,12 @@ export function sanitizeNotebookLMCitationsAndLatex(
   let removedCitationsCount = 0;
   let normalizedLatexDelimitersCount = 0;
 
-  // 1. إزالة أسوار Markdown العشوائية (```markdown ... ```) وعلامات الاقتباس الصريحة 【1:2†source】
+  // 1. فك هروب علامات الدولار \$ الناتجة عن نسخ ردود NotebookLM وإزالة أسوار Markdown وعلامات الاقتباس
   let text = rawResponse
+    .replace(/\\+\$/g, () => {
+      normalizedLatexDelimitersCount += 1;
+      return "$";
+    })
     .replace(/^```(?:markdown|latex|text|plain)?\s*$/gim, "")
     .replace(/【[^】]*】/g, () => {
       removedCitationsCount += 1;
@@ -81,22 +85,25 @@ export function sanitizeNotebookLMCitationsAndLatex(
     }
   );
 
-  // 3. تنظيف البادئات الهيكلية المتسربة داخل المتن مثل [TEXT]: أو معرف_الفكرة: idea-01
+  // 3. إزالة فواصل --- العشوائية وعبارات المحادثة الاقتراحية في نهاية رد NotebookLM
   text = text
+    .replace(/(?:^|\n|\s+)(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|هل\s+تود\s+الانتقال|هل\s+ترغب\s+في\s+الانتقال|بانتظار\s+تعليماتك|إذا\s+كنت\s+مستعداً)[\s\S]*$/gi, "")
+    .replace(/^\s*[-*_]{3,}\s*$/gm, "")
+    .replace(/\s+---+\s*/g, " ")
     .replace(/\[(?:TEXT|PROMPT|SOLUTION|ANSWER)\]\s*:?\s*/gi, "")
     .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "");
 
   // 4. إحصاء وتوحيد محددات \( ... \) و \[ ... \]
-  text = text.replace(/\\\((.+?)\\\)/g, (_m, inner: string) => {
+  text = text.replace(/\\+\((.+?)\\+\)/g, (_m, inner: string) => {
     normalizedLatexDelimitersCount += 1;
     return `$${inner.trim()}$`;
   });
-  text = text.replace(/\\\[([\s\S]+?)\\\]/g, (_m, inner: string) => {
+  text = text.replace(/\\+\[([\s\S]+?)\\+\]/g, (_m, inner: string) => {
     normalizedLatexDelimitersCount += 1;
     return `$${inner.trim()}$`;
   });
 
-  // 5. تطبيع الرياضيات المصرية (الفترات ]a, b[، المجال ح - {...}، أوامر LaTeX المكشوفة، وفك \text العربي)
+  // 5. تطبيع الرياضيات المصرية (الفترات ]a, b[، المجال ح - {...}، أوامر LaTeX المكشوفة، وفصل الجمل العربية)
   text = normalizeToEgyptianSchoolMath(text);
 
   // 6. تطبيع مواضع وحدات القياس العربية لتأتي دائماً بعد العدد ("8 سم" بدلاً من "سم 8")
