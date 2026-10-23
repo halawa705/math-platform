@@ -1,20 +1,23 @@
-﻿"use client";
+"use client";
 
 /**
  * @file homework-assignment-builder.tsx
  * @description باني الواجب المنزلي الإلكتروني للمعلم:
- * مربوط مباشرة بمستكشف المنهج (`curriculum-hierarchy-ssot.ts`) لاختيار (الصف الدراسي -> الوحدة -> الدرس)،
- * ثم توليد برومبت الواجب لـ NotebookLM، ثم استقبال رد NotebookLM وتحويله فوراً إلى واجب تفاعلي يظهر للطالب أونلاين.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * مربوط حصرياً بالصفوف المفعلة (`loadEnabledGradesSSOT`) والوحدات الحقيقية (`loadActiveCurriculumUnitsSSOT`),
+ * ويتيح تحديد عدد أسئلة اختر والمقالي، ويعرض البرومبت كاملاً قابلاً للتعديل مع فتح NotebookLM بنقرة واحدة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
-  EGYPTIAN_MATH_GRADES_SSOT,
   loadActiveCurriculumUnitsSSOT,
   type CurriculumUnitNode,
 } from "@/core/ssot/curriculum-hierarchy-ssot";
-import { MATH_BRANCHES_SSOT } from "@/core/ssot/math-branches-ssot";
+import {
+  copyPromptAndOpenGradeNotebookLmSSOT,
+  loadEnabledGradesSSOT,
+} from "@/core/ssot/teacher-identity-ssot";
 import { buildWorksheetDrillNotebookLMPrompt } from "@/core/prompts/worksheet-drill-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import {
@@ -25,18 +28,6 @@ import {
 export const MODULE_ID_HOMEWORK_ASSIGNMENT_BUILDER =
   "homework_assignment_builder" as const;
 
-const SAMPLE_HOMEWORK_NOTEBOOKLM_REPLY = `=== [QUESTION: 1] | النوع: MCQ | الدرس: القطعة الواصلة بين منتصفي ضلعين في مثلث | الدرجة: 2 ===
-النص: في الشكل المقابل: $د$ منتصف $أ ب$، $هـ$ منتصف $أ جـ$، وطول $ب جـ = 16$ سم. فإن طول القطعة $د هـ$ يساوي:
-الرسم: [رسم هندسي: مثلث أ ب جـ فيه د منتصف أ ب و هـ منتصف أ جـ]
-البدائل: (أ) $8$ سم | (ب) $16$ سم | (جـ) $32$ سم | (د) $4$ سم
-الإجابة_الصحيحة: $8$ سم
-البرهان_والخطوات: بما أن د منتصف أ ب، هـ منتصف أ جـ، إذن د هـ يوازي ب جـ ويساوي نصف طوله = 16 ÷ 2 = 8 سم.
-=== [QUESTION: 2] | النوع: ESSAY | الدرس: القطعة الواصلة بين منتصفي ضلعين في مثلث | الدرجة: 3 ===
-النص: مثلث أ ب جـ محيطه $24$ سم، $د، هـ، و$ منتصفات أضلاعه الثلاثة. أوجد بالخطوات محيط المثلث $د هـ و$.
-الرسم: 
-الإجابة_الصحيحة: 12 سم
-البرهان_والخطوات: محيط المثلث الناشئ من توصيل منتصفات أضلاع مثلث يساوي نصف محيط المثلث الأصلي = 24 ÷ 2 = 12 سم.`;
-
 export interface HomeworkAssignmentBuilderProps {
   readonly onHomeworkPublished?: (hw: PublishedOnlineHomeworkAssignment) => void;
 }
@@ -44,43 +35,54 @@ export interface HomeworkAssignmentBuilderProps {
 export default function HomeworkAssignmentBuilder({
   onHomeworkPublished,
 }: HomeworkAssignmentBuilderProps) {
+  const [enabledGrades, setEnabledGrades] = useState(() =>
+    loadEnabledGradesSSOT()
+  );
   const [gradeId, setGradeId] = useState<string>("prep-3");
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
-  const [notebookReply, setNotebookReply] = useState<string>(
-    SAMPLE_HOMEWORK_NOTEBOOKLM_REPLY
-  );
+  const [mcqCount, setMcqCount] = useState<number>(5);
+  const [essayCount, setEssayCount] = useState<number>(2);
+  const [editablePrompt, setEditablePrompt] = useState<string>("");
+  const [notebookReply, setNotebookReply] = useState<string>("");
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
   const [publishedSuccess, setPublishedSuccess] = useState<boolean>(false);
 
   useEffect(() => {
+    const activeGrades = loadEnabledGradesSSOT();
+    setEnabledGrades(activeGrades);
     const loaded = loadActiveCurriculumUnitsSSOT(gradeId);
     setUnits(loaded);
     const firstUnit = loaded[0];
     if (firstUnit) {
       setSelectedUnitId(firstUnit.id);
       setSelectedLessonId(firstUnit.lessons[0]?.id || "");
+    } else {
+      setSelectedUnitId("");
+      setSelectedLessonId("");
     }
   }, [gradeId]);
 
   const activeGrade =
-    EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === gradeId) ||
-    EGYPTIAN_MATH_GRADES_SSOT[5];
+    enabledGrades.find((g) => g.id === gradeId) || enabledGrades[0];
   const activeUnit = units.find((u) => u.id === selectedUnitId) || units[0];
   const activeLesson =
     activeUnit?.lessons.find((l) => l.id === selectedLessonId) ||
     activeUnit?.lessons[0];
   const branchId = activeUnit?.branchId || "plane_geometry";
 
-  const promptText = buildWorksheetDrillNotebookLMPrompt({
-    gradeNameArabic: activeGrade.nameArabic,
-    branchId,
-    lessonTitleArabic: activeLesson?.titleArabic || "الدرس الأول",
-    quickMcqCount: 3,
-    quickEssayCount: 2,
-    durationMinutes: 20,
-  });
+  useEffect(() => {
+    const generated = buildWorksheetDrillNotebookLMPrompt({
+      gradeNameArabic: activeGrade?.nameArabic || "الصف الثالث الإعدادي",
+      branchId,
+      lessonTitleArabic: activeLesson?.titleArabic || "الدرس الأول",
+      quickMcqCount: mcqCount,
+      quickEssayCount: essayCount,
+      durationMinutes: 25,
+    });
+    setEditablePrompt(generated);
+  }, [activeGrade, branchId, activeLesson, mcqCount, essayCount]);
 
   const handlePublishOnlineHomework = () => {
     const parsedQuestions = parseNotebookLMExamQuestionsToIR(notebookReply, {
@@ -92,8 +94,8 @@ export default function HomeworkAssignmentBuilder({
 
     const newAssignment: PublishedOnlineHomeworkAssignment = {
       assignmentId: `hw_${Date.now()}`,
-      gradeId: activeGrade.id,
-      gradeNameArabic: activeGrade.nameArabic,
+      gradeId: activeGrade?.id || gradeId,
+      gradeNameArabic: activeGrade?.nameArabic || "الصف الثالث الإعدادي",
       unitId: activeUnit?.id || "u1",
       unitTitleArabic: activeUnit?.titleArabic || "الوحدة الأولى",
       lessonId: activeLesson?.id || "l1",
@@ -110,41 +112,43 @@ export default function HomeworkAssignmentBuilder({
   };
 
   return (
-    <div className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">
-            📝 إعداد ونشر الواجب التفاعلي للطالب أونلاين (مربوط بمستكشف المنهج SSOT)
+          <h3 className="text-base font-black text-slate-900 dark:text-white">
+            📝 إعداد ونشر الواجب التفاعلي للطالب أونلاين (مربوط بمستكشف المنهج)
           </h3>
           <p className="text-xs font-bold text-slate-500">
-            اختر الصف والوحدة والدرس، انسخ برومبت الواجب إلى NotebookLM، ثم الصق الرد لنشره فوراً في بوابة الطالب
+            اختر الصف والوحدة والدرس وعدد الأسئلة، ثم انسخ البرومبت لدفتر NotebookLM الخاص بالصف
           </p>
         </div>
         <button
           type="button"
           onClick={() => {
-            navigator.clipboard?.writeText(promptText);
+            copyPromptAndOpenGradeNotebookLmSSOT(editablePrompt, gradeId);
             setCopiedPrompt(true);
-            setTimeout(() => setCopiedPrompt(false), 2000);
+            setTimeout(() => setCopiedPrompt(false), 3000);
           }}
-          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black cursor-pointer"
+          className="min-h-[44px] px-4 py-2 rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black shadow-sm cursor-pointer"
         >
-          {copiedPrompt ? "✓ تم نسخ برومبت الواجب" : "📋 ١. نسخ برومبت الواجب لـ NotebookLM"}
+          {copiedPrompt
+            ? "✓ تم نسخ البرومبت وفتح NotebookLM!"
+            : "📋 ١. نسخ برومبت الواجب وفتح NotebookLM لهذا الصف ↗"}
         </button>
       </div>
 
-      {/* القوائم الثلاث المربوطة بشجرة مستكشف المنهج (الصف -> الوحدة -> الدرس) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      {/* القوائم الثلاث المربوطة بشجرة مستكشف المنهج + تحديد أعداد الأسئلة */}
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
         <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 mb-1">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
             ١. الصف الدراسي:
           </label>
           <select
             value={gradeId}
             onChange={(e) => setGradeId(e.target.value)}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+            className="w-full min-h-[44px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
           >
-            {EGYPTIAN_MATH_GRADES_SSOT.map((g) => (
+            {enabledGrades.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.nameArabic}
               </option>
@@ -153,8 +157,8 @@ export default function HomeworkAssignmentBuilder({
         </div>
 
         <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 mb-1">
-            ٢. الوحدة الدراسية ({MATH_BRANCHES_SSOT[branchId].nameArabic}):
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            ٢. الوحدة {activeUnit ? `(${activeUnit.branchNameArabic})` : ""}:
           </label>
           <select
             value={selectedUnitId}
@@ -163,24 +167,28 @@ export default function HomeworkAssignmentBuilder({
               setSelectedUnitId(e.target.value);
               if (nextU?.lessons[0]) setSelectedLessonId(nextU.lessons[0].id);
             }}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+            className="w-full min-h-[44px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
           >
-            {units.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.titleArabic}
-              </option>
-            ))}
+            {units.length === 0 ? (
+              <option value="">لم يتم تقسيم هذا الصف بعد</option>
+            ) : (
+              units.map((u) => (
+                <option key={u.id} value={u.id}>
+                  [{u.branchNameArabic}] {u.titleArabic}
+                </option>
+              ))
+            )}
           </select>
         </div>
 
         <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 mb-1">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
             ٣. الدرس المستهدف:
           </label>
           <select
             value={selectedLessonId}
             onChange={(e) => setSelectedLessonId(e.target.value)}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+            className="w-full min-h-[44px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
           >
             {(activeUnit?.lessons || []).map((l) => (
               <option key={l.id} value={l.id}>
@@ -189,23 +197,77 @@ export default function HomeworkAssignmentBuilder({
             ))}
           </select>
         </div>
+
+        <div>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            أسئلة اختر (MCQ):
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={30}
+            value={mcqCount}
+            onChange={(e) => setMcqCount(Number(e.target.value))}
+            className="w-full min-h-[44px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            مسائل مقالية:
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={essayCount}
+            onChange={(e) => setEssayCount(Number(e.target.value))}
+            className="w-full min-h-[44px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+          />
+        </div>
+      </div>
+
+      {units.length === 0 && (
+        <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 text-xs font-bold text-amber-900 flex items-center justify-between">
+          <span>لم تقم بتقسيم وحدات هذا الصف بعد في مستكشف المنهج.</span>
+          <Link
+            href="/library"
+            className="px-3 py-1 rounded-xl bg-amber-600 text-white font-black"
+          >
+            تقسيم المنهج الآن ↗
+          </Link>
+        </div>
+      )}
+
+      {/* نص برومبت الواجب القابل للتعديل */}
+      <div className="space-y-1.5">
+        <label className="block text-xs font-extrabold text-indigo-900 dark:text-indigo-300">
+          ✨ نص برومبت الواجب الموجه إلى NotebookLM (يمكنك قراءته أو تعديله):
+        </label>
+        <textarea
+          rows={4}
+          value={editablePrompt}
+          onChange={(e) => setEditablePrompt(e.target.value)}
+          className="w-full p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-slate-950 text-xs font-bold leading-relaxed"
+        />
       </div>
 
       {/* صندوق لصق رد NotebookLM ونشره أونلاين */}
-      <div className="space-y-2">
-        <label className="block text-[11px] font-extrabold text-slate-600 dark:text-slate-300">
-          ٢. الصق رد NotebookLM هنا لتحويله إلى واجب تفاعلي أونلاين للطالب:
+      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-200">
+          📥 ٢. الصق رد NotebookLM هنا لتحويله إلى واجب تفاعلي أونلاين للطالب:
         </label>
         <textarea
-          rows={5}
+          rows={4}
           value={notebookReply}
           onChange={(e) => setNotebookReply(e.target.value)}
-          className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
+          placeholder="الصق رد أسئلة الواجب من NotebookLM هنا..."
+          className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
         />
         <button
           type="button"
           onClick={handlePublishOnlineHomework}
-          className="w-full min-h-[44px] py-2.5 rounded-xl bg-gradient-to-l from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs sm:text-sm font-black shadow-md cursor-pointer"
+          className="w-full min-h-[46px] py-2.5 rounded-2xl bg-gradient-to-l from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs sm:text-sm font-black shadow-sm cursor-pointer"
         >
           {publishedSuccess
             ? "✓ تم نشر الواجب فوراً في بوابة الطالب أونلاين!"

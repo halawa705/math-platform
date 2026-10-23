@@ -1,23 +1,25 @@
-﻿"use client";
+"use client";
 
 /**
  * @file studio-exam-generator-tab.tsx
  * @description تبويب إعداد الاختبار التقييمي الرسمي داخل استوديو التوليد الموحد:
- * يولد برومبت NotebookLM عبر `official-exam-prompt-builder.ts`، ويستقبل رد NotebookLM
- * ليحوله فوراً عبر `notebooklm-exam-questions-parser.ts` إلى أسئلة وأشكال هندسية حية على ورقة الـ A4.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * يعرض البرومبت كاملاً في صندوق قابل للتعديل، ويفتح دفتر NotebookLM الخاص بالصف بنقرة واحدة،
+ * ويستقبل رد NotebookLM ليحوله فوراً إلى أسئلة وأشكال هندسية على ورقة الـ A4.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
+import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
 
 export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB =
   "studio_exam_generator_tab" as const;
 
 export interface StudioExamGeneratorTabProps {
+  readonly gradeId?: string;
   readonly gradeNameAr?: string;
   readonly branchId?: MathBranchId;
   readonly lessonTitle: string;
@@ -28,19 +30,8 @@ export interface StudioExamGeneratorTabProps {
   ) => void;
 }
 
-const SAMPLE_EXAM_NOTEBOOK_RESPONSE = `=== [QUESTION: 1] | النوع: MCQ | الدرس: القطعة الواصلة بين منتصفي ضلعين | الدرجة: 2 ===
-النص: في الشكل المقابل: $د$ منتصف $أ ب$، $هـ$ منتصف $أ جـ$، وطول $ب جـ = 12$ سم. فإن طول $د هـ$ يساوي:
-الرسم: [رسم هندسي: مثلث فيه قطعة واصلة بين منتصفي ضلعين]
-البدائل: (أ) $6$ سم | (ب) $12$ سم | (جـ) $24$ سم | (د) $8$ سم
-الإجابة_الصحيحة: $6$ سم
-البرهان_والخطوات: بما أن د منتصف أ ب، هـ منتصف أ جـ، إذن د هـ = نصف ب جـ = 6 سم.
-=== [QUESTION: 2] | النوع: PROOF | الدرس: نظرية إقليدس | الدرجة: 4 ===
-النص: في الشكل المقابل: المثلث $أ ب جـ$ قائم الزاوية في $أ$، سقط $أ د \\perp ب جـ$. إذا كان $ب د = 4.5$ سم، $د جـ = 8$ سم، أوجد بالبرهان طول $أ د$.
-الرسم: [رسم هندسي: نظرية إقليدس وعمود ساقط من رأس القائمة على الوتر]
-الإجابة_الصحيحة: 6 سم
-البرهان_والخطوات: من نظرية إقليدس: $(أ د)^2 = ب د \\times د جـ = 4.5 \\times 8 = 36 \\implies أ د = 6$ سم.`;
-
 export default function StudioExamGeneratorTab({
+  gradeId = "prep-3",
   gradeNameAr = "الصف الثالث الإعدادي",
   branchId = "plane_geometry",
   lessonTitle,
@@ -48,36 +39,38 @@ export default function StudioExamGeneratorTab({
   onApplyExamTitleToSheet,
   onApplyParsedQuestionsToSheet,
 }: StudioExamGeneratorTabProps) {
-  const [mcqCount, setMcqCount] = useState(4);
-  const [proofCount, setProofCount] = useState(2);
+  const [mcqCount, setMcqCount] = useState(6);
+  const [proofCount, setProofCount] = useState(3);
   const [difficulty, setDifficulty] = useState<
     "standard_balanced" | "olympiad_challenge"
   >("standard_balanced");
-  const [notebookRawReply, setNotebookRawReply] = useState<string>(
-    SAMPLE_EXAM_NOTEBOOK_RESPONSE
-  );
+  const [editablePrompt, setEditablePrompt] = useState<string>("");
+  const [notebookRawReply, setNotebookRawReply] = useState<string>("");
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  const officialPrompt = buildOfficialExamNotebookLMPrompt({
-    gradeNameArabic: gradeNameAr,
-    termNumber: 1,
-    branchId,
-    targetedLessonTitlesArabic: [lessonTitle],
-    mcqQuestionsCount: mcqCount,
-    essayAndProofQuestionsCount: proofCount,
-    totalMarks: mcqCount * 2 + proofCount * 4,
-    durationTextArabic: "ساعة ونصف",
-    difficultyProfile: difficulty,
-  });
+  useEffect(() => {
+    const generated = buildOfficialExamNotebookLMPrompt({
+      gradeNameArabic: gradeNameAr,
+      termNumber: 1,
+      branchId,
+      targetedLessonTitlesArabic: [lessonTitle],
+      mcqQuestionsCount: mcqCount,
+      essayAndProofQuestionsCount: proofCount,
+      totalMarks: mcqCount * 1 + proofCount * 3,
+      durationTextArabic: "ساعة ونصف",
+      difficultyProfile: difficulty,
+    });
+    setEditablePrompt(generated);
+  }, [gradeNameAr, branchId, lessonTitle, mcqCount, proofCount, difficulty]);
 
-  const handleCopyPrompt = () => {
-    navigator.clipboard?.writeText(officialPrompt);
+  const handleCopyAndOpenNotebook = () => {
+    copyPromptAndOpenGradeNotebookLmSSOT(editablePrompt, gradeId);
     setCopiedPrompt(true);
-    setTimeout(() => setCopiedPrompt(false), 2000);
+    setTimeout(() => setCopiedPrompt(false), 3000);
   };
 
   const handleConvertReplyToA4Sheet = () => {
-    onApplyExamTitleToSheet(`اختبار ${branchNameAr} — ${lessonTitle}`);
+    onApplyExamTitleToSheet(`اختبار تقييمي — ${lessonTitle}`);
     const parsedIR = parseNotebookLMExamQuestionsToIR(notebookRawReply, {
       defaultBranchId: branchId,
       defaultLessonTitleArabic: lessonTitle,
@@ -104,54 +97,57 @@ export default function StudioExamGeneratorTab({
   };
 
   return (
-    <div className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">
-            📄 إعداد الاختبار التقييمي الرسمي ({branchNameAr})
+          <h3 className="text-base font-black text-slate-900 dark:text-white">
+            📄 إعداد الاختبار التقييمي الرسمي ({gradeNameAr})
           </h3>
           <p className="text-xs font-bold text-slate-500">
-            الدرس النشط: {lessonTitle}
+            الدرس النشط: {lessonTitle} — اختر عدد الأسئلة وانسخ البرومبت لدفتر NotebookLM
           </p>
         </div>
         <button
           type="button"
-          onClick={handleCopyPrompt}
-          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-black cursor-pointer"
+          onClick={handleCopyAndOpenNotebook}
+          className="min-h-[44px] px-4 py-2 rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black shadow-sm cursor-pointer"
         >
-          {copiedPrompt ? "✓ تم نسخ البرومبت" : "📋 ١. نسخ برومبت الاختبار لـ NotebookLM"}
+          {copiedPrompt
+            ? "✓ تم نسخ البرومبت وفتح NotebookLM!"
+            : "📋 ١. نسخ البرومبت وفتح NotebookLM لهذا الصف ↗"}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">
-            أسئلة اختر (MCQ):
+      {/* تحديد أعداد الأسئلة (اختر + مقالي) ومستوى الصعوبة */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            عدد أسئلة اختر (MCQ):
           </label>
           <input
             type="number"
-            min={1}
-            max={20}
+            min={0}
+            max={40}
             value={mcqCount}
             onChange={(e) => setMcqCount(Number(e.target.value))}
-            className="w-full px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
+            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
           />
         </div>
-        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">
-            مسائل البرهان والمقال:
+        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            عدد الأسئلة المقالية والبرهان:
           </label>
           <input
             type="number"
-            min={1}
-            max={10}
+            min={0}
+            max={25}
             value={proofCount}
             onChange={(e) => setProofCount(Number(e.target.value))}
-            className="w-full px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
+            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
           />
         </div>
-        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
             ميزان الصعوبة:
           </label>
           <select
@@ -161,7 +157,7 @@ export default function StudioExamGeneratorTab({
                 e.target.value as "standard_balanced" | "olympiad_challenge"
               )
             }
-            className="w-full px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
+            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
           >
             <option value="standard_balanced">متوازن قياسي</option>
             <option value="olympiad_challenge">متفوقين ومستويات عليا</option>
@@ -169,23 +165,37 @@ export default function StudioExamGeneratorTab({
         </div>
       </div>
 
+      {/* صندوق البرومبت الصريح القابل للتعديل */}
+      <div className="space-y-1.5">
+        <label className="block text-xs font-extrabold text-indigo-900 dark:text-indigo-300">
+          ✨ نص برومبت الاختبار الموجه إلى NotebookLM (يمكنك قراءته أو تعديله قبل النسخ):
+        </label>
+        <textarea
+          rows={5}
+          value={editablePrompt}
+          onChange={(e) => setEditablePrompt(e.target.value)}
+          className="w-full p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-slate-950 text-xs font-bold leading-relaxed"
+        />
+      </div>
+
       {/* استقبال رد NotebookLM وتحويله فوراً لورقة الـ A4 */}
-      <div className="space-y-2">
-        <label className="block text-[11px] font-extrabold text-slate-600 dark:text-slate-300">
-          ٢. الصق رد NotebookLM هنا لتصييره فوراً في ورقة الـ A4 مع الرسوم الهندسية:
+      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-200">
+          📥 ٢. الصق رد NotebookLM هنا لتصيير الاختبار فوراً في ورقة الـ A4:
         </label>
         <textarea
           rows={4}
           value={notebookRawReply}
           onChange={(e) => setNotebookRawReply(e.target.value)}
-          className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
+          placeholder="الصق رد أسئلة الاختبار من NotebookLM هنا..."
+          className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
         />
         <button
           type="button"
           onClick={handleConvertReplyToA4Sheet}
-          className="w-full min-h-[42px] py-2 rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black shadow cursor-pointer"
+          className="w-full min-h-[44px] py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-black shadow-sm cursor-pointer"
         >
-          ⚡ تصيير الأسئلة والأشكال في ورقة الـ A4 الآن ⬅
+          ⚡ تصيير الأسئلة والأشكال في معاينة ورقة الـ A4 الآن ⬅
         </button>
       </div>
     </div>

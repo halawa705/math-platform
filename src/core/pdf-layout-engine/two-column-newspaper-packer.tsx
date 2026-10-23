@@ -12,7 +12,10 @@ import {
   PRINT_FONT_FAMILIES_SSOT,
   type PDFPrintSettingsStateSSOT,
 } from "../ssot/pdf-print-settings-ssot";
-import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "../ssot/teacher-identity-ssot";
+import {
+  DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+  loadTeacherIdentitySSOT,
+} from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";
 import {
   resolvePrintThemePalette,
@@ -37,7 +40,12 @@ export default function TwoColumnNewspaperPacker({
   children,
 }: TwoColumnNewspaperPackerProps) {
   const [mobileZoomScale, setMobileZoomScale] = useState<number>(1);
+  const [identity, setIdentity] = useState(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
   const viewportWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIdentity(loadTeacherIdentitySSOT());
+  }, []);
 
   useEffect(() => {
     const updateScale = () => {
@@ -110,8 +118,7 @@ export default function TwoColumnNewspaperPacker({
                   ∑
                 </span>
                 <span>
-                  {DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformBrandName} •{" "}
-                  {DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherFullName}
+                  {identity.platformBrandName} • {identity.teacherNickname || identity.teacherFullName}
                 </span>
               </div>
               <div
@@ -154,10 +161,7 @@ export default function TwoColumnNewspaperPacker({
           </div>
 
           <footer className="pt-2 border-t border-slate-300 flex items-center justify-between text-[9.5pt] font-bold text-slate-600">
-            <span>
-              {DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.watermarkText} —{" "}
-              {DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherFullName}
-            </span>
+            <span>{identity.footerText}</span>
             <span>
               صفحة {formatNumeralsByModeSSOT(1, settings.numeralMode)} من{" "}
               {formatNumeralsByModeSSOT(1, settings.numeralMode)}

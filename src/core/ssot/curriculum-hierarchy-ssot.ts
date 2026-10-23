@@ -2,9 +2,9 @@
  * @file curriculum-hierarchy-ssot.ts
  * @description المصدر الوحيد للحقيقة (SSOT) لمستكشف المنهج الرياضي وتقسيمه إلى وحدات ودروس.
  * يضم:
- * 1. برومبت تقسيم المنهج الموجه لـ NotebookLM لاستخراج الوحدات والدروس من الكتب المرفوعة.
- * 2. المحلل الحتمي لاستقبال رد NotebookLM وتحويله إلى شجرة (الصف -> الفرع -> الوحدات -> الدروس).
- * 3. الدوال المرجعية التي تغذي كافة برومبتات وصفحات المنصة (امتحانات، مذكرات، مراجعات، فيديوهات، واجبات).
+ * 1. قائمة الصفوف الدراسية الكاملة (من الصف الثالث الابتدائي حتى الثالث الثانوي) مع فلترة الصفوف التي يفعّلها المعلم في الإعدادات.
+ * 2. برومبت تقسيم المنهج الموجه لـ NotebookLM لاستخراج الفروع والوحدات والدروس الحقيقية من الكتب المرفوعة.
+ * 3. المحلل الحتمي لاستقبال رد NotebookLM وحفظ الوحدات والدروس الحقيقية فقط (بدون أي وحدات أو دروس مثبتة وهمية).
  */
 
 import type { MathBranchId, SchoolStageId } from "./math-branches-ssot";
@@ -23,6 +23,7 @@ export interface CurriculumUnitNode {
   readonly gradeId: string;
   readonly termNumber: 1 | 2;
   readonly branchId: MathBranchId;
+  readonly branchNameArabic?: string;
   readonly orderIndex: number;
   readonly titleArabic: string;
   readonly lessons: readonly CurriculumLessonNode[];
@@ -37,6 +38,7 @@ export interface CurriculumGradeNode {
 }
 
 export const EGYPTIAN_MATH_GRADES_SSOT: readonly CurriculumGradeNode[] = [
+  { id: "prim-3", stage: "primary", orderIndex: 3, nameArabic: "الصف الثالث الابتدائي" },
   { id: "prim-4", stage: "primary", orderIndex: 4, nameArabic: "الصف الرابع الابتدائي" },
   { id: "prim-5", stage: "primary", orderIndex: 5, nameArabic: "الصف الخامس الابتدائي" },
   { id: "prim-6", stage: "primary", orderIndex: 6, nameArabic: "الصف السادس الابتدائي" },
@@ -49,37 +51,33 @@ export const EGYPTIAN_MATH_GRADES_SSOT: readonly CurriculumGradeNode[] = [
 ];
 
 /**
- * 1. يبني البرومبت الصارم الذي يُنسخ إلى NotebookLM لتقسيم المنهج المرفوع إلى وحدات ودروس.
+ * 1. يبني البرومبت الصارم الذي يُنسخ إلى NotebookLM لتقسيم المنهج المرفوع إلى فروع ووحدات ودروس حقيقية.
  */
 export function buildCurriculumSplitterPrompt(params: {
   gradeName: string;
   termNumber: 1 | 2;
   branchId?: MathBranchId;
 }): string {
-  const branchText = params.branchId
-    ? `فرع: ${MATH_BRANCHES_SSOT[params.branchId].nameArabic}`
-    : "جميع فروع الرياضيات المقررة في المصدر";
   const termText = params.termNumber === 1 ? "الفصل الدراسي الأول" : "الفصل الدراسي الثاني";
 
-  return `بصفتك خبيراً أول في تخطيط مناهج الرياضيات:
+  return `بصفتك خبيراً أول في تخطيط مناهج الرياضيات بوزارة التربية والتعليم:
 المهمة: استخراج الفهرس الكامل والدقيق لوحدات ودروس المنهج من الكتب والمصادر المرفوعة فقط:
 - الصف الدراسي: ${params.gradeName}
 - الفصل الدراسي: ${termText}
-- النطاق: ${branchText}
 
 ⛔ ضوابط صارمة للإخراج (للاستيراد الآلي في النظام):
 1. التزم حصراً بأسماء وترتيب الوحدات والدروس الواردة نصاً في المصادر المرفوعة دون حذف أو دمج أو اختلاق.
-2. صنف كل وحدة تحت الفرع الرياضي المناسب لها (الأعداد / الجبر / الدوال / حساب المثلثات / الهندسة المستوية / الهندسة التحليلية / الهندسة الفراغية / الإحصاء والاحتمالات / التفاضل والتكامل / الاستاتيكا / الديناميكا).
+2. حدد أمام كل وحدة الفرع الرياضي الخاص بها كما يرد في المنهج (مثال في الإعدادي: الأعداد والجبر / الهندسة والقياس / حساب المثلثات / الإحصاء والاحتمالات — وفي الابتدائي حسب محور أو وحدة الكتاب المدرسي).
 3. لا تكتب أي مقدمات أو شروحات؛ أخرج الهيكل بالصيغة القياسية التالية فقط:
 
-=== [UNIT: رقم الوحدة] | الفرع: [اسم الفرع] | العنوان: [اسم الوحدة كاملاً] ===
+=== [UNIT: رقم الوحدة] | الفرع: [اسم الفرع في المنهج] | العنوان: [اسم الوحدة كاملاً] ===
 - [LESSON: 1] [اسم الدرس الأول كاملاً] | المفاهيم: [مفهوم 1، مفهوم 2]
 - [LESSON: 2] [اسم الدرس الثاني كاملاً] | المفاهيم: [مفهوم 1، مفهوم 2]
 `;
 }
 
 /**
- * 2. يحلل رد NotebookLM ويحوله إلى وحدات ودروس مهيكلة تصبح المصدر الوحيد للحقيقة في المنصة.
+ * 2. يحلل رد NotebookLM ويحوله إلى وحدات ودروس حقيقية تصبح المصدر الوحيد للحقيقة في المنصة.
  */
 export function parseCurriculumSplitterResponse(
   rawResponse: string,
@@ -94,6 +92,7 @@ export function parseCurriculumSplitterResponse(
   let currentUnit: {
     id: string;
     branchId: MathBranchId;
+    branchNameArabic: string;
     orderIndex: number;
     titleArabic: string;
     lessons: CurriculumLessonNode[];
@@ -103,13 +102,13 @@ export function parseCurriculumSplitterResponse(
     if (/هندسة\s*فراغية|مجسم/i.test(text)) return "solid_geometry";
     if (/تحليلية|إحداثي|ميل/i.test(text)) return "analytic_geometry";
     if (/مثلثات|جا|جتا|ظا/i.test(text)) return "trigonometry";
-    if (/هندسة|برهان|مثلث|دائرة|رباعي/i.test(text)) return "plane_geometry";
-    if (/إحصاء|احتمال|تكراري|وسط|وسيط/i.test(text)) return "statistics_probability";
+    if (/هندسة|برهان|مثلث|دائرة|رباعي|قياس/i.test(text)) return "plane_geometry";
+    if (/إحصاء|احتمال|تكراري|وسط|وسيط|بيانات/i.test(text)) return "statistics_probability";
     if (/تفاضل|تكامل|نهايات|مشتقة/i.test(text)) return "calculus";
     if (/استاتيكا|اتزان|عزوم|قوى/i.test(text)) return "statics";
     if (/ديناميكا|حركة|سرعة|عجلة/i.test(text)) return "dynamics";
     if (/دوال|دالة|منحنى/i.test(text)) return "functions";
-    if (/أعداد|كسور|نسبة|عمليات/i.test(text)) return "numbers";
+    if (/أعداد|كسور|نسبة|عمليات|حساب/i.test(text)) return "numbers";
     return defaultBranchId;
   };
 
@@ -120,9 +119,11 @@ export function parseCurriculumSplitterResponse(
       const branchRaw = unitMatch[2].trim();
       const titleRaw = unitMatch[3].replace(/===/g, "").trim();
       const unitId = `${gradeId}-t${termNumber}-u${orderIdx}`;
+      const resolvedBranchId = inferBranchFromArabic(branchRaw + " " + titleRaw);
       currentUnit = {
         id: unitId,
-        branchId: inferBranchFromArabic(branchRaw + " " + titleRaw),
+        branchId: resolvedBranchId,
+        branchNameArabic: branchRaw || MATH_BRANCHES_SSOT[resolvedBranchId].nameArabic,
         orderIndex: orderIdx,
         titleArabic: titleRaw,
         lessons: [],
@@ -132,6 +133,7 @@ export function parseCurriculumSplitterResponse(
         gradeId,
         termNumber,
         branchId: currentUnit.branchId,
+        branchNameArabic: currentUnit.branchNameArabic,
         orderIndex: currentUnit.orderIndex,
         titleArabic: currentUnit.titleArabic,
         lessons: currentUnit.lessons,
@@ -159,46 +161,13 @@ export function parseCurriculumSplitterResponse(
   return units;
 }
 
-const CURRICULUM_STORAGE_KEY = "math_platform_curriculum_units_ssot_v1" as const;
+const CURRICULUM_STORAGE_KEY = "math_platform_real_curriculum_units_ssot_v2" as const;
 
-export const DEFAULT_SEEDED_CURRICULUM_UNITS_SSOT: readonly CurriculumUnitNode[] = [
-  {
-    id: "prep-3-t1-u1",
-    gradeId: "prep-3",
-    termNumber: 1,
-    branchId: "algebra",
-    orderIndex: 1,
-    titleArabic: "الوحدة الأولى: العلاقات والدوال والتمثيل البياني",
-    lessons: [
-      { id: "prep-3-t1-u1-l1", unitId: "prep-3-t1-u1", orderIndex: 1, titleArabic: "حاصل الضرب الديكارتي", coreConcepts: ["الزوج المرتب", "الشبكة البيانية"] },
-      { id: "prep-3-t1-u1-l2", unitId: "prep-3-t1-u1", orderIndex: 2, titleArabic: "دوال كثيرات الحدود والدالة التربيعية", coreConcepts: ["رأس المنحنى", "محور التماثل"] },
-    ],
-  },
-  {
-    id: "prep-3-t1-u2",
-    gradeId: "prep-3",
-    termNumber: 1,
-    branchId: "plane_geometry",
-    orderIndex: 2,
-    titleArabic: "الوحدة الثانية: نظريات المثلث والتوازي وإقليدس",
-    lessons: [
-      { id: "prep-3-t1-u2-l1", unitId: "prep-3-t1-u2", orderIndex: 1, titleArabic: "القطعة الواصلة بين منتصفي ضلعين في مثلث", coreConcepts: ["التنصيف", "التوازي"] },
-      { id: "prep-3-t1-u2-l2", unitId: "prep-3-t1-u2", orderIndex: 2, titleArabic: "متوسطات المثلث ونظرية إقليدس", coreConcepts: ["نقطة تقاطع المتوسطات ١:٢", "نظرية إقليدس"] },
-    ],
-  },
-  {
-    id: "prep-3-t1-u3",
-    gradeId: "prep-3",
-    termNumber: 1,
-    branchId: "trigonometry",
-    orderIndex: 3,
-    titleArabic: "الوحدة الثالثة: حساب المثلثات والهندسة التحليلية",
-    lessons: [
-      { id: "prep-3-t1-u3-l1", unitId: "prep-3-t1-u3", orderIndex: 1, titleArabic: "النسب المثلثية الأساسية للزاوية الحادة", coreConcepts: ["جا", "جتا", "ظا"] },
-      { id: "prep-3-t1-u3-l2", unitId: "prep-3-t1-u3", orderIndex: 2, titleArabic: "البعد بين نقطتين وإحداثيات منتصف قطعة مستقيمة", coreConcepts: ["قانون البعد", "نقطة المنتصف"] },
-    ],
-  },
-];
+/**
+ * تم استئصال كافة الوحدات والدروس المثبتة (Zero Hardcoded Units):
+ * لا يظهر في المنصة إلا ما يقوم المعلم بتقسيمه واستيراده فعلياً من مستكشف المنهج.
+ */
+export const DEFAULT_SEEDED_CURRICULUM_UNITS_SSOT: readonly CurriculumUnitNode[] = [];
 
 export function loadActiveCurriculumUnitsSSOT(
   gradeId?: string
@@ -208,18 +177,15 @@ export function loadActiveCurriculumUnitsSSOT(
       const raw = window.localStorage.getItem(CURRICULUM_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as CurriculumUnitNode[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const filtered = gradeId
-            ? parsed.filter((u) => u.gradeId === gradeId)
-            : parsed;
-          if (filtered.length > 0) return filtered;
+        if (Array.isArray(parsed)) {
+          return gradeId ? parsed.filter((u) => u.gradeId === gradeId) : parsed;
         }
       }
     } catch {
       // ignore storage read error
     }
   }
-  return DEFAULT_SEEDED_CURRICULUM_UNITS_SSOT;
+  return [];
 }
 
 export function saveImportedCurriculumUnitsSSOT(
@@ -236,5 +202,16 @@ export function saveImportedCurriculumUnitsSSOT(
     window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(merged));
   } catch {
     // ignore storage write error
+  }
+}
+
+export function clearCurriculumUnitsForGradeSSOT(gradeId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = loadActiveCurriculumUnitsSSOT();
+    const remaining = existing.filter((u) => u.gradeId !== gradeId);
+    window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(remaining));
+  } catch {
+    // ignore
   }
 }

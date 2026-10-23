@@ -1,23 +1,21 @@
-﻿"use client";
+"use client";
 
 /**
  * @file studio-context-ribbon-bar.tsx
- * @description شريط السياق المدمج لاختيار (الصف الدراسي -> الفرع الرياضي -> الوحدة -> الدرس)
- * مربوط مباشرة بمستكشف المنهج الحي (`loadActiveCurriculumUnitsSSOT` في `curriculum-hierarchy-ssot.ts`)
- * و `math-branches-ssot.ts`.
+ * @description شريط السياق الهادئ لاختيار (الصف الدراسي النشط -> الوحدة الحقيقية -> الدرس الحقيقي)
+ * مربوط حصرياً بمستكشف المنهج (`loadActiveCurriculumUnitsSSOT`) وبالصفوف المفعلة (`loadEnabledGradesSSOT`).
+ * خالٍ تماماً من أي وحدات وهمية أو قوائم فروع مزدحمة.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  EGYPTIAN_MATH_GRADES_SSOT,
   loadActiveCurriculumUnitsSSOT,
   type CurriculumUnitNode,
 } from "@/core/ssot/curriculum-hierarchy-ssot";
-import {
-  ALL_MATH_BRANCHES_LIST,
-  type MathBranchId,
-} from "@/core/ssot/math-branches-ssot";
+import { loadEnabledGradesSSOT } from "@/core/ssot/teacher-identity-ssot";
+import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 
 export const MODULE_ID_STUDIO_CONTEXT_RIBBON_BAR =
   "studio_context_ribbon_bar" as const;
@@ -35,7 +33,6 @@ export interface StudioContextRibbonBarProps {
 
 export default function StudioContextRibbonBar({
   selectedGradeId,
-  selectedBranchId,
   selectedUnitTitle,
   selectedLessonTitle,
   onChangeGrade,
@@ -43,37 +40,49 @@ export default function StudioContextRibbonBar({
   onChangeUnitTitle,
   onChangeLessonTitle,
 }: StudioContextRibbonBarProps) {
+  const [enabledGrades, setEnabledGrades] = useState(() =>
+    loadEnabledGradesSSOT()
+  );
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
 
   useEffect(() => {
+    const activeGrades = loadEnabledGradesSSOT();
+    setEnabledGrades(activeGrades);
     const loaded = loadActiveCurriculumUnitsSSOT(selectedGradeId);
     setUnits(loaded);
+    if (loaded.length > 0) {
+      const firstUnit = loaded[0];
+      if (firstUnit) {
+        onChangeUnitTitle?.(firstUnit.titleArabic);
+        onChangeBranch(firstUnit.branchId);
+        if (firstUnit.lessons[0]) {
+          onChangeLessonTitle(firstUnit.lessons[0].titleArabic);
+        }
+      }
+    }
   }, [selectedGradeId]);
 
   const activeUnit =
-    units.find((u) => u.titleArabic === selectedUnitTitle) ||
-    units.find((u) => u.branchId === selectedBranchId) ||
-    units[0];
-
+    units.find((u) => u.titleArabic === selectedUnitTitle) || units[0];
   const lessonsList = activeUnit?.lessons || [];
 
   return (
     <section
       aria-label="سياق الصف والوحدة والدرس من مستكشف المنهج"
-      className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+      className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-        {/* ١. الصف الدراسي */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* ١. الصف الدراسي النشط */}
         <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">
-            ١. الصف الدراسي (SSOT):
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            ١. الصف الدراسي (من صفوفك المفعلة):
           </label>
           <select
             value={selectedGradeId}
             onChange={(e) => onChangeGrade(e.target.value)}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+            className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
           >
-            {EGYPTIAN_MATH_GRADES_SSOT.map((g) => (
+            {enabledGrades.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.nameArabic}
               </option>
@@ -81,71 +90,88 @@ export default function StudioContextRibbonBar({
           </select>
         </div>
 
-        {/* ٢. الفرع الرياضي */}
+        {/* ٢. الوحدة الدراسية المستخرجة من مستكشف المنهج */}
         <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">
-            ٢. الفرع الرياضي:
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            ٢. الوحدة الدراسية{" "}
+            {activeUnit ? `(الفرع: ${activeUnit.branchNameArabic})` : ""}:
           </label>
-          <select
-            value={selectedBranchId}
-            onChange={(e) => onChangeBranch(e.target.value as MathBranchId)}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
-          >
-            {ALL_MATH_BRANCHES_LIST.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.symbolBadge} {b.nameArabic}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* ٣. الوحدة الدراسية من مستكشف المنهج */}
-        <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">
-            ٣. الوحدة من مستكشف المنهج:
-          </label>
-          <select
-            value={activeUnit?.titleArabic || ""}
-            onChange={(e) => {
-              const pickedUnit = units.find(
-                (u) => u.titleArabic === e.target.value
-              );
-              onChangeUnitTitle?.(e.target.value);
-              if (pickedUnit) {
-                onChangeBranch(pickedUnit.branchId);
-                if (pickedUnit.lessons[0]) {
-                  onChangeLessonTitle(pickedUnit.lessons[0].titleArabic);
+          {units.length > 0 ? (
+            <select
+              value={activeUnit?.titleArabic || ""}
+              onChange={(e) => {
+                const pickedUnit = units.find(
+                  (u) => u.titleArabic === e.target.value
+                );
+                onChangeUnitTitle?.(e.target.value);
+                if (pickedUnit) {
+                  onChangeBranch(pickedUnit.branchId);
+                  if (pickedUnit.lessons[0]) {
+                    onChangeLessonTitle(pickedUnit.lessons[0].titleArabic);
+                  }
                 }
-              }
-            }}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
-          >
-            {units.map((u) => (
-              <option key={u.id} value={u.titleArabic}>
-                {u.titleArabic}
-              </option>
-            ))}
-          </select>
+              }}
+              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+            >
+              {units.map((u) => (
+                <option key={u.id} value={u.titleArabic}>
+                  [{u.branchNameArabic}] {u.titleArabic}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={selectedUnitTitle || ""}
+              onChange={(e) => onChangeUnitTitle?.(e.target.value)}
+              placeholder="اكتب اسم الوحدة أو قسّم المنهج من المكتبة..."
+              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+            />
+          )}
         </div>
 
-        {/* ٤. الدرس المستهدف */}
+        {/* ٣. الدرس المستهدف */}
         <div>
-          <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">
-            ٤. الدرس المستهدف:
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            ٣. الدرس المستهدف:
           </label>
-          <select
-            value={selectedLessonTitle}
-            onChange={(e) => onChangeLessonTitle(e.target.value)}
-            className="w-full min-h-[42px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
-          >
-            {lessonsList.map((lesson) => (
-              <option key={lesson.id} value={lesson.titleArabic}>
-                {lesson.orderIndex}. {lesson.titleArabic}
-              </option>
-            ))}
-          </select>
+          {lessonsList.length > 0 ? (
+            <select
+              value={selectedLessonTitle}
+              onChange={(e) => onChangeLessonTitle(e.target.value)}
+              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+            >
+              {lessonsList.map((lesson) => (
+                <option key={lesson.id} value={lesson.titleArabic}>
+                  {lesson.orderIndex}. {lesson.titleArabic}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={selectedLessonTitle}
+              onChange={(e) => onChangeLessonTitle(e.target.value)}
+              placeholder="اكتب اسم الدرس..."
+              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+            />
+          )}
         </div>
       </div>
+
+      {units.length === 0 && (
+        <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
+          <span>
+            💡 لم تقم بتقسيم منهج هذا الصف بعد في مستكشف المنهج (تم حذف جميع الوحدات الوهمية).
+          </span>
+          <Link
+            href="/library"
+            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black"
+          >
+            🧭 انتقل لمستكشف المنهج لتقسيم هذا الصف الآن ↗
+          </Link>
+        </div>
+      )}
     </section>
   );
 }
