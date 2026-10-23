@@ -2,10 +2,11 @@
 
 /**
  * @file teacher-generation-studio-view.tsx
- * @description الواجهة الرئيسية الهادئة لمركز استوديو التوليد والإنتاج الموحد:
- * تفصل بين خطوة إعداد البرومبت ودمج رد NotebookLM وبين خطوة معاينة وتنسيق ورقة الـ A4
- * للقضاء التام على الزحام البصري، وتربط كل صف بدفتر NotebookLM الخاص به.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 215 سطراً).
+ * @description واجهة استوديو التوليد والطباعة بتصميم هادئ وصديق للهاتف:
+ * - شريط تبويبات أفقي قابل للسحب.
+ * - سياق (الصف/الوحدة/الدرس) في بطاقة واحدة مطوية تعرض ملخصاً سطرياً.
+ * - لوح واحد ظاهر في كل مرة (إعداد وتوليد | معاينة الورقة A4) مع زر عائم للتبديل على الهاتف.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 200 سطر).
  */
 
 import { useState } from "react";
@@ -13,14 +14,13 @@ import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers
 import SegmentedWorkspaceTabsBar, {
   type SegmentedTabItem,
 } from "@/components/global-ui/segmented-workspace-tabs-bar";
-import {
-  MATH_BRANCHES_SSOT,
-  type MathBranchId,
-} from "@/core/ssot/math-branches-ssot";
+import { MATH_BRANCHES_SSOT, type MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import PDFPreviewOrchestrator from "@/features/pdf-preview-controls/pdf-preview-orchestrator";
 import StudioContextRibbonBar from "./studio-context-ribbon-bar";
+import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
+import StudioMobilePaneFloatingSwitch, { type StudioActivePane } from "./studio-mobile-pane-floating-switch";
 import StudioExamGeneratorTab from "./studio-exam-generator-tab";
 import StudioBookletGeneratorTab from "./studio-booklet-generator-tab";
 import StudioFinalReviewGeneratorTab from "./studio-final-review-generator-tab";
@@ -30,207 +30,141 @@ import StudioVisualGeometryLabTab from "./studio-visual-geometry-lab-tab";
 export const MODULE_ID_TEACHER_GENERATION_STUDIO_VIEW =
   "teacher_generation_studio_view" as const;
 
-const STUDIO_SEGMENTED_TABS: readonly SegmentedTabItem[] = [
-  {
-    id: "exam",
-    labelAr: "اختبار تقييمي رسمي",
-    subtitleAr: "ورقي وإلكتروني",
-    icon: "📄",
-    badgeText: "A4",
-  },
-  {
-    id: "booklet",
-    labelAr: "مذكرة شرح الدرس",
-    subtitleAr: "المراحل الثلاث",
-    icon: "📘",
-  },
-  {
-    id: "review",
-    labelAr: "مراجعة نهائية وشهرية",
-    subtitleAr: "المراحل الثلاث",
-    icon: "🏆",
-  },
-  {
-    id: "worksheet",
-    labelAr: "ورقة عمل وتطبيق",
-    subtitleAr: "صفحة واحدة",
-    icon: "⚡",
-  },
-  {
-    id: "geometry_lab",
-    labelAr: "معمل الأشكال الهندسية",
-    subtitleAr: "الرسم بالوصف العربي",
-    icon: "📐",
-    badgeText: "SVG",
-  },
+const STUDIO_TABS: readonly SegmentedTabItem[] = [
+  { id: "exam", labelAr: "اختبار", icon: "📄" },
+  { id: "booklet", labelAr: "مذكرة", icon: "📘" },
+  { id: "review", labelAr: "مراجعة", icon: "🏆" },
+  { id: "worksheet", labelAr: "ورقة عمل", icon: "⚡" },
+  { id: "geometry_lab", labelAr: "معمل الأشكال", icon: "📐" },
 ];
 
 export default function TeacherGenerationStudioView() {
   const [activeTabId, setActiveTabId] = useState<string>("exam");
-  const [selectedGradeId, setSelectedGradeId] = useState<string>("prep-3");
-  const [selectedBranchId, setSelectedBranchId] =
-    useState<MathBranchId>("plane_geometry");
-  const [selectedUnitTitle, setSelectedUnitTitle] = useState<string>("");
-  const [selectedLessonTitle, setSelectedLessonTitle] =
-    useState<string>("الدرس الأول");
-  const [sheetCustomTitle, setSheetCustomTitle] = useState<string>(
-    "اختبار تقييمي في الرياضيات"
-  );
-  const [customSheetQuestions, setCustomSheetQuestions] = useState<
+  const [gradeId, setGradeId] = useState<string>("prep-3");
+  const [branchId, setBranchId] = useState<MathBranchId>("plane_geometry");
+  const [unitTitle, setUnitTitle] = useState<string>("");
+  const [lessonTitle, setLessonTitle] = useState<string>("الدرس الأول");
+  const [sheetTitle, setSheetTitle] = useState<string>("اختبار تقييمي في الرياضيات");
+  const [sheetQuestions, setSheetQuestions] = useState<
     readonly PrintableMathQuestionItem[] | undefined
   >(undefined);
-  const [activeStepPane, setActiveStepPane] = useState<"builder" | "preview">(
-    "builder"
-  );
+  const [pane, setPane] = useState<StudioActivePane>("builder");
 
-  const activeBranch = MATH_BRANCHES_SSOT[selectedBranchId];
-  const activeGrade =
-    EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === selectedGradeId) ||
-    EGYPTIAN_MATH_GRADES_SSOT[6];
+  const branch = MATH_BRANCHES_SSOT[branchId];
+  const grade =
+    EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === gradeId) || EGYPTIAN_MATH_GRADES_SSOT[6];
+
+  const applyTitle = (t: string) => {
+    setSheetTitle(t);
+    setPane("preview");
+  };
+  const applyQuestions = (qs: readonly PrintableMathQuestionItem[]) => {
+    setSheetQuestions(qs);
+    setPane("preview");
+  };
+
+  const contextSummary = `${grade.nameArabic} • ${unitTitle || "الوحدة"} • ${lessonTitle}`;
 
   return (
     <div
       dir="rtl"
-      className="min-h-screen pb-24 md:pb-12 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100"
+      className="min-h-screen overflow-x-hidden pb-28 md:pb-12 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100"
     >
       <TopFourCentersNavigationBar activeCenter="studio" />
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 pt-5 space-y-5">
+      <main className="max-w-3xl mx-auto px-3 sm:px-5 pt-4 space-y-3">
+        <header className="px-1">
+          <h1 className="text-lg font-black">استوديو التوليد والطباعة</h1>
+          <p className="text-[11px] font-bold text-slate-500">
+            اختر النوع ← جهّز المحتوى ← عاين الورقة واطبعها
+          </p>
+        </header>
+
         <SegmentedWorkspaceTabsBar
-          tabs={STUDIO_SEGMENTED_TABS}
+          tabs={STUDIO_TABS}
           activeTabId={activeTabId}
           onSelectTab={(id) => {
             setActiveTabId(id);
-            setActiveStepPane("builder");
+            setPane("builder");
           }}
         />
 
-        <StudioContextRibbonBar
-          selectedGradeId={selectedGradeId}
-          selectedBranchId={selectedBranchId}
-          selectedUnitTitle={selectedUnitTitle}
-          selectedLessonTitle={selectedLessonTitle}
-          onChangeGrade={setSelectedGradeId}
-          onChangeBranch={setSelectedBranchId}
-          onChangeUnitTitle={setSelectedUnitTitle}
-          onChangeLessonTitle={setSelectedLessonTitle}
-        />
+        <StudioCollapsibleSectionCard icon="🎯" titleAr="الدرس المستهدف" summaryAr={contextSummary}>
+          <StudioContextRibbonBar
+            selectedGradeId={gradeId}
+            selectedBranchId={branchId}
+            selectedUnitTitle={unitTitle}
+            selectedLessonTitle={lessonTitle}
+            onChangeGrade={setGradeId}
+            onChangeBranch={setBranchId}
+            onChangeUnitTitle={setUnitTitle}
+            onChangeLessonTitle={setLessonTitle}
+          />
+        </StudioCollapsibleSectionCard>
 
-        {/* مبدل الخطوتين الهادئ لمنع تكدس الإعدادات مع ورقة الـ A4 في شاشة واحدة */}
-        <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-200/80 dark:bg-slate-900 border border-slate-300/70 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={() => setActiveStepPane("builder")}
-            className={`min-h-[46px] rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition cursor-pointer ${
-              activeStepPane === "builder"
-                ? "bg-indigo-900 text-white shadow-sm"
-                : "text-slate-700 dark:text-slate-300 hover:bg-white/60"
-            }`}
-          >
-            <span>١.</span>
-            <span>إعداد البرومبت ودمج رد NotebookLM</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveStepPane("preview")}
-            className={`min-h-[46px] rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition cursor-pointer ${
-              activeStepPane === "preview"
-                ? "bg-teal-700 text-white shadow-sm"
-                : "text-slate-700 dark:text-slate-300 hover:bg-white/60"
-            }`}
-          >
-            <span>٢.</span>
-            <span>معاينة وتنسيق وطباعة ورقة الـ A4 📄</span>
-          </button>
-        </div>
-
-        {activeStepPane === "builder" ? (
-          <div className="space-y-4">
+        {pane === "builder" ? (
+          <div>
             {activeTabId === "exam" && (
               <StudioExamGeneratorTab
-                gradeId={selectedGradeId}
-                gradeNameAr={activeGrade.nameArabic}
-                branchId={selectedBranchId}
-                lessonTitle={selectedLessonTitle}
-                branchNameAr={activeBranch.nameArabic}
-                onApplyExamTitleToSheet={(t) => {
-                  setSheetCustomTitle(t);
-                  setActiveStepPane("preview");
-                }}
-                onApplyParsedQuestionsToSheet={(qs) => {
-                  setCustomSheetQuestions(qs);
-                  setActiveStepPane("preview");
-                }}
+                gradeId={gradeId}
+                gradeNameAr={grade.nameArabic}
+                branchId={branchId}
+                lessonTitle={lessonTitle}
+                branchNameAr={branch.nameArabic}
+                onApplyExamTitleToSheet={applyTitle}
+                onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
-
             {activeTabId === "booklet" && (
               <StudioBookletGeneratorTab
-                gradeId={selectedGradeId}
-                gradeNameAr={activeGrade.nameArabic}
-                branchId={selectedBranchId}
-                unitTitleAr={selectedUnitTitle || "الوحدة الأولى"}
-                lessonTitle={selectedLessonTitle}
-                branchNameAr={activeBranch.nameArabic}
-                onApplyBookletTitleToSheet={(t) => {
-                  setSheetCustomTitle(t);
-                  setActiveStepPane("preview");
-                }}
-                onApplyParsedQuestionsToSheet={(qs) => {
-                  setCustomSheetQuestions(qs);
-                  setActiveStepPane("preview");
-                }}
+                gradeId={gradeId}
+                gradeNameAr={grade.nameArabic}
+                branchId={branchId}
+                unitTitleAr={unitTitle || "الوحدة الأولى"}
+                lessonTitle={lessonTitle}
+                branchNameAr={branch.nameArabic}
+                onApplyBookletTitleToSheet={applyTitle}
+                onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
-
             {activeTabId === "review" && (
               <StudioFinalReviewGeneratorTab
-                gradeId={selectedGradeId}
-                gradeNameAr={activeGrade.nameArabic}
-                branchId={selectedBranchId}
-                unitTitleAr={selectedUnitTitle || "جميع وحدات المنهج"}
-                branchNameAr={activeBranch.nameArabic}
-                onApplyReviewTitleToSheet={(t) => {
-                  setSheetCustomTitle(t);
-                  setActiveStepPane("preview");
-                }}
-                onApplyParsedQuestionsToSheet={(qs) => {
-                  setCustomSheetQuestions(qs);
-                  setActiveStepPane("preview");
-                }}
+                gradeId={gradeId}
+                gradeNameAr={grade.nameArabic}
+                branchId={branchId}
+                unitTitleAr={unitTitle || "جميع وحدات المنهج"}
+                branchNameAr={branch.nameArabic}
+                onApplyReviewTitleToSheet={applyTitle}
+                onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
-
             {activeTabId === "worksheet" && (
               <StudioWorksheetGeneratorTab
-                gradeId={selectedGradeId}
-                gradeNameAr={activeGrade.nameArabic}
-                branchId={selectedBranchId}
-                branchNameAr={activeBranch.nameArabic}
-                lessonTitle={selectedLessonTitle}
-                onApplyWorksheetTitleToSheet={(t) => {
-                  setSheetCustomTitle(t);
-                  setActiveStepPane("preview");
-                }}
-                onApplyParsedQuestionsToSheet={(qs) => {
-                  setCustomSheetQuestions(qs);
-                  setActiveStepPane("preview");
-                }}
+                gradeId={gradeId}
+                gradeNameAr={grade.nameArabic}
+                branchId={branchId}
+                branchNameAr={branch.nameArabic}
+                lessonTitle={lessonTitle}
+                onApplyWorksheetTitleToSheet={applyTitle}
+                onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
-
             {activeTabId === "geometry_lab" && <StudioVisualGeometryLabTab />}
           </div>
         ) : (
           <PDFPreviewOrchestrator
-            key={sheetCustomTitle}
-            customTitle={sheetCustomTitle}
-            customQuestions={customSheetQuestions}
-            gradeNameAr={activeGrade.nameArabic}
-            branchNameAr={activeBranch.nameArabic}
+            key={sheetTitle}
+            customTitle={sheetTitle}
+            customQuestions={sheetQuestions}
+            gradeNameAr={grade.nameArabic}
+            branchNameAr={branch.nameArabic}
           />
         )}
       </main>
+
+      {activeTabId !== "geometry_lab" && (
+        <StudioMobilePaneFloatingSwitch activePane={pane} onChangePane={setPane} />
+      )}
     </div>
   );
 }

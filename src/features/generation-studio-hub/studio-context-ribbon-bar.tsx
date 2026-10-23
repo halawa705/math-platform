@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-context-ribbon-bar.tsx
@@ -69,13 +69,13 @@ export default function StudioContextRibbonBar({
   return (
     <section
       aria-label="سياق الصف والوحدة والدرس من مستكشف المنهج"
-      className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+      className="space-y-3 pt-2"
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         {/* ١. الصف الدراسي النشط */}
         <div>
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            ١. الصف الدراسي (من صفوفك المفعلة):
+            الصف الدراسي
           </label>
           <select
             value={selectedGradeId}
@@ -93,7 +93,7 @@ export default function StudioContextRibbonBar({
         {/* ٢. الوحدة الدراسية المستخرجة من مستكشف المنهج */}
         <div>
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            ٢. الوحدة الدراسية{" "}
+            الوحدة{" "}
             {activeUnit ? `(الفرع: ${activeUnit.branchNameArabic})` : ""}:
           </label>
           {units.length > 0 ? (
@@ -133,7 +133,7 @@ export default function StudioContextRibbonBar({
         {/* ٣. الدرس المستهدف */}
         <div>
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            ٣. الدرس المستهدف:
+            الدرس
           </label>
           {lessonsList.length > 0 ? (
             <select
@@ -162,7 +162,7 @@ export default function StudioContextRibbonBar({
       {units.length === 0 && (
         <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
           <span>
-            💡 لم تقم بتقسيم منهج هذا الصف بعد في مستكشف المنهج (تم حذف جميع الوحدات الوهمية).
+            💡 لم تقم بتقسيم منهج هذا الصف بعد في مستكشف المنهج.
           </span>
           <Link
             href="/library"
@@ -175,3 +175,4 @@ export default function StudioContextRibbonBar({
     </section>
   );
 }
+

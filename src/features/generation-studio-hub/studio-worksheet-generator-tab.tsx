@@ -2,8 +2,8 @@
 
 /**
  * @file studio-worksheet-generator-tab.tsx
- * @description تبويب إعداد ورقة العمل والتطبيق السريع في صفحة واحدة (One-Page A4 Drill):
- * يتيح تحديد عدد أسئلة اختر وعدد الأسئلة المقالية، ويعرض البرومبت قابلاً للتعديل مع فتح NotebookLM بنقرة واحدة.
+ * @description تبويب ورقة العمل والتطبيق السريع (صفحة A4 واحدة) بتصميم هادئ:
+ * أعداد الأسئلة وزمن الحل داخل قسم قابل للطي، خطوتان واضحتان (نسخ البرومبت ← لصق الرد)، وزر تصيير لاصق.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
@@ -16,6 +16,10 @@ import {
   type PrintableMathQuestionItem,
 } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
+import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
+import StudioNumberStepperField from "./studio-number-stepper-field";
+import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
+import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 
 export const MODULE_ID_STUDIO_WORKSHEET_GENERATOR_TAB =
   "studio_worksheet_generator_tab" as const;
@@ -41,146 +45,84 @@ export default function StudioWorksheetGeneratorTab({
   onApplyWorksheetTitleToSheet,
   onApplyParsedQuestionsToSheet,
 }: StudioWorksheetGeneratorTabProps) {
-  const [quickMcqCount, setQuickMcqCount] = useState(5);
-  const [quickEssayCount, setQuickEssayCount] = useState(2);
+  const [mcqCount, setMcqCount] = useState(5);
+  const [essayCount, setEssayCount] = useState(2);
   const [durationMinutes, setDurationMinutes] = useState(20);
-  const [editablePrompt, setEditablePrompt] = useState<string>("");
-  const [notebookReply, setNotebookReply] = useState<string>("");
-  const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [reply, setReply] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    const generated = buildWorksheetDrillNotebookLMPrompt({
-      gradeNameArabic: gradeNameAr,
-      branchId,
-      lessonTitleArabic: lessonTitle,
-      quickMcqCount,
-      quickEssayCount,
-      durationMinutes,
-    });
-    setEditablePrompt(generated);
-  }, [gradeNameAr, branchId, lessonTitle, quickMcqCount, quickEssayCount, durationMinutes]);
+    setPrompt(
+      buildWorksheetDrillNotebookLMPrompt({
+        gradeNameArabic: gradeNameAr,
+        branchId,
+        lessonTitleArabic: lessonTitle,
+        quickMcqCount: mcqCount,
+        quickEssayCount: essayCount,
+        durationMinutes,
+      })
+    );
+  }, [gradeNameAr, branchId, lessonTitle, mcqCount, essayCount, durationMinutes]);
 
-  const handleCopyAndOpenNotebook = () => {
-    copyPromptAndOpenGradeNotebookLmSSOT(editablePrompt, gradeId);
-    setCopiedPrompt(true);
-    setTimeout(() => setCopiedPrompt(false), 3000);
-  };
-
-  const handleRenderWorksheetToA4 = () => {
-    onApplyWorksheetTitleToSheet(`ورقة عمل تطبيقية: ${lessonTitle}`);
-    const parsedIR = parseNotebookLMExamQuestionsToIR({
-      rawText: notebookReply,
+  const handleRender = () => {
+    const parsed = parseNotebookLMExamQuestionsToIR({
+      rawText: reply,
       branchId,
       unitId: "worksheet-unit",
       lessonId: "worksheet-lesson",
       lessonTitleArabic: lessonTitle,
     });
-    if (parsedIR.length > 0 && onApplyParsedQuestionsToSheet) {
-      const mapped = parsedIR.map((q) =>
-        convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)
-      );
-      onApplyParsedQuestionsToSheet(mapped);
+    if (parsed.length === 0) {
+      setNotice("⚠️ الصق رد NotebookLM أولاً ثم اضغط تصيير.");
+      return;
     }
+    setNotice(null);
+    onApplyParsedQuestionsToSheet?.(
+      parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
+    );
+    onApplyWorksheetTitleToSheet(`ورقة عمل تطبيقية: ${lessonTitle}`);
   };
 
   return (
-    <div className="p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-base font-black text-slate-900 dark:text-white">
-            ⚡ إعداد شيت تطبيقي سريع (ورقة A4 واحدة — ميزانية صفحة)
-          </h3>
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            لدرس: {lessonTitle} — حدد عدد أسئلة اختر والمقالي للتوزيع السريع في الحصة
-          </p>
+    <div className="space-y-3">
+      <StudioCollapsibleSectionCard
+        icon="🔢"
+        titleAr="أعداد الأسئلة وزمن الحل"
+        summaryAr={`${mcqCount} اختر • ${essayCount} مقالي • ${durationMinutes} دقيقة`}
+      >
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          <StudioNumberStepperField labelAr="اختر" value={mcqCount} max={25} onChange={setMcqCount} />
+          <StudioNumberStepperField labelAr="مقالي" value={essayCount} max={15} onChange={setEssayCount} />
+          <StudioNumberStepperField labelAr="الزمن (د)" value={durationMinutes} min={5} max={60} onChange={setDurationMinutes} />
         </div>
-        <button
-          type="button"
-          onClick={handleCopyAndOpenNotebook}
-          className="min-h-[44px] px-4 py-2 rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black shadow-sm cursor-pointer"
-        >
-          {copiedPrompt
-            ? "✓ تم نسخ البرومبت وفتح NotebookLM!"
-            : "📋 ١. نسخ برومبت ورقة العمل وفتح NotebookLM ↗"}
-        </button>
-      </div>
+      </StudioCollapsibleSectionCard>
 
-      {/* تحديد عدد أسئلة اختر والمقالي وزمن الحل */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            عدد أسئلة اختر (MCQ):
-          </label>
-          <input
-            type="number"
-            min={0}
-            max={25}
-            value={quickMcqCount}
-            onChange={(e) => setQuickMcqCount(Number(e.target.value))}
-            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
-          />
-        </div>
-        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            عدد المسائل المقالية:
-          </label>
-          <input
-            type="number"
-            min={0}
-            max={15}
-            value={quickEssayCount}
-            onChange={(e) => setQuickEssayCount(Number(e.target.value))}
-            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
-          />
-        </div>
-        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            زمن الشيت (بالدقائق):
-          </label>
-          <input
-            type="number"
-            min={5}
-            max={60}
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(Number(e.target.value))}
-            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-black"
-          />
-        </div>
-      </div>
+      <StudioSingleStagePastePanel
+        stageTitleAr={`ورقة عمل — ${lessonTitle}`}
+        stageHintAr="شيت تطبيقي سريع يُطبع في صفحة A4 واحدة."
+        promptText={prompt}
+        onChangePrompt={setPrompt}
+        onCopyPromptAndOpenNotebook={() => {
+          copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 3000);
+        }}
+        isPromptCopied={copied}
+        replyValue={reply}
+        onChangeReply={(v) => {
+          setNotice(null);
+          setReply(v);
+        }}
+        replyPlaceholderAr="الصق رد ورقة العمل هنا..."
+      />
 
-      {/* نص البرومبت الصريح القابل للتعديل */}
-      <div className="space-y-1.5">
-        <label className="block text-xs font-extrabold text-indigo-900 dark:text-indigo-300">
-          ✨ نص برومبت ورقة العمل (قابل للتعديل قبل النسخ):
-        </label>
-        <textarea
-          rows={5}
-          value={editablePrompt}
-          onChange={(e) => setEditablePrompt(e.target.value)}
-          className="w-full p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-slate-950 text-xs font-bold leading-relaxed"
-        />
-      </div>
-
-      {/* لصق رد NotebookLM وتصييره في ورقة الـ A4 */}
-      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-200">
-          📥 ٢. الصق رد NotebookLM هنا لتصيير ورقة العمل في معاينة الـ A4:
-        </label>
-        <textarea
-          rows={4}
-          value={notebookReply}
-          onChange={(e) => setNotebookReply(e.target.value)}
-          placeholder="الصق رد ورقة العمل من NotebookLM هنا..."
-          className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
-        />
-        <button
-          type="button"
-          onClick={handleRenderWorksheetToA4}
-          className="w-full min-h-[44px] py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-black shadow-sm cursor-pointer"
-        >
-          ⚡ تصيير ورقة العمل في معاينة الـ A4 الآن ⬅
-        </button>
-      </div>
+      <StudioStickyPrimaryActionBar
+        primaryLabelAr="⚡ تصيير ورقة العمل ومعاينتها"
+        onPrimary={handleRender}
+        noticeAr={notice}
+      />
     </div>
   );
 }
