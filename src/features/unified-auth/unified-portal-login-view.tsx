@@ -1,15 +1,15 @@
-﻿"use client";
+"use client";
 
 /**
  * @file unified-portal-login-view.tsx
  * @description الصفحة الموحدة لتسجيل الدخول (Mobile-First):
- * تجمع دخول الطلاب الظاهر مع البوابة الخفية للمعلم المالك الوحيد (5 نقرات على شعار ∑ أو كتابة #MATH-MASTER#)
- * في شاشة واحدة فائقة الأناقة والهدوء البصري.
+ * تظهر للجميع كبوابة دخول طلاب فقط، بينما يدخل المعلم المالك (الأدمن) بطريقتين سريتين:
+ * 1) كتابة الرمز السري (`19842026` أو `Halawa#77.`) مباشرة في خانة كود الطالب والضغط على دخول.
+ * 2) أو النقر 5 مرات على شعار `∑` في أعلى البطاقة.
  */
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "@/core/ssot/teacher-identity-ssot";
 import { ALL_MATH_BRANCHES_LIST } from "@/core/ssot/math-branches-ssot";
 import GlobalThemeModeToggleButton from "@/components/global-ui/global-theme-mode-toggle-button";
@@ -53,6 +53,7 @@ export default function UnifiedPortalLoginView() {
         <StudentCodeLoginForm
           onStudentSubmit={() => router.push("/student")}
           onStealthCodeDetected={() => setIsTeacherStealthOpen(true)}
+          onDirectTeacherLogin={() => router.push("/studio")}
         />
 
         {/* شريط الفروع الرياضية الـ 11 القابل للسحب باللمس على الهاتف */}
@@ -74,28 +75,10 @@ export default function UnifiedPortalLoginView() {
             ))}
           </div>
         </div>
-
-        {/* وصول سريع لمعاينة المراكز الأربعة مباشرة */}
-        <div className="pt-2 grid grid-cols-2 gap-2">
-          <Link
-            href="/student"
-            className="min-h-[42px] px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-center text-xs font-black text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1"
-          >
-            <span>🎓</span>
-            <span>معاينة بوابة الطالب</span>
-          </Link>
-          <Link
-            href="/studio"
-            className="min-h-[42px] px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-center text-xs font-black text-indigo-900 dark:text-indigo-300 flex items-center justify-center gap-1"
-          >
-            <span>⚡</span>
-            <span>استوديو المعلم</span>
-          </Link>
-        </div>
       </div>
 
-      <footer className="text-center text-[11px] font-bold text-slate-500 dark:text-slate-500 z-10">
-        اضغط ٥ مرات على رمز <span className="font-black text-indigo-700 dark:text-teal-400">∑</span> لفتح البوابة السرية للمعلم المالك
+      <footer className="text-center text-[11px] font-bold text-slate-400 dark:text-slate-600 z-10">
+        جميع الحقوق محفوظة © {DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformBrandName}
       </footer>
     </main>
   );

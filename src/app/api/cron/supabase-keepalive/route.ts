@@ -11,7 +11,9 @@ export async function GET() {
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     "https://ribcyosvoiwtrpynyzjp.supabase.co";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseAnonKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "sb_publishable_-_NDzAmrswsChgitYYrIKw_iEmWYIqD";
 
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("your-project-id")) {
     return NextResponse.json({

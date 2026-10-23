@@ -3,26 +3,29 @@
 /**
  * @file student-code-login-form.tsx
  * @description خاصية ذرية مستقلة: نموذج دخول الطالب الموحد (باستخدام كود الطالب أو رقم الهاتف).
- * يراقب الإدخال بصمت عبر `isStealthTeacherTriggerCodeSSOT` لفتح بوابة المعلم المالك عند كتابة الرمز السري.
+ * إذا أدخل المعلم المالك الكود السري المباشر (`19842026` أو `Halawa#77.`) يتم توجيهه فوراً لاستوديو المعلم
+ * دون إظهار أي أزرار خاصة بالمعلم أمام الطلاب.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { isStealthTeacherTriggerCodeSSOT } from "@/core/ssot/teacher-identity-ssot";
 
 export interface StudentCodeLoginFormProps {
   readonly onStudentSubmit: (studentCode: string) => void;
   readonly onStealthCodeDetected: () => void;
+  readonly onDirectTeacherLogin?: () => void;
 }
 
 export default function StudentCodeLoginForm({
   onStudentSubmit,
   onStealthCodeDetected,
+  onDirectTeacherLogin,
 }: StudentCodeLoginFormProps) {
   const [codeInput, setCodeInput] = useState("");
 
   const handleInputChange = (val: string) => {
     setCodeInput(val);
-    if (isStealthTeacherTriggerCodeSSOT(val)) {
+    if (val.trim() === "#MATH-MASTER#") {
       setCodeInput("");
       onStealthCodeDetected();
     }
@@ -30,8 +33,20 @@ export default function StudentCodeLoginForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!codeInput.trim()) return;
-    onStudentSubmit(codeInput.trim());
+    const trimmed = codeInput.trim();
+    if (!trimmed) return;
+
+    if (isStealthTeacherTriggerCodeSSOT(trimmed)) {
+      setCodeInput("");
+      if (onDirectTeacherLogin) {
+        onDirectTeacherLogin();
+      } else {
+        onStealthCodeDetected();
+      }
+      return;
+    }
+
+    onStudentSubmit(trimmed);
   };
 
   return (
@@ -44,7 +59,7 @@ export default function StudentCodeLoginForm({
           type="text"
           value={codeInput}
           onChange={(e) => handleInputChange(e.target.value)}
-          placeholder="أدخل كود الطالب للدخول للمحاضرات والاختبارات..."
+          placeholder="مثال: 1001 أو MATH-1001 أو رقم الهاتف..."
           className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600"
         />
       </div>

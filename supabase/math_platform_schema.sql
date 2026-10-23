@@ -99,3 +99,7 @@ CREATE TABLE IF NOT EXISTS public.drive_archived_documents (
 INSERT INTO public.curriculum_tree (id, grade_id, grade_name_ar, term_id, branch_id, unit_title_ar, lesson_title_ar, order_index)
 VALUES ('init_keepalive_row', 'prep_3', 'الصف الثالث الإعدادي', 'term_1', 'algebra', 'الوحدة الأولى: العلاقات والدوال', 'حاصل الضرب الديكارتي', 1)
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.students (student_code, full_name, grade_id, phone, parent_phone, is_active)
+VALUES ('MATH-1001', 'أحمد محمد علي (طالب تجريبي)', 'prep_3', '01012345678', '01098765432', TRUE)
+ON CONFLICT (student_code) DO NOTHING;
