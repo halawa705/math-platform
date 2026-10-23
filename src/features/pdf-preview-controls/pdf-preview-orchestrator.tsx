@@ -30,6 +30,10 @@ import PDFColorThemeSelector from "./pdf-color-theme-selector";
 import PDFNotationDirectionSwitch from "./pdf-notation-direction-switch";
 import PDFHeaderBrandingEditor from "./pdf-header-branding-editor";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
+import {
+  OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL,
+  saveDocumentToOvermathDriveVault,
+} from "@/features/curriculum-library-hub/overmath-google-drive-vault";
 
 export interface PDFPreviewOrchestratorProps {
   readonly customTitle?: string;
@@ -49,6 +53,7 @@ export default function PDFPreviewOrchestrator({
   }));
   const [isMobileControlsExpanded, setIsMobileControlsExpanded] =
     useState<boolean>(false);
+  const [driveSyncFeedback, setDriveSyncFeedback] = useState<string | null>(null);
   const sheetContainerRef = useRef<HTMLDivElement>(null);
 
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
@@ -59,6 +64,27 @@ export default function PDFPreviewOrchestrator({
   const handlePrintNow = () => {
     const html = sheetContainerRef.current?.innerHTML || "";
     triggerIsolatedA4Print(html, settings);
+  };
+
+  const handleSaveToOvermathDrive = () => {
+    const html = sheetContainerRef.current?.innerHTML || "";
+    const title = settings.customDocumentTitle || customTitle || "مذكرة رياضيات رسمية";
+    const docKind = title.includes("مراجعة")
+      ? "final_review"
+      : title.includes("اختبار")
+      ? "exam"
+      : "booklet";
+    saveDocumentToOvermathDriveVault({
+      titleAr: title,
+      docKind,
+      branchAr: "الرياضيات",
+      gradeAr: "المرحلة الإعدادية والثانوية",
+      pagesCount: 2,
+      fontUsed: `${activeFont.nameArabic.split("—")[0].trim()} ${settings.exactFontSizePt}pt`,
+      htmlContent: html,
+    });
+    setDriveSyncFeedback(`✓ تم الحفظ في Google Drive (${OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL})`);
+    setTimeout(() => setDriveSyncFeedback(null), 4000);
   };
 
   return (
@@ -85,6 +111,15 @@ export default function PDFPreviewOrchestrator({
             <span>
               {isMobileControlsExpanded ? "إخفاء الأدوات" : "تخصيص الورقة (10)"}
             </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveToOvermathDrive}
+            className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-indigo-800 hover:bg-indigo-700 border border-indigo-400/30 text-white text-xs font-black shadow-sm flex items-center gap-1.5 cursor-pointer"
+            title={`حفظ وأرشفة مباشرة في Google Drive (${OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL})`}
+          >
+            <span>☁️</span>
+            <span>{driveSyncFeedback || "حفظ في Google Drive"}</span>
           </button>
           <button
             type="button"

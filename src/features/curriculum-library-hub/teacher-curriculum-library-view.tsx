@@ -3,7 +3,7 @@
 /**
  * @file teacher-curriculum-library-view.tsx
  * @description الواجهة الرئيسية لمركز مكتبة الرياضيات والمنهج (المركز الثاني من المراكز الأربعة).
- * تضم ٣ تبويبات ذرية: مستكشف وتقسيم المنهج (SSOT)، بنك المسائل والنظريات، وأرشيف المذكرات والاختبارات.
+ * تضم تبويبين ذريين بعد استئصال بنك الأسئلة: مستكشف وتقسيم المنهج (SSOT)، وأرشيف خزينة Google Drive (overmath.math@gmail.com).
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
@@ -13,7 +13,6 @@ import SegmentedWorkspaceTabsBar, {
   type SegmentedTabItem,
 } from "@/components/global-ui/segmented-workspace-tabs-bar";
 import CurriculumNotebooklmSplitterTab from "./curriculum-notebooklm-splitter-tab";
-import MathQuestionBankFilterTab from "./math-question-bank-filter-tab";
 import SavedBookletsReviewsArchiveTab from "./saved-booklets-reviews-archive-tab";
 
 export const MODULE_ID_TEACHER_CURRICULUM_LIBRARY_VIEW =
@@ -28,16 +27,11 @@ const LIBRARY_TABS: readonly SegmentedTabItem[] = [
     badgeText: "SSOT",
   },
   {
-    id: "qbank",
-    labelAr: "بنك المسائل والبراهين",
-    subtitleAr: "مفلتر بالفروع الـ ١١",
-    icon: "🗄️",
-  },
-  {
     id: "archive",
-    labelAr: "أرشيف المذكرات والاختبارات",
-    subtitleAr: "جاهز للطباعة الفورية",
-    icon: "📚",
+    labelAr: "أرشيف المذكرات وخزينة Google Drive",
+    subtitleAr: "overmath.math@gmail.com",
+    icon: "☁️",
+    badgeText: "Drive",
   },
 ];
 
@@ -59,7 +53,6 @@ export default function TeacherCurriculumLibraryView() {
         />
 
         {activeTabId === "splitter" && <CurriculumNotebooklmSplitterTab />}
-        {activeTabId === "qbank" && <MathQuestionBankFilterTab />}
         {activeTabId === "archive" && <SavedBookletsReviewsArchiveTab />}
       </main>
     </div>
