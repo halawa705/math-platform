@@ -29,9 +29,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Env files
+# Env files & Private Credentials
 .env*
 !.env.example
+docs/بيانات-الدخول-والأرقام-السرية.md
+docs/*secret*
+docs/*passwords*
 
 # Vercel
 .vercel
