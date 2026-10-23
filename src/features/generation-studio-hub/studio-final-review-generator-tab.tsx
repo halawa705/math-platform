@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-final-review-generator-tab.tsx
@@ -6,7 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 export const MODULE_ID_STUDIO_FINAL_REVIEW_GENERATOR_TAB =
   "studio_final_review_generator_tab" as const;

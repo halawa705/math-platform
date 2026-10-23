@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-numeral-system-switch.tsx
@@ -7,7 +7,6 @@
  * ترتبط حصرياً بـ `pdf-print-settings-ssot.ts` و `numeral-and-unit-ssot.ts`.
  */
 
-import React from "react";
 import type { NumeralDisplayMode } from "@/core/ssot/numeral-and-unit-ssot";
 
 export interface PDFNumeralSystemSwitchProps {

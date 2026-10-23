@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-worksheet-generator-tab.tsx
@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React from "react";
 
 export const MODULE_ID_STUDIO_WORKSHEET_GENERATOR_TAB =
   "studio_worksheet_generator_tab" as const;

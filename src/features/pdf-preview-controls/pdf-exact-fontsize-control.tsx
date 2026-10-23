@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-exact-fontsize-control.tsx
@@ -6,7 +6,6 @@
  * (`12pt`, `12.5pt`, `13pt`, `13.5pt`, `14pt`, `15pt`, `16pt`) مع ضمان عدم النزول عن 12pt لراحة عين الطالب.
  */
 
-import React from "react";
 import type { ExactPrintFontSizePt } from "@/core/ssot/pdf-print-settings-ssot";
 
 export interface PDFExactFontSizeControlProps {

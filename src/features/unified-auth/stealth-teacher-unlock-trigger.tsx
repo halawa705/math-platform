@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file stealth-teacher-unlock-trigger.tsx
@@ -7,7 +7,7 @@
  * أو كتابة البادئة السرية في حقل كود الطالب، فينبثق حقل المفتاح السري للمعلم المالك.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "@/core/ssot/teacher-identity-ssot";
 
 export interface StealthTeacherUnlockTriggerProps {

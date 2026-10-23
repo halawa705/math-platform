@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-color-theme-selector.tsx
@@ -6,7 +6,6 @@
  * (`royal_indigo` نيلي ملكي، `math_teal` فيروزي أكاديمي، `photocopy_black` أسود حاد لماكينات التصوير الليزرية).
  */
 
-import React from "react";
 import type { PrintColorThemeId } from "@/core/ssot/pdf-print-settings-ssot";
 
 export interface PDFColorThemeSelectorProps {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-booklet-generator-tab.tsx
@@ -6,7 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 export const MODULE_ID_STUDIO_BOOKLET_GENERATOR_TAB =
   "studio_booklet_generator_tab" as const;

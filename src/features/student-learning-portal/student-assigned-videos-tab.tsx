@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-assigned-videos-tab.tsx
@@ -6,7 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 export const MODULE_ID_STUDENT_ASSIGNED_VIDEOS_TAB =
   "student_assigned_videos_tab" as const;

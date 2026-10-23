@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-assigned-homework-tab.tsx
@@ -7,7 +7,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 50 سطراً).
  */
 
-import React from "react";
 import StudentHomeworkInteractiveSolver from "@/features/homework-drills-hub/student-homework-interactive-solver";
 
 export const MODULE_ID_STUDENT_ASSIGNED_HOMEWORK_TAB =

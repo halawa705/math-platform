@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file global-theme-mode-toggle-button.tsx
@@ -6,7 +6,7 @@
  * يعتمد حصرياً على مصدر الحقيقة `theme-mode-ssot.ts` ليطبق على جميع صفحات وتبويبات المنصة.
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   applyThemeModeSSOT,
   resolveActiveThemeModeSSOT,

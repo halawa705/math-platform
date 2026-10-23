@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-assigned-exams-tab.tsx
@@ -7,7 +7,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudentVirtualMathKeypad from "@/features/electronic-exams-hub/student-virtual-math-keypad";
 import LiveExamCountdownTimer from "@/features/electronic-exams-hub/live-exam-countdown-timer";

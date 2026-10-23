@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-visual-geometry-lab-tab.tsx
@@ -7,7 +7,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 170 سطراً).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { matchArabicDescriptionToCanonicalGeometryFigure } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";

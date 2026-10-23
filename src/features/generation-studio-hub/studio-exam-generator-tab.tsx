@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-exam-generator-tab.tsx
@@ -8,7 +8,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-notation-direction-switch.tsx
@@ -6,7 +6,6 @@
  * والرموز الإنجليزية (x, y, f(x), A B C) للمدارس الرسمية واللغات.
  */
 
-import React from "react";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 
 export interface PDFNotationDirectionSwitchProps {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-columns-layout-toggle.tsx
@@ -6,7 +6,6 @@
  * (Newspaper 2-Column Flow) الذي يضاعف سعة الصفحة الواحدة في الامتحانات والمراجعات.
  */
 
-import React from "react";
 import type { PageColumnsLayoutMode } from "@/core/ssot/pdf-print-settings-ssot";
 
 export interface PDFColumnsLayoutToggleProps {

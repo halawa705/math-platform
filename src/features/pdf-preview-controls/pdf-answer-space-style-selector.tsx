@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-answer-space-style-selector.tsx
@@ -6,7 +6,6 @@
  * (أسطر مسطرة، نقاط، شبكة تربيعية للرسم البياني، فارغة، أو إخفاء مساحة الحل لتوفير الورق).
  */
 
-import React from "react";
 import type { AnswerSpaceStyleMode } from "@/core/ssot/pdf-print-settings-ssot";
 
 export interface PDFAnswerSpaceStyleSelectorProps {

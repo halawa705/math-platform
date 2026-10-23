@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-context-ribbon-bar.tsx
@@ -8,7 +8,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   EGYPTIAN_MATH_GRADES_SSOT,
   loadActiveCurriculumUnitsSSOT,

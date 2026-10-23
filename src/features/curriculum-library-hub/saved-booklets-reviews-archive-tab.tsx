@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file saved-booklets-reviews-archive-tab.tsx
@@ -6,7 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL,

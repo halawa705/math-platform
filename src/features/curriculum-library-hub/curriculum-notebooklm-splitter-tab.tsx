@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file curriculum-notebooklm-splitter-tab.tsx
@@ -7,7 +7,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   EGYPTIAN_MATH_GRADES_SSOT,
   buildCurriculumSplitterPrompt,

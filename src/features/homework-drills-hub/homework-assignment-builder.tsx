@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file homework-assignment-builder.tsx
@@ -8,7 +8,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   EGYPTIAN_MATH_GRADES_SSOT,
   loadActiveCurriculumUnitsSSOT,

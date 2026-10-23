@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file unified-portal-login-view.tsx
@@ -7,7 +7,7 @@
  * في شاشة واحدة فائقة الأناقة والهدوء البصري.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "@/core/ssot/teacher-identity-ssot";

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file homework-drills-manager-view.tsx
@@ -8,7 +8,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطر).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import HomeworkAssignmentBuilder from "./homework-assignment-builder";
 import StudentHomeworkInteractiveSolver from "./student-homework-interactive-solver";
 

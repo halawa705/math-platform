@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file teacher-curriculum-library-view.tsx
@@ -7,7 +7,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import SegmentedWorkspaceTabsBar, {
   type SegmentedTabItem,

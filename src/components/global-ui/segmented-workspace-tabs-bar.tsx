@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file segmented-workspace-tabs-bar.tsx
@@ -7,7 +7,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React from "react";
 
 export const MODULE_ID_SEGMENTED_WORKSPACE_TABS_BAR =
   "segmented_workspace_tabs_bar" as const;

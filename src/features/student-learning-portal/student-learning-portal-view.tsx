@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-learning-portal-view.tsx
@@ -8,7 +8,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 120 سطراً).
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import SegmentedWorkspaceTabsBar, {
   type SegmentedTabItem,

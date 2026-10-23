@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-virtual-math-keypad.tsx
@@ -7,7 +7,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React from "react";
 
 export const MODULE_ID_STUDENT_VIRTUAL_MATH_KEYPAD =
   "student_virtual_math_keypad" as const;

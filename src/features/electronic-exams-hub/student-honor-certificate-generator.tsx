@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-honor-certificate-generator.tsx
@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
-import React from "react";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "@/core/ssot/teacher-identity-ssot";
 import { toEasternNumeralsSSOT } from "@/core/ssot/numeral-and-unit-ssot";
 

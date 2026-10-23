@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-assigned-booklets-tab.tsx
@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
-import React from "react";
 import Link from "next/link";
 
 export const MODULE_ID_STUDENT_ASSIGNED_BOOKLETS_TAB =

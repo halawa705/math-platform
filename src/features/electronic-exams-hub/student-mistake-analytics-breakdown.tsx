@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-mistake-analytics-breakdown.tsx
@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
-import React from "react";
 
 export const MODULE_ID_STUDENT_MISTAKE_ANALYTICS_BREAKDOWN =
   "student_mistake_analytics_breakdown" as const;

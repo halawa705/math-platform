@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file student-homework-interactive-solver.tsx
@@ -8,7 +8,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudentVirtualMathKeypad from "@/features/electronic-exams-hub/student-virtual-math-keypad";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";

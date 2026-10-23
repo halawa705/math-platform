@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-header-branding-editor.tsx
@@ -6,7 +6,6 @@
  * داخل الترويسة المدمجة (42pt).
  */
 
-import React from "react";
 
 export interface PDFHeaderBrandingEditorProps {
   readonly documentTitle: string;

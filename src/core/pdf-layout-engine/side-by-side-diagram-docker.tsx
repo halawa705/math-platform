@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file side-by-side-diagram-docker.tsx
@@ -8,7 +8,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React from "react";
 import type { PDFPrintSettingsStateSSOT } from "../ssot/pdf-print-settings-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";
 import {

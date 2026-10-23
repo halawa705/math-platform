@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-answer-visibility-mode.tsx
@@ -8,7 +8,6 @@
  * 3. `answer_key_only`: نموذج الإجابة الرسمي المنفصل فقط.
  */
 
-import React from "react";
 import type { DocumentAnswerVisibilityMode } from "@/core/ssot/pdf-print-settings-ssot";
 
 export interface PDFAnswerVisibilityModeProps {

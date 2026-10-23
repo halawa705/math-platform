@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file top-four-centers-navigation-bar.tsx
@@ -8,7 +8,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import React from "react";
 import Link from "next/link";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT } from "@/core/ssot/teacher-identity-ssot";
 import GlobalThemeModeToggleButton from "./global-theme-mode-toggle-button";

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-font-family-selector.tsx
@@ -7,7 +7,6 @@
  * ترتبط حصرياً بـ `PRINT_FONT_FAMILIES_SSOT` في `pdf-print-settings-ssot.ts`.
  */
 
-import React from "react";
 import {
   PRINT_FONT_FAMILIES_SSOT,
   type PrintFontFamilyId,

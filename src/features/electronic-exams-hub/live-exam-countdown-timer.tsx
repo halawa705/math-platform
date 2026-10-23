@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file live-exam-countdown-timer.tsx
@@ -6,7 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toEasternNumeralsSSOT } from "@/core/ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_LIVE_EXAM_COUNTDOWN_TIMER =

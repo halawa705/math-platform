@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file pdf-density-budget-selector.tsx
@@ -6,7 +6,6 @@
  * (`ultra_compact` ضغط أقصى 92%+، `standard_balanced` متوازن، `booklet_relaxed` مريح للمذكرات).
  */
 
-import React from "react";
 import type { PageDensityBudgetMode } from "@/core/ssot/pdf-print-settings-ssot";
 
 export interface PDFDensityBudgetSelectorProps {
