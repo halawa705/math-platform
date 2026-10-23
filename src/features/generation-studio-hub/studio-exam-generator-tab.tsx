@@ -49,6 +49,10 @@ export default function StudioExamGeneratorTab({
   const [notebookRawReply, setNotebookRawReply] = useState<string>("");
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(30);
+  const [availabilityPreset, setAvailabilityPreset] = useState<
+    "3" | "7" | "14" | "custom"
+  >("7");
+  const [customAvailabilityDays, setCustomAvailabilityDays] = useState(5);
   const [publishMessage, setPublishMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -99,6 +103,11 @@ export default function StudioExamGeneratorTab({
     }
   };
 
+  const resolvedAvailabilityDays =
+    availabilityPreset === "custom"
+      ? Math.max(1, Math.round(customAvailabilityDays || 1))
+      : Number(availabilityPreset);
+
   const handlePublishAsOnlineExam = () => {
     const parsed = parseNotebookLMExamQuestionsToIR(notebookRawReply, {
       defaultBranchId: branchId,
@@ -113,10 +122,11 @@ export default function StudioExamGeneratorTab({
       gradeNameArabic: gradeNameAr,
       titleAr: `اختبار — ${lessonTitle}`,
       durationMinutes,
+      availabilityDays: resolvedAvailabilityDays,
       questions: parsed,
     });
     setPublishMessage(
-      `✓ تم نشر الاختبار (${parsed.length} أسئلة) لطلاب ${gradeNameAr}، وأُرشف أي اختبار سابق لنفس الصف.`
+      `✓ تم نشر الاختبار (${parsed.length} أسئلة) لطلاب ${gradeNameAr} بمؤقت بقاء (${resolvedAvailabilityDays} يوم) وسوف يؤرشف تلقائياً بانتهاء المؤقت.`
     );
   };
 
@@ -222,28 +232,79 @@ export default function StudioExamGeneratorTab({
           ⚡ تصيير الأسئلة والأشكال في معاينة ورقة الـ A4 الآن ⬅
         </button>
 
-        {/* نشر الاختبار إلكترونياً للطلاب */}
-        <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/60 space-y-2.5">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="text-xs font-extrabold text-teal-900 dark:text-teal-200">
-              ٣. أو انشره كاختبار إلكتروني لطلاب {gradeNameAr} — مدة الحل:
-            </label>
-            <input
-              type="number"
-              min={5}
-              max={180}
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(Number(e.target.value))}
-              className="w-20 px-2 py-1 rounded-lg border border-teal-300 bg-white dark:bg-slate-950 text-xs font-black"
-            />
-            <span className="text-xs font-bold text-slate-500">دقيقة</span>
+        {/* نشر الاختبار إلكترونياً للطلاب بمؤقت بقاء */}
+        <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/60 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs font-extrabold text-teal-900 dark:text-teal-200">
+                ٣. نشر كاختبار إلكتروني لطلاب {gradeNameAr} — زمن إجابة الطالب:
+              </label>
+              <input
+                type="number"
+                min={5}
+                max={180}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                className="w-20 px-2 py-1 rounded-lg border border-teal-300 bg-white dark:bg-slate-950 text-xs font-black"
+              />
+              <span className="text-xs font-bold text-slate-500">دقيقة</span>
+            </div>
           </div>
+
+          {/* مؤقت بقاء الاختبار نشطاً قبل الأرشفة التلقائية */}
+          <div className="space-y-1.5 pt-1 border-t border-teal-200/60 dark:border-teal-900/50">
+            <span className="block text-xs font-extrabold text-teal-900 dark:text-teal-200">
+              ⏳ مؤقت بقاء الاختبار نشطاً قبل الأرشفة التلقائية بكل بياناته:
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  { id: "3", label: "٣ أيام" },
+                  { id: "7", label: "٧ أيام" },
+                  { id: "14", label: "أسبوعين (١٤ يوماً)" },
+                  { id: "custom", label: "مخصص (عدد أيام)" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setAvailabilityPreset(opt.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                    availabilityPreset === opt.id
+                      ? "bg-teal-700 text-white shadow-xs"
+                      : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-teal-200 dark:border-teal-800"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+
+              {availabilityPreset === "custom" && (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={customAvailabilityDays}
+                    onChange={(e) =>
+                      setCustomAvailabilityDays(Math.max(1, Number(e.target.value)))
+                    }
+                    className="w-20 px-2.5 py-1.5 rounded-xl border border-teal-400 bg-white dark:bg-slate-950 text-xs font-black text-center"
+                  />
+                  <span className="text-xs font-bold text-teal-900 dark:text-teal-200">
+                    يوماً
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={handlePublishAsOnlineExam}
             className="w-full min-h-[44px] py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm cursor-pointer"
           >
-            🚀 نشر كاختبار إلكتروني للطلاب (يُؤرشف السابق تلقائياً)
+            🚀 نشر كاختبار إلكتروني للطلاب (يؤرشف تلقائياً بعد {resolvedAvailabilityDays} يوم)
           </button>
           {publishMessage && (
             <p className="text-xs font-black text-teal-900 dark:text-teal-200">{publishMessage}</p>

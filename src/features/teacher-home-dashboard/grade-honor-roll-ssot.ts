@@ -1,17 +1,18 @@
 /**
  * @file grade-honor-roll-ssot.ts
- * @description المصدر الموحد لإحصائيات الصفوف وقاعة المتميزين، مبني بالكامل على بيانات حقيقية:
- * - عدد المسجلين = الطلاب الذين سجلوا فعلاً في المنصة (بدون الحساب التجريبي).
- * - المسلّمون والدرجات = تسليمات الطلاب الفعلية للاختبار النشط لكل صف.
- * - قاعة المتميزين = أعلى ٣ درجات في الاختبار النشط بشرط ≥ ٧٠٪، وتختفي بمجرد أرشفة الاختبار.
+ * @description المصدر الموحد لإحصائيات الصفوف وقاعة المتميزين، مبني بالكامل على بيانات حقيقية ومزامنة Supabase:
+ * - عدد المسجلين = الطلاب الذين سجلوا فعلاً في المنصة عبر جدول `public.students`.
+ * - المسلّمون والدرجات = تسليمات الطلاب الفعلية للاختبارات النشطة (التي لم ينتهِ مؤقتها) لكل صف عبر جدول `public.exam_submissions`.
+ * - قاعة المتميزين = أعلى ٣ طلاب في الاختبارات النشطة بشرط ≥ ٧٠٪، وتختفي تلقائياً فور انتهاء مؤقت الاختبار وأرشفته.
  */
 
+import { loadRegisteredStudentsSSOT } from "@/core/ssot/teacher-identity-ssot";
 import {
-  DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT,
-  loadRegisteredStudentsSSOT,
-} from "@/core/ssot/teacher-identity-ssot";
+  pullExamSubmissionsFromSupabaseCloud,
+  syncExamSubmissionToSupabaseCloud,
+} from "@/core/supabase/supabase-cloud-sync-ssot";
 import {
-  loadActiveExamForGradeSSOT,
+  loadActiveExamsForGradeSSOT,
   loadAllPublishedExamsSSOT,
   type PublishedOnlineExam,
 } from "@/features/electronic-exams-hub/published-online-exams-store";
@@ -60,7 +61,7 @@ export interface StudentExamHistoryItem {
   readonly classAveragePercentage: number;
 }
 
-const SUBMISSIONS_STORAGE_KEY = "math_platform_exam_submissions_v2" as const;
+const SUBMISSIONS_STORAGE_KEY = "math_platform_exam_submissions_v3" as const;
 
 export function loadAllExamSubmissionsSSOT(): readonly OnlineExamSubmissionRecord[] {
   if (typeof window === "undefined") return [];
@@ -84,7 +85,39 @@ function persistSubmissions(list: readonly OnlineExamSubmissionRecord[]): void {
   }
 }
 
-/** تسجيل تسليم طالب (تسليم واحد لكل طالب في كل اختبار) وتحديث قاعة المتميزين فوراً. */
+/**
+ * سحب تسليمات الطلاب من سحابة Supabase ودمجها مع السجل المحلي لتحديث لوحة المعلم وقاعة المتميزين حياً.
+ */
+export async function refreshExamSubmissionsFromSupabaseSSOT(): Promise<
+  readonly OnlineExamSubmissionRecord[]
+> {
+  const local = loadAllExamSubmissionsSSOT();
+  const cloud = await pullExamSubmissionsFromSupabaseCloud();
+  if (!cloud) return local;
+
+  const byKey = new Map<string, OnlineExamSubmissionRecord>();
+  for (const s of local) {
+    byKey.set(`${s.examId}__${s.studentCode.toUpperCase()}`, s);
+  }
+  for (const c of cloud) {
+    const key = `${c.examId}__${c.studentCode.toUpperCase()}`;
+    const existing = byKey.get(key);
+    byKey.set(key, {
+      ...c,
+      isReviewedByTeacher: Boolean(
+        existing?.isReviewedByTeacher || c.isReviewedByTeacher
+      ),
+    });
+  }
+
+  const merged = Array.from(byKey.values()).sort((a, b) =>
+    b.submittedAtIso.localeCompare(a.submittedAtIso)
+  );
+  persistSubmissions(merged);
+  return merged;
+}
+
+/** تسجيل تسليم طالب (تسليم واحد لكل طالب في كل اختبار) ومزامنته مع سحابة Supabase وتحديث قاعة المتميزين فوراً. */
 export function recordStudentOnlineExamSubmissionSSOT(input: {
   readonly exam: PublishedOnlineExam;
   readonly studentCode: string;
@@ -92,7 +125,7 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
   readonly percentageScore: number;
 }): OnlineExamSubmissionRecord {
   const record: OnlineExamSubmissionRecord = {
-    submissionId: `sub_${Date.now()}`,
+    submissionId: `${input.exam.examId}__${input.studentCode}`,
     examId: input.exam.examId,
     examTitleAr: input.exam.titleAr,
     gradeId: input.exam.gradeId,
@@ -103,9 +136,14 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
     isReviewedByTeacher: false,
   };
   const others = loadAllExamSubmissionsSSOT().filter(
-    (s) => !(s.examId === input.exam.examId && s.studentCode === input.studentCode)
+    (s) =>
+      !(
+        s.examId === input.exam.examId &&
+        s.studentCode.toUpperCase() === input.studentCode.toUpperCase()
+      )
   );
   persistSubmissions([record, ...others]);
+  void syncExamSubmissionToSupabaseCloud(record);
   return record;
 }
 
@@ -113,19 +151,24 @@ export function findStudentSubmissionForExamSSOT(
   examId: string,
   studentCode: string
 ): OnlineExamSubmissionRecord | null {
+  const cleanCode = studentCode.trim().toUpperCase();
   return (
     loadAllExamSubmissionsSSOT().find(
-      (s) => s.examId === examId && s.studentCode === studentCode
+      (s) => s.examId === examId && s.studentCode.toUpperCase() === cleanCode
     ) || null
   );
 }
 
 export function markExamSubmissionsReviewedSSOT(examId: string): void {
-  persistSubmissions(
-    loadAllExamSubmissionsSSOT().map((s) =>
-      s.examId === examId ? { ...s, isReviewedByTeacher: true } : s
-    )
+  const updated = loadAllExamSubmissionsSSOT().map((s) =>
+    s.examId === examId ? { ...s, isReviewedByTeacher: true } : s
   );
+  persistSubmissions(updated);
+  for (const s of updated) {
+    if (s.examId === examId) {
+      void syncExamSubmissionToSupabaseCloud(s);
+    }
+  }
 }
 
 export function getGradeAnalyticsAndHonorRollSSOT(
@@ -133,13 +176,15 @@ export function getGradeAnalyticsAndHonorRollSSOT(
   gradeNameAr: string
 ): GradeAnalyticsMetric {
   const registeredCount = loadRegisteredStudentsSSOT().filter(
-    (s) => s.gradeId === gradeId && s.id !== DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT.id
+    (s) => s.gradeId === gradeId
   ).length;
 
-  const activeExam = loadActiveExamForGradeSSOT(gradeId);
-  const submissions = activeExam
-    ? loadAllExamSubmissionsSSOT().filter((s) => s.examId === activeExam.examId)
-    : [];
+  const activeExams = loadActiveExamsForGradeSSOT(gradeId);
+  const activeExamIds = new Set(activeExams.map((e) => e.examId));
+  const submissions =
+    activeExamIds.size > 0
+      ? loadAllExamSubmissionsSSOT().filter((s) => activeExamIds.has(s.examId))
+      : [];
 
   const completedExamsCount = submissions.length;
   const averageScorePercentage =
@@ -158,8 +203,20 @@ export function getGradeAnalyticsAndHonorRollSSOT(
     else buckets[3] += 1;
   });
 
-  const topThreeHonorRoll: HonorStudentEntry[] = submissions
-    .filter((s) => s.percentageScore >= MIN_HONOR_ROLL_PERCENTAGE_SSOT)
+  // تجميع أعلى درجة لكل طالب في الاختبارات النشطة للصف حتى لا يتكرر نفس الطالب في قاعة المتميزين
+  const bestByStudent = new Map<string, OnlineExamSubmissionRecord>();
+  for (const s of submissions) {
+    if (s.percentageScore < MIN_HONOR_ROLL_PERCENTAGE_SSOT) continue;
+    const key = s.studentCode.toUpperCase();
+    const prev = bestByStudent.get(key);
+    if (!prev || s.percentageScore > prev.percentageScore) {
+      bestByStudent.set(key, s);
+    }
+  }
+
+  const topThreeHonorRoll: HonorStudentEntry[] = Array.from(
+    bestByStudent.values()
+  )
     .sort(
       (a, b) =>
         b.percentageScore - a.percentageScore ||
@@ -174,6 +231,8 @@ export function getGradeAnalyticsAndHonorRollSSOT(
       averagePercentage: s.percentageScore,
     }));
 
+  const activeTitles = activeExams.map((e) => e.titleAr).join(" • ");
+
   return {
     gradeId,
     gradeNameAr,
@@ -182,8 +241,8 @@ export function getGradeAnalyticsAndHonorRollSSOT(
     unreviewedSubmissionsCount: submissions.filter((s) => !s.isReviewedByTeacher)
       .length,
     averageScorePercentage,
-    hasActiveExam: Boolean(activeExam),
-    activeExamTitleAr: activeExam?.titleAr || "",
+    hasActiveExam: activeExams.length > 0,
+    activeExamTitleAr: activeTitles,
     scoreBuckets: buckets,
     topThreeHonorRoll,
   };
@@ -193,12 +252,13 @@ export function getGradeAnalyticsAndHonorRollSSOT(
 export function loadStudentExamHistorySSOT(
   studentCode: string
 ): readonly StudentExamHistoryItem[] {
+  const cleanCode = studentCode.trim().toUpperCase();
   const all = loadAllExamSubmissionsSSOT();
   const titles = new Map(
     loadAllPublishedExamsSSOT().map((e) => [e.examId, e.titleAr])
   );
   return all
-    .filter((s) => s.studentCode === studentCode)
+    .filter((s) => s.studentCode.toUpperCase() === cleanCode)
     .sort((a, b) => a.submittedAtIso.localeCompare(b.submittedAtIso))
     .map((mine) => {
       const peers = all.filter((s) => s.examId === mine.examId);

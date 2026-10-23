@@ -15,13 +15,18 @@ import StudentHonorCertificateGenerator from "@/features/electronic-exams-hub/st
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import { gradeStudentHomeworkAnswer } from "@/features/homework-drills-hub/homework-auto-grading-engine";
 import {
-  loadActiveExamForGradeSSOT,
+  PUBLISHED_EXAMS_UPDATED_EVENT,
+  formatExamExpiryRemainingAr,
+  loadActiveExamsForGradeSSOT,
+  refreshPublishedExamsFromSupabaseSSOT,
   type PublishedOnlineExam,
 } from "@/features/electronic-exams-hub/published-online-exams-store";
 import {
+  EXAM_SUBMISSIONS_UPDATED_EVENT,
   MIN_HONOR_ROLL_PERCENTAGE_SSOT,
   findStudentSubmissionForExamSSOT,
   recordStudentOnlineExamSubmissionSSOT,
+  refreshExamSubmissionsFromSupabaseSSOT,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 
 export const MODULE_ID_STUDENT_ASSIGNED_EXAMS_TAB =
@@ -42,7 +47,8 @@ export default function StudentAssignedExamsTab({
   isTeacherPreview = false,
   onExamSubmitted,
 }: StudentAssignedExamsTabProps) {
-  const [exam, setExam] = useState<PublishedOnlineExam | null>(null);
+  const [activeExams, setActiveExams] = useState<readonly PublishedOnlineExam[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState<string>("");
   const [choices, setChoices] = useState<Record<string, number>>({});
   const [written, setWritten] = useState<Record<string, string>>({});
   const [keypadQId, setKeypadQId] = useState<string | null>(null);
@@ -50,16 +56,37 @@ export default function StudentAssignedExamsTab({
   const [feedback, setFeedback] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const active = gradeId ? loadActiveExamForGradeSSOT(gradeId) : null;
-    setExam(active);
+    const syncLocal = () => {
+      const list = gradeId ? loadActiveExamsForGradeSSOT(gradeId) : [];
+      setActiveExams(list);
+      setSelectedExamId((prev) =>
+        list.some((e) => e.examId === prev) ? prev : list[0]?.examId || ""
+      );
+    };
+    syncLocal();
+    void refreshPublishedExamsFromSupabaseSSOT();
+    void refreshExamSubmissionsFromSupabaseSSOT();
+    window.addEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, syncLocal);
+    window.addEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, syncLocal);
+    return () => {
+      window.removeEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, syncLocal);
+      window.removeEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, syncLocal);
+    };
+  }, [gradeId]);
+
+  const exam =
+    activeExams.find((e) => e.examId === selectedExamId) || activeExams[0] || null;
+
+  useEffect(() => {
     setResultPct(null);
     setChoices({});
     setWritten({});
-    if (active && studentCode) {
-      const previous = findStudentSubmissionForExamSSOT(active.examId, studentCode);
+    setFeedback({});
+    if (exam && studentCode) {
+      const previous = findStudentSubmissionForExamSSOT(exam.examId, studentCode);
       if (previous) setResultPct(previous.percentageScore);
     }
-  }, [gradeId, studentCode]);
+  }, [exam, studentCode]);
 
   if (!exam) {
     return (
@@ -106,11 +133,33 @@ export default function StudentAssignedExamsTab({
 
   return (
     <div className="space-y-4">
+      {activeExams.length > 1 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {activeExams.map((e) => (
+            <button
+              key={e.examId}
+              type="button"
+              onClick={() => setSelectedExamId(e.examId)}
+              className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap cursor-pointer transition ${
+                exam.examId === e.examId
+                  ? "bg-indigo-900 text-white dark:bg-teal-600 shadow-xs"
+                  : "bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
+              }`}
+            >
+              🎯 {e.titleAr}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-sm sm:text-base font-black">{exam.titleAr}</h3>
           <p className="text-xs font-bold text-slate-500">
             {exam.questions.length} أسئلة • للدخول في قاعة المتميزين تحتاج {MIN_HONOR_ROLL_PERCENTAGE_SSOT}٪ فأكثر
+          </p>
+          <p className="text-[11px] font-bold text-teal-700 dark:text-teal-400 mt-0.5">
+            ⏳ {formatExamExpiryRemainingAr(exam.expiresAtIso).labelAr}
           </p>
         </div>
         {!submitted && !isTeacherPreview && (

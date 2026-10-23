@@ -17,7 +17,9 @@ import { loadEnabledGradesSSOT } from "@/core/ssot/teacher-identity-ssot";
 import {
   PUBLISHED_EXAMS_UPDATED_EVENT,
   archiveOnlineExamSSOT,
+  formatExamExpiryRemainingAr,
   loadAllPublishedExamsSSOT,
+  refreshPublishedExamsFromSupabaseSSOT,
   type PublishedOnlineExam,
 } from "./published-online-exams-store";
 import {
@@ -30,6 +32,7 @@ import {
   EXAM_SUBMISSIONS_UPDATED_EVENT,
   loadAllExamSubmissionsSSOT,
   markExamSubmissionsReviewedSSOT,
+  refreshExamSubmissionsFromSupabaseSSOT,
   type OnlineExamSubmissionRecord,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 
@@ -62,6 +65,8 @@ export default function ElectronicExamsManagerView() {
     setGrades(g);
     setVideoGradeId(g[0]?.id || "");
     refresh();
+    void refreshPublishedExamsFromSupabaseSSOT();
+    void refreshExamSubmissionsFromSupabaseSSOT();
     window.addEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, refresh);
     window.addEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, refresh);
     return () => {
@@ -113,12 +118,13 @@ export default function ElectronicExamsManagerView() {
                     : null;
                 const pending = examSubs.filter((s) => !s.isReviewedByTeacher).length;
                 const isActive = exam.status === "active";
+                const expiryInfo = formatExamExpiryRemainingAr(exam.expiresAtIso);
                 return (
                   <div
                     key={exam.examId}
                     className="p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 space-y-3"
                   >
-                    <div className="flex items-center justify-between text-[11px] font-black">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-black">
                       <span
                         className={`px-2.5 py-0.5 rounded-full ${
                           isActive
@@ -126,14 +132,17 @@ export default function ElectronicExamsManagerView() {
                             : "bg-slate-200 dark:bg-slate-800 text-slate-500"
                         }`}
                       >
-                        {isActive ? "نشط للطلاب" : "مؤرشف"}
+                        {isActive ? `نشط (${exam.availabilityDays} يوم)` : "مؤرشف بكامل بياناته"}
                       </span>
-                      <span className="text-slate-400">{exam.durationMinutes} دقيقة</span>
+                      <span className="text-slate-400">زمن الحل: {exam.durationMinutes} دقيقة</span>
                     </div>
                     <div>
                       <h3 className="text-sm font-black">{exam.titleAr}</h3>
                       <p className="text-xs font-bold text-slate-500">
                         {exam.gradeNameArabic} • {exam.questions.length} أسئلة
+                      </p>
+                      <p className="text-[11px] font-bold text-teal-700 dark:text-teal-400 mt-1">
+                        ⏳ {isActive ? expiryInfo.labelAr : "أُرشف الاختبار مع حفظ جميع تسليمات ودرجات الطلاب"}
                       </p>
                     </div>
                     <div className="flex items-center justify-between text-xs font-black pt-2 border-t border-slate-100 dark:border-slate-800">

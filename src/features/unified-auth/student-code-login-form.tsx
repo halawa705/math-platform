@@ -10,9 +10,12 @@
 
 import { useState, useEffect } from "react";
 import {
+  IDENTITY_UPDATED_EVENT_NAME,
   isStealthTeacherTriggerCodeSSOT,
   loadEnabledGradesSSOT,
   loadRegisteredStudentsSSOT,
+  refreshRegisteredStudentsFromSupabaseSSOT,
+  refreshTeacherIdentityFromSupabaseSSOT,
   registerNewStudentSSOT,
   saveRememberedSessionSSOT,
   type RegisteredStudentRecordSSOT,
@@ -48,14 +51,23 @@ export default function StudentCodeLoginForm({
     useState<RegisteredStudentRecordSSOT | null>(null);
 
   useEffect(() => {
-    const grades = loadEnabledGradesSSOT();
-    setEnabledGrades(grades);
-    if (grades.length > 0) {
-      setRegGradeId(grades[0].id);
-    }
+    const syncGrades = () => {
+      const grades = loadEnabledGradesSSOT();
+      setEnabledGrades(grades);
+      if (grades.length > 0) {
+        setRegGradeId((prev) =>
+          grades.some((g) => g.id === prev) ? prev : grades[0].id
+        );
+      }
+    };
+    syncGrades();
+    void refreshTeacherIdentityFromSupabaseSSOT();
+    void refreshRegisteredStudentsFromSupabaseSSOT();
+    window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, syncGrades);
+    return () => window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, syncGrades);
   }, []);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     const trimmed = codeOrPhone.trim();
@@ -80,13 +92,23 @@ export default function StudentCodeLoginForm({
       return;
     }
 
-    const students = loadRegisteredStudentsSSOT();
-    const matched = students.find(
+    let students = loadRegisteredStudentsSSOT();
+    let matched = students.find(
       (s) =>
         s.studentCode.toLowerCase() === trimmed.toLowerCase() ||
         s.altNumericCode === trimmed ||
         s.studentPhone === trimmed
     );
+
+    if (!matched) {
+      students = await refreshRegisteredStudentsFromSupabaseSSOT();
+      matched = students.find(
+        (s) =>
+          s.studentCode.toLowerCase() === trimmed.toLowerCase() ||
+          s.altNumericCode === trimmed ||
+          s.studentPhone === trimmed
+      );
+    }
 
     if (!matched) {
       setErrorMsg("لم يتم العثور على هذا الكود أو الرقم. إذا كنت طالباً جديداً اضغط على تبويب «تسجيل طالب جديد».");

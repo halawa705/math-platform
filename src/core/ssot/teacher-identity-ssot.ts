@@ -5,16 +5,22 @@
  * ٢. اسم/رمز الدخول السري للمعلم المالك (قابل للتغيير في الإعدادات) + حفظ الجلسة (تذكرني).
  * ٣. الصفوف الدراسية المفعّلة لهذا العام الدراسي (من الثالث الابتدائي حتى الثالث الثانوي) كمصدر وحيد للحقيقة في الموقع كله.
  * ٤. روابط دفاتر NotebookLM لكل صف دراسي لفتح الدفتر ونسخ البرومبت تلقائياً بضغطة واحدة.
- * ٥. إشعار حي فوري (`math-platform-identity-updated`) يحدث الشريط العلوي والتذييل والمطبوعات في نفس اللحظة عند الضغط على حفظ.
+ * ٥. مزامنة الطلاب المسجلين فعلياً مع جدول `public.students` في سحابة Supabase (بدون أي حسابات تجريبية أو وهمية).
  */
 
 import {
   EGYPTIAN_MATH_GRADES_SSOT,
   type CurriculumGradeNode,
 } from "./curriculum-hierarchy-ssot";
-import { syncTeacherIdentityToSupabaseCloud } from "../supabase/supabase-cloud-sync-ssot";
+import {
+  pullStudentsRegistryFromSupabaseCloud,
+  pullTeacherIdentityFromSupabaseCloud,
+  syncStudentRecordToSupabaseCloud,
+  syncTeacherIdentityToSupabaseCloud,
+} from "../supabase/supabase-cloud-sync-ssot";
 
 export const IDENTITY_UPDATED_EVENT_NAME = "math-platform-identity-updated" as const;
+export const STUDENTS_REGISTRY_UPDATED_EVENT = "math-platform-students-updated" as const;
 
 export interface OwnerTeacherIdentity {
   readonly teacherFullName: string;
@@ -55,7 +61,7 @@ export interface RememberedUserSessionSSOT {
 }
 
 const TEACHER_SETTINGS_STORAGE_KEY = "math_platform_teacher_settings_ssot_v4" as const;
-const REGISTERED_STUDENTS_STORAGE_KEY = "math_platform_students_registry_ssot_v2" as const;
+const REGISTERED_STUDENTS_STORAGE_KEY = "math_platform_students_registry_ssot_v3" as const;
 const REMEMBERED_SESSION_STORAGE_KEY = "math_platform_remembered_session_v2" as const;
 
 export const DEFAULT_OWNER_TEACHER_IDENTITY_SSOT: OwnerTeacherIdentity = {
@@ -92,17 +98,59 @@ export const DEFAULT_OWNER_TEACHER_IDENTITY_SSOT: OwnerTeacherIdentity = {
   },
 };
 
-export const DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT: RegisteredStudentRecordSSOT = {
-  id: "demo-student-1001",
-  studentCode: "MATH-1001",
-  altNumericCode: "1001",
-  fullNameAr: "أحمد محمد علي (طالب تجريبي)",
-  studentPhone: "01012345678",
-  passwordPin: "1234",
-  gradeId: "prep-3",
-  gradeNameAr: "الصف الثالث الإعدادي",
-  createdAtIso: "2026-10-23T12:00:00.000Z",
-};
+function sanitizeTeacherIdentity(
+  parsed: Partial<OwnerTeacherIdentity>
+): OwnerTeacherIdentity {
+  const resolvedBrand =
+    parsed.platformBrandName && !parsed.platformBrandName.includes("الخوارزمي")
+      ? parsed.platformBrandName
+      : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformBrandName;
+  const resolvedFooter =
+    parsed.footerText && !parsed.footerText.includes("الخوارزمي")
+      ? parsed.footerText
+      : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText;
+  const resolvedWatermark =
+    parsed.watermarkText && !parsed.watermarkText.includes("الخوارزمي")
+      ? parsed.watermarkText
+      : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.watermarkText;
+
+  const legacyFakeNickname = "عميد الرياضيات";
+  const legacyFakePhone = "01000000000";
+  const cleanNickname =
+    parsed.teacherNickname === legacyFakeNickname ? "" : parsed.teacherNickname ?? "";
+  const cleanPhone =
+    parsed.teacherPhone === legacyFakePhone ? "" : parsed.teacherPhone ?? "";
+  const cleanTitle =
+    parsed.teacherTitle && !parsed.teacherTitle.startsWith("خبير تدريس")
+      ? parsed.teacherTitle
+      : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherTitle;
+  const footerWithoutFake = resolvedFooter.includes(legacyFakeNickname)
+    ? DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText
+    : resolvedFooter;
+
+  return {
+    ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+    ...parsed,
+    teacherNickname: cleanNickname,
+    teacherPhone: cleanPhone,
+    teacherTitle: cleanTitle,
+    platformBrandName: resolvedBrand,
+    footerText: footerWithoutFake,
+    watermarkText: resolvedWatermark,
+    platformLogoUrl: parsed.platformLogoUrl ?? "",
+    platformLogoSymbol:
+      parsed.platformLogoSymbol ||
+      DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformLogoSymbol,
+    enabledGradeIds:
+      Array.isArray(parsed.enabledGradeIds) && parsed.enabledGradeIds.length > 0
+        ? parsed.enabledGradeIds
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.enabledGradeIds,
+    notebookLmUrlsByGrade: {
+      ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.notebookLmUrlsByGrade,
+      ...(parsed.notebookLmUrlsByGrade || {}),
+    },
+  };
+}
 
 export function loadTeacherIdentitySSOT(): OwnerTeacherIdentity {
   if (typeof window === "undefined") return DEFAULT_OWNER_TEACHER_IDENTITY_SSOT;
@@ -110,56 +158,7 @@ export function loadTeacherIdentitySSOT(): OwnerTeacherIdentity {
     const raw = window.localStorage.getItem(TEACHER_SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_OWNER_TEACHER_IDENTITY_SSOT;
     const parsed = JSON.parse(raw) as Partial<OwnerTeacherIdentity>;
-    const resolvedBrand =
-      parsed.platformBrandName && !parsed.platformBrandName.includes("الخوارزمي")
-        ? parsed.platformBrandName
-        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformBrandName;
-    const resolvedFooter =
-      parsed.footerText && !parsed.footerText.includes("الخوارزمي")
-        ? parsed.footerText
-        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText;
-    const resolvedWatermark =
-      parsed.watermarkText && !parsed.watermarkText.includes("الخوارزمي")
-        ? parsed.watermarkText
-        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.watermarkText;
-
-    // ترحيل القيم الوهمية القديمة (لقب وهاتف ومسمى وظيفي افتراضي) إلى قيم فارغة/محايدة
-    const legacyFakeNickname = "عميد الرياضيات";
-    const legacyFakePhone = "01000000000";
-    const cleanNickname =
-      parsed.teacherNickname === legacyFakeNickname ? "" : parsed.teacherNickname ?? "";
-    const cleanPhone =
-      parsed.teacherPhone === legacyFakePhone ? "" : parsed.teacherPhone ?? "";
-    const cleanTitle =
-      parsed.teacherTitle && !parsed.teacherTitle.startsWith("خبير تدريس")
-        ? parsed.teacherTitle
-        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherTitle;
-    const footerWithoutFake = resolvedFooter.includes(legacyFakeNickname)
-      ? DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText
-      : resolvedFooter;
-
-    return {
-      ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
-      ...parsed,
-      teacherNickname: cleanNickname,
-      teacherPhone: cleanPhone,
-      teacherTitle: cleanTitle,
-      platformBrandName: resolvedBrand,
-      footerText: footerWithoutFake,
-      watermarkText: resolvedWatermark,
-      platformLogoUrl: parsed.platformLogoUrl ?? "",
-      platformLogoSymbol:
-        parsed.platformLogoSymbol ||
-        DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformLogoSymbol,
-      enabledGradeIds:
-        Array.isArray(parsed.enabledGradeIds) && parsed.enabledGradeIds.length > 0
-          ? parsed.enabledGradeIds
-          : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.enabledGradeIds,
-      notebookLmUrlsByGrade: {
-        ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.notebookLmUrlsByGrade,
-        ...(parsed.notebookLmUrlsByGrade || {}),
-      },
-    };
+    return sanitizeTeacherIdentity(parsed);
   } catch {
     return DEFAULT_OWNER_TEACHER_IDENTITY_SSOT;
   }
@@ -180,6 +179,29 @@ export function saveTeacherIdentitySSOT(updated: OwnerTeacherIdentity): boolean 
   } catch {
     return false;
   }
+}
+
+export async function refreshTeacherIdentityFromSupabaseSSOT(): Promise<OwnerTeacherIdentity> {
+  const cloud = await pullTeacherIdentityFromSupabaseCloud();
+  if (!cloud) return loadTeacherIdentitySSOT();
+  const merged = sanitizeTeacherIdentity({
+    ...loadTeacherIdentitySSOT(),
+    ...cloud,
+  });
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(
+        TEACHER_SETTINGS_STORAGE_KEY,
+        JSON.stringify(merged)
+      );
+      window.dispatchEvent(
+        new CustomEvent(IDENTITY_UPDATED_EVENT_NAME, { detail: merged })
+      );
+    } catch {
+      // ignore storage write error
+    }
+  }
+  return merged;
 }
 
 /**
@@ -236,18 +258,55 @@ export async function copyPromptAndOpenGradeNotebookLmSSOT(
 }
 
 export function loadRegisteredStudentsSSOT(): readonly RegisteredStudentRecordSSOT[] {
-  if (typeof window === "undefined") return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
+  if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(REGISTERED_STUDENTS_STORAGE_KEY);
-    if (!raw) return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as RegisteredStudentRecordSSOT[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
-    }
-    return parsed;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (s) => s && s.fullNameAr && !s.fullNameAr.includes("تجريبي")
+    );
   } catch {
-    return [DEFAULT_DEMO_STUDENT_ACCOUNT_SSOT];
+    return [];
   }
+}
+
+function persistStudentsList(
+  students: readonly RegisteredStudentRecordSSOT[]
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REGISTERED_STUDENTS_STORAGE_KEY,
+      JSON.stringify(students)
+    );
+    window.dispatchEvent(new CustomEvent(STUDENTS_REGISTRY_UPDATED_EVENT));
+  } catch {
+    // ignore storage write error
+  }
+}
+
+/**
+ * سحب سجل الطلاب من سحابة Supabase ودمجه مع السجل المحلي لضمان رؤية الطلاب المسجلين من هواتفهم.
+ */
+export async function refreshRegisteredStudentsFromSupabaseSSOT(): Promise<
+  readonly RegisteredStudentRecordSSOT[]
+> {
+  const local = loadRegisteredStudentsSSOT();
+  const cloud = await pullStudentsRegistryFromSupabaseCloud();
+  if (!cloud) return local;
+
+  const byCode = new Map<string, RegisteredStudentRecordSSOT>();
+  for (const s of local) {
+    byCode.set(s.studentCode.toUpperCase(), s);
+  }
+  for (const c of cloud) {
+    byCode.set(c.studentCode.toUpperCase(), c);
+  }
+  const merged = Array.from(byCode.values());
+  persistStudentsList(merged);
+  return merged;
 }
 
 export function registerNewStudentSSOT(input: {
@@ -257,7 +316,11 @@ export function registerNewStudentSSOT(input: {
   readonly gradeId: string;
 }): RegisteredStudentRecordSSOT {
   const existing = loadRegisteredStudentsSSOT();
-  const nextNumber = 1001 + existing.length;
+  const maxExistingCode = existing.reduce((max, s) => {
+    const num = Number(s.altNumericCode || s.studentCode.replace(/^MATH-/i, ""));
+    return Number.isFinite(num) && num > max ? num : max;
+  }, 1000);
+  const nextNumber = maxExistingCode + 1;
   const gradeObj = EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === input.gradeId);
 
   const newStudent: RegisteredStudentRecordSSOT = {
@@ -272,16 +335,8 @@ export function registerNewStudentSSOT(input: {
     createdAtIso: new Date().toISOString(),
   };
 
-  if (typeof window !== "undefined") {
-    try {
-      window.localStorage.setItem(
-        REGISTERED_STUDENTS_STORAGE_KEY,
-        JSON.stringify([...existing, newStudent])
-      );
-    } catch {
-      // ignore
-    }
-  }
+  persistStudentsList([...existing, newStudent]);
+  void syncStudentRecordToSupabaseCloud(newStudent);
   return newStudent;
 }
 
@@ -298,7 +353,12 @@ export function authenticateStudentCodeOrPhoneSSOT(
       s.studentPhone === clean
   );
   if (!found) return null;
-  if (passwordPin && passwordPin.trim().length > 0 && found.passwordPin !== passwordPin.trim()) {
+  if (
+    passwordPin &&
+    passwordPin.trim().length > 0 &&
+    found.passwordPin &&
+    found.passwordPin !== passwordPin.trim()
+  ) {
     return null;
   }
   return found;

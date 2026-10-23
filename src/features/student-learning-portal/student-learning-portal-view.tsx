@@ -15,15 +15,23 @@ import SegmentedWorkspaceTabsBar, {
 } from "@/components/global-ui/segmented-workspace-tabs-bar";
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
+  STUDENTS_REGISTRY_UPDATED_EVENT,
   loadEnabledGradesSSOT,
   loadRememberedSessionSSOT,
   loadTeacherIdentitySSOT,
+  refreshRegisteredStudentsFromSupabaseSSOT,
+  refreshTeacherIdentityFromSupabaseSSOT,
 } from "@/core/ssot/teacher-identity-ssot";
+import {
+  PUBLISHED_EXAMS_UPDATED_EVENT,
+  refreshPublishedExamsFromSupabaseSSOT,
+} from "@/features/electronic-exams-hub/published-online-exams-store";
 import {
   EXAM_SUBMISSIONS_UPDATED_EVENT,
   MIN_HONOR_ROLL_PERCENTAGE_SSOT,
   getGradeAnalyticsAndHonorRollSSOT,
   loadStudentExamHistorySSOT,
+  refreshExamSubmissionsFromSupabaseSSOT,
   type GradeAnalyticsMetric,
   type StudentExamHistoryItem,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
@@ -88,10 +96,23 @@ export default function StudentLearningPortalView() {
       setMetric(getGradeAnalyticsAndHonorRollSSOT(studentGradeId, gradeName));
       setHistory(studentCode ? loadStudentExamHistorySSOT(studentCode) : []);
     };
+    const pullCloud = () => {
+      void refreshTeacherIdentityFromSupabaseSSOT();
+      void refreshRegisteredStudentsFromSupabaseSSOT();
+      void refreshPublishedExamsFromSupabaseSSOT();
+      void refreshExamSubmissionsFromSupabaseSSOT();
+    };
     refresh();
+    pullCloud();
+    const intervalId = window.setInterval(pullCloud, 15000);
+    window.addEventListener(STUDENTS_REGISTRY_UPDATED_EVENT, refresh);
+    window.addEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, refresh);
     window.addEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener(STUDENTS_REGISTRY_UPDATED_EVENT, refresh);
+      window.removeEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, refresh);
       window.removeEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };

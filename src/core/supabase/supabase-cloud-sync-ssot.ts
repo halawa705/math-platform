@@ -1,12 +1,21 @@
 /**
  * @file supabase-cloud-sync-ssot.ts
- * @description محرك المزامنة السحابية التلقائية بين المتصفح (`localStorage`) وقاعدة بيانات Supabase (`ribcyosvoiwtrpynyzjp`)
- * لضمان انتقال إعدادات هوية المعلم (`TeacherIdentitySSOT`) وشجرة الوحدات والدروس (`curriculum_units`)
- * تلقائياً بين هاتف المعلم وجهاز الكمبيوتر الخاص به.
+ * @description محرك المزامنة السحابية التلقائية عبر الصفوف المستقلة (Row-Level Cloud Persistence)
+ * بين المتصفح (`localStorage`) وقاعدة بيانات Supabase (`ribcyosvoiwtrpynyzjp`) مع سياسات RLS:
+ * ١. `platform_ssot_state`: إعدادات هوية المعلم وصفوفه وروابط NotebookLM.
+ * ٢. `curriculum_units`: شجرة الوحدات والدروس.
+ * ٣. `students`: تسجيل الطلاب الذاتي من هواتفهم ودخولهم من أي جهاز دون تداخل.
+ * ٤. `electronic_exams`: الاختبارات الإلكترونية المنشورة ومؤقت أرشفتها التلقائية (`expires_at`).
+ * ٥. `exam_submissions`: تسليمات الطلاب الفورية وتحديث قاعة المتميزين حياً عبر جميع الأجهزة.
  */
 
-import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
+import type {
+  OwnerTeacherIdentity,
+  RegisteredStudentRecordSSOT,
+} from "../ssot/teacher-identity-ssot";
 import type { CurriculumUnitNode } from "../ssot/curriculum-hierarchy-ssot";
+import type { PublishedOnlineExam } from "@/features/electronic-exams-hub/published-online-exams-store";
+import type { OnlineExamSubmissionRecord } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -26,7 +35,7 @@ function buildSupabaseHeaders(): HeadersInit {
 }
 
 /**
- * مزامنة كائن هوية المعلم والإعدادات والصفوف وروابط NotebookLM إلى سحابة Supabase.
+ * ١. مزامنة كائن هوية المعلم والإعدادات والصفوف وروابط NotebookLM إلى سحابة Supabase.
  */
 export async function syncTeacherIdentityToSupabaseCloud(
   identity: OwnerTeacherIdentity
@@ -51,10 +60,7 @@ export async function syncTeacherIdentityToSupabaseCloud(
   }
 }
 
-/**
- * جلب أحدث نسخة من إعدادات المعلم من سحابة Supabase عند فتح المنصة من جهاز جديد أو هاتف.
- */
-export async function pullTeacherIdentityFromSupabaseCloud(): Promise<OwnerTeacherIdentity | null> {
+export async function pullTeacherIdentityFromSupabaseCloud(): Promise<Partial<OwnerTeacherIdentity> | null> {
   if (typeof window === "undefined") return null;
   try {
     const res = await fetch(
@@ -65,7 +71,9 @@ export async function pullTeacherIdentityFromSupabaseCloud(): Promise<OwnerTeach
       }
     );
     if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{ identity_json?: OwnerTeacherIdentity }>;
+    const rows = (await res.json()) as Array<{
+      identity_json?: Partial<OwnerTeacherIdentity>;
+    }>;
     const candidate = rows[0]?.identity_json;
     if (!candidate || !candidate.platformBrandName) return null;
     return candidate;
@@ -75,7 +83,7 @@ export async function pullTeacherIdentityFromSupabaseCloud(): Promise<OwnerTeach
 }
 
 /**
- * مزامنة شجرة الوحدات والدروس المستخرجة من مستكشف المنهج إلى جدول `curriculum_units` في Supabase.
+ * ٢. مزامنة شجرة الوحدات والدروس المستخرجة من مستكشف المنهج إلى جدول `curriculum_units` في Supabase.
  */
 export async function syncCurriculumUnitsToSupabaseCloud(
   units: readonly CurriculumUnitNode[]
@@ -107,9 +115,6 @@ export async function syncCurriculumUnitsToSupabaseCloud(
   }
 }
 
-/**
- * سحب شجرة الوحدات والدروس المحفوظة في Supabase لمزامنتها مع المتصفح المحلي.
- */
 export async function pullCurriculumUnitsFromSupabaseCloud(): Promise<
   readonly CurriculumUnitNode[] | null
 > {
@@ -144,6 +149,260 @@ export async function pullCurriculumUnitsFromSupabaseCloud(): Promise<
       orderIndex: r.order_index,
       lessons: Array.isArray(r.lessons_json) ? r.lessons_json : [],
     }));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * ٣. مزامنة بيانات الطلاب المسجلين عبر جدول `public.students` (صف مستقل لكل طالب لمنع التداخل بين الهواتف).
+ */
+export async function syncStudentRecordToSupabaseCloud(
+  student: RegisteredStudentRecordSSOT
+): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/students?on_conflict=student_code`,
+      {
+        method: "POST",
+        headers: buildSupabaseHeaders(),
+        body: JSON.stringify({
+          student_code: student.studentCode,
+          alt_numeric_code: student.altNumericCode,
+          full_name: student.fullNameAr,
+          grade_id: student.gradeId,
+          grade_name_ar: student.gradeNameAr,
+          phone: student.studentPhone,
+          pin_code: student.passwordPin,
+          is_active: true,
+          created_at: student.createdAtIso,
+        }),
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function pullStudentsRegistryFromSupabaseCloud(): Promise<
+  readonly RegisteredStudentRecordSSOT[] | null
+> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/students?select=*&order=created_at.asc`,
+      {
+        method: "GET",
+        headers: buildSupabaseHeaders(),
+      }
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{
+      id: string;
+      student_code: string;
+      alt_numeric_code?: string | null;
+      full_name: string;
+      grade_id: string;
+      grade_name_ar?: string | null;
+      phone?: string | null;
+      pin_code?: string | null;
+      created_at: string;
+    }>;
+    if (!Array.isArray(rows)) return null;
+    return rows
+      .filter((r) => r.full_name && !r.full_name.includes("تجريبي"))
+      .map((r) => ({
+        id: r.id || `student-${r.student_code}`,
+        studentCode: r.student_code,
+        altNumericCode:
+          r.alt_numeric_code || r.student_code.replace(/^MATH-/i, ""),
+        fullNameAr: r.full_name,
+        studentPhone: r.phone || "",
+        passwordPin: r.pin_code || "",
+        gradeId: r.grade_id,
+        gradeNameAr: r.grade_name_ar || "",
+        createdAtIso: r.created_at || new Date().toISOString(),
+      }));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * ٤. مزامنة الاختبارات الإلكترونية المنشورة ومؤقت بقائها عبر جدول `public.electronic_exams`.
+ */
+export async function syncPublishedExamToSupabaseCloud(
+  exam: PublishedOnlineExam
+): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/electronic_exams?on_conflict=exam_code`,
+      {
+        method: "POST",
+        headers: buildSupabaseHeaders(),
+        body: JSON.stringify({
+          exam_code: exam.examId,
+          title_ar: exam.titleAr,
+          grade_id: exam.gradeId,
+          grade_name_ar: exam.gradeNameArabic,
+          branch_id: "general",
+          duration_minutes: exam.durationMinutes,
+          availability_days: exam.availabilityDays,
+          expires_at: exam.expiresAtIso,
+          pass_percentage: 70,
+          questions_json: exam.questions,
+          status: exam.status,
+          is_published: exam.status === "active",
+          created_at: exam.publishedAtIso,
+        }),
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function pullPublishedExamsFromSupabaseCloud(): Promise<
+  readonly PublishedOnlineExam[] | null
+> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/electronic_exams?select=*&order=created_at.desc`,
+      {
+        method: "GET",
+        headers: buildSupabaseHeaders(),
+      }
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{
+      exam_code: string;
+      title_ar: string;
+      grade_id: string;
+      grade_name_ar?: string | null;
+      duration_minutes: number;
+      availability_days?: number | null;
+      expires_at?: string | null;
+      questions_json: PublishedOnlineExam["questions"];
+      status?: string | null;
+      is_published?: boolean | null;
+      created_at: string;
+    }>;
+    if (!Array.isArray(rows)) return null;
+    const nowMs = Date.now();
+    return rows.map((r) => {
+      const publishedAtIso = r.created_at || new Date().toISOString();
+      const availabilityDays =
+        typeof r.availability_days === "number" && r.availability_days > 0
+          ? r.availability_days
+          : 7;
+      const expiresAtIso =
+        r.expires_at ||
+        new Date(
+          Date.parse(publishedAtIso) + availabilityDays * 86_400_000
+        ).toISOString();
+      const isExpiredByTimer = Date.parse(expiresAtIso) <= nowMs;
+      const rawStatus =
+        r.status === "archived" || r.is_published === false
+          ? "archived"
+          : "active";
+      return {
+        examId: r.exam_code,
+        gradeId: r.grade_id,
+        gradeNameArabic: r.grade_name_ar || "",
+        titleAr: r.title_ar,
+        durationMinutes: r.duration_minutes || 30,
+        availabilityDays,
+        publishedAtIso,
+        expiresAtIso,
+        questions: Array.isArray(r.questions_json) ? r.questions_json : [],
+        status: isExpiredByTimer ? "archived" : rawStatus,
+      };
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * ٥. مزامنة تسليمات الطلاب للاختبارات عبر جدول `public.exam_submissions` (صف مستقل لكل تسليم).
+ */
+export async function syncExamSubmissionToSupabaseCloud(
+  submission: OnlineExamSubmissionRecord
+): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const submissionCode = `${submission.examId}__${submission.studentCode}`;
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/exam_submissions?on_conflict=submission_code`,
+      {
+        method: "POST",
+        headers: buildSupabaseHeaders(),
+        body: JSON.stringify({
+          submission_code: submissionCode,
+          exam_code: submission.examId,
+          exam_title_ar: submission.examTitleAr,
+          grade_id: submission.gradeId,
+          student_code: submission.studentCode,
+          student_name: submission.studentNameAr,
+          percentage: submission.percentageScore,
+          score: submission.percentageScore,
+          total_marks: 100,
+          is_reviewed_by_teacher: submission.isReviewedByTeacher,
+          submitted_at: submission.submittedAtIso,
+        }),
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function pullExamSubmissionsFromSupabaseCloud(): Promise<
+  readonly OnlineExamSubmissionRecord[] | null
+> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/exam_submissions?select=*&order=submitted_at.desc`,
+      {
+        method: "GET",
+        headers: buildSupabaseHeaders(),
+      }
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{
+      id: string;
+      submission_code?: string | null;
+      exam_code?: string | null;
+      exam_title_ar?: string | null;
+      grade_id?: string | null;
+      student_code: string;
+      student_name: string;
+      percentage: number;
+      is_reviewed_by_teacher?: boolean | null;
+      submitted_at: string;
+    }>;
+    if (!Array.isArray(rows)) return null;
+    return rows
+      .filter((r) => Boolean(r.exam_code && r.student_code))
+      .map((r) => ({
+        submissionId:
+          r.submission_code || r.id || `${r.exam_code}__${r.student_code}`,
+        examId: r.exam_code || "",
+        examTitleAr: r.exam_title_ar || "",
+        gradeId: r.grade_id || "",
+        studentCode: r.student_code,
+        studentNameAr: r.student_name,
+        percentageScore: Math.round(Number(r.percentage) || 0),
+        submittedAtIso: r.submitted_at || new Date().toISOString(),
+        isReviewedByTeacher: Boolean(r.is_reviewed_by_teacher),
+      }));
   } catch {
     return null;
   }

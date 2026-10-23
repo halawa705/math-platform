@@ -15,16 +15,23 @@ import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
   IDENTITY_UPDATED_EVENT_NAME,
+  STUDENTS_REGISTRY_UPDATED_EVENT,
   loadEnabledGradesSSOT,
   loadTeacherIdentitySSOT,
+  refreshRegisteredStudentsFromSupabaseSSOT,
+  refreshTeacherIdentityFromSupabaseSSOT,
   type OwnerTeacherIdentity,
 } from "@/core/ssot/teacher-identity-ssot";
 import type { CurriculumGradeNode } from "@/core/ssot/curriculum-hierarchy-ssot";
-import { PUBLISHED_EXAMS_UPDATED_EVENT } from "@/features/electronic-exams-hub/published-online-exams-store";
+import {
+  PUBLISHED_EXAMS_UPDATED_EVENT,
+  refreshPublishedExamsFromSupabaseSSOT,
+} from "@/features/electronic-exams-hub/published-online-exams-store";
 import {
   EXAM_SUBMISSIONS_UPDATED_EVENT,
   MIN_HONOR_ROLL_PERCENTAGE_SSOT,
   getGradeAnalyticsAndHonorRollSSOT,
+  refreshExamSubmissionsFromSupabaseSSOT,
   type GradeAnalyticsMetric,
 } from "./grade-honor-roll-ssot";
 import HonorRollPodium from "./honor-roll-podium";
@@ -67,13 +74,24 @@ export default function TeacherExecutiveDashboardView() {
       );
     };
     const bump = () => setRefreshTick((t) => t + 1);
+    const pullCloud = () => {
+      void refreshTeacherIdentityFromSupabaseSSOT();
+      void refreshRegisteredStudentsFromSupabaseSSOT();
+      void refreshPublishedExamsFromSupabaseSSOT();
+      void refreshExamSubmissionsFromSupabaseSSOT();
+    };
     syncIdentityAndGrades();
+    pullCloud();
+    const intervalId = window.setInterval(pullCloud, 15000);
     window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, syncIdentityAndGrades);
+    window.addEventListener(STUDENTS_REGISTRY_UPDATED_EVENT, bump);
     window.addEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, bump);
     window.addEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, bump);
     window.addEventListener("storage", bump);
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, syncIdentityAndGrades);
+      window.removeEventListener(STUDENTS_REGISTRY_UPDATED_EVENT, bump);
       window.removeEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, bump);
       window.removeEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, bump);
       window.removeEventListener("storage", bump);
