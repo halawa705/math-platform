@@ -21,6 +21,7 @@ import {
   loadTeacherIdentitySSOT,
   saveTeacherIdentitySSOT,
 } from "@/core/ssot/teacher-identity-ssot";
+import { pullCurriculumUnitsFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
 
 export const MODULE_ID_CURRICULUM_NOTEBOOKLM_SPLITTER_TAB =
   "curriculum_notebooklm_splitter_tab" as const;
@@ -56,6 +57,12 @@ export default function CurriculumNotebooklmSplitterTab() {
       identity.notebookLmUrlsByGrade?.[targetGrade?.id || gradeId] || ""
     );
     setSavedUnits(loadActiveCurriculumUnitsSSOT(targetGrade?.id || gradeId));
+    void pullCurriculumUnitsFromSupabaseCloud().then((cloudUnits) => {
+      if (cloudUnits && cloudUnits.length > 0) {
+        saveImportedCurriculumUnitsSSOT(cloudUnits);
+        setSavedUnits(loadActiveCurriculumUnitsSSOT(targetGrade?.id || gradeId));
+      }
+    });
 
     const generatedPrompt = buildCurriculumSplitterPrompt({
       gradeName: targetGrade?.nameArabic || "الصف الثالث الإعدادي",

@@ -9,6 +9,7 @@
 
 import type { MathBranchId, SchoolStageId } from "./math-branches-ssot";
 import { MATH_BRANCHES_SSOT } from "./math-branches-ssot";
+import { syncCurriculumUnitsToSupabaseCloud } from "../supabase/supabase-cloud-sync-ssot";
 
 export interface CurriculumLessonNode {
   readonly id: string;
@@ -200,6 +201,7 @@ export function saveImportedCurriculumUnitsSSOT(
       ...newUnits,
     ];
     window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(merged));
+    void syncCurriculumUnitsToSupabaseCloud(merged);
   } catch {
     // ignore storage write error
   }

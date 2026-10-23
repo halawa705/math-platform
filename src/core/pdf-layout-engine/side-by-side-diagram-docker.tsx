@@ -1,10 +1,13 @@
-﻿"use client";
+"use client";
 
 /**
  * @file side-by-side-diagram-docker.tsx
- * @description مكون ذري مستقل لتصيير بطاقة السؤال الرياضي الواحد داخل ورقة الـ A4
- * مع دمج الشكل الهندسي المتجهي (SVG) بجانب نص السؤال (Side-by-Side Geometry Docking)
- * وتصيير اختيارات الـ MCQ الأفقية ومساحة الإجابة ونموذج البرهان.
+ * @description مكون ذري مستقل لتصيير بطاقة المثال المحلول أو السؤال الرياضي داخل ورقة الـ A4
+ * بتصميم يتفوق على المذكرات الوزارية والكتب الخارجية:
+ * - ترويسة زمردية/نيلية أنيقة لكل مثال أو سؤال.
+ * - دمج الشكل الهندسي المتجهي (SVG) بحجم مضبوط (`150px × 105px`) بجانب نص السؤال دون تضخم.
+ * - اختيارات MCQ في شبكة 2x2 مؤطرة بأزرار `(أ) (ب) (جـ) (د)`.
+ * - خطوات الحل مقسمة في بطاقات مرقمة (`الخطوة ١`، `الخطوة ٢`) مع إبراز `الناتج النهائي`.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
@@ -15,10 +18,6 @@ import {
   type PrintableMathQuestionItem,
 } from "./a4-vector-html-sheet-renderer";
 import { projectGeometryFigureToSVGMarkup } from "../geometry-engine/vector-svg-figure-projector";
-import {
-  resolveAdaptiveMCQColumnsCount,
-  resolveMCQGridTailwindClass,
-} from "./adaptive-mcq-options-grid-solver";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 
 export const MODULE_ID_SIDE_BY_SIDE_DIAGRAM_DOCKER =
@@ -43,136 +42,174 @@ export default function SideBySideDiagramDocker({
     settings.numeralMode
   );
 
+  const isSolvedMode =
+    settings.answerVisibilityMode === "questions_with_answers" ||
+    settings.answerVisibilityMode === "answer_key_only";
+
+  const solutionSteps = question.modelAnswerAr
+    ? question.modelAnswerAr.split("|").map((s) => s.trim()).filter(Boolean)
+    : [];
+
   return (
     <article
-      style={{ breakInside: "avoid" }}
-      className="p-2.5 rounded-lg border border-slate-300/90 bg-white flex flex-col gap-1.5"
+      style={{
+        breakInside: "avoid",
+        borderColor: isSolvedMode ? "#059669" : "#CBD5E1",
+      }}
+      className="rounded-xl border-2 bg-white flex flex-col justify-between overflow-hidden shadow-2xs"
     >
-      {/* رأس السؤال المدمج */}
-      <div className="flex items-center justify-between gap-1 border-b border-slate-200 pb-1">
-        <div className="flex items-center gap-1.5">
-          <span
-            style={{
-              backgroundColor: themePalette.primaryHex,
-              color: "#ffffff",
-            }}
-            className="px-2 py-0.5 rounded text-[10pt] font-black"
-          >
-            س{formattedQNum}
-          </span>
-          <span
-            style={{
-              backgroundColor: themePalette.badgeBgHex,
-              color: themePalette.primaryHex,
-            }}
-            className="px-1.5 py-0.5 rounded text-[9pt] font-bold"
-          >
-            {question.branchBadgeAr}
-          </span>
-        </div>
-        <span className="text-[9.5pt] font-extrabold text-slate-600">
-          ({formattedMarks} د)
-        </span>
-      </div>
-
-      {/* متن السؤال + الشكل الهندسي جنبًا إلى جنب (Side-by-Side Geometry Docking) */}
-      {settings.answerVisibilityMode !== "answer_key_only" && (
+      <div>
+        {/* شريط رأس البطاقة الفاخر */}
         <div
-          className={
-            question.geometryFigure
-              ? "grid grid-cols-12 gap-2 items-center"
-              : "block"
-          }
+          style={{
+            backgroundColor: isSolvedMode ? "#ECFDF5" : "#F8FAFC",
+            borderBottomColor: isSolvedMode ? "#A7F3D0" : "#E2E8F0",
+          }}
+          className="px-2.5 py-1.5 border-b flex items-center justify-between gap-1.5"
         >
-          <div className={question.geometryFigure ? "col-span-7" : "w-full"}>
-            <SafeKaTeXBiDiMathRenderer
-              text={question.promptAr}
-              numeralMode={settings.numeralMode}
-              notationLanguage={settings.notationLanguage}
-            />
-          </div>
-          {question.geometryFigure && (
-            <div
-              className="col-span-5 border border-slate-200 rounded-md p-1 bg-slate-50/50"
-              dangerouslySetInnerHTML={{
-                __html: projectGeometryFigureToSVGMarkup(
-                  question.geometryFigure,
-                  {
-                    strokeColorHex: themePalette.secondaryHex,
-                    accentColorHex: themePalette.borderHex,
-                    numeralMode: settings.numeralMode,
-                  }
-                ),
+          <div className="flex items-center gap-1.5">
+            <span
+              style={{
+                backgroundColor: isSolvedMode
+                  ? "#047857"
+                  : themePalette.primaryHex,
+                color: "#ffffff",
               }}
-            />
-          )}
+              className="px-2 py-0.5 rounded-md text-[9.5pt] font-black"
+            >
+              {isSolvedMode
+                ? `✍️ مثال توضيحي (${formattedQNum})`
+                : `مسألة (${formattedQNum})`}
+            </span>
+            <span
+              style={{
+                backgroundColor: themePalette.badgeBgHex,
+                color: themePalette.primaryHex,
+              }}
+              className="px-2 py-0.5 rounded-md text-[8.5pt] font-extrabold"
+            >
+              {question.branchBadgeAr}
+            </span>
+          </div>
+          <span className="text-[8.5pt] font-black text-slate-500">
+            #{formattedQNum} • ({formattedMarks} د)
+          </span>
         </div>
-      )}
 
-      {/* اختيارات MCQ الأفقية المتكيفة (4 أعمدة أو عمودان أو عمود واحد حسب طول البديل) */}
-      {question.mcqChoicesAr &&
-        settings.answerVisibilityMode !== "answer_key_only" && (
-          <div
-            className={`grid ${resolveMCQGridTailwindClass(
-              resolveAdaptiveMCQColumnsCount(
-                question.mcqChoicesAr,
-                settings.columnsCount === 2
-              )
-            )} gap-1 pt-1 text-[10.5pt]`}
-          >
-            {question.mcqChoicesAr.map((choice, cIdx) => {
-              const letters = ["أ", "ب", "جـ", "د"];
-              return (
+        {/* متن السؤال + الشكل الهندسي جنبًا إلى جنب بحجم محكوم بدقة */}
+        {settings.answerVisibilityMode !== "answer_key_only" && (
+          <div className="p-2.5">
+            <div
+              className={
+                question.geometryFigure
+                  ? "flex items-center justify-between gap-2.5"
+                  : "block"
+              }
+            >
+              <div className="flex-1 text-[10.5pt] font-extrabold text-slate-900 leading-relaxed">
+                <SafeKaTeXBiDiMathRenderer
+                  text={question.promptAr}
+                  numeralMode={settings.numeralMode}
+                  notationLanguage={settings.notationLanguage}
+                />
+              </div>
+              {question.geometryFigure && (
                 <div
-                  key={cIdx}
-                  className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50/60 flex items-center gap-1"
-                >
-                  <span className="font-black text-slate-700">
-                    ({letters[cIdx]})
-                  </span>
-                  <SafeKaTeXBiDiMathRenderer
-                    text={choice}
-                    numeralMode={settings.numeralMode}
-                    notationLanguage={settings.notationLanguage}
-                  />
-                </div>
-              );
-            })}
+                  style={{ width: "148px", minWidth: "148px" }}
+                  className="border border-indigo-200 rounded-lg p-1 bg-indigo-50/30 flex items-center justify-center shrink-0"
+                  dangerouslySetInnerHTML={{
+                    __html: projectGeometryFigureToSVGMarkup(
+                      question.geometryFigure,
+                      {
+                        widthPx: 140,
+                        heightPx: 98,
+                        strokeColorHex: themePalette.primaryHex,
+                        accentColorHex: "#0D9488",
+                        numeralMode: settings.numeralMode,
+                      }
+                    ),
+                  }}
+                />
+              )}
+            </div>
+
+            {/* اختيارات MCQ في شبكة 2x2 مؤطرة بأناقة */}
+            {question.mcqChoicesAr && (
+              <div className="grid grid-cols-2 gap-1.5 pt-2 mt-1.5 border-t border-slate-100 text-[10pt]">
+                {question.mcqChoicesAr.map((choice, cIdx) => {
+                  const letters = ["أ", "ب", "جـ", "د"];
+                  return (
+                    <div
+                      key={cIdx}
+                      className="px-2 py-1 rounded-lg border border-slate-200 bg-slate-50/80 flex items-center justify-between gap-1.5"
+                    >
+                      <span
+                        style={{
+                          backgroundColor: themePalette.primaryHex,
+                          color: "#ffffff",
+                        }}
+                        className="w-5 h-5 rounded-md flex items-center justify-center text-[8.5pt] font-black shrink-0"
+                      >
+                        {letters[cIdx]}
+                      </span>
+                      <div className="flex-1 text-center font-bold">
+                        <SafeKaTeXBiDiMathRenderer
+                          text={choice}
+                          numeralMode={settings.numeralMode}
+                          notationLanguage={settings.notationLanguage}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
+      </div>
 
-      {/* مساحة حل الطالب حسب النمط المختار */}
+      {/* مساحة حل الطالب (في وضع الأسئلة فقط) */}
       {settings.answerVisibilityMode === "questions_only" &&
-        question.kind !== "mcq" &&
         settings.answerSpaceStyle !== "hidden" && (
-          <div className="mt-1 pt-1 space-y-2">
+          <div className="px-2.5 pb-2 pt-1 bg-slate-50/60 border-t border-dashed border-slate-200 space-y-1.5">
+            <div className="text-[8.5pt] font-extrabold text-slate-400">
+              مساحة الحل والخطوات:
+            </div>
             {[1, 2].map((lineIdx) => (
               <div
                 key={lineIdx}
                 className={`h-4 w-full ${
                   settings.answerSpaceStyle === "dotted"
-                    ? "border-b border-dotted border-slate-400"
+                    ? "border-b border-dotted border-slate-300"
                     : settings.answerSpaceStyle === "lined"
                     ? "border-b border-solid border-slate-300"
-                    : settings.answerSpaceStyle === "grid"
-                    ? "bg-slate-100/70 border border-slate-300"
-                    : ""
+                    : "bg-white border border-slate-200"
                 }`}
               />
             ))}
           </div>
         )}
 
-      {/* نموذج الإجابة والبرهان الرياضي */}
-      {(settings.answerVisibilityMode === "questions_with_answers" ||
-        settings.answerVisibilityMode === "answer_key_only") && (
-        <div className="mt-1 p-1.5 rounded bg-emerald-50/90 border border-emerald-300 text-[10.5pt] text-emerald-950">
-          <span className="font-black">البرهان الجذري: </span>
-          <SafeKaTeXBiDiMathRenderer
-            text={question.modelAnswerAr}
-            numeralMode={settings.numeralMode}
-            notationLanguage={settings.notationLanguage}
-          />
+      {/* خطوات الحل والشرح بالتفصيل (في وضع المذكرة المحلولة / نموذج الإجابة) */}
+      {isSolvedMode && (
+        <div className="p-2 bg-emerald-50/50 border-t border-emerald-200/80 space-y-1.5">
+          <div className="text-[9pt] font-black text-emerald-900">
+            خطوات الحل والشرح بالتفصيل:
+          </div>
+          <div className="space-y-1">
+            {solutionSteps.map((stepText, idx) => (
+              <div
+                key={idx}
+                className="p-1.5 rounded-lg bg-white border border-emerald-200/90 text-[9.5pt] font-bold text-slate-800 leading-relaxed"
+              >
+                <SafeKaTeXBiDiMathRenderer
+                  text={stepText}
+                  numeralMode={settings.numeralMode}
+                  notationLanguage={settings.notationLanguage}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </article>

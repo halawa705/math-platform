@@ -1,7 +1,26 @@
 -- ============================================================================
 -- قاعدة بيانات منصة الرياضيات المتكاملة (Math-eslam - Zero-Error Schema)
 -- مصممة بدون قيود ترتيب خارجية (No Foreign-Key Order Lock) لضمان التنفيذ من أول مرة
+-- وتشمل جداول المزامنة التلقائية للإعدادات وشجرة الوحدات بين الهاتف والكمبيوتر
 -- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.platform_ssot_state (
+  id TEXT PRIMARY KEY DEFAULT 'owner_ssot',
+  identity_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.curriculum_units (
+  id TEXT PRIMARY KEY,
+  grade_id TEXT NOT NULL,
+  term_number INTEGER NOT NULL DEFAULT 1,
+  branch_id TEXT NOT NULL,
+  branch_name_ar TEXT NOT NULL,
+  title_ar TEXT NOT NULL,
+  order_index INTEGER NOT NULL DEFAULT 1,
+  lessons_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 CREATE TABLE IF NOT EXISTS public.curriculum_tree (
   id TEXT PRIMARY KEY,
@@ -36,7 +55,7 @@ CREATE TABLE IF NOT EXISTS public.electronic_exams (
   unit_title_ar TEXT,
   lesson_title_ar TEXT,
   duration_minutes INTEGER NOT NULL DEFAULT 45,
-  pass_percentage INTEGER NOT NULL DEFAULT 50,
+  pass_percentage INTEGER NOT NULL DEFAULT 70,
   questions_json JSONB NOT NULL DEFAULT '[]'::jsonb,
   is_published BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -99,7 +118,3 @@ CREATE TABLE IF NOT EXISTS public.drive_archived_documents (
 INSERT INTO public.curriculum_tree (id, grade_id, grade_name_ar, term_id, branch_id, unit_title_ar, lesson_title_ar, order_index)
 VALUES ('init_keepalive_row', 'prep_3', 'الصف الثالث الإعدادي', 'term_1', 'algebra', 'الوحدة الأولى: العلاقات والدوال', 'حاصل الضرب الديكارتي', 1)
 ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.students (student_code, full_name, grade_id, phone, parent_phone, is_active)
-VALUES ('MATH-1001', 'أحمد محمد علي (طالب تجريبي)', 'prep_3', '01012345678', '01098765432', TRUE)
-ON CONFLICT (student_code) DO NOTHING;

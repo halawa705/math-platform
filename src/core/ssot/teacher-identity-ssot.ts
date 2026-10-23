@@ -12,6 +12,7 @@ import {
   EGYPTIAN_MATH_GRADES_SSOT,
   type CurriculumGradeNode,
 } from "./curriculum-hierarchy-ssot";
+import { syncTeacherIdentityToSupabaseCloud } from "../supabase/supabase-cloud-sync-ssot";
 
 export interface OwnerTeacherIdentity {
   readonly teacherFullName: string;
@@ -124,6 +125,7 @@ export function saveTeacherIdentitySSOT(updated: OwnerTeacherIdentity): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(TEACHER_SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+    void syncTeacherIdentityToSupabaseCloud(updated);
   } catch {
     // ignore
   }
@@ -153,9 +155,12 @@ export function isStealthTeacherTriggerCodeSSOT(rawInput: string): boolean {
  * ينسخ البرومبت تلقائياً إلى الحافظة ويفتح صفحة NotebookLM المربوطة بهذا الصف الدراسي في لسان جديد.
  */
 export async function copyPromptAndOpenGradeNotebookLmSSOT(
-  gradeId: string,
-  promptText: string
+  arg1: string,
+  arg2: string
 ): Promise<{ copied: boolean; openedUrl: string }> {
+  const isArg1Grade = /^(?:prim|prep|sec)-\d$/.test(arg1.trim());
+  const gradeId = isArg1Grade ? arg1.trim() : arg2.trim();
+  const promptText = isArg1Grade ? arg2 : arg1;
   const settings = loadTeacherIdentitySSOT();
   const targetUrl =
     settings.notebookLmUrlsByGrade[gradeId]?.trim() ||

@@ -3,8 +3,9 @@
 /**
  * @file safe-katex-bidi-math-renderer.tsx
  * @description العازل ثنائي الاتجاه (RTL/LTR) وعارض المعادلات الرياضية الآمن المتوافق مع الهاتف والطباعة.
- * يطبق قواعد `numeral-and-unit-ssot.ts`، ويطهر رمز فرق المجموعات `\setminus` إلى `-`،
- * ويصيّر المعادلات عبر `katex.renderToString` مع `throwOnError: false` لضمان عدم ظهور كود LaTeX خام نهائياً.
+ * - يستخدم `output: "html"` حصراً لمنع ازدواجية الأرقام والرموز في الطباعة نهائياً (Zero Duplicate MathML).
+ * - يعالج الدوال المثلثية العربية واللاتينية بدون تسريب أي وسم `\text{\cos}`.
+ * - يرفع حجم الكسور الجبرية تلقائياً عبر `\displaystyle` لتظهر واضحة ومفصولة البسط والمقام كالكتب الوزارية.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
@@ -28,8 +29,7 @@ export interface SafeKaTeXBiDiMathRendererProps {
 }
 
 /**
- * يطهر تعبير LaTeX الرياضي من الرموز غير المدعومة في المناهج العربية مثل `\setminus`
- * ويضبط المتغيرات والأرقام وفق نظام العرض المختار.
+ * يطهر تعبير LaTeX الرياضي من أي تسرب نصي، ويعالج الدوال المثلثية والكسور الجبرية بدقة.
  */
 export function sanitizeLatexForSchoolMath(
   rawLatex: string,
@@ -37,6 +37,11 @@ export function sanitizeLatexForSchoolMath(
   notationLanguage: MathNotationLanguage
 ): string {
   let cleaned = rawLatex
+    .replace(/\\text\{\\(?:sin|cos|tan)\}/gi, (m) => {
+      if (m.includes("sin")) return "\\sin";
+      if (m.includes("cos")) return "\\cos";
+      return "\\tan";
+    })
     .replace(/\\setminus/g, " - ")
     .replace(/\\div/g, " \\div ")
     .replace(/\\times/g, " \\times ")
@@ -44,12 +49,24 @@ export function sanitizeLatexForSchoolMath(
 
   if (notationLanguage === "english") {
     cleaned = cleaned
+      .replace(/\\text\{\s*جا\s*\}/g, "\\sin")
+      .replace(/\\text\{\s*جتا\s*\}/g, "\\cos")
+      .replace(/\\text\{\s*ظا\s*\}/g, "\\tan")
+      .replace(/جا/g, "\\sin ")
+      .replace(/جتا/g, "\\cos ")
+      .replace(/ظا/g, "\\tan ")
       .replace(/س/g, "x")
       .replace(/ص/g, "y")
       .replace(/ع/g, "z")
-      .replace(/جا/g, "\\sin")
-      .replace(/جتا/g, "\\cos")
-      .replace(/ظا/g, "\\tan");
+      .replace(/ح/g, "\\mathbb{R}");
+  }
+
+  // تكبير الكسور والجذور داخل السطر لتظهر بحجم كتاب وزاري واضح
+  if (
+    (cleaned.includes("\\frac") || cleaned.includes("\\sqrt")) &&
+    !cleaned.includes("\\displaystyle")
+  ) {
+    cleaned = `{\\displaystyle ${cleaned}}`;
   }
 
   return formatNumeralsByModeSSOT(cleaned, numeralMode);
@@ -64,7 +81,6 @@ export default function SafeKaTeXBiDiMathRenderer({
   if (!text) return null;
 
   const unitFixed = normalizeArabicUnitPlacementSSOT(text);
-  // تقسيم النص عند محددات المعادلات $$...$$ أو $...$ لعزل اتجاه كل معادلة بدقة
   const segments = unitFixed.split(/(\$\$[^$]+\$\$|\$[^$]+\$)/g);
 
   return (
@@ -94,7 +110,7 @@ export default function SafeKaTeXBiDiMathRenderer({
               displayMode: isBlockMath,
               throwOnError: false,
               strict: false,
-              output: "htmlAndMathml",
+              output: "html",
             });
           } catch {
             renderedHtml = sanitized;
@@ -104,8 +120,11 @@ export default function SafeKaTeXBiDiMathRenderer({
             <span
               key={idx}
               dir="ltr"
-              style={{ unicodeBidi: "isolate" }}
-              className="inline-block px-1.5 py-0.5 mx-1 rounded-md bg-indigo-50/90 dark:bg-indigo-950/70 text-indigo-950 dark:text-indigo-200 font-bold tracking-wide border border-indigo-200/70 dark:border-indigo-800/60 align-middle"
+              style={{
+                unicodeBidi: "isolate",
+                display: isBlockMath ? "block" : "inline-block",
+              }}
+              className="px-1 py-0.5 mx-0.5 rounded bg-indigo-50/60 text-indigo-950 font-bold align-middle"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
             />
           );

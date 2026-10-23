@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 /**
  * @file student-assigned-exams-tab.tsx
- * @description تبويب الاختبار الإلكتروني الحي للطالب: يجمع المؤقت الزمني، الشكل الهندسي المتجهي،
- * لوحة الرموز الرياضية الافتراضية للهاتف، المقيم الفوري، وشهادة التفوق.
+ * @description تبويب الاختبار الإلكتروني الحي للطالب:
+ * عند تسليم الإجابة، يسجل النتيجة أوتوماتيكياً في `recordStudentOnlineExamSubmissionSSOT`
+ * فإذا تخطى الطالب نسبة 70% يظهر اسمه فوراً في قاعة المتميزين لصفه الدراسي، وإذا قل عن 70% لا يُدرج في القاعة.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
@@ -16,11 +17,26 @@ import StudentHonorCertificateGenerator from "@/features/electronic-exams-hub/st
 import StudentMistakeAnalyticsBreakdown from "@/features/electronic-exams-hub/student-mistake-analytics-breakdown";
 import { buildTriangleMidsegmentFigure } from "@/core/geometry-engine/triangle-family/triangle-midsegment-branch";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
+import { loadRememberedSessionSSOT } from "@/core/ssot/teacher-identity-ssot";
+import {
+  MIN_HONOR_ROLL_PERCENTAGE_SSOT,
+  recordStudentOnlineExamSubmissionSSOT,
+} from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 
 export const MODULE_ID_STUDENT_ASSIGNED_EXAMS_TAB =
   "student_assigned_exams_tab" as const;
 
-export default function StudentAssignedExamsTab() {
+export interface StudentAssignedExamsTabProps {
+  readonly studentNameAr?: string;
+  readonly studentGradeId?: string;
+  readonly onExamSubmitted?: () => void;
+}
+
+export default function StudentAssignedExamsTab({
+  studentNameAr = "زياد إسلام حلاوة",
+  studentGradeId = "prep-3",
+  onExamSubmitted,
+}: StudentAssignedExamsTabProps) {
   const [selectedChoice, setSelectedChoice] = useState<number | null>(0);
   const [studentProofInput, setStudentProofInput] = useState<string>(
     "بما أن د منتصف أ ب، هـ منتصف أ جـ إذن د هـ يوازي ب جـ ويساوي ٦ سم"
@@ -52,12 +68,31 @@ export default function StudentAssignedExamsTab() {
     },
   ]);
 
+  const handleSubmitExam = () => {
+    const session = loadRememberedSessionSSOT();
+    const resolvedName =
+      session?.studentNameAr || studentNameAr || "طالب المنصة";
+    const resolvedCode = session?.studentCode || `STU-${Date.now().toString().slice(-4)}`;
+    const resolvedGrade = session?.gradeId || studentGradeId || "prep-3";
+
+    recordStudentOnlineExamSubmissionSSOT({
+      gradeId: resolvedGrade,
+      studentCode: resolvedCode,
+      studentNameAr: resolvedName,
+      percentageScore: evaluation.percentageScore,
+      examTitleAr: "اختبار الهندسة المستوية — نظريات المثلث",
+    });
+
+    setSubmitted(true);
+    onExamSubmitted?.();
+  };
+
   return (
     <div className="space-y-4">
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-indigo-900 text-white text-xs font-black">
-            السؤال الأول • هندسة مستوية (٤ درجات)
+          <span className="px-3 py-1 rounded-xl bg-indigo-900 text-white text-xs font-black">
+            السؤال الأول • هندسة مستوية (٤ درجات) — شرط قاعة التميز: {MIN_HONOR_ROLL_PERCENTAGE_SSOT}% فأعلى
           </span>
           <LiveExamCountdownTimer initialDurationSeconds={1800} isPaused={submitted} />
         </div>
@@ -110,17 +145,28 @@ export default function StudentAssignedExamsTab() {
 
         <button
           type="button"
-          onClick={() => setSubmitted(true)}
+          onClick={handleSubmitExam}
           className="w-full min-h-[48px] py-3 rounded-2xl bg-gradient-to-l from-indigo-900 to-teal-700 text-white text-sm font-black shadow-lg cursor-pointer"
         >
-          تسليم الإجابة وتصحيح البرهان فوراً ✓
+          تسليم الإجابة وتحديث قاعة المتميزين أوتوماتيكياً ✓
         </button>
       </div>
 
       {submitted && (
         <div className="space-y-3">
+          <div
+            className={`p-4 rounded-2xl border text-xs font-black ${
+              evaluation.percentageScore >= MIN_HONOR_ROLL_PERCENTAGE_SSOT
+                ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                : "bg-amber-50 border-amber-300 text-amber-900"
+            }`}
+          >
+            {evaluation.percentageScore >= MIN_HONOR_ROLL_PERCENTAGE_SSOT
+              ? `🎉 مبروك! حصلت على ${evaluation.percentageScore}% (تخطيت شرط الـ ${MIN_HONOR_ROLL_PERCENTAGE_SSOT}%) وتم تحديث اسمك أوتوماتيكياً في قاعة المتميزين لصفك الدراسي!`
+              : `⚠️ حصلت على ${evaluation.percentageScore}% — لا يُكتب في قاعة المتميزين إلا من يتخطى نسبة الـ ${MIN_HONOR_ROLL_PERCENTAGE_SSOT}%. حاول مرة أخرى في الاختبار القادم!`}
+          </div>
           <StudentHonorCertificateGenerator
-            studentNameArabic="طالب منصة الخوارزمي"
+            studentNameArabic={studentNameAr}
             examTitleArabic="اختبار الهندسة المستوية — نظريات المثلث"
             percentageScore={evaluation.percentageScore}
           />

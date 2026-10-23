@@ -18,6 +18,7 @@ import {
   saveTeacherIdentitySSOT,
   type OwnerTeacherIdentity,
 } from "@/core/ssot/teacher-identity-ssot";
+import { pullTeacherIdentityFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
 
 export default function TeacherPlatformSettingsView() {
   const [formState, setFormState] = useState<OwnerTeacherIdentity>(
@@ -27,6 +28,12 @@ export default function TeacherPlatformSettingsView() {
 
   useEffect(() => {
     setFormState(loadTeacherIdentitySSOT());
+    void pullTeacherIdentityFromSupabaseCloud().then((cloudIdentity) => {
+      if (cloudIdentity) {
+        setFormState(cloudIdentity);
+        saveTeacherIdentitySSOT(cloudIdentity);
+      }
+    });
   }, []);
 
   const toggleGradeEnabled = (gradeId: string) => {

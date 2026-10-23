@@ -81,6 +81,8 @@ export default function StudentLearningPortalView() {
   const [gradeTopThree, setGradeTopThree] = useState<
     readonly HonorStudentEntry[]
   >([]);
+  const [activeExamStatus, setActiveExamStatus] = useState<"active" | "archived">("active");
+  const [refreshTick, setRefreshTick] = useState<number>(0);
   const [footerText, setFooterText] = useState<string>(
     DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText
   );
@@ -99,7 +101,8 @@ export default function StudentLearningPortalView() {
   useEffect(() => {
     const metric = getGradeAnalyticsAndHonorRollSSOT(studentGradeId);
     setGradeTopThree(metric.topThreeHonorRoll);
-  }, [studentGradeId]);
+    setActiveExamStatus(metric.activeExamStatus);
+  }, [studentGradeId, refreshTick, activeTabId]);
 
   const currentGradeObj =
     enabledGrades.find((g) => g.id === studentGradeId) || enabledGrades[0];
@@ -185,13 +188,17 @@ export default function StudentLearningPortalView() {
                     👑 قاعة المتميزين — {currentGradeObj?.nameArabic} فقط
                   </h2>
                   <p className="text-xs font-bold text-slate-500">
-                    أفضل ٣ طلاب في صفك الدراسي هذا الشهر
+                    أفضل ٣ طلاب تخطوا نسبة ٧٠٪ في الاختبار النشط لصفك الدراسي
                   </p>
                 </div>
 
-                {gradeTopThree.length === 0 ? (
+                {activeExamStatus === "archived" ? (
+                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs font-bold text-slate-500">
+                    📦 تمت أرشفة الاختبار السابق — قاعة المتميزين في انتظار الطلاب الجدد الذين سيتخطون نسبة 70% في الاختبار القادم.
+                  </div>
+                ) : gradeTopThree.length === 0 ? (
                   <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 text-center text-xs font-bold text-slate-500">
-                    سيتم إعلان أوائل ({currentGradeObj?.nameArabic}) فور انتهاء الاختبار القادم.
+                    في انتظار الطلاب الأوائل الحاصلين على 70% فأعلى في الاختبار الحالي لـ ({currentGradeObj?.nameArabic}).
                   </div>
                 ) : (
                   <div className="space-y-2.5">
@@ -226,7 +233,13 @@ export default function StudentLearningPortalView() {
             </div>
           )}
 
-          {activeTabId === "live_exam" && <StudentAssignedExamsTab />}
+          {activeTabId === "live_exam" && (
+            <StudentAssignedExamsTab
+              studentNameAr={studentName}
+              studentGradeId={studentGradeId}
+              onExamSubmitted={() => setRefreshTick((t) => t + 1)}
+            />
+          )}
           {activeTabId === "videos" && <StudentAssignedVideosTab />}
           {activeTabId === "booklets" && <StudentAssignedBookletsTab />}
           {activeTabId === "homework" && <StudentAssignedHomeworkTab />}

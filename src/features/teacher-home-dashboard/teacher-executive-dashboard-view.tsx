@@ -18,7 +18,10 @@ import {
 } from "@/core/ssot/teacher-identity-ssot";
 import type { CurriculumGradeNode } from "@/core/ssot/curriculum-hierarchy-ssot";
 import {
+  archiveActiveOnlineExamForGradeSSOT,
   getGradeAnalyticsAndHonorRollSSOT,
+  MIN_HONOR_ROLL_PERCENTAGE_SSOT,
+  startNewOnlineExamForGradeSSOT,
   type GradeAnalyticsMetric,
 } from "./grade-honor-roll-ssot";
 
@@ -28,6 +31,7 @@ export default function TeacherExecutiveDashboardView() {
   );
   const [enabledGrades, setEnabledGrades] = useState<readonly CurriculumGradeNode[]>([]);
   const [selectedHonorGradeId, setSelectedHonorGradeId] = useState<string>("prep-3");
+  const [refreshTick, setRefreshTick] = useState<number>(0);
 
   useEffect(() => {
     setIdentity(loadTeacherIdentitySSOT());
@@ -39,10 +43,11 @@ export default function TeacherExecutiveDashboardView() {
   }, []);
 
   const gradeMetrics: readonly GradeAnalyticsMetric[] = useMemo(() => {
+    void refreshTick;
     return enabledGrades.map((g) =>
       getGradeAnalyticsAndHonorRollSSOT(g.id, g.nameArabic)
     );
-  }, [enabledGrades]);
+  }, [enabledGrades, refreshTick]);
 
   const totalRegistered = gradeMetrics.reduce((s, m) => s + m.registeredCount, 0);
   const totalCompletedExams = gradeMetrics.reduce((s, m) => s + m.completedExamsCount, 0);
@@ -278,66 +283,122 @@ export default function TeacherExecutiveDashboardView() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white">
-                👑 قاعة المتميزين (أفضل ٣ طلاب لكل صف دراسي)
+                👑 قاعة المتميزين الحية (أفضل ٣ طلاب تخطوا {MIN_HONOR_ROLL_PERCENTAGE_SSOT}% في الاختبار النشط)
               </h2>
               <p className="text-xs text-slate-500">
-                تظهر هذه اللوحة لطلاب كل صف بشكل مستقل تماماً بحيث يرى طلاب كل صف أوائل صفهم فقط
+                تتحدث أوتوماتيكياً بعد كل طالب ينهي الاختبار الأونلاين، وتختفي فور أرشفة الاختبار لتنتظر أوائل الاختبار الجديد
               </p>
             </div>
 
-            {/* شريط اختيار الصف لعرض أوائله */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-              {enabledGrades.map((g) => (
+            <div className="flex flex-wrap items-center gap-2">
+              {activeHonorMetric.activeExamStatus === "active" ? (
                 <button
-                  key={g.id}
                   type="button"
-                  onClick={() => setSelectedHonorGradeId(g.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
-                    selectedHonorGradeId === g.id
-                      ? "bg-indigo-900 text-white dark:bg-teal-600 shadow-xs"
-                      : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                  }`}
+                  onClick={() => {
+                    archiveActiveOnlineExamForGradeSSOT(selectedHonorGradeId);
+                    setRefreshTick((t) => t + 1);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black cursor-pointer shadow-xs"
                 >
-                  {g.nameArabic}
+                  📦 أرشفة الاختبار الحالي (إخفاء القاعة وانتظار الاختبار الجديد)
                 </button>
-              ))}
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    startNewOnlineExamForGradeSSOT(
+                      selectedHonorGradeId,
+                      `اختبار جديد — ${activeHonorMetric.gradeNameAr}`
+                    );
+                    setRefreshTick((t) => t + 1);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-black cursor-pointer shadow-xs"
+                >
+                  🚀 فتح اختبار جديد لهذا الصف واستقبال الأوائل (&ge;{MIN_HONOR_ROLL_PERCENTAGE_SSOT}%)
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {activeHonorMetric.topThreeHonorRoll.map((stu) => {
-              const medal = stu.rank === 1 ? "🥇 المركز الأول" : stu.rank === 2 ? "🥈 المركز الثاني" : "🥉 المركز الثالث";
-              return (
-                <div
-                  key={stu.studentCode}
-                  className="p-5 rounded-2xl bg-gradient-to-b from-amber-50/60 to-white dark:from-amber-950/20 dark:to-slate-900 border border-amber-200/80 dark:border-amber-800/50 flex flex-col justify-between gap-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-black">
-                      {medal}
-                    </span>
-                    <span className="font-mono text-xs font-bold text-slate-400">
-                      كود: {stu.studentCode}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">
-                      {stu.studentNameAr}
-                    </h3>
-                    <p className="text-xs font-bold text-slate-500 mt-0.5">
-                      {activeHonorMetric.gradeNameAr} • أتمّ {stu.examsCompleted} اختبارات
-                    </p>
-                  </div>
-                  <div className="pt-2 border-t border-amber-200/50 dark:border-amber-900/40 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500">متوسط الدرجات:</span>
-                    <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 font-mono">
-                      {stu.averagePercentage}%
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          {/* شريط اختيار الصف لعرض أوائله */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {enabledGrades.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setSelectedHonorGradeId(g.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
+                  selectedHonorGradeId === g.id
+                    ? "bg-indigo-900 text-white dark:bg-teal-600 shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                {g.nameArabic}
+              </button>
+            ))}
           </div>
+
+          {activeHonorMetric.activeExamStatus === "archived" ? (
+            <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-2">
+              <div className="text-2xl">📦</div>
+              <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">
+                تمت أرشفة الاختبار السابق لـ ({activeHonorMetric.gradeNameAr})
+              </h3>
+              <p className="text-xs font-bold text-slate-500 max-w-lg mx-auto">
+                اختفت قاعة المتميزين السابقة وهي الآن في انتظار الطلاب الجدد الذين سيتخطون نسبة {MIN_HONOR_ROLL_PERCENTAGE_SSOT}% في الاختبار الجديد.
+              </p>
+            </div>
+          ) : activeHonorMetric.topThreeHonorRoll.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-2">
+              <div className="text-2xl">⏳</div>
+              <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">
+                في انتظار الطلاب الحاصلين على {MIN_HONOR_ROLL_PERCENTAGE_SSOT}% فأعلى
+              </h3>
+              <p className="text-xs font-bold text-slate-500">
+                بمجرد انتهاء أي طالب من الاختبار الأونلاين وحصوله على {MIN_HONOR_ROLL_PERCENTAGE_SSOT}% أو أكثر سيظهر اسمه هنا أوتوماتيكياً.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {activeHonorMetric.topThreeHonorRoll.map((stu) => {
+                const medal =
+                  stu.rank === 1
+                    ? "🥇 المركز الأول"
+                    : stu.rank === 2
+                    ? "🥈 المركز الثاني"
+                    : "🥉 المركز الثالث";
+                return (
+                  <div
+                    key={stu.studentCode}
+                    className="p-5 rounded-2xl bg-gradient-to-b from-amber-50/60 to-white dark:from-amber-950/20 dark:to-slate-900 border border-amber-200/80 dark:border-amber-800/50 flex flex-col justify-between gap-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-black">
+                        {medal}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-slate-400">
+                        كود: {stu.studentCode}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white">
+                        {stu.studentNameAr}
+                      </h3>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5">
+                        {activeHonorMetric.gradeNameAr} • تخطى شرط الـ {MIN_HONOR_ROLL_PERCENTAGE_SSOT}%
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-amber-200/50 dark:border-amber-900/40 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-500">الدرجة المحققة:</span>
+                      <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 font-mono">
+                        {stu.averagePercentage}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       </main>
     </div>
