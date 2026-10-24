@@ -39,8 +39,10 @@ export default function SideBySideDiagramDocker({
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const formattedQNum = formatNumeralsByModeSSOT(question.questionNumber, settings.numeralMode);
   const formattedMarks = formatNumeralsByModeSSOT(question.marks, settings.numeralMode);
-  const isBookletSolvedExample = question.id.startsWith("booklet-s1-");
-  const isBookletDrillOrHomework = question.id.startsWith("booklet-s2-");
+  const isBookletDrill = question.id.includes("-drill-");
+  const isBookletSolvedExample = question.id.startsWith("booklet-s1-") && !isBookletDrill;
+  const isBookletHomework = question.id.includes("-hw-") || question.id.startsWith("booklet-s2-");
+  const isBookletDrillOrHomework = isBookletDrill || isBookletHomework;
   const isSolvedMode =
     isBookletSolvedExample ||
     settings.answerVisibilityMode === "questions_with_answers" ||
@@ -52,16 +54,18 @@ export default function SideBySideDiagramDocker({
     ? isOddQuestion
       ? "#F2FBF7"
       : "#F0F9FF"
-    : isBookletDrillOrHomework
-      ? "#FFFFFF"
+    : isBookletDrill
+      ? "#F8FAFC"
       : "#FFFFFF";
   const cardBorderColorHex = isBookletSolvedExample
     ? isOddQuestion
       ? "#10B981"
       : "#0E7490"
-    : isBookletDrillOrHomework
-      ? "#9D174D"
-      : palette.borderHex;
+    : isBookletDrill
+      ? "#6366F1"
+      : isBookletHomework
+        ? "#9D174D"
+        : palette.borderHex;
   const badgeBgColorHex = isBookletSolvedExample
     ? isOddQuestion
       ? "#065F46"
@@ -114,6 +118,24 @@ export default function SideBySideDiagramDocker({
               </span>
             )}
           </div>
+        ) : isBookletDrill ? (
+          <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">
+            <span
+              style={{ backgroundColor: "#4338CA" }}
+              className="px-3 py-1 rounded-lg text-white text-[0.86em] font-black inline-flex items-center gap-1.5 shadow-xs"
+            >
+              <span>🎯</span>
+              <span>
+                حاول بنفسك ({formattedQNum})
+              </span>
+            </span>
+            <span
+              style={{ color: "#4338CA", borderColor: "#C7D2FE" }}
+              className="px-2 py-0.5 rounded bg-indigo-50 border text-[0.78em] font-black"
+            >
+              تدريب فهم مباشر
+            </span>
+          </div>
         ) : (
           <div
             style={{
@@ -125,10 +147,10 @@ export default function SideBySideDiagramDocker({
           >
             <div className="flex items-center gap-1.5 min-w-0">
               <span
-                style={{ backgroundColor: isBookletDrillOrHomework ? "#4338CA" : palette.primaryHex }}
+                style={{ backgroundColor: palette.primaryHex }}
                 className="px-2 py-0.5 rounded-md text-white text-[0.84em] font-black shrink-0 shadow-2xs"
               >
-                {isBookletDrillOrHomework ? `#${formattedQNum}` : `س (${formattedQNum})`}
+                {`#${formattedQNum}`}
               </span>
               {question.citationBadgeAr && (
                 <span
@@ -140,12 +162,10 @@ export default function SideBySideDiagramDocker({
               )}
             </div>
             <span
-              style={{ color: isBookletDrillOrHomework ? "#9D174D" : palette.primaryHex }}
+              style={{ color: "#9D174D" }}
               className="text-[0.78em] font-black bg-white px-2 py-0.2 rounded-md border border-slate-200 shrink-0 shadow-2xs"
             >
-              {isBookletDrillOrHomework
-                ? `مسألة تدريب / واجب (${formattedQNum})`
-                : `${formattedMarks} ${question.marks === 1 ? "درجة" : "درجات"}`}
+              مسألة واجب ({formattedQNum})
             </span>
           </div>
         )}
@@ -287,10 +307,10 @@ export default function SideBySideDiagramDocker({
         !isBookletSolvedExample && (
           <div className="px-2.5 pb-2.5 pt-1.5 bg-slate-50/70 border-t border-dashed border-slate-300 space-y-1.5">
             <div
-              style={{ color: isBookletDrillOrHomework ? "#9D174D" : palette.primaryHex }}
+              style={{ color: isBookletDrill ? "#4338CA" : isBookletHomework ? "#9D174D" : palette.primaryHex }}
               className="text-[0.8em] font-black text-left"
             >
-              {isBookletDrillOrHomework ? "إجابة الواجب / مساحة الحل:" : "مساحة الحل:"}
+              {isBookletDrill ? "إجابة تدريب حاول بنفسك:" : isBookletHomework ? "إجابة الواجب المنزلي:" : "مساحة الحل:"}
             </div>
             {[1, 2].map((lineIdx) => (
               <div
