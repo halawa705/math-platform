@@ -25,8 +25,10 @@ import {
   stripInlineChoicesFromPromptText,
 } from "./notebooklm-exam-questions-parser";
 import {
-  extractStage2DrillsAndHomeworkBlocks,
-  parseStage1IdeasToPrintableItems,
+  buildStage2PrintableItem,
+  extractConceptAndRule,
+  parseSolvedExamplesFromSection,
+  parseStage2ByIdeas,
   parseStage3SolutionsMap,
 } from "./notebooklm-stage-parsers-helper";
 
@@ -63,10 +65,71 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   const cleanS3 = sanitizeNotebookLMCitationsAndLatex(params.stage3Raw || "").cleanedText;
   const resultItems: PrintableMathQuestionItem[] = [];
 
-  // 1. المرحلة الأولى: استخراج الأفكار والأمثلة المحلولة
+  const solutionsMap = parseStage3SolutionsMap(cleanS3);
+  const { drillsByIdea, allHomework } = parseStage2ByIdeas(cleanS2);
+
+  // 1. معالجة المرحلة 1 (الأفكار والمفاهيم والقواعد والأمثلة) مع ربط تدريبات حاول بنفسك بكل فكرة مباشرة
   if (cleanS1) {
-    const s1Items = parseStage1IdeasToPrintableItems(cleanS1, params.branchNameAr);
-    resultItems.push(...s1Items);
+    const rawBlocks = cleanS1
+      .replace(/^[\s\S]*?(?=(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i, "")
+      .split(/(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i)
+      .filter((b) => b.length > 20);
+
+    rawBlocks.forEach((block, ideaIdx) => {
+      const titleMatch = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)(?:[:|]\s*\[?([^\]\n|]+)\]?)?/i);
+      const ideaNumAr = titleMatch?.[1]?.trim() || `${ideaIdx + 1}`;
+      const ideaNameAr = titleMatch?.[2]?.trim() || "";
+      const fullTitle = `الفكرة ${ideaNumAr}${ideaNameAr ? `: ${ideaNameAr}` : ""}`;
+
+      const codeMatch = block.match(/معرف\s*الفكرة\s*:\s*(idea-\d+)/i);
+      const ideaKey = codeMatch ? codeMatch[1].toLowerCase() : `idea-${ideaIdx + 1}`;
+
+      const { concept, rule } = extractConceptAndRule(block);
+
+      const examplesPart = block.replace(
+        /^[\s\S]*?(?=(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i,
+        ""
+      );
+      const examples = parseSolvedExamplesFromSection(examplesPart, fullTitle, concept);
+
+      // إضافة الأمثلة المحلولة للفكرة
+      examples.forEach((ex, exIdx) => {
+        const geoMatch = ex.geometryRaw
+          ? matchOptionalGeometryFigureFromArabicDescription(ex.geometryRaw, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
+          : undefined;
+
+        resultItems.push({
+          id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
+          questionNumber: resultItems.length + 1,
+          kind: geoMatch ? "essay_geometry" : "essay_algebra",
+          branchBadgeAr: params.branchNameAr,
+          marks: 2,
+          promptAr: ex.promptAr,
+          modelAnswerAr: ex.steps.join(" ⇐ ") || ex.rawFinal || "تطبيق مباشر",
+          solutionStepsAr: ex.steps.length > 0 ? ex.steps : undefined,
+          geometryFigure: geoMatch,
+          ideaBannerTitleAr: exIdx === 0 ? fullTitle : undefined,
+          conceptExplanationAr: exIdx === 0 ? concept : undefined,
+          framedRuleAr: exIdx === 0 ? rule : undefined,
+        });
+      });
+
+      // إضافة تدريبات حاول بنفسك الخاصة بهذه الفكرة مباشرة تحت أمثلتها
+      const matchingDrills = drillsByIdea.get(ideaKey) || drillsByIdea.get(`idx-${ideaIdx + 1}`) || [];
+      matchingDrills.forEach((drill, dIdx) => {
+        resultItems.push(
+          buildStage2PrintableItem({
+            id: `booklet-s1-drill-${ideaIdx + 1}-${dIdx + 1}`,
+            questionNumber: resultItems.length + 1,
+            block: drill,
+            branchNameAr: params.branchNameAr,
+            defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
+            defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
+            solutionsMap,
+          })
+        );
+      });
+    });
 
     if (resultItems.length === 0) {
       const fallbackQs = parseNotebookLMExamQuestionsToIR({
@@ -87,46 +150,21 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
     }
   }
 
-  // 2. المرحلة الثانية: استخراج تدريبات حاول بنفسك والواجب
-  const solutionsMap = parseStage3SolutionsMap(cleanS3);
-  if (cleanS2) {
-    const s2Items = extractStage2DrillsAndHomeworkBlocks(cleanS2);
-    let drillCount = 0;
-    let hwCount = 0;
-
-    s2Items.forEach((it) => {
-      const isDrill = it.type === "drill";
-      if (isDrill) drillCount++;
-      else hwCount++;
-
-      const geoMatch = it.geometryText
-        ? matchOptionalGeometryFigureFromArabicDescription(it.geometryText, `s2_g_${resultItems.length + 1}`)
-        : undefined;
-
-      const mcqChoices = parseChoicesTupleFromBlock(it.promptText);
-      const promptAr = mcqChoices ? stripInlineChoicesFromPromptText(it.promptText) : it.promptText;
-      const isMcq = it.kindTag.includes("اختر") || mcqChoices !== undefined;
-      const matchedSteps = (it.qCode ? solutionsMap.byCode.get(it.qCode) : undefined) || solutionsMap.byIndex.get(resultItems.length + 1);
-
-      resultItems.push({
-        id: `booklet-s2-${it.type}-${resultItems.length + 1}`,
-        questionNumber: resultItems.length + 1,
-        kind: isMcq ? "mcq" : geoMatch ? "essay_geometry" : "essay_algebra",
-        branchBadgeAr: params.branchNameAr,
-        marks: isMcq ? 1 : 2,
-        promptAr: promptAr || (isDrill ? `تمرين حاول بنفسك (${drillCount})` : `سؤال واجب (${hwCount})`),
-        mcqChoicesAr: mcqChoices,
-        correctMcqIndex: resolveCorrectChoiceIndex(matchedSteps?.[matchedSteps.length - 1] || "", mcqChoices),
-        modelAnswerAr: matchedSteps ? matchedSteps.join(" ⇐ ") : isDrill ? "حل الطالب كتطبيق مباشر" : "واجب منزلي للتقييم والتصحيح",
-        solutionStepsAr: matchedSteps,
-        geometryFigure: geoMatch,
-        ideaBannerTitleAr:
-          isDrill && drillCount === 1
-            ? "✍️ أولاً: تدريبات الفهم المباشر (حاول بنفسك)"
-            : !isDrill && hwCount === 1
-              ? "📚 ثانياً: تمارين الواجب المنزلي على الدرس"
-              : undefined,
-      });
+  // 2. إضافة تمارين الواجب المنزلي الشاملة في نهاية الدرس
+  if (allHomework.length > 0) {
+    allHomework.forEach((hw, hIdx) => {
+      resultItems.push(
+        buildStage2PrintableItem({
+          id: `booklet-s2-hw-${hIdx + 1}`,
+          questionNumber: resultItems.length + 1,
+          block: hw,
+          branchNameAr: params.branchNameAr,
+          defaultPrompt: `سؤال واجب (${hIdx + 1})`,
+          defaultAnswer: "واجب منزلي للتقييم والتصحيح",
+          bannerTitleAr: hIdx === 0 ? "📚 تمارين الواجب المنزلي الشاملة على الدرس" : undefined,
+          solutionsMap,
+        })
+      );
     });
   }
 

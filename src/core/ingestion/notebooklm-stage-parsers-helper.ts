@@ -1,9 +1,9 @@
 /**
  * @file notebooklm-stage-parsers-helper.ts
- * @description دوال ذرية مساعدة لتحليل حقول ومراحل ردود NotebookLM:
- * - استخراج وتنظيف الحقول النصية المؤطرة بعلامات التنصيص أو الأقواس.
- * - تحليل وربط حلول المرحلة 3 بالمعرفات والأرقام.
- * - تفنيط الأفكار والأمثلة وتدريبات حاول بنفسك وتمارين الواجب بدون ابتلاع أو دمج.
+ * @description محلل وناسج مراحل المذكرة الدراسية بتفنيط حتمي دقيق وفق الهيكل البيداغوجي:
+ * - يعزل المفهوم والقاعدة حصراً دون ابتلاع الأمثلة اللاحقة.
+ * - يربط كل فكرة بأمثلتها المحلولة وتدريبات "حاول بنفسك" الخاصة بها مباشرة.
+ * - يجمع تمارين "الواجب المنزلي" في قسم مستقل بنهاية الدرس.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 245 سطراً).
  */
 
@@ -23,12 +23,17 @@ export function cleanBracketedField(val: string): string {
   return val.replace(/\s*---+\s*$/g, "").replace(/^[\s\[*#]+|[\s\]*#]+$/g, "").trim();
 }
 
-export function extractLineField(block: string, labelPattern: string): string {
-  const rx = new RegExp(
-    `(?:^|\\n)\\s*(?:${labelPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:الفكرة|مفهوم|المفهوم|القاعدة|القانون|المثال|مثال|معرف|نص|خطوات|الناتج|أولاً|ثانياً|حاول|تمارين|نهاية)\\s*[:|#]|$)`,
-    "i"
+export function extractConceptAndRule(block: string): { concept: string; rule: string } {
+  const conceptMatch = block.match(
+    /(?:مفهوم\s*الفكرة|المفهوم_الرياضي|المفهوم\s*الرياضي|الشرح)\s*:\s*([\s\S]*?)(?=\n\s*(?:القاعدة|القانون|المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|$))/i
   );
-  return cleanBracketedField(block.match(rx)?.[1] ?? "");
+  const ruleMatch = block.match(
+    /(?:القاعدة\s*الرياضية|القانون_أو_القاعدة|القانون\s*أو\s*القاعدة|صندوق_القاعدة|القانون)\s*:\s*([\s\S]*?)(?=\n\s*(?:المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|$))/i
+  );
+  return {
+    concept: cleanBracketedField(conceptMatch?.[1] ?? ""),
+    rule: cleanBracketedField(ruleMatch?.[1] ?? ""),
+  };
 }
 
 export function parseStage3SolutionsMap(stage3Cleaned: string): {
@@ -62,184 +67,149 @@ export function parseStage3SolutionsMap(stage3Cleaned: string): {
   return { byCode, byIndex };
 }
 
-export interface ExtractedStage2Item {
-  readonly type: "drill" | "homework";
-  readonly orderNum: string;
-  readonly kindTag: string;
-  readonly rawBlock: string;
-  readonly qCode?: string;
+export interface ExtractedQuestionBlock {
+  readonly rawText: string;
   readonly promptText: string;
-  readonly geometryText?: string;
+  readonly qCode?: string;
+  readonly kindTag?: string;
 }
 
-export function extractStage2DrillsAndHomeworkBlocks(cleanS2: string): readonly ExtractedStage2Item[] {
-  if (!cleanS2) return [];
-  const cleanBody = cleanS2.replace(/^[\s\S]*?(?=(?:حاول\s+بنفسك|تمارين\s+الواجب|\[1\]|#1|الفكرة\s+))/i, "").trim();
-  const results: ExtractedStage2Item[] = [];
+export function parseStage2ByIdeas(s2Raw: string): {
+  readonly drillsByIdea: Map<string, ExtractedQuestionBlock[]>;
+  readonly allHomework: ExtractedQuestionBlock[];
+} {
+  const drillsByIdea = new Map<string, ExtractedQuestionBlock[]>();
+  const allHomework: ExtractedQuestionBlock[] = [];
+  if (!s2Raw) return { drillsByIdea, allHomework };
 
-  const drillMatches = Array.from(
-    cleanBody.matchAll(/(?:\[(\d+)\]|تمرين\s*\(?(\d+)\)?|سؤال\s*\(?(\d+)\)?)\s*(?:\|\s*معرف\s*السؤال\s*:\s*(?:try|practice|drill)[\w-]+)?\s*([\s\S]*?)(?=(?:\n\s*(?:\[\d+\]|تمرين\s*\(?\d+\)?|سؤال\s*\(?\d+\)?|#\d+|تمارين\s+الواجب|الواجب\s+المنزلي|الفكرة|نهاية))|$)/gi)
-  );
-  drillMatches.forEach((m, idx) => {
-    const raw = (m[4] || m[0]).trim();
-    const qCode = raw.match(/معرف\s*السؤال\s*:\s*((?:practice|drill|try)-\d+-\d+)/i)?.[1]?.toLowerCase();
-    const geoMatch = raw.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-    const promptText = raw.replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "").replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
-    results.push({ type: "drill", orderNum: m[1] || m[2] || m[3] || String(idx + 1), kindTag: "", rawBlock: raw, qCode, promptText, geometryText: geoMatch?.[1] });
+  const ideaBlocks = s2Raw
+    .replace(/^[\s\S]*?(?=(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|[0-9٠-٩]+))/i, "")
+    .split(/(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i)
+    .filter((b) => b.length > 20);
+
+  ideaBlocks.forEach((block, idx) => {
+    const codeMatch = block.match(/معرف\s*الفكرة\s*:\s*(idea-\d+)/i);
+    const key = codeMatch ? codeMatch[1].toLowerCase() : `idea-${idx + 1}`;
+
+    const tryMatch = block.match(/(?:أولاً\s*:\s*)?تمارين\s*حاول\s*بنفسك([\s\S]*?)(?=(?:ثانياً\s*:\s*)?تمارين\s*الواجب|نهاية\s*الفكرة|###|$)/i);
+    const tryBody = tryMatch ? tryMatch[1] : "";
+
+    const hwMatch = block.match(/(?:ثانياً\s*:\s*)?تمارين\s*الواجب\s*المنزلي([\s\S]*?)(?=نهاية\s*الفكرة|###|$)/i);
+    const hwBody = hwMatch ? hwMatch[1] : "";
+
+    const drills: ExtractedQuestionBlock[] = [];
+    if (tryBody) {
+      const splits = tryBody
+        .split(/(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\]))/i)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 10);
+
+      splits.forEach((s) => {
+        const qCode = s.match(/معرف\s*السؤال\s*:\s*((?:try|practice|drill)-\d+-\d+)/i)?.[1]?.toLowerCase();
+        const cleanPrompt = s
+          .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
+          .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
+          .trim();
+        drills.push({ rawText: s, promptText: cleanPrompt, qCode });
+      });
+    }
+
+    if (hwBody) {
+      const splits = hwBody
+        .split(/(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\]))/i)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 10);
+
+      splits.forEach((s) => {
+        const qCode = s.match(/معرف\s*السؤال\s*:\s*((?:hw|homework)-\d+-\d+)/i)?.[1]?.toLowerCase();
+        const cleanPrompt = s
+          .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
+          .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
+          .trim();
+        allHomework.push({ rawText: s, promptText: cleanPrompt, qCode });
+      });
+    }
+
+    drillsByIdea.set(key, drills);
+    drillsByIdea.set(`idx-${idx + 1}`, drills);
   });
 
-  const hwMatches = Array.from(
-    cleanBody.matchAll(/(?:#(\d+)|سؤال\s*\(?(\d+)\)?|مسألة\s*\(?(\d+)\)?)\s*(\[(?:اختر|أكمل|مقالي)\])?\s*([\s\S]*?)(?=(?:\n\s*(?:#\d+|سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|الفكرة|نهاية))|$)/gi)
-  );
-  hwMatches.forEach((m, idx) => {
-    const raw = m[5].trim();
-    const qCode = raw.match(/معرف\s*السؤال\s*:\s*((?:homework|hw)-\d+-\d+)/i)?.[1]?.toLowerCase();
-    const geoMatch = raw.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-    const promptText = raw.replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "").replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
-    results.push({ type: "homework", orderNum: m[1] || m[2] || m[3] || String(idx + 1), kindTag: (m[4] || "").toLowerCase(), rawBlock: raw, qCode, promptText, geometryText: geoMatch?.[1] });
+  return { drillsByIdea, allHomework };
+}
+
+export function parseSolvedExamplesFromSection(
+  examplesSection: string,
+  ideaTitle: string,
+  concept: string
+): Array<{ promptAr: string; steps: string[]; rawFinal: string; geometryRaw?: string }> {
+  const exSplits = examplesSection
+    .split(/(?:^|\n)\s*(?=(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال\s*:\s*example-[0-9a-zA-Z_-]+|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i)
+    .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل)/i.test(b));
+
+  const list = exSplits.length > 0 ? exSplits : [examplesSection];
+  const results: Array<{ promptAr: string; steps: string[]; rawFinal: string; geometryRaw?: string }> = [];
+
+  list.forEach((exBody) => {
+    const promptMatch = exBody.match(/(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*([\s\S]*?)(?=\n\s*(?:خطوات\s*الحل|الحل|الخطوة|الناتج\s*النهائي|$))/i);
+    const rawProblem = promptMatch?.[1] || exBody.split(/\n\s*(?:خطوات\s*الحل|الحل|الخطوة)\s*:/i)[0]?.trim() || concept || ideaTitle;
+    const cleanProblem = rawProblem
+      .replace(/^(?:###\s*)?(?:المثال\s*\S+|مثال\s*\S+)\s*/i, "")
+      .replace(/\|\s*معرف\s*المثال\s*:\s*[\w-]+/gi, "")
+      .replace(/\|\s*نوع\s*المسألة\s*:\s*\[?[^|\n\]]+\]?/gi, "")
+      .replace(/^(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*/i, "")
+      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
+      .trim();
+
+    const stepsMatch = exBody.match(/(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|$))/i);
+    const rawFinal = exBody.match(/(?:الناتج\s*النهائي|الإجابة\s*النهائية)\s*:\s*([^\n]+)/i)?.[1]?.trim() || "";
+    const steps = mergeLogicalSolutionSteps(stepsMatch?.[1] || "").filter(
+      (line) => !/^(?:معرف\s*المثال|نص\s*المسألة|نوع\s*المسألة|المثال\s*\d+|مثال\s*\d+)/i.test(line) && !/example-\d+-\d+/i.test(line)
+    );
+    if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);
+
+    const geoMatch = exBody.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
+    results.push({ promptAr: cleanProblem || ideaTitle, steps, rawFinal, geometryRaw: geoMatch?.[1] });
   });
 
   return results;
 }
 
-export function parseStage1IdeasToPrintableItems(cleanS1: string, branchNameAr: string): readonly PrintableMathQuestionItem[] {
-  const resultItems: PrintableMathQuestionItem[] = [];
-  const deferredHomework: PrintableMathQuestionItem[] = [];
-  if (!cleanS1) return resultItems;
+export function buildStage2PrintableItem(params: {
+  readonly id: string;
+  readonly questionNumber: number;
+  readonly block: ExtractedQuestionBlock;
+  readonly branchNameAr: string;
+  readonly defaultPrompt: string;
+  readonly defaultAnswer: string;
+  readonly bannerTitleAr?: string;
+  readonly solutionsMap: {
+    readonly byCode: Map<string, readonly string[]>;
+    readonly byIndex: Map<number, readonly string[]>;
+  };
+}): PrintableMathQuestionItem {
+  const mcqChoices = parseChoicesTupleFromBlock(params.block.promptText);
+  const promptAr = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
+  const isMcq = (params.block.rawText || "").includes("اختر") || mcqChoices !== undefined;
+  const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) ||
+    params.solutionsMap.byIndex.get(params.questionNumber);
 
-  const ideaBlocks = cleanS1
-    .replace(/^[\s\S]*?(?=(?:###\s*)?(?:الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|[0-9٠-٩]+)|===\s*\[(?:STAGE_1_IDEA|IDEA)))/i, "")
-    .split(/(?=(?:^|\n)\s*(?:###\s*)?(?:الفكرة\s+[^\n:]+:|===\s*\[(?:STAGE_1_IDEA|IDEA)\s*:\s*\d+\]))/i)
-    .map((b) => b.replace(/نهاية\s*الفكرة[^\n]*/gi, "").trim())
-    .filter((b) => b.length > 15 && !/^فهرس أفكار الدرس/i.test(b));
+  const geoMatch = params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
+  const geometryFigure = geoMatch?.[1]
+    ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `${params.id}_geo`)
+    : undefined;
 
-  ideaBlocks.forEach((ideaBlock, ideaIdx) => {
-    const headerLine = ideaBlock.split(/\r?\n/)[0] || "";
-    const rawTitle = headerLine
-      .replace(/^(?:###\s*)?(?:الفكرة\s+[^:]+:|===\s*\[[^\]]+\]\s*===)/i, "")
-      .replace(/\|\s*نوع\s*المسألة\s*:[^|]+/gi, "")
-      .replace(/\|\s*معرف\s*الفكرة\s*:[^|]+/gi, "")
-      .replace(/#+/g, "")
-      .trim() || extractLineField(ideaBlock, "عنوان_الفكرة|العنوان") || `الفكرة (${ideaIdx + 1})`;
-    const ideaTitle = cleanBracketedField(rawTitle);
-    const concept = extractLineField(ideaBlock, "مفهوم الفكرة|المفهوم_الرياضي|الشرح");
-    const rule = extractLineField(ideaBlock, "القاعدة الرياضية|القانون_أو_القاعدة|صندوق_القاعدة");
-
-    // فصل المناطق الثلاث داخل الفكرة: الأمثلة المحلولة، حاول بنفسك، الواجب المنزلي
-    const tryMatch = ideaBlock.match(/(?:أولاً\s*:\s*)?تمارين\s*حاول\s*بنفسك([\s\S]*?)(?=(?:ثانياً\s*:\s*)?تمارين\s*الواجب|نهاية\s*الفكرة|$)/i);
-    const tryBody = tryMatch ? tryMatch[1] : "";
-    const hwMatch = ideaBlock.match(/(?:ثانياً\s*:\s*)?تمارين\s*الواجب\s*المنزلي([\s\S]*?)(?=نهاية\s*الفكرة|$)/i);
-    const hwBody = hwMatch ? hwMatch[1] : "";
-    const examplesSection = ideaBlock.split(/(?:أولاً\s*:\s*)?تمارين\s*حاول\s*بنفسك|(?:ثانياً\s*:\s*)?تمارين\s*الواجب/i)[0] || "";
-
-    const exSplits = examplesSection
-      .split(/(?:^|\n)\s*(?=(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال\s*:\s*example-[0-9a-zA-Z_-]+|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i)
-      .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل)/i.test(b));
-
-    // أ) تصيير الأمثلة المحلولة
-    exSplits.forEach((exBody, exIdx) => {
-      const promptMatch = exBody.match(/(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*([\s\S]*?)(?=\n\s*(?:خطوات\s*الحل|الحل|الخطوة|الناتج\s*النهائي|$))/i);
-      const rawProblem = promptMatch?.[1] || exBody.split(/\n\s*(?:خطوات\s*الحل|الحل|الخطوة)\s*:/i)[0]?.trim() || concept || ideaTitle;
-      const cleanProblem = rawProblem.replace(/^(?:###\s*)?(?:المثال\s*\S+|مثال\s*\S+)\s*/i, "").replace(/\|\s*معرف\s*المثال\s*:\s*[\w-]+/gi, "").replace(/\|\s*نوع\s*المسألة\s*:\s*\[?[^|\n\]]+\]?/gi, "").replace(/^(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*/i, "").replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
-
-      const stepsMatch = exBody.match(/(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|$))/i);
-      const rawFinal = extractLineField(exBody, "الناتج النهائي|الإجابة_النهائية|الناتج_النهائي");
-      const steps = mergeLogicalSolutionSteps(stepsMatch?.[1] || "").filter((line) => !/^(?:معرف\s*المثال|نص\s*المسألة|نوع\s*المسألة|المثال\s*\d+|مثال\s*\d+)/i.test(line) && !/example-\d+-\d+/i.test(line));
-      if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);
-
-      const geoMatch = exBody.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-      const geometryFigure = geoMatch?.[1] ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `s1_g_${ideaIdx}_${exIdx}`) : undefined;
-      const mcqChoicesAr = parseChoicesTupleFromBlock(cleanProblem);
-      const cleanPromptAr = mcqChoicesAr ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
-
-      resultItems.push({
-        id: `booklet-s1-ex-${ideaIdx + 1}-${exIdx + 1}`,
-        questionNumber: resultItems.length + 1,
-        kind: mcqChoicesAr ? "mcq" : geometryFigure ? "essay_geometry" : "essay_algebra",
-        branchBadgeAr: branchNameAr,
-        marks: mcqChoicesAr ? 1 : 2,
-        promptAr: cleanPromptAr || ideaTitle,
-        mcqChoicesAr,
-        correctMcqIndex: resolveCorrectChoiceIndex(rawFinal || steps[steps.length - 1] || "", mcqChoicesAr),
-        modelAnswerAr: steps.join(" ⇐ ") || rawFinal || "راجع خطوات المثال",
-        solutionStepsAr: steps.length > 0 ? steps : undefined,
-        geometryFigure,
-        ideaBannerTitleAr: exIdx === 0 ? `الفكرة (${ideaIdx + 1}): ${ideaTitle}` : undefined,
-        conceptExplanationAr: exIdx === 0 ? concept || undefined : undefined,
-        framedRuleAr: exIdx === 0 ? rule || undefined : undefined,
-      });
-    });
-
-    // ب) تصيير تدريبات حاول بنفسك المستقلة لهذه الفكرة
-    if (tryBody) {
-      const trySplits = tryBody
-        .split(/(?:^|\n|\s*-\s*)(?=(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*(?:try|practice|drill)|:|-))/i)
-        .map((s) => s.replace(/#+/g, "").trim())
-        .filter((s) => s.length > 10);
-
-      trySplits.forEach((ts, tIdx) => {
-        const cleanPrompt = ts.replace(/^(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*/i, "").replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "").replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
-        const geoMatch = ts.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-        const geometryFigure = geoMatch?.[1] ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `s1_td_${ideaIdx}_${tIdx}`) : undefined;
-        const mcqChoices = parseChoicesTupleFromBlock(cleanPrompt);
-        const promptAr = mcqChoices ? stripInlineChoicesFromPromptText(cleanPrompt) : cleanPrompt;
-
-        resultItems.push({
-          id: `booklet-s1-drill-${ideaIdx + 1}-${tIdx + 1}`,
-          questionNumber: resultItems.length + 1,
-          kind: mcqChoices ? "mcq" : geometryFigure ? "essay_geometry" : "essay_algebra",
-          branchBadgeAr: branchNameAr,
-          marks: mcqChoices ? 1 : 2,
-          promptAr: promptAr || `تمرين حاول بنفسك (${tIdx + 1})`,
-          mcqChoicesAr: mcqChoices,
-          correctMcqIndex: resolveCorrectChoiceIndex("", mcqChoices),
-          modelAnswerAr: "حل الطالب كتطبيق مباشر",
-          geometryFigure,
-          ideaBannerTitleAr: exSplits.length === 0 && tIdx === 0 ? `الفكرة (${ideaIdx + 1}): ${ideaTitle}` : undefined,
-          conceptExplanationAr: exSplits.length === 0 && tIdx === 0 ? concept || undefined : undefined,
-          framedRuleAr: exSplits.length === 0 && tIdx === 0 ? rule || undefined : undefined,
-        });
-      });
-    }
-
-    // جـ) استخراج تمارين الواجب لتأجيلها لقسم الواجب الشامل في نهاية المذكرة
-    if (hwBody) {
-      const hwSplits = hwBody
-        .split(/(?:^|\n|\s*-\s*)(?=(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*(?:hw|homework)|:|-))/i)
-        .map((s) => s.replace(/#+/g, "").trim())
-        .filter((s) => s.length > 10);
-
-      hwSplits.forEach((hs, hIdx) => {
-        const cleanPrompt = hs.replace(/^(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*/i, "").replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "").replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
-        const geoMatch = hs.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-        const geometryFigure = geoMatch?.[1] ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `s1_hw_${ideaIdx}_${hIdx}`) : undefined;
-        const mcqChoices = parseChoicesTupleFromBlock(cleanPrompt);
-        const promptAr = mcqChoices ? stripInlineChoicesFromPromptText(cleanPrompt) : cleanPrompt;
-
-        deferredHomework.push({
-          id: `booklet-s2-hw-${ideaIdx + 1}-${hIdx + 1}`,
-          questionNumber: 0,
-          kind: mcqChoices ? "mcq" : geometryFigure ? "essay_geometry" : "essay_algebra",
-          branchBadgeAr: branchNameAr,
-          marks: mcqChoices ? 1 : 2,
-          promptAr: promptAr || `سؤال واجب (${hIdx + 1})`,
-          mcqChoicesAr: mcqChoices,
-          correctMcqIndex: resolveCorrectChoiceIndex("", mcqChoices),
-          modelAnswerAr: "واجب منزلي للتقييم والتصحيح",
-          geometryFigure,
-        });
-      });
-    }
-  });
-
-  // دمج تمارين الواجب المؤجلة في النهاية بأرقام تسلسلية صحيحة
-  deferredHomework.forEach((hw, idx) => {
-    resultItems.push({
-      ...hw,
-      questionNumber: resultItems.length + 1,
-      ideaBannerTitleAr: idx === 0 ? "📚 تمارين الواجب المنزلي الشاملة على الدرس" : undefined,
-    });
-  });
-
-  return resultItems;
+  return {
+    id: params.id,
+    questionNumber: params.questionNumber,
+    kind: isMcq ? "mcq" : geometryFigure ? "essay_geometry" : "essay_algebra",
+    branchBadgeAr: params.branchNameAr,
+    marks: isMcq ? 1 : 2,
+    promptAr: promptAr || params.defaultPrompt,
+    mcqChoicesAr: mcqChoices,
+    correctMcqIndex: resolveCorrectChoiceIndex(matchedSteps?.[matchedSteps.length - 1] || "", mcqChoices),
+    modelAnswerAr: matchedSteps ? matchedSteps.join(" ⇐ ") : params.defaultAnswer,
+    solutionStepsAr: matchedSteps,
+    geometryFigure,
+    ideaBannerTitleAr: params.bannerTitleAr,
+  };
 }
