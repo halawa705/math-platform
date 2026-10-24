@@ -33,7 +33,8 @@ export function separateTopLevelArabicFromMathContent(rawLatex: string): string 
   const cleaned = rawLatex
     .replace(/^\\+(?![a-zA-Z{])\s*/, "")
     .replace(/\s*\\+$/, "")
-    .replace(/(^|[^\\a-zA-Z])(frac|sqrt|text|mathrm|textbf|mathbf)\{/g, "$1\\$2{")
+    .replace(/(^|[^\\])\b(frac|sqrt)\{/g, "$1\\$2{")
+    .replace(/\\(?:text|mathrm|textbf)\{\s*(\\frac\{[\s\S]*?\})\s*\}/g, "$1")
     .trim();
   if (!cleaned) return "";
 
@@ -185,10 +186,6 @@ export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
         })
         .replace(/(^|[^\\a-zA-Z])frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1$\\frac{$2}{$3}$")
         .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$\\frac{$1}{$2}$")
-        .replace(
-          /\\?frac\s*([\u0600-\u06FF0-9٠-٩a-zA-Z\s+\-×÷()]{1,35}?)\s*\{\s*([^{}]+)\s*\}/g,
-          "$\\frac{\\text{$1}}{$2}$"
-        )
         .replace(/(^|[^\\a-zA-Z])sqrt(\[[0-9]+\])?\{([^{}]+)\}/g, "$1$\\sqrt$2{$3}$")
         .replace(/\\sqrt(\[[0-9]+\])?\{([^{}]+)\}/g, "$\\sqrt$1{$2}$")
         .replace(

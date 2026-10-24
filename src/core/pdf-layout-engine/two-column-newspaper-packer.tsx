@@ -121,7 +121,7 @@ export default function TwoColumnNewspaperPacker({
         <div
           ref={sheetContainerRef}
           dir="rtl"
-          className="w-full max-w-[794px] min-h-[1123px] bg-white text-slate-950 shadow-2xl p-[5mm] flex flex-col justify-between relative overflow-hidden"
+          className="w-full max-w-[794px] min-h-[1123px] bg-white text-slate-950 shadow-2xl p-[5mm] flex flex-col justify-between relative overflow-hidden print:overflow-visible"
           style={{
             backgroundColor: "#ffffff",
             color: "#0f172a",

@@ -78,7 +78,18 @@ export function triggerIsolatedA4Print(
       overflow: visible !important;
     }
     .katex .mfrac {
-      margin: 0.14em 0.1em !important;
+      margin: 0.2em 0.14em !important;
+    }
+    .grid.grid-cols-2 {
+      display: block !important;
+      columns: 2 !important;
+      column-gap: 5mm !important;
+    }
+    .grid.grid-cols-2 > * {
+      display: inline-block !important;
+      width: 100% !important;
+      margin-bottom: 2.5mm !important;
+      break-inside: auto !important;
     }
     .a4-ministerial-sheet {
       width: 100% !important;

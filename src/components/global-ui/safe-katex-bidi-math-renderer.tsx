@@ -127,12 +127,26 @@ export function sanitizeLatexForSchoolMath(
 
   cleaned = localizeMathExpressionNotationSSOT(cleaned, notationLanguage);
 
+  // فك أي \frac أو \sqrt محبوسة خطأ داخل \text{...} لأن KaTeX لا يصرّف الكسور داخل وسوم النصوص
+  cleaned = cleaned.replace(/\\(?:text|mathrm|textbf)\{\s*(\\frac\{[\s\S]*?\})\s*\}/g, "$1");
+
   if (notationLanguage === "english") {
-    cleaned = cleaned
-      .replace(/س/g, "x")
-      .replace(/ص/g, "y")
-      .replace(/ع/g, "z")
-      .replace(/ح/g, "\\mathbb{R}");
+    // حماية كتل \text{...} بالكامل حتى لا تُمس الحروف والكلمات العربية مثل (المضلع، محيط، الأصغر)
+    const textBlocks: string[] = [];
+    let protectedLatex = cleaned.replace(/\\(?:text|mathrm|textbf|mathbf)\{[^{}]*\}/g, (m) => {
+      textBlocks.push(m);
+      return `___MATH_TXT_${textBlocks.length - 1}___`;
+    });
+
+    // استبدال المتغيرات والرموز المنفردة فقط خارج النصوص
+    protectedLatex = protectedLatex
+      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])س(?![\u0600-\u06FFa-zA-Z_])/g, "x")
+      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ص(?![\u0600-\u06FFa-zA-Z_])/g, "y")
+      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ع(?![\u0600-\u06FFa-zA-Z_])/g, "z")
+      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ك(?![\u0600-\u06FFa-zA-Z_])/g, "k")
+      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ح(?![\u0600-\u06FFa-zA-Z_])/g, "\\mathbb{R}");
+
+    cleaned = protectedLatex.replace(/___MATH_TXT_(\d+)___/g, (_m, idx) => textBlocks[Number(idx)] || "");
   }
 
   // تغليف أي كلمات عربية داخل البسط أو المقام بـ \text{...} حتى لا تلتصق الكلمات العربية ببعضها داخل KaTeX
@@ -141,6 +155,8 @@ export function sanitizeLatexForSchoolMath(
     (match, arabicPhrase: string | undefined) =>
       arabicPhrase ? `\\text{${arabicPhrase.trim()}}` : match
   );
+
+  cleaned = cleaned.replace(/\\text\{\s*\\text\{([^{}]+)\}\s*\}/g, "\\text{$1}");
 
   // تكبير الكسور والجذور داخل السطر لتظهر بحجم كتاب وزاري واضح مع مسافة أمان قبل القوس المغلق
   if (
@@ -198,7 +214,7 @@ export default function SafeKaTeXBiDiMathRenderer({
   return (
     <span
       className={`inline ${
-        hasFractionSegment ? "leading-[2.15] py-0.5" : "leading-relaxed"
+        hasFractionSegment ? "leading-[2.45] py-1 inline-block align-middle" : "leading-relaxed"
       } break-words ${className}`}
     >
       {segments.map((segment, idx) => {
@@ -230,8 +246,9 @@ export default function SafeKaTeXBiDiMathRenderer({
                 unicodeBidi: "isolate",
                 display: isBlockMath ? "block" : "inline-block",
                 maxWidth: "100%",
-                paddingTop: isFractionMath ? "0.24em" : undefined,
-                paddingBottom: isFractionMath ? "0.24em" : undefined,
+                paddingTop: isFractionMath ? "0.32em" : undefined,
+                paddingBottom: isFractionMath ? "0.32em" : undefined,
+                margin: isFractionMath ? "0.12em 0.15em" : undefined,
                 verticalAlign: "middle",
               }}
               className="mx-0.5 font-bold align-middle max-w-full"

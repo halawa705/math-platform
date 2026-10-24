@@ -258,10 +258,15 @@ const ARABIC_ORDINALS_TO_NUMBER: Readonly<Record<string, number>> = {
 
 function inferLessonNumberFromText(text: string): number | null {
   if (!text) return null;
-  const digitMatch = text.match(/(?:الدرس|درس|رقم|^)\s*\(?(\d{1,2})\)?/);
+  const parenMatch = text.match(/\(?(\d{1,2})\)?\s*[-–—:]/);
+  if (parenMatch?.[1]) {
+    const n = parseInt(parenMatch[1], 10);
+    if (n > 0 && n <= 40) return n;
+  }
+  const digitMatch = text.match(/(?:الدرس|درس|رقم|^)\s*\(?(\d{1,2})\)?/i);
   if (digitMatch?.[1]) {
     const n = parseInt(digitMatch[1], 10);
-    if (n > 0 && n <= 30) return n;
+    if (n > 0 && n <= 40) return n;
   }
   for (const [word, num] of Object.entries(ARABIC_ORDINALS_TO_NUMBER)) {
     if (new RegExp(`(?:الدرس\\s+)?${word}\\b`).test(text)) {
@@ -269,6 +274,21 @@ function inferLessonNumberFromText(text: string): number | null {
     }
   }
   return null;
+}
+
+function resolveGradeShortCode(gradeIdOrName: string): string {
+  if (GRADE_SHORT_CODES_MAP[gradeIdOrName]) return GRADE_SHORT_CODES_MAP[gradeIdOrName];
+  if (/أول.*ثانوي|1ث|sec-1/i.test(gradeIdOrName)) return "1ث";
+  if (/ثان.*ثانوي|2ث|sec-2/i.test(gradeIdOrName)) return "2ث";
+  if (/ثالث.*ثانوي|3ث|sec-3/i.test(gradeIdOrName)) return "3ث";
+  if (/أول.*إعدادي|1ع|prep-1/i.test(gradeIdOrName)) return "1ع";
+  if (/ثان.*إعدادي|2ع|prep-2/i.test(gradeIdOrName)) return "2ع";
+  if (/ثالث.*إعدادي|3ع|prep-3/i.test(gradeIdOrName)) return "3ع";
+  if (/سادس.*ابتدائي|6ب|prim-6/i.test(gradeIdOrName)) return "6ب";
+  if (/خامس.*ابتدائي|5ب|prim-5/i.test(gradeIdOrName)) return "5ب";
+  if (/رابع.*ابتدائي|4ب|prim-4/i.test(gradeIdOrName)) return "4ب";
+  if (/ثالث.*ابتدائي|3ب|prim-3/i.test(gradeIdOrName)) return "3ب";
+  return "3ع";
 }
 
 /**
@@ -284,7 +304,7 @@ export function buildStandardDocumentTitleSSOT(params: {
   readonly promptText?: string;
   readonly rawReplyText?: string;
 }): string {
-  const gradeCode = GRADE_SHORT_CODES_MAP[params.gradeId] || "3ع";
+  const gradeCode = resolveGradeShortCode(params.gradeId);
   const units = loadActiveCurriculumUnitsSSOT(params.gradeId);
 
   let resolvedLessonOrder = 1;

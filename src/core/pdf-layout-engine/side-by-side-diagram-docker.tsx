@@ -76,12 +76,12 @@ export default function SideBySideDiagramDocker({
   const stepsCount = question.solutionStepsAr?.length ?? 0;
   const totalStepsLength = (question.solutionStepsAr ?? []).reduce((sum, s) => sum + s.length, 0);
   const autoCompactScale =
-    stepsCount >= 5 || totalStepsLength > 260
-      ? 0.9
-      : stepsCount >= 3 || totalStepsLength > 150
-        ? 0.95
+    stepsCount >= 5 || totalStepsLength > 240
+      ? 0.86
+      : stepsCount >= 3 || totalStepsLength > 130
+        ? 0.92
         : 1;
-  const optionsFontEm = question.mcqChoicesAr && question.mcqChoicesAr.some((c) => c.length > 22) ? "0.85em" : "0.9em";
+  const optionsFontEm = question.mcqChoicesAr && question.mcqChoicesAr.some((c) => c.length > 18) ? "0.82em" : "0.88em";
 
   return (
     <article
@@ -89,8 +89,9 @@ export default function SideBySideDiagramDocker({
         backgroundColor: cardSurfaceBgHex,
         borderColor: cardBorderColorHex,
         boxShadow: "0 2px 6px rgba(15, 23, 42, 0.05)",
+        breakInside: "auto",
       }}
-      className="min-w-0 w-full rounded-xl border-2 flex flex-col justify-between overflow-hidden"
+      className="min-w-0 w-full rounded-xl border-2 flex flex-col justify-between break-inside-auto print:break-inside-auto"
     >
       <div className="p-2.5 pb-2 min-w-0">
         {isBookletSolvedExample ? (
@@ -150,7 +151,7 @@ export default function SideBySideDiagramDocker({
         )}
 
         {settings.answerVisibilityMode !== "answer_key_only" && (
-          <div className="min-w-0" style={{ breakInside: "avoid" }}>
+          <div className="min-w-0" style={{ breakAfter: "avoid" }}>
             <div className={question.geometryFigure ? "flex items-start justify-between gap-2.5 min-w-0" : "block min-w-0"}>
               <div className="flex-1 min-w-0 space-y-1 text-[0.96em] font-extrabold text-slate-900 leading-relaxed break-words">
                 <div>
