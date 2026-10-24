@@ -43,22 +43,26 @@ export function PedagogicalIdeaAndRuleCapsule({
 
   return (
     <section
-      style={{ breakInside: "avoid", borderColor: palette.borderHex }}
-      className="w-full min-w-0 rounded-xl border-2 bg-white overflow-hidden shadow-2xs my-1"
+      style={{
+        breakInside: "avoid",
+        borderColor: palette.borderHex,
+        boxShadow: "0 2px 6px rgba(76, 29, 149, 0.08)",
+      }}
+      className="w-full min-w-0 rounded-xl border-2 bg-white overflow-hidden my-0.5"
     >
       {item.ideaBannerTitleAr && (
         <div
           style={{ background: palette.headerGradientCss }}
-          className="px-3 py-1.5 text-white flex flex-wrap items-center justify-between gap-2 text-[0.95em] font-black"
+          className="px-3 py-1 text-white flex flex-wrap items-center justify-between gap-2 text-[0.92em] font-black"
         >
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="bg-white/20 px-1.5 py-0.5 rounded text-[0.85em]">💡</span>
-            <span className="truncate">
+            <span className="bg-white/20 px-1.5 py-0.5 rounded text-[0.82em] shrink-0">💡</span>
+            <span className="break-words">
               {formatNumeralsByModeSSOT(item.ideaBannerTitleAr, numeralMode)}
             </span>
           </div>
           {item.branchBadgeAr && (
-            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[0.78em] font-extrabold shrink-0">
+            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[0.76em] font-extrabold shrink-0">
               {item.branchBadgeAr}
             </span>
           )}
@@ -66,11 +70,11 @@ export function PedagogicalIdeaAndRuleCapsule({
       )}
 
       {(item.conceptExplanationAr || item.framedRuleAr) && (
-        <div className="p-2.5 grid grid-cols-1 gap-2 bg-white">
+        <div className="p-2 grid grid-cols-1 gap-1.5 bg-white">
           {item.conceptExplanationAr && (
             <div
               style={{ backgroundColor: palette.softSurfaceHex, borderColor: palette.primaryHex }}
-              className="px-3 py-1.5 rounded-lg border-r-4 text-[0.92em] text-slate-800 leading-relaxed min-w-0"
+              className="px-2.5 py-1 rounded-lg border-r-4 text-[0.9em] text-slate-800 leading-relaxed min-w-0"
             >
               <span style={{ color: palette.primaryHex }} className="font-black ml-1.5">
                 📘 مفهوم الفكرة:
@@ -86,7 +90,7 @@ export function PedagogicalIdeaAndRuleCapsule({
           {item.framedRuleAr && (
             <div
               style={{ backgroundColor: palette.ruleBgHex, borderColor: palette.ruleBorderHex }}
-              className="px-3 py-1.5 rounded-lg border-2 border-dashed text-[0.94em] font-bold text-slate-900 leading-relaxed min-w-0"
+              className="px-2.5 py-1 rounded-lg border-2 border-dashed text-[0.92em] font-bold text-slate-900 leading-relaxed min-w-0"
             >
               <span style={{ color: palette.secondaryHex }} className="font-black ml-1.5">
                 📐 القاعدة الرياضية المؤطرة:
@@ -109,16 +113,20 @@ export function StructuredStepByStepSolutionBox({
   palette,
   numeralMode,
   notationLanguage,
+  compactScale = 1,
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
+  readonly compactScale?: number;
 }) {
   const steps =
     item.solutionStepsAr && item.solutionStepsAr.length > 0
       ? item.solutionStepsAr
       : [item.modelAnswerAr];
+
+  const effectiveEm = Number((0.88 * compactScale).toFixed(2));
 
   return (
     <div
@@ -126,32 +134,44 @@ export function StructuredStepByStepSolutionBox({
         backgroundColor: palette.solvedBgHex,
         borderColor: palette.solvedBorderHex,
         color: palette.solvedTextHex,
+        fontSize: `${effectiveEm}em`,
       }}
-      className="mt-2 p-2 rounded-lg border text-[0.88em] space-y-1.5 min-w-0"
+      className="mt-1.5 p-2 rounded-lg border-2 space-y-1 min-w-0"
     >
-      <div className="font-black flex flex-wrap items-center justify-between gap-1 border-b border-black/10 pb-1 mb-1">
+      <div className="font-black flex flex-wrap items-center justify-between gap-1 border-b border-purple-900/10 pb-1 mb-1">
         <span>✓ خطوات الحل والإجابة النموذجية:</span>
         {item.kind === "mcq" && item.correctMcqIndex !== undefined && (
-          <span className="px-2 py-0.5 rounded bg-white text-emerald-800 border border-emerald-300 text-[0.84em] font-black">
+          <span
+            style={{
+              backgroundColor: palette.primaryHex,
+              color: "#ffffff",
+              borderColor: palette.borderHex,
+            }}
+            className="px-2 py-0.5 rounded-md border text-[0.84em] font-black shadow-2xs"
+          >
             الإجابة الصحيحة: ({ARABIC_CHOICE_LETTERS[item.correctMcqIndex]})
           </span>
         )}
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {steps.map((rawStepText, idx) => {
           const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
           const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
           const cleanStepText = rawStepText.replace(/^الناتج\s*النهائي\s*:\s*/i, "").trim();
 
           return (
-            <div key={idx} className="flex items-baseline gap-1.5 leading-relaxed min-w-0">
+            <div
+              key={idx}
+              style={{ breakInside: "avoid" }}
+              className="flex items-baseline gap-1.5 leading-relaxed min-w-0"
+            >
               <span
                 style={{
-                  backgroundColor: isLast ? palette.primaryHex : "#ffffff",
+                  background: isLast ? palette.headerGradientCss : "#ffffff",
                   color: isLast ? "#ffffff" : palette.primaryHex,
-                  borderColor: palette.solvedBorderHex,
+                  borderColor: palette.borderHex,
                 }}
-                className="shrink-0 px-1.5 py-0.2 rounded border text-[0.78em] font-black"
+                className="shrink-0 px-1.5 py-0.2 rounded-md border text-[0.78em] font-black shadow-2xs"
               >
                 {isLast ? "∴ الناتج" : `خطوة ${formatNumeralsByModeSSOT(idx + 1, numeralMode)}`}
               </span>
@@ -203,7 +223,7 @@ export function OfficialMcqAnswerKeySummaryTable({
               <span style={{ backgroundColor: palette.primaryHex }} className="text-white font-black px-1.5 py-0.2 rounded text-[0.85em] shrink-0">
                 س{formatNumeralsByModeSSOT(q.questionNumber, numeralMode)}
               </span>
-              <span className="font-black text-emerald-800 truncate">
+              <span style={{ color: palette.primaryHex }} className="font-black truncate">
                 ({letter}){" "}
                 <SafeKaTeXBiDiMathRenderer text={choiceVal} numeralMode={numeralMode} notationLanguage={notationLanguage} />
               </span>

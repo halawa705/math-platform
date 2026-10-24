@@ -38,6 +38,21 @@ body {
   scrollbar-width: none;
 }
 
+.katex-mathml,
+.katex-error {
+  display: none !important;
+}
+
+.katex,
+.katex-display,
+.katex-html {
+  overflow: visible !important;
+}
+
+.katex .mfrac {
+  margin: 0.14em 0.1em !important;
+}
+
 @media print {
   @page {
     size: A4 portrait;

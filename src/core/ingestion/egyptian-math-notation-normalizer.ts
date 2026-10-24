@@ -37,6 +37,11 @@ export function separateTopLevelArabicFromMathContent(rawLatex: string): string 
     .trim();
   if (!cleaned) return "";
 
+  // حماية بيئات cases و matrix و aligned من التفكيك
+  if (/\\begin\{(?:cases|matrix|pmatrix|bmatrix|aligned|array)\}/.test(cleaned)) {
+    return `$${cleaned}$`;
+  }
+
   // 1. فك \text{...} الموجود في المستوى الأعلى فقط (خارج \frac و \sqrt و _ و ^)
   let topUnwrapped = "";
   let i = 0;
@@ -170,9 +175,20 @@ export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
 
       return segment
         .replace(/\\(?:dft|dfrac|tfrac)\{/g, "\\frac{")
-        .replace(/\\(?:left|right|displaystyle|quad|qquad|enspace)\b/g, " ")
+        .replace(/\\?(?:left|right|displaystyle|quad|qquad|enspace)\b/g, " ")
+        .replace(/\\?begin\{?cases\}?([\s\S]*?)\\?end\{?cases\}?/gi, (_m, casesBody: string) => {
+          const rows = casesBody
+            .split(/\\\\|;/)
+            .map((r) => r.replace(/&/g, " : ").trim())
+            .filter(Boolean);
+          return rows.join(" ، ");
+        })
         .replace(/(^|[^\\a-zA-Z])frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1$\\frac{$2}{$3}$")
         .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$\\frac{$1}{$2}$")
+        .replace(
+          /\\?frac\s*([\u0600-\u06FF0-9٠-٩a-zA-Z\s+\-×÷()]{1,35}?)\s*\{\s*([^{}]+)\s*\}/g,
+          "$\\frac{\\text{$1}}{$2}$"
+        )
         .replace(/(^|[^\\a-zA-Z])sqrt(\[[0-9]+\])?\{([^{}]+)\}/g, "$1$\\sqrt$2{$3}$")
         .replace(/\\sqrt(\[[0-9]+\])?\{([^{}]+)\}/g, "$\\sqrt$1{$2}$")
         .replace(
@@ -187,6 +203,8 @@ export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
           /\\(times|div|pm|mp|le|leq|ge|geq|neq|ne|approx|equiv|cong|sim|perp|parallel|angle|triangle|in|notin|subset|subseteq|cup|cap|implies|Rightarrow|iff|Leftrightarrow|pi|theta|alpha|beta|gamma|delta|phi|infty|circ)\b/g,
           "$\\$1$"
         )
+        .replace(/\b(begincases|endcases|quad|qquad|frac)\b/gi, "")
+        .replace(/\s*&\s*/g, " ، ")
         .replace(/(?:^|\s)\\+(?=\s|$|[.,،؛:])/g, " ");
     })
     .join("")

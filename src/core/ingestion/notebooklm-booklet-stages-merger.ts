@@ -149,12 +149,16 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
             steps.push(`الناتج النهائي: ${rawFinal}`);
           }
 
-          const geoMatch = exBody.match(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
+          const geoMatch = exBody.match(
+            /\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i
+          );
           const geometryFigure = geoMatch?.[1]
             ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `s1_g_${ideaIdx}_${exIdx}`)
             : undefined;
 
-          const basePrompt = problem.replace(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, "").trim();
+          const basePrompt = problem
+            .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
+            .trim();
           const mcqChoicesAr = parseChoicesTupleFromBlock(basePrompt);
           const cleanPromptAr = mcqChoicesAr ? stripInlineChoicesFromPromptText(basePrompt) : basePrompt;
           const correctMcqIndex = resolveCorrectChoiceIndex(rawFinal || steps[steps.length - 1] || "", mcqChoicesAr);

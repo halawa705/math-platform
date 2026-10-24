@@ -75,6 +75,10 @@ export function triggerIsolatedA4Print(
       max-width: 100% !important;
       white-space: normal !important;
       overflow-wrap: anywhere !important;
+      overflow: visible !important;
+    }
+    .katex .mfrac {
+      margin: 0.14em 0.1em !important;
     }
     .a4-ministerial-sheet {
       width: 100% !important;
@@ -85,9 +89,15 @@ export function triggerIsolatedA4Print(
       box-shadow: none !important;
       overflow-x: hidden !important;
     }
-    article, section, header, footer {
+    header, footer, section {
       break-inside: avoid;
       page-break-inside: avoid;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    article {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
       min-width: 0 !important;
       max-width: 100% !important;
     }

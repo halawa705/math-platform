@@ -39,8 +39,16 @@ function buildHumanReadableMathFallback(latex: string): string {
     .replace(/\{\\displaystyle\s*([\s\S]*?)\}/g, "$1")
     .replace(/\\displaystyle\b/g, "")
     .replace(/\\(?:text|mathrm|textbf|mathbf)\{([^{}]*)\}/g, "$1")
-    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1)/($2)")
-    .replace(/\\sqrt\{([^{}]+)\}/g, "√($1)")
+    .replace(/\\?begin\{?cases\}?([\s\S]*?)\\?end\{?cases\}?/gi, (_m, body: string) =>
+      body
+        .split(/\\\\|;/)
+        .map((r) => r.replace(/&/g, " : ").trim())
+        .filter(Boolean)
+        .join(" ، ")
+    )
+    .replace(/\\?frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1 / $2)")
+    .replace(/\\?sqrt\{([^{}]+)\}/g, "√($1)")
+    .replace(/\\?(?:quad|qquad|enspace|begincases|endcases)\b/gi, " ")
     .replace(/\\times\b/g, " × ")
     .replace(/\\div\b/g, " ÷ ")
     .replace(/\\pm\b/g, " ± ")
@@ -64,6 +72,8 @@ function buildHumanReadableMathFallback(latex: string): string {
     .replace(/\\(?:cap)\b/g, " ∩ ")
     .replace(/\\(?:phi|emptyset|varnothing)\b/g, "∅")
     .replace(/\\(?:infty)\b/g, "∞")
+    .replace(/\bfrac\b/gi, "/")
+    .replace(/&/g, " ، ")
     .replace(/[\\{}]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
@@ -183,9 +193,14 @@ export default function SafeKaTeXBiDiMathRenderer({
   const normalizedMath = normalizeToEgyptianSchoolMath(text);
   const unitFixed = normalizeArabicUnitPlacementSSOT(normalizedMath);
   const segments = unitFixed.split(/(\$\$[^$]+\$\$|\$[^$]+\$)/g);
+  const hasFractionSegment = /\\(?:d|t)?frac\b/.test(unitFixed);
 
   return (
-    <span className={`inline leading-relaxed break-words ${className}`}>
+    <span
+      className={`inline ${
+        hasFractionSegment ? "leading-[2.15] py-0.5" : "leading-relaxed"
+      } break-words ${className}`}
+    >
       {segments.map((segment, idx) => {
         const isBlockMath =
           segment.startsWith("$$") && segment.endsWith("$$") && segment.length > 4;
@@ -199,6 +214,7 @@ export default function SafeKaTeXBiDiMathRenderer({
           const innerLatex = isBlockMath
             ? segment.slice(2, -2)
             : segment.slice(1, -1);
+          const isFractionMath = /\\(?:d|t)?frac\b/.test(innerLatex);
           const sanitized = sanitizeLatexForSchoolMath(
             innerLatex,
             numeralMode,
@@ -214,8 +230,11 @@ export default function SafeKaTeXBiDiMathRenderer({
                 unicodeBidi: "isolate",
                 display: isBlockMath ? "block" : "inline-block",
                 maxWidth: "100%",
+                paddingTop: isFractionMath ? "0.24em" : undefined,
+                paddingBottom: isFractionMath ? "0.24em" : undefined,
+                verticalAlign: "middle",
               }}
-              className="mx-0.5 font-bold align-middle max-w-full overflow-x-hidden"
+              className="mx-0.5 font-bold align-middle max-w-full"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
             />
           );

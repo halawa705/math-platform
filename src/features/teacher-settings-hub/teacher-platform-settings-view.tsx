@@ -15,12 +15,49 @@ import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
   loadTeacherIdentitySSOT,
+  refreshTeacherIdentityFromSupabaseSSOT,
   saveTeacherIdentitySSOT,
   type OwnerTeacherIdentity,
 } from "@/core/ssot/teacher-identity-ssot";
-import { pullTeacherIdentityFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
 
 const LOGO_SYMBOL_PRESETS = ["🛡️", "🐎", "∑", "👑", "📐", "🏆"] as const;
+
+function compressImageFileToDataUrl(file: File, maxDim = 256): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const rawDataUrl = typeof reader.result === "string" ? reader.result : "";
+      if (!rawDataUrl) {
+        resolve("");
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(rawDataUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/png", 0.9));
+        } catch {
+          resolve(rawDataUrl);
+        }
+      };
+      img.onerror = () => resolve(rawDataUrl);
+      img.src = rawDataUrl;
+    };
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function TeacherPlatformSettingsView() {
   const [formState, setFormState] = useState<OwnerTeacherIdentity>(
@@ -28,22 +65,16 @@ export default function TeacherPlatformSettingsView() {
   );
   const [saveBanner, setSaveBanner] = useState<string | null>(null);
 
+  const applyAndPersistIdentity = (next: OwnerTeacherIdentity) => {
+    setFormState(next);
+    saveTeacherIdentitySSOT(next);
+  };
+
   useEffect(() => {
     const localLoaded = loadTeacherIdentitySSOT();
     setFormState(localLoaded);
-    void pullTeacherIdentityFromSupabaseCloud().then((cloudIdentity) => {
-      if (
-        cloudIdentity &&
-        cloudIdentity.platformBrandName &&
-        !cloudIdentity.platformBrandName.includes("الخوارزمي")
-      ) {
-        const merged: OwnerTeacherIdentity = {
-          ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
-          ...localLoaded,
-          ...cloudIdentity,
-        };
-        setFormState(merged);
-      }
+    void refreshTeacherIdentityFromSupabaseSSOT().then((synced) => {
+      setFormState(synced);
     });
   }, []);
 
@@ -53,11 +84,11 @@ export default function TeacherPlatformSettingsView() {
       ? formState.enabledGradeIds.filter((id) => id !== gradeId)
       : [...formState.enabledGradeIds, gradeId];
     if (updated.length === 0) return;
-    setFormState({ ...formState, enabledGradeIds: updated });
+    applyAndPersistIdentity({ ...formState, enabledGradeIds: updated });
   };
 
   const updateNotebookUrl = (gradeId: string, url: string) => {
-    setFormState({
+    applyAndPersistIdentity({
       ...formState,
       notebookLmUrlsByGrade: {
         ...formState.notebookLmUrlsByGrade,
@@ -66,19 +97,16 @@ export default function TeacherPlatformSettingsView() {
     });
   };
 
-  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setFormState((prev) => ({
-          ...prev,
-          platformLogoUrl: reader.result as string,
-        }));
-      }
-    };
-    reader.readAsDataURL(file);
+    const compressedDataUrl = await compressImageFileToDataUrl(file, 256);
+    if (compressedDataUrl) {
+      applyAndPersistIdentity({
+        ...formState,
+        platformLogoUrl: compressedDataUrl,
+      });
+    }
   };
 
   const handleSaveSettings = (e?: React.FormEvent) => {
@@ -86,7 +114,7 @@ export default function TeacherPlatformSettingsView() {
     const ok = saveTeacherIdentitySSOT(formState);
     if (ok) {
       setSaveBanner(
-        "✓ تم حفظ جميع الإعدادات واللوجو واسم المنصة وتعميمها فوراً في الشريط العلوي والمطبوعات!"
+        "✓ تم حفظ جميع الإعدادات واللوجو واسم المنصة والكنية والهاتف وروابط NotebookLM وتعميمها فوراً!"
       );
       setTimeout(() => setSaveBanner(null), 5000);
     }
@@ -166,7 +194,7 @@ export default function TeacherPlatformSettingsView() {
                     <button
                       type="button"
                       onClick={() =>
-                        setFormState({ ...formState, platformLogoUrl: "" })
+                        applyAndPersistIdentity({ ...formState, platformLogoUrl: "" })
                       }
                       className="px-3 py-2 rounded-xl bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs font-black cursor-pointer"
                     >
@@ -189,7 +217,7 @@ export default function TeacherPlatformSettingsView() {
                           : formState.platformLogoUrl
                       }
                       onChange={(e) =>
-                        setFormState({
+                        applyAndPersistIdentity({
                           ...formState,
                           platformLogoUrl: e.target.value,
                         })
@@ -209,7 +237,7 @@ export default function TeacherPlatformSettingsView() {
                           key={sym}
                           type="button"
                           onClick={() =>
-                            setFormState({
+                            applyAndPersistIdentity({
                               ...formState,
                               platformLogoUrl: "",
                               platformLogoSymbol: sym,
@@ -240,7 +268,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.platformBrandName}
                   onChange={(e) =>
-                    setFormState({ ...formState, platformBrandName: e.target.value })
+                    applyAndPersistIdentity({ ...formState, platformBrandName: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold"
                 />
@@ -254,7 +282,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.teacherFullName}
                   onChange={(e) =>
-                    setFormState({ ...formState, teacherFullName: e.target.value })
+                    applyAndPersistIdentity({ ...formState, teacherFullName: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold"
                 />
@@ -268,7 +296,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.teacherNickname}
                   onChange={(e) =>
-                    setFormState({ ...formState, teacherNickname: e.target.value })
+                    applyAndPersistIdentity({ ...formState, teacherNickname: e.target.value })
                   }
                   placeholder="مثال: عميد الرياضيات"
                   className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold"
@@ -283,7 +311,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.teacherPhone}
                   onChange={(e) =>
-                    setFormState({ ...formState, teacherPhone: e.target.value })
+                    applyAndPersistIdentity({ ...formState, teacherPhone: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold"
                 />
@@ -297,7 +325,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.footerText}
                   onChange={(e) =>
-                    setFormState({ ...formState, footerText: e.target.value })
+                    applyAndPersistIdentity({ ...formState, footerText: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold"
                 />
@@ -311,7 +339,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.customSecretLoginCode}
                   onChange={(e) =>
-                    setFormState({
+                    applyAndPersistIdentity({
                       ...formState,
                       customSecretLoginCode: e.target.value,
                     })
@@ -329,7 +357,7 @@ export default function TeacherPlatformSettingsView() {
                   type="text"
                   value={formState.watermarkText}
                   onChange={(e) =>
-                    setFormState({ ...formState, watermarkText: e.target.value })
+                    applyAndPersistIdentity({ ...formState, watermarkText: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold"
                 />

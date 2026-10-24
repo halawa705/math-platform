@@ -56,50 +56,53 @@ export function resolvePrintThemePalette(
 ): PrintThemePaletteTokens {
   if (themeId === "emerald_moasser") {
     return {
-      primaryHex: "#064E3B",
-      secondaryHex: "#065F46",
-      accentHex: "#D97706",
-      badgeBgHex: "#ECFDF5",
-      borderHex: "#059669",
-      softSurfaceHex: "#F0FDF4",
-      ruleBgHex: "#FFFBEB",
-      ruleBorderHex: "#F59E0B",
-      solvedBgHex: "#ECFDF5",
-      solvedBorderHex: "#6EE7B7",
-      solvedTextHex: "#064E3B",
-      headerGradientCss: "linear-gradient(135deg, #064E3B 0%, #047857 100%)",
+      primaryHex: "#3B0764",
+      secondaryHex: "#6B21A8",
+      accentHex: "#9333EA",
+      badgeBgHex: "#F3E8FF",
+      borderHex: "#7E22CE",
+      softSurfaceHex: "#FAF5FF",
+      ruleBgHex: "#FDF4FF",
+      ruleBorderHex: "#A855F7",
+      solvedBgHex: "#FAF5FF",
+      solvedBorderHex: "#C084FC",
+      solvedTextHex: "#3B0764",
+      headerGradientCss:
+        "linear-gradient(135deg, #2E1065 0%, #581C87 55%, #7E22CE 100%)",
     };
   }
   if (themeId === "math_teal") {
     return {
-      primaryHex: "#134E4A",
-      secondaryHex: "#0F766E",
+      primaryHex: "#0F172A",
+      secondaryHex: "#0369A1",
       accentHex: "#0284C7",
-      badgeBgHex: "#F0FDFA",
-      borderHex: "#0D9488",
-      softSurfaceHex: "#F0FDFA",
+      badgeBgHex: "#F0F9FF",
+      borderHex: "#0284C7",
+      softSurfaceHex: "#F8FAFC",
       ruleBgHex: "#F0F9FF",
       ruleBorderHex: "#38BDF8",
-      solvedBgHex: "#F0FDFA",
-      solvedBorderHex: "#5EEAD4",
-      solvedTextHex: "#134E4A",
-      headerGradientCss: "linear-gradient(135deg, #134E4A 0%, #0F766E 100%)",
+      solvedBgHex: "#F0F9FF",
+      solvedBorderHex: "#7DD3FC",
+      solvedTextHex: "#0C4A6E",
+      headerGradientCss:
+        "linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #0284C7 100%)",
     };
   }
   if (themeId === "amber_gold") {
     return {
-      primaryHex: "#78350F",
+      primaryHex: "#451A03",
       secondaryHex: "#92400E",
-      accentHex: "#B45309",
+      accentHex: "#D97706",
       badgeBgHex: "#FFFBEB",
-      borderHex: "#D97706",
+      borderHex: "#B45309",
       softSurfaceHex: "#FEF3C7",
       ruleBgHex: "#FFF7ED",
       ruleBorderHex: "#EA580C",
-      solvedBgHex: "#FEFCE8",
-      solvedBorderHex: "#FDE047",
-      solvedTextHex: "#713F12",
-      headerGradientCss: "linear-gradient(135deg, #78350F 0%, #B45309 100%)",
+      solvedBgHex: "#FFFBEB",
+      solvedBorderHex: "#FCD34D",
+      solvedTextHex: "#451A03",
+      headerGradientCss:
+        "linear-gradient(135deg, #451A03 0%, #78350F 55%, #B45309 100%)",
     };
   }
   if (themeId === "photocopy_black") {
@@ -119,18 +122,19 @@ export function resolvePrintThemePalette(
     };
   }
   return {
-    primaryHex: "#1E1B4B",
-    secondaryHex: "#312E81",
-    accentHex: "#4F46E5",
-    badgeBgHex: "#EEF2FF",
-    borderHex: "#4338CA",
-    softSurfaceHex: "#F5F3FF",
-    ruleBgHex: "#EEF2FF",
-    ruleBorderHex: "#6366F1",
-    solvedBgHex: "#ECFDF5",
-    solvedBorderHex: "#6EE7B7",
-    solvedTextHex: "#064E3B",
-    headerGradientCss: "linear-gradient(135deg, #1E1B4B 0%, #3730A3 100%)",
+    primaryHex: "#2E1065",
+    secondaryHex: "#4C1D95",
+    accentHex: "#7C3AED",
+    badgeBgHex: "#F5F3FF",
+    borderHex: "#6D28D9",
+    softSurfaceHex: "#FAF5FF",
+    ruleBgHex: "#F3E8FF",
+    ruleBorderHex: "#8B5CF6",
+    solvedBgHex: "#F5F3FF",
+    solvedBorderHex: "#C4B5FD",
+    solvedTextHex: "#2E1065",
+    headerGradientCss:
+      "linear-gradient(135deg, #1E1B4B 0%, #3B0764 52%, #6D28D9 100%)",
   };
 }
 

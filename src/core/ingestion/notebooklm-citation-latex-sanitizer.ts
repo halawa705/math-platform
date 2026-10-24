@@ -91,9 +91,21 @@ export function sanitizeNotebookLMCitationsAndLatex(
     .replace(/^\s*[-*_]{3,}\s*$/gm, "")
     .replace(/\s+---+\s*/g, " ")
     .replace(/\[(?:TEXT|PROMPT|SOLUTION|ANSWER)\]\s*:?\s*/gi, "")
-    .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "");
+    .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "")
+    .replace(
+      /\[\s*(رسم\s*(?:هندسي|توضيحي|بياني)\s*:[^\]]*)\]/gi,
+      (_m, inner: string) => `[${inner.trim()}]`
+    )
+    .replace(
+      /(?:^|(?<![\[أ-ي]))(رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+)\]/gi,
+      "[$1]"
+    );
 
-  // 4. إحصاء وتوحيد محددات \( ... \) و \[ ... \]
+  // 4. إحصاء وتوحيد محددات \( ... \) و \[ ... \] وبيئات \begin{cases}...\end{cases}
+  text = text.replace(
+    /(\\begin\{(?:cases|matrix|pmatrix|bmatrix|aligned|array)\}[\s\S]*?\\end\{(?:cases|matrix|pmatrix|bmatrix|aligned|array)\})/g,
+    (envBlock) => (envBlock.startsWith("$") ? envBlock : `$${envBlock}$`)
+  );
   text = text.replace(/\\+\((.+?)\\+\)/g, (_m, inner: string) => {
     normalizedLatexDelimitersCount += 1;
     return `$${inner.trim()}$`;

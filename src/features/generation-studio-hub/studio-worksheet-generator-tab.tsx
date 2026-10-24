@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildWorksheetDrillNotebookLMPrompt } from "@/core/prompts/worksheet-drill-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import {
@@ -29,6 +30,7 @@ export interface StudioWorksheetGeneratorTabProps {
   readonly gradeNameAr?: string;
   readonly branchId?: MathBranchId;
   readonly branchNameAr?: string;
+  readonly unitTitleAr?: string;
   readonly lessonTitle: string;
   readonly onApplyWorksheetTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (
@@ -41,6 +43,7 @@ export default function StudioWorksheetGeneratorTab({
   gradeNameAr = "الصف الثالث الإعدادي",
   branchId = "plane_geometry",
   branchNameAr = "الرياضيات",
+  unitTitleAr = "",
   lessonTitle,
   onApplyWorksheetTitleToSheet,
   onApplyParsedQuestionsToSheet,
@@ -82,7 +85,15 @@ export default function StudioWorksheetGeneratorTab({
     onApplyParsedQuestionsToSheet?.(
       parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
     );
-    onApplyWorksheetTitleToSheet(`ورقة عمل تطبيقية: ${lessonTitle}`);
+    onApplyWorksheetTitleToSheet(
+      buildStandardDocumentTitleSSOT({
+        gradeId,
+        unitTitleInput: unitTitleAr,
+        lessonTitleInput: lessonTitle,
+        promptText: prompt,
+        rawReplyText: reply,
+      })
+    );
   };
 
   return (

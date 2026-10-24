@@ -10,6 +10,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import {
   buildBookletStageNotebookLMPrompt,
   extractIdeasFromBookletStage1Reply,
@@ -121,7 +122,15 @@ export default function StudioBookletGeneratorTab({
     }
     setNotice(null);
     onApplyParsedQuestionsToSheet?.(items);
-    onApplyBookletTitleToSheet(`مذكرة شرح وتدريبات: ${lessonTitle}`);
+    onApplyBookletTitleToSheet(
+      buildStandardDocumentTitleSSOT({
+        gradeId,
+        unitTitleInput: unitTitleAr,
+        lessonTitleInput: lessonTitle,
+        promptText: prompt,
+        rawReplyText: replies[1] || replies[2],
+      })
+    );
   };
 
   const stage = STAGE_COPY[activeStage];

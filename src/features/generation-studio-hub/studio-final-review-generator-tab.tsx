@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import {
   buildFinalReviewNotebookLMPrompt,
   extractEssayQuestionsFromReviewStage2Reply,
@@ -113,9 +114,16 @@ export default function StudioFinalReviewGeneratorTab({
     setNotice(null);
     onApplyParsedQuestionsToSheet?.(items);
     onApplyReviewTitleToSheet(
-      scope === "final_exam_night_capsule"
-        ? `المراجعة النهائية الشاملة — ${gradeNameAr}`
-        : `مراجعة اختبار الشهر — ${gradeNameAr}`
+      buildStandardDocumentTitleSSOT({
+        gradeId,
+        unitTitleInput: unitTitleAr,
+        lessonTitleInput:
+          scope === "final_exam_night_capsule"
+            ? "المراجعة النهائية الشاملة"
+            : "مراجعة اختبار الشهر",
+        promptText: prompt,
+        rawReplyText: replies[1] || replies[2],
+      })
     );
   };
 

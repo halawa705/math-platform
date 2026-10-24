@@ -40,7 +40,9 @@ export default function PDFPreviewOrchestrator({
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => ({
     ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
     answerVisibilityMode:
-      customTitle?.includes("مذكرة") || customTitle?.includes("مراجعة")
+      customTitle?.includes("مذكرة") ||
+      customTitle?.includes("مراجعة") ||
+      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"))
         ? "questions_with_answers"
         : DEFAULT_PDF_PRINT_SETTINGS_SSOT.answerVisibilityMode,
     customDocumentTitle: customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
@@ -77,7 +79,7 @@ export default function PDFPreviewOrchestrator({
         <button
           type="button"
           onClick={handlePrintNow}
-          className="w-full min-h-[50px] rounded-xl bg-gradient-to-l from-teal-700 to-emerald-600 text-white text-sm font-black cursor-pointer flex items-center justify-center gap-2"
+          className="w-full min-h-[50px] rounded-xl bg-gradient-to-l from-purple-800 via-violet-700 to-indigo-800 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-black cursor-pointer flex items-center justify-center gap-2 shadow-sm"
         >
           <span>🖨️</span>
           <span>طباعة / تصدير A4 PDF</span>

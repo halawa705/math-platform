@@ -38,6 +38,7 @@ export interface OwnerTeacherIdentity {
   readonly stealthEmblemClicksRequired: number;
   readonly enabledGradeIds: readonly string[];
   readonly notebookLmUrlsByGrade: Readonly<Record<string, string>>;
+  readonly updatedAtMs?: number;
 }
 
 export interface RegisteredStudentRecordSSOT {
@@ -102,40 +103,39 @@ function sanitizeTeacherIdentity(
   parsed: Partial<OwnerTeacherIdentity>
 ): OwnerTeacherIdentity {
   const resolvedBrand =
-    parsed.platformBrandName && !parsed.platformBrandName.includes("الخوارزمي")
+    parsed.platformBrandName &&
+    parsed.platformBrandName.trim().length > 0 &&
+    !parsed.platformBrandName.includes("الخوارزمي")
       ? parsed.platformBrandName
       : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.platformBrandName;
   const resolvedFooter =
-    parsed.footerText && !parsed.footerText.includes("الخوارزمي")
+    parsed.footerText &&
+    parsed.footerText.trim().length > 0 &&
+    !parsed.footerText.includes("الخوارزمي")
       ? parsed.footerText
       : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText;
   const resolvedWatermark =
-    parsed.watermarkText && !parsed.watermarkText.includes("الخوارزمي")
+    parsed.watermarkText &&
+    parsed.watermarkText.trim().length > 0 &&
+    !parsed.watermarkText.includes("الخوارزمي")
       ? parsed.watermarkText
       : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.watermarkText;
-
-  const legacyFakeNickname = "عميد الرياضيات";
-  const legacyFakePhone = "01000000000";
-  const cleanNickname =
-    parsed.teacherNickname === legacyFakeNickname ? "" : parsed.teacherNickname ?? "";
-  const cleanPhone =
-    parsed.teacherPhone === legacyFakePhone ? "" : parsed.teacherPhone ?? "";
-  const cleanTitle =
-    parsed.teacherTitle && !parsed.teacherTitle.startsWith("خبير تدريس")
-      ? parsed.teacherTitle
-      : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherTitle;
-  const footerWithoutFake = resolvedFooter.includes(legacyFakeNickname)
-    ? DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText
-    : resolvedFooter;
 
   return {
     ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
     ...parsed,
-    teacherNickname: cleanNickname,
-    teacherPhone: cleanPhone,
-    teacherTitle: cleanTitle,
+    teacherFullName:
+      parsed.teacherFullName && parsed.teacherFullName.trim().length > 0
+        ? parsed.teacherFullName
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherFullName,
+    teacherNickname: parsed.teacherNickname ?? "",
+    teacherPhone: parsed.teacherPhone ?? "",
+    teacherTitle:
+      parsed.teacherTitle && parsed.teacherTitle.trim().length > 0
+        ? parsed.teacherTitle
+        : DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.teacherTitle,
     platformBrandName: resolvedBrand,
-    footerText: footerWithoutFake,
+    footerText: resolvedFooter,
     watermarkText: resolvedWatermark,
     platformLogoUrl: parsed.platformLogoUrl ?? "",
     platformLogoSymbol:
@@ -149,6 +149,8 @@ function sanitizeTeacherIdentity(
       ...DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.notebookLmUrlsByGrade,
       ...(parsed.notebookLmUrlsByGrade || {}),
     },
+    updatedAtMs:
+      typeof parsed.updatedAtMs === "number" ? parsed.updatedAtMs : undefined,
   };
 }
 
@@ -166,26 +168,54 @@ export function loadTeacherIdentitySSOT(): OwnerTeacherIdentity {
 
 export function saveTeacherIdentitySSOT(updated: OwnerTeacherIdentity): boolean {
   if (typeof window === "undefined") return false;
+  const stamped: OwnerTeacherIdentity = sanitizeTeacherIdentity({
+    ...updated,
+    updatedAtMs: Date.now(),
+  });
+  let savedLocally = false;
   try {
     window.localStorage.setItem(
       TEACHER_SETTINGS_STORAGE_KEY,
-      JSON.stringify(updated)
+      JSON.stringify(stamped)
     );
-    window.dispatchEvent(
-      new CustomEvent(IDENTITY_UPDATED_EVENT_NAME, { detail: updated })
-    );
-    void syncTeacherIdentityToSupabaseCloud(updated);
-    return true;
+    savedLocally = true;
   } catch {
-    return false;
+    // في حال تجاوز حجم صورة اللوجو سعة localStorage نضغطها أو نحفظ البيانات النصية كاملة
+    try {
+      const fallbackWithoutHeavyDataUrl: OwnerTeacherIdentity = {
+        ...stamped,
+        platformLogoUrl: stamped.platformLogoUrl.startsWith("data:")
+          ? ""
+          : stamped.platformLogoUrl,
+      };
+      window.localStorage.setItem(
+        TEACHER_SETTINGS_STORAGE_KEY,
+        JSON.stringify(fallbackWithoutHeavyDataUrl)
+      );
+      savedLocally = true;
+    } catch {
+      savedLocally = false;
+    }
   }
+  window.dispatchEvent(
+    new CustomEvent(IDENTITY_UPDATED_EVENT_NAME, { detail: stamped })
+  );
+  void syncTeacherIdentityToSupabaseCloud(stamped);
+  return savedLocally;
 }
 
 export async function refreshTeacherIdentityFromSupabaseSSOT(): Promise<OwnerTeacherIdentity> {
+  const local = loadTeacherIdentitySSOT();
   const cloud = await pullTeacherIdentityFromSupabaseCloud();
-  if (!cloud) return loadTeacherIdentitySSOT();
+  if (!cloud) return local;
+  const localTime = local.updatedAtMs ?? 0;
+  const cloudTime = typeof cloud.updatedAtMs === "number" ? cloud.updatedAtMs : 0;
+  // إذا كان الحفظ المحلي أحدث أو مساوياً للسحابي، لا نطمس التعديلات المحلية أبداً
+  if (localTime > 0 && localTime >= cloudTime) {
+    return local;
+  }
   const merged = sanitizeTeacherIdentity({
-    ...loadTeacherIdentitySSOT(),
+    ...local,
     ...cloud,
   });
   if (typeof window !== "undefined") {

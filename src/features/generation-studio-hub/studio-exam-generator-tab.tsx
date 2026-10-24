@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import {
@@ -30,6 +31,7 @@ export interface StudioExamGeneratorTabProps {
   readonly gradeId?: string;
   readonly gradeNameAr?: string;
   readonly branchId?: MathBranchId;
+  readonly unitTitleAr?: string;
   readonly lessonTitle: string;
   readonly branchNameAr: string;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
@@ -42,6 +44,7 @@ export default function StudioExamGeneratorTab({
   gradeId = "prep-3",
   gradeNameAr = "الصف الثالث الإعدادي",
   branchId = "plane_geometry",
+  unitTitleAr = "",
   lessonTitle,
   branchNameAr,
   onApplyExamTitleToSheet,
@@ -91,7 +94,15 @@ export default function StudioExamGeneratorTab({
     onApplyParsedQuestionsToSheet?.(
       parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
     );
-    onApplyExamTitleToSheet(`اختبار تقييمي — ${lessonTitle}`);
+    onApplyExamTitleToSheet(
+      buildStandardDocumentTitleSSOT({
+        gradeId,
+        unitTitleInput: unitTitleAr,
+        lessonTitleInput: lessonTitle,
+        promptText: prompt,
+        rawReplyText: reply,
+      })
+    );
   };
 
   const handlePublish = (p: { durationMinutes: number; availabilityDays: number }) => {

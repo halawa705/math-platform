@@ -217,3 +217,146 @@ export function clearCurriculumUnitsForGradeSSOT(gradeId: string): void {
     // ignore
   }
 }
+
+const GRADE_SHORT_CODES_MAP: Readonly<Record<string, string>> = {
+  "prim-3": "3ب",
+  "prim-4": "4ب",
+  "prim-5": "5ب",
+  "prim-6": "6ب",
+  "prep-1": "1ع",
+  "prep-2": "2ع",
+  "prep-3": "3ع",
+  "sec-1": "1ث",
+  "sec-2": "2ث",
+  "sec-3": "3ث",
+};
+
+const ARABIC_ORDINALS_TO_NUMBER: Readonly<Record<string, number>> = {
+  الأول: 1,
+  الاول: 1,
+  الأولى: 1,
+  الاولى: 1,
+  الثاني: 2,
+  الثانية: 2,
+  الثالث: 3,
+  الثالثة: 3,
+  الرابع: 4,
+  الرابعة: 4,
+  الخامس: 5,
+  الخامسة: 5,
+  السادس: 6,
+  السادسة: 6,
+  السابع: 7,
+  السابعة: 7,
+  الثامن: 8,
+  الثامنة: 8,
+  التاسع: 9,
+  التاسعة: 9,
+  العاشر: 10,
+  العاشرة: 10,
+};
+
+function inferLessonNumberFromText(text: string): number | null {
+  if (!text) return null;
+  const digitMatch = text.match(/(?:الدرس|درس|رقم|^)\s*\(?(\d{1,2})\)?/);
+  if (digitMatch?.[1]) {
+    const n = parseInt(digitMatch[1], 10);
+    if (n > 0 && n <= 30) return n;
+  }
+  for (const [word, num] of Object.entries(ARABIC_ORDINALS_TO_NUMBER)) {
+    if (new RegExp(`(?:الدرس\\s+)?${word}\\b`).test(text)) {
+      return num;
+    }
+  }
+  return null;
+}
+
+/**
+ * يشتق الاسم القياسي الرسمي لأي ملف أو مستند يُنتج في المنصة بالصيغة:
+ * "(رقم الدرس في الوحدة) - رمز الصف - اسم الوحدة - اسم الدرس"
+ * مثال: "5 - 1ع - الوحدة الثانية - المعادلات الخطية"
+ * وإن لم يوجد مستكشف المنهج، يشتق الرقم والوحدة واسم الدرس من مدخلات البحث والبرومبت والردود.
+ */
+export function buildStandardDocumentTitleSSOT(params: {
+  readonly gradeId: string;
+  readonly unitTitleInput?: string;
+  readonly lessonTitleInput?: string;
+  readonly promptText?: string;
+  readonly rawReplyText?: string;
+}): string {
+  const gradeCode = GRADE_SHORT_CODES_MAP[params.gradeId] || "3ع";
+  const units = loadActiveCurriculumUnitsSSOT(params.gradeId);
+
+  let resolvedLessonOrder = 1;
+  let resolvedUnitTitle = (params.unitTitleInput || "").trim();
+  let resolvedLessonTitle = (params.lessonTitleInput || "").trim();
+
+  // 1. البحث في مستكشف المنهج إن وُجد
+  if (units.length > 0) {
+    const matchedUnit =
+      units.find((u) => u.titleArabic === resolvedUnitTitle) ||
+      units.find((u) =>
+        u.lessons.some((l) => l.titleArabic === resolvedLessonTitle)
+      ) ||
+      units[0];
+
+    if (matchedUnit) {
+      if (!resolvedUnitTitle) {
+        resolvedUnitTitle = matchedUnit.titleArabic;
+      }
+      const matchedLesson = matchedUnit.lessons.find(
+        (l) =>
+          l.titleArabic === resolvedLessonTitle ||
+          resolvedLessonTitle.includes(l.titleArabic) ||
+          l.titleArabic.includes(resolvedLessonTitle)
+      );
+      if (matchedLesson) {
+        resolvedLessonOrder = matchedLesson.orderIndex;
+        resolvedLessonTitle = matchedLesson.titleArabic
+          .replace(/^(?:الدرس\s+\S+\s*[:\-–—]\s*|\d+\s*[.\-–]\s*)/, "")
+          .trim() || matchedLesson.titleArabic;
+      }
+    }
+  }
+
+  // 2. إن لم يوجد في مستكشف المنهج، نشتق من المدخلات أو البرومبت أو الرد
+  const combinedSource = `${resolvedLessonTitle}\n${resolvedUnitTitle}\n${params.promptText || ""}\n${(params.rawReplyText || "").slice(0, 600)}`;
+
+  const inferredNum =
+    inferLessonNumberFromText(resolvedLessonTitle) ||
+    inferLessonNumberFromText(params.promptText || "") ||
+    inferLessonNumberFromText((params.rawReplyText || "").slice(0, 400));
+  if (inferredNum && resolvedLessonOrder === 1) {
+    resolvedLessonOrder = inferredNum;
+  }
+
+  if (!resolvedUnitTitle || resolvedUnitTitle === "الوحدة") {
+    const unitFromPrompt = combinedSource.match(
+      /(?:الوحدة\s+(?:الأولى|الاولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|\d+)(?:\s*[:\-–—]\s*[^\n|•]+)?)/
+    )?.[0];
+    resolvedUnitTitle = unitFromPrompt ? unitFromPrompt.trim() : "الوحدة الأولى";
+  }
+
+  if (!resolvedLessonTitle || /^الدرس\s+(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|\d+)$/.test(resolvedLessonTitle)) {
+    const lessonFromReply = combinedSource.match(
+      /(?:درس|الدرس|الموضوع|عنوان الدرس)\s*[:\-–—]\s*([^\n|•*]+)/
+    )?.[1];
+    const ideaFromReply = (params.rawReplyText || "").match(
+      /الفكرة\s+(?:الأولى|\(1\)|1)\s*:\s*([^\n\-|]+)/
+    )?.[1];
+    if (lessonFromReply && lessonFromReply.trim().length > 2) {
+      resolvedLessonTitle = lessonFromReply.trim();
+    } else if (ideaFromReply && ideaFromReply.trim().length > 2) {
+      resolvedLessonTitle = ideaFromReply.trim();
+    }
+  }
+
+  const cleanLessonName =
+    resolvedLessonTitle
+      .replace(/^(?:الدرس\s+(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|\d+)\s*[:\-–—]?\s*)/, "")
+      .trim() ||
+    resolvedLessonTitle ||
+    "الدرس الأول";
+
+  return `${resolvedLessonOrder} - ${gradeCode} - ${resolvedUnitTitle} - ${cleanLessonName}`;
+}

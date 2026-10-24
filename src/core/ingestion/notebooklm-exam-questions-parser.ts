@@ -181,13 +181,17 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .trim();
 
     const basePrompt = explicitPrompt || fallbackPrompt || block;
-    const geoMatch = block.match(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
+    const geoMatch = block.match(
+      /\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i
+    );
     const attachedGeometryFigure = geoMatch?.[1]
       ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `geom_${params.lessonId}_${orderNumber}`)
       : undefined;
 
     const mcqChoicesArabic = parseChoicesTupleFromBlock(block);
-    const rawCleanPrompt = basePrompt.replace(/\[رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, "").trim();
+    const rawCleanPrompt = basePrompt
+      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
+      .trim();
     const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
 
     const patternKind: MathQuestionPatternKind =

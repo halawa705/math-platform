@@ -77,10 +77,32 @@ export default function TwoColumnNewspaperPacker({
     questions.some((q) => q.id.startsWith("booklet-s1-"));
   const densityGap =
     settings.densityMode === "ultra_compact"
-      ? "gap-2"
+      ? "gap-1.5"
       : settings.densityMode === "standard_balanced"
-        ? "gap-2.5"
-        : "gap-3.5";
+        ? "gap-2"
+        : "gap-3";
+
+  // تجميع الأسئلة حسب الفكرة حتى يتدفق العمودان (Masonry / Balanced Columns) داخل كل فكرة بذكاء فائق دون ترك فراغات عملاقة
+  const ideaGroups = React.useMemo(() => {
+    const groups: Array<{
+      readonly anchorQuestion?: PrintableMathQuestionItem;
+      readonly items: PrintableMathQuestionItem[];
+    }> = [];
+    for (const q of questions) {
+      const hasIdeaCapsule = Boolean(
+        q.ideaBannerTitleAr || q.conceptExplanationAr || q.framedRuleAr
+      );
+      if (hasIdeaCapsule || groups.length === 0) {
+        groups.push({
+          anchorQuestion: hasIdeaCapsule ? q : undefined,
+          items: [q],
+        });
+      } else {
+        groups[groups.length - 1].items.push(q);
+      }
+    }
+    return groups;
+  }, [questions]);
 
   return (
     <div
@@ -192,25 +214,33 @@ export default function TwoColumnNewspaperPacker({
                   </div>
                 </div>
               ) : (
-                <div className={`grid ${settings.columnsCount === 2 ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start min-w-0`}>
-                  {questions.map((q) => {
-                    const hasIdeaCapsule = Boolean(
-                      q.ideaBannerTitleAr || q.conceptExplanationAr || q.framedRuleAr
-                    );
+                <div className="space-y-2 min-w-0">
+                  {ideaGroups.map((group, gIdx) => {
+                    const isTwoCols = settings.columnsCount === 2;
                     return (
-                      <React.Fragment key={q.id}>
-                        {hasIdeaCapsule && (
-                          <div className="col-span-full min-w-0">
+                      <div key={gIdx} className="space-y-1.5 min-w-0">
+                        {group.anchorQuestion && (
+                          <div className="w-full min-w-0">
                             <PedagogicalIdeaAndRuleCapsule
-                              item={q}
+                              item={group.anchorQuestion}
                               palette={palette}
                               numeralMode={settings.numeralMode}
                               notationLanguage={settings.notationLanguage}
                             />
                           </div>
                         )}
-                        <SideBySideDiagramDocker question={q} settings={settings} />
-                      </React.Fragment>
+                        <div
+                          className={`grid ${isTwoCols ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start min-w-0`}
+                        >
+                          {group.items.map((q) => (
+                            <SideBySideDiagramDocker
+                              key={q.id}
+                              question={q}
+                              settings={settings}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>

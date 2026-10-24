@@ -109,6 +109,7 @@ export default function TeacherGenerationStudioView() {
                 gradeId={gradeId}
                 gradeNameAr={grade.nameArabic}
                 branchId={branchId}
+                unitTitleAr={unitTitle || "الوحدة الأولى"}
                 lessonTitle={lessonTitle}
                 branchNameAr={branch.nameArabic}
                 onApplyExamTitleToSheet={applyTitle}
@@ -144,6 +145,7 @@ export default function TeacherGenerationStudioView() {
                 gradeNameAr={grade.nameArabic}
                 branchId={branchId}
                 branchNameAr={branch.nameArabic}
+                unitTitleAr={unitTitle || "الوحدة الأولى"}
                 lessonTitle={lessonTitle}
                 onApplyWorksheetTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={applyQuestions}
