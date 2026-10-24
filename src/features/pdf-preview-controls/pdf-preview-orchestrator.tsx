@@ -7,10 +7,12 @@
  * في ٣ مجموعات، ثم ورقة A4 الحية بالتحجيم التلقائي للهاتف.
  */
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   DEFAULT_PDF_PRINT_SETTINGS_SSOT,
+  loadPersistedPDFPrintSettingsSSOT,
   PRINT_FONT_FAMILIES_SSOT,
+  savePersistedPDFPrintSettingsSSOT,
   type PDFPrintSettingsStateSSOT,
 } from "@/core/ssot/pdf-print-settings-ssot";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
@@ -37,19 +39,45 @@ export default function PDFPreviewOrchestrator({
   branchNameAr = "",
   children,
 }: PDFPreviewOrchestratorProps) {
-  const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => ({
-    ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
-    answerVisibilityMode:
+  const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => {
+    const persisted = loadPersistedPDFPrintSettingsSSOT();
+    const isBookletOrReview =
       customTitle?.includes("مذكرة") ||
       customTitle?.includes("مراجعة") ||
-      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"))
+      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"));
+    return {
+      ...persisted,
+      answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
-        : DEFAULT_PDF_PRINT_SETTINGS_SSOT.answerVisibilityMode,
-    customDocumentTitle: customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
-  }));
+        : persisted.answerVisibilityMode,
+      customDocumentTitle:
+        customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
+    };
+  });
   const [isToolsOpen, setIsToolsOpen] = useState<boolean>(false);
   const [driveFeedback, setDriveFeedback] = useState<string | null>(null);
   const sheetContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const persisted = loadPersistedPDFPrintSettingsSSOT();
+    const isBookletOrReview =
+      customTitle?.includes("مذكرة") ||
+      customTitle?.includes("مراجعة") ||
+      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"));
+    setSettings((prev) => ({
+      ...prev,
+      ...persisted,
+      answerVisibilityMode: isBookletOrReview
+        ? "questions_with_answers"
+        : persisted.answerVisibilityMode,
+      customDocumentTitle: customTitle || prev.customDocumentTitle,
+    }));
+  }, [customTitle, customQuestions]);
+
+  const handleUpdateSettings = (next: PDFPrintSettingsStateSSOT) => {
+    setSettings(next);
+    savePersistedPDFPrintSettingsSSOT(next);
+  };
 
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
   const questions = customQuestions ?? [];
@@ -104,7 +132,10 @@ export default function PDFPreviewOrchestrator({
       </div>
 
       {isToolsOpen && (
-        <PDFControlsGroupedToolPanel settings={settings} onChangeSettings={setSettings} />
+        <PDFControlsGroupedToolPanel
+          settings={settings}
+          onChangeSettings={handleUpdateSettings}
+        />
       )}
 
       <TwoColumnNewspaperPacker

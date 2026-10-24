@@ -104,16 +104,77 @@ export interface PDFPrintSettingsStateSSOT {
 }
 
 export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
-  numeralMode: "eastern",
-  notationLanguage: "arabic",
-  fontFamilyId: "almarai",
-  exactFontSizePt: 12,
+  numeralMode: "western",
+  notationLanguage: "english",
+  fontFamilyId: "cairo",
+  exactFontSizePt: 13,
   answerVisibilityMode: "questions_only",
   densityMode: "ultra_compact",
   columnsCount: 2,
   showColumnDivider: true,
   answerSpaceStyle: "dotted",
-  colorThemeId: "royal_indigo",
+  colorThemeId: "math_teal",
   customDocumentTitle: "مستند رياضيات",
   customDurationText: "ساعة ونصف",
 };
+
+const PDF_PRINT_SETTINGS_STORAGE_KEY =
+  "math_platform_pdf_print_settings_ssot_v2" as const;
+
+/**
+ * يسترجع إعدادات تخصيص ورقة الـ PDF المحفوظة للمعلم، أو يرجع الإعدادات الافتراضية المعتمدة:
+ * (1- أرقام عربية غربية 0-9، 2- حجم الخط 13pt، 3- خط كايرو، 4- حروف إنجليزية x, y، 5- قالب أزرق).
+ */
+export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
+  if (typeof window === "undefined") return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
+  try {
+    const raw = window.localStorage.getItem(PDF_PRINT_SETTINGS_STORAGE_KEY);
+    if (!raw) return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
+    const parsed = JSON.parse(raw) as Partial<PDFPrintSettingsStateSSOT>;
+    return {
+      ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
+      ...parsed,
+      numeralMode:
+        parsed.numeralMode === "eastern" || parsed.numeralMode === "western"
+          ? parsed.numeralMode
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.numeralMode,
+      notationLanguage:
+        parsed.notationLanguage === "arabic" ||
+        parsed.notationLanguage === "english"
+          ? parsed.notationLanguage
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.notationLanguage,
+      fontFamilyId:
+        parsed.fontFamilyId && parsed.fontFamilyId in PRINT_FONT_FAMILIES_SSOT
+          ? parsed.fontFamilyId
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.fontFamilyId,
+      exactFontSizePt:
+        typeof parsed.exactFontSizePt === "number" &&
+        parsed.exactFontSizePt >= 12 &&
+        parsed.exactFontSizePt <= 16
+          ? (parsed.exactFontSizePt as ExactPrintFontSizePt)
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.exactFontSizePt,
+      colorThemeId:
+        parsed.colorThemeId || DEFAULT_PDF_PRINT_SETTINGS_SSOT.colorThemeId,
+    };
+  } catch {
+    return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
+  }
+}
+
+/**
+ * يحفظ أي تغيير يختاره المعلم في تخصيص الصفحة (الخط، الحجم، الأرقام، الرموز، اللون، الأعمدة، إلخ) للاستخدام التالي.
+ */
+export function savePersistedPDFPrintSettingsSSOT(
+  settings: PDFPrintSettingsStateSSOT
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const { customDocumentTitle: _ignoreTitle, ...persistedPrefs } = settings;
+    window.localStorage.setItem(
+      PDF_PRINT_SETTINGS_STORAGE_KEY,
+      JSON.stringify(persistedPrefs)
+    );
+  } catch {
+    // ignore storage write error
+  }
+}

@@ -40,10 +40,34 @@ export default function SideBySideDiagramDocker({
   const formattedQNum = formatNumeralsByModeSSOT(question.questionNumber, settings.numeralMode);
   const formattedMarks = formatNumeralsByModeSSOT(question.marks, settings.numeralMode);
   const isBookletSolvedExample = question.id.startsWith("booklet-s1-");
+  const isBookletDrillOrHomework = question.id.startsWith("booklet-s2-");
   const isSolvedMode =
     isBookletSolvedExample ||
     settings.answerVisibilityMode === "questions_with_answers" ||
     settings.answerVisibilityMode === "answer_key_only";
+
+  // ألوان خلفية وحدود متميزة لكل مثال كما في الموقع الأصلي تماماً (المثال الفردي تطبيقي بخلفيه زمردية ناعمة، والمثال الزوجي متقدم بخلفيه سماوية/بنفسجية ناعمة)
+  const isOddQuestion = question.questionNumber % 2 === 1;
+  const cardSurfaceBgHex = isBookletSolvedExample
+    ? isOddQuestion
+      ? "#F2FBF7"
+      : "#F0F9FF"
+    : isBookletDrillOrHomework
+      ? "#FFFFFF"
+      : "#FFFFFF";
+  const cardBorderColorHex = isBookletSolvedExample
+    ? isOddQuestion
+      ? "#10B981"
+      : "#0E7490"
+    : isBookletDrillOrHomework
+      ? "#9D174D"
+      : palette.borderHex;
+  const badgeBgColorHex = isBookletSolvedExample
+    ? isOddQuestion
+      ? "#065F46"
+      : "#155E75"
+    : palette.primaryHex;
+  const exampleRoleLabel = isOddQuestion ? "تطبيقي" : "متقدم";
 
   const mcqCols = resolveAdaptiveMCQColumnsCount(question.mcqChoicesAr, settings.columnsCount === 2);
   const mcqGridClass = resolveMCQGridTailwindClass(mcqCols);
@@ -62,45 +86,68 @@ export default function SideBySideDiagramDocker({
   return (
     <article
       style={{
-        borderColor: palette.borderHex,
-        boxShadow: "0 2px 8px rgba(76, 29, 149, 0.07)",
+        backgroundColor: cardSurfaceBgHex,
+        borderColor: cardBorderColorHex,
+        boxShadow: "0 2px 6px rgba(15, 23, 42, 0.05)",
       }}
-      className="min-w-0 w-full rounded-xl border-2 bg-white flex flex-col justify-between overflow-hidden"
+      className="min-w-0 w-full rounded-xl border-2 flex flex-col justify-between overflow-hidden"
     >
-      <div className="p-2 pb-1.5 min-w-0">
-        <div
-          style={{
-            background: `linear-gradient(90deg, ${palette.softSurfaceHex} 0%, ${palette.badgeBgHex} 100%)`,
-            borderColor: palette.borderHex,
-            breakAfter: "avoid",
-          }}
-          className="px-2 py-1 mb-1.5 rounded-lg border-r-4 border border-purple-200/70 flex flex-wrap items-center justify-between gap-1.5"
-        >
-          <div className="flex items-center gap-1.5 min-w-0">
+      <div className="p-2.5 pb-2 min-w-0">
+        {isBookletSolvedExample ? (
+          <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">
             <span
-              style={{ background: palette.headerGradientCss }}
-              className="px-2 py-0.5 rounded-md text-white text-[0.84em] font-black shrink-0 shadow-2xs"
+              style={{ backgroundColor: badgeBgColorHex }}
+              className="px-3 py-1 rounded-lg text-white text-[0.86em] font-black inline-flex items-center gap-1.5 shadow-xs"
             >
-              {isBookletSolvedExample ? `مثال (${formattedQNum})` : `س (${formattedQNum})`}
+              <span>✍️</span>
+              <span>
+                مثال توضيحي {formattedQNum} ({exampleRoleLabel})
+              </span>
             </span>
             {question.citationBadgeAr && (
               <span
-                style={{ color: palette.secondaryHex, borderColor: palette.borderHex }}
-                className="px-1.5 py-0.2 rounded bg-white border text-[0.75em] font-black truncate"
+                style={{ color: palette.secondaryHex, borderColor: cardBorderColorHex }}
+                className="px-2 py-0.5 rounded bg-white border text-[0.75em] font-black truncate"
               >
                 📍 {formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode)}
               </span>
             )}
           </div>
-          <span
-            style={{ color: palette.primaryHex, borderColor: palette.solvedBorderHex }}
-            className="text-[0.76em] font-black bg-white px-2 py-0.2 rounded-md border shrink-0 shadow-2xs"
+        ) : (
+          <div
+            style={{
+              background: `linear-gradient(90deg, ${palette.softSurfaceHex} 0%, ${palette.badgeBgHex} 100%)`,
+              borderColor: cardBorderColorHex,
+              breakAfter: "avoid",
+            }}
+            className="px-2.5 py-1 mb-2 rounded-lg border-r-4 border flex flex-wrap items-center justify-between gap-1.5"
           >
-            {isBookletSolvedExample
-              ? "مثال محلول"
-              : `${formattedMarks} ${question.marks === 1 ? "درجة" : "درجات"}`}
-          </span>
-        </div>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                style={{ backgroundColor: isBookletDrillOrHomework ? "#4338CA" : palette.primaryHex }}
+                className="px-2 py-0.5 rounded-md text-white text-[0.84em] font-black shrink-0 shadow-2xs"
+              >
+                {isBookletDrillOrHomework ? `#${formattedQNum}` : `س (${formattedQNum})`}
+              </span>
+              {question.citationBadgeAr && (
+                <span
+                  style={{ color: palette.secondaryHex, borderColor: palette.borderHex }}
+                  className="px-1.5 py-0.2 rounded bg-white border text-[0.75em] font-black truncate"
+                >
+                  📍 {formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode)}
+                </span>
+              )}
+            </div>
+            <span
+              style={{ color: isBookletDrillOrHomework ? "#9D174D" : palette.primaryHex }}
+              className="text-[0.78em] font-black bg-white px-2 py-0.2 rounded-md border border-slate-200 shrink-0 shadow-2xs"
+            >
+              {isBookletDrillOrHomework
+                ? `مسألة تدريب / واجب (${formattedQNum})`
+                : `${formattedMarks} ${question.marks === 1 ? "درجة" : "درجات"}`}
+            </span>
+          </div>
+        )}
 
         {settings.answerVisibilityMode !== "answer_key_only" && (
           <div className="min-w-0" style={{ breakInside: "avoid" }}>
@@ -234,22 +281,30 @@ export default function SideBySideDiagramDocker({
         )}
       </div>
 
-      {settings.answerVisibilityMode === "questions_only" && settings.answerSpaceStyle !== "hidden" && !isBookletSolvedExample && (
-        <div className="px-2.5 pb-2 pt-1 bg-slate-50/70 border-t border-dashed border-slate-200 space-y-1">
-          {[1, 2].map((lineIdx) => (
+      {(settings.answerVisibilityMode === "questions_only" || isBookletDrillOrHomework) &&
+        settings.answerSpaceStyle !== "hidden" &&
+        !isBookletSolvedExample && (
+          <div className="px-2.5 pb-2.5 pt-1.5 bg-slate-50/70 border-t border-dashed border-slate-300 space-y-1.5">
             <div
-              key={lineIdx}
-              className={`h-3.5 w-full ${
-                settings.answerSpaceStyle === "dotted"
-                  ? "border-b border-dotted border-slate-300"
-                  : settings.answerSpaceStyle === "lined"
-                    ? "border-b border-solid border-slate-300"
-                    : "bg-white border border-slate-200"
-              }`}
-            />
-          ))}
-        </div>
-      )}
+              style={{ color: isBookletDrillOrHomework ? "#9D174D" : palette.primaryHex }}
+              className="text-[0.8em] font-black text-left"
+            >
+              {isBookletDrillOrHomework ? "إجابة الواجب / مساحة الحل:" : "مساحة الحل:"}
+            </div>
+            {[1, 2].map((lineIdx) => (
+              <div
+                key={lineIdx}
+                className={`h-3.5 w-full ${
+                  settings.answerSpaceStyle === "dotted"
+                    ? "border-b border-dotted border-slate-400"
+                    : settings.answerSpaceStyle === "lined"
+                      ? "border-b border-solid border-slate-400"
+                      : "bg-white border border-slate-200"
+                }`}
+              />
+            ))}
+          </div>
+        )}
     </article>
   );
 }

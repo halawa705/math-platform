@@ -54,6 +54,7 @@ export interface PrintThemePaletteTokens {
 export function resolvePrintThemePalette(
   themeId: PrintColorThemeId
 ): PrintThemePaletteTokens {
+  // ١. أرجواني المعاصر (Emerald Moasser -> Royal Purple)
   if (themeId === "emerald_moasser") {
     return {
       primaryHex: "#3B0764",
@@ -71,23 +72,25 @@ export function resolvePrintThemePalette(
         "linear-gradient(135deg, #2E1065 0%, #581C87 55%, #7E22CE 100%)",
     };
   }
+  // ٢. أزرق ملكي (الافتراضي: Math Teal -> Royal Blue)
   if (themeId === "math_teal") {
     return {
-      primaryHex: "#0F172A",
-      secondaryHex: "#0369A1",
+      primaryHex: "#1E3A8A",
+      secondaryHex: "#1D4ED8",
       accentHex: "#0284C7",
-      badgeBgHex: "#F0F9FF",
-      borderHex: "#0284C7",
+      badgeBgHex: "#EFF6FF",
+      borderHex: "#2563EB",
       softSurfaceHex: "#F8FAFC",
       ruleBgHex: "#F0F9FF",
-      ruleBorderHex: "#38BDF8",
-      solvedBgHex: "#F0F9FF",
-      solvedBorderHex: "#7DD3FC",
-      solvedTextHex: "#0C4A6E",
+      ruleBorderHex: "#3B82F6",
+      solvedBgHex: "#F0FDF4",
+      solvedBorderHex: "#86EFAC",
+      solvedTextHex: "#064E3B",
       headerGradientCss:
-        "linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #0284C7 100%)",
+        "linear-gradient(135deg, #1E1B4B 0%, #1E3A8A 50%, #2563EB 100%)",
     };
   }
+  // ٣. ذهبي المراجعات
   if (themeId === "amber_gold") {
     return {
       primaryHex: "#451A03",
@@ -105,6 +108,7 @@ export function resolvePrintThemePalette(
         "linear-gradient(135deg, #451A03 0%, #78350F 55%, #B45309 100%)",
     };
   }
+  // ٤. أسود نقي (تصوير ليزري)
   if (themeId === "photocopy_black") {
     return {
       primaryHex: "#000000",
@@ -121,20 +125,21 @@ export function resolvePrintThemePalette(
       headerGradientCss: "linear-gradient(135deg, #000000 0%, #1E293B 100%)",
     };
   }
+  // ٥. زمردي المعاصر الأصيل (Royal Indigo slot -> Emerald Green)
   return {
-    primaryHex: "#2E1065",
-    secondaryHex: "#4C1D95",
-    accentHex: "#7C3AED",
-    badgeBgHex: "#F5F3FF",
-    borderHex: "#6D28D9",
-    softSurfaceHex: "#FAF5FF",
-    ruleBgHex: "#F3E8FF",
-    ruleBorderHex: "#8B5CF6",
-    solvedBgHex: "#F5F3FF",
-    solvedBorderHex: "#C4B5FD",
-    solvedTextHex: "#2E1065",
+    primaryHex: "#064E3B",
+    secondaryHex: "#065F46",
+    accentHex: "#0D9488",
+    badgeBgHex: "#ECFDF5",
+    borderHex: "#059669",
+    softSurfaceHex: "#F0FDF4",
+    ruleBgHex: "#FFFBEB",
+    ruleBorderHex: "#F59E0B",
+    solvedBgHex: "#ECFDF5",
+    solvedBorderHex: "#6EE7B7",
+    solvedTextHex: "#064E3B",
     headerGradientCss:
-      "linear-gradient(135deg, #1E1B4B 0%, #3B0764 52%, #6D28D9 100%)",
+      "linear-gradient(135deg, #064E3B 0%, #047857 55%, #0D9488 100%)",
   };
 }
 

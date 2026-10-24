@@ -19,9 +19,9 @@ const PRINT_THEMES: readonly {
   readonly label: string;
   readonly swatchHex: string;
 }[] = [
-  { id: "royal_indigo", label: "موف ملكي فاخر", swatchHex: "#4C1D95" },
+  { id: "math_teal", label: "أزرق ملكي (الافتراضي)", swatchHex: "#1E40AF" },
   { id: "emerald_moasser", label: "أرجواني المعاصر", swatchHex: "#7E22CE" },
-  { id: "math_teal", label: "ياقوتي أكاديمي", swatchHex: "#0369A1" },
+  { id: "royal_indigo", label: "زمردي المعاصر", swatchHex: "#065F46" },
   { id: "amber_gold", label: "ذهبي المراجعات", swatchHex: "#92400E" },
   { id: "photocopy_black", label: "أسود نقي (تصوير)", swatchHex: "#0F172A" },
 ];

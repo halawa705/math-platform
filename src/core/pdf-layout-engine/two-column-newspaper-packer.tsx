@@ -133,74 +133,113 @@ export default function TwoColumnNewspaperPacker({
           <div className="w-full min-w-0 flex-1 flex flex-col justify-between gap-3 relative z-10">
             <div className="space-y-3 min-w-0">
               <header
-                style={{ borderColor: palette.primaryHex }}
-                className="rounded-xl border-2 bg-white overflow-hidden shadow-2xs"
+                style={{
+                  borderColor: palette.primaryHex,
+                  boxShadow: "0 2px 10px rgba(30, 58, 138, 0.08)",
+                }}
+                className="rounded-xl border-2 bg-white overflow-hidden"
               >
                 <div
-                  style={{ background: palette.headerGradientCss }}
-                  className="px-3 py-1.5 text-white flex items-center justify-between text-[8.5pt] font-black"
-                >
-                  <span>📐 {identity.platformBrandName} — سلسلة الرياضيات المعتمدة</span>
-                  <span>{isSolvedMode ? "✓ مذكرة / نسخة محلولة ومعتمدة" : "📄 ورقة أسئلة وتقييم"}</span>
-                </div>
-
-                <div
-                  style={{ backgroundColor: palette.softSurfaceHex }}
+                  style={{ backgroundColor: "#F8FAFC" }}
                   className="grid grid-cols-12 items-center p-2.5 gap-2 border-b border-slate-200"
                 >
+                  {/* القسم الأيمن: اسم السنتر/المنصة + إدارة التربية والتعليم + مذكرة الشرح والتأسيس */}
                   <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2 min-w-0">
                     <div
-                      style={{ backgroundColor: palette.primaryHex }}
-                      className="w-9 h-9 rounded-lg text-white flex items-center justify-center text-sm font-black overflow-hidden shrink-0"
+                      style={{ background: palette.headerGradientCss }}
+                      className="w-10 h-10 rounded-xl text-white flex items-center justify-center text-base font-black overflow-hidden shrink-0 shadow-xs"
                     >
                       {identity.platformLogoUrl ? (
-                        <img src={identity.platformLogoUrl} alt={identity.platformBrandName} className="w-full h-full object-cover" />
+                        <img
+                          src={identity.platformLogoUrl}
+                          alt={identity.platformBrandName}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <span>{identity.platformLogoSymbol || "∑"}</span>
+                        <span>{identity.platformLogoSymbol || "🛡️"}</span>
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <div style={{ color: palette.primaryHex }} className="text-[10.5pt] font-black leading-tight truncate">
-                        {identity.teacherFullName}
+                    <div className="min-w-0 space-y-0.5">
+                      <div
+                        style={{ color: palette.primaryHex }}
+                        className="text-[10.5pt] font-black leading-tight truncate"
+                      >
+                        {identity.platformBrandName}
                       </div>
-                      <div className="text-[8pt] font-bold text-slate-600 truncate">
-                        {identity.teacherNickname || "خبير تدريس الرياضيات"}
+                      <div className="text-[7.5pt] font-extrabold text-slate-600 truncate">
+                        إدارة التربية والتعليم
+                      </div>
+                      <div
+                        style={{ color: palette.accentHex }}
+                        className="text-[7.5pt] font-black truncate"
+                      >
+                        {isSolvedMode
+                          ? "مذكرة الشرح والتأسيس والتطبيقات المعتمدة"
+                          : "ورقة تقييم واختبار رسمي معتمد"}
                       </div>
                     </div>
                   </div>
 
-                  <div className="col-span-4 text-center space-y-1 px-1 min-w-0">
-                    <div className="text-[12pt] font-black text-slate-950 leading-snug break-words">
+                  {/* القسم الأوسط: عنوان الدرس + كبسولة الصف الدراسي والفصل */}
+                  <div className="col-span-4 text-center space-y-1.5 px-1 min-w-0">
+                    <div className="text-[11.5pt] font-black text-slate-950 leading-snug break-words">
                       {settings.customDocumentTitle}
                     </div>
                     {subtitleAr && (
                       <span
-                        style={{ backgroundColor: palette.primaryHex }}
-                        className="inline-block px-3 py-0.5 rounded-full text-white text-[8pt] font-black"
+                        style={{ background: palette.headerGradientCss }}
+                        className="inline-block px-3.5 py-0.5 rounded-full text-white text-[8pt] font-black shadow-2xs"
                       >
                         {subtitleAr}
                       </span>
                     )}
                   </div>
 
-                  <div className="col-span-4 border-r border-slate-200 pr-2 text-left space-y-0.5 text-[8.5pt] font-bold min-w-0">
+                  {/* القسم الأيسر: اسم المعلم واللقب + الهاتف + عدد الأفكار والفرع */}
+                  <div className="col-span-4 border-r border-slate-200 pr-2.5 text-left space-y-0.5 text-[8.5pt] font-bold min-w-0">
+                    <div
+                      style={{ color: palette.primaryHex }}
+                      className="text-[9.5pt] font-black truncate"
+                    >
+                      المعلم: {identity.teacherFullName}
+                      {identity.teacherNickname ? ` (${identity.teacherNickname})` : ""}
+                    </div>
                     {identity.teacherPhone && (
-                      <div className="text-slate-700 font-mono">
-                        هاتف: {formatNumeralsByModeSSOT(identity.teacherPhone, settings.numeralMode)}
+                      <div className="text-slate-700 font-mono font-extrabold text-[8pt]">
+                        هاتف:{" "}
+                        {formatNumeralsByModeSSOT(
+                          identity.teacherPhone,
+                          settings.numeralMode
+                        )}
                       </div>
                     )}
-                    <div style={{ color: palette.secondaryHex }} className="font-black">
-                      العناصر: ({formatNumeralsByModeSSOT(questions.length, settings.numeralMode)}) | الزمن:{" "}
-                      {formatNumeralsByModeSSOT(settings.customDurationText, settings.numeralMode)}
+                    <div className="text-slate-500 font-extrabold text-[7.8pt]">
+                      الأفكار: (
+                      {formatNumeralsByModeSSOT(
+                        ideaGroups.length,
+                        settings.numeralMode
+                      )}
+                      ) | المسائل: (
+                      {formatNumeralsByModeSSOT(
+                        questions.length,
+                        settings.numeralMode
+                      )}
+                      )
                     </div>
                   </div>
                 </div>
 
-                <div className="px-3 py-1.5 bg-white flex items-center justify-between text-[8.5pt] font-extrabold text-slate-700">
-                  <span>اسم الطالب: ........................................</span>
-                  <span>الكود / المجموعة: ......................</span>
-                  <span style={{ color: palette.primaryHex }} className="font-black">
-                    الدرجة الكلية: ...... / {formatNumeralsByModeSSOT(totalMarks, settings.numeralMode)}
+                {/* شريط بيانات الطالب والوحدة على غرار الموقع الأصلي */}
+                <div
+                  style={{ backgroundColor: palette.badgeBgHex }}
+                  className="px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[8.5pt] font-black text-slate-800"
+                >
+                  <span>اسم الطالب: ....................................</span>
+                  <span>المجموعة: ...................</span>
+                  <span>الفصل: ...........</span>
+                  <span style={{ color: palette.primaryHex }}>
+                    الدرجة الكلية: ...... /{" "}
+                    {formatNumeralsByModeSSOT(totalMarks, settings.numeralMode)}
                   </span>
                 </div>
               </header>
@@ -214,11 +253,11 @@ export default function TwoColumnNewspaperPacker({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2 min-w-0">
+                <div className="space-y-3 min-w-0">
                   {ideaGroups.map((group, gIdx) => {
                     const isTwoCols = settings.columnsCount === 2;
                     return (
-                      <div key={gIdx} className="space-y-1.5 min-w-0">
+                      <div key={gIdx} className="space-y-2 min-w-0">
                         {group.anchorQuestion && (
                           <div className="w-full min-w-0">
                             <PedagogicalIdeaAndRuleCapsule
@@ -240,6 +279,23 @@ export default function TwoColumnNewspaperPacker({
                             />
                           ))}
                         </div>
+                        {group.anchorQuestion &&
+                          !/الواجب\s*المنزلي|ثانياً/.test(
+                            group.anchorQuestion.ideaBannerTitleAr || ""
+                          ) && (
+                            <div className="py-1 flex items-center justify-center gap-3 text-[8.5pt] font-black text-slate-600">
+                              <span className="w-16 border-t-2 border-double border-slate-400" />
+                              <span>
+                                نهاية الفكرة (
+                                {formatNumeralsByModeSSOT(
+                                  gIdx + 1,
+                                  settings.numeralMode
+                                )}
+                                )
+                              </span>
+                              <span className="w-16 border-t-2 border-double border-slate-400" />
+                            </div>
+                          )}
                       </div>
                     );
                   })}
@@ -259,12 +315,52 @@ export default function TwoColumnNewspaperPacker({
             </div>
 
             <footer
-              style={{ borderColor: palette.primaryHex }}
-              className="pt-2 mt-2 border-t-2 flex items-center justify-between text-[8.5pt] font-black text-slate-600 px-1"
+              style={{
+                borderColor: palette.primaryHex,
+                backgroundColor: "#FAF8FF",
+              }}
+              className="mt-3 p-1.5 rounded-2xl border-2 break-inside-avoid"
             >
-              <span>{identity.platformBrandName} • {identity.teacherFullName}</span>
-              <span style={{ color: palette.secondaryHex }}>{identity.footerText} 🌟</span>
-              <span>سلسلة المذكرات المعتمدة</span>
+              <div
+                style={{ borderColor: palette.solvedBorderHex }}
+                className="p-2 rounded-xl border bg-white text-center space-y-1.5"
+              >
+                <div
+                  style={{ background: palette.headerGradientCss }}
+                  className="mx-auto max-w-md py-1 px-4 rounded-full text-white text-[9pt] font-black shadow-2xs"
+                >
+                  اعتماد وإشراف المذكرة التعليمية
+                </div>
+                <div className="flex flex-wrap items-center justify-around gap-2 pt-1 text-[8.8pt] font-black text-slate-900 border-b border-dashed border-slate-200 pb-1.5">
+                  <span>
+                    <span style={{ color: palette.secondaryHex }}>معلم المادة: </span>
+                    {identity.teacherFullName}
+                    {identity.teacherNickname ? ` (${identity.teacherNickname})` : ""}
+                  </span>
+                  {identity.teacherPhone && (
+                    <span>
+                      <span style={{ color: palette.secondaryHex }}>
+                        للتواصل والواتساب:{" "}
+                      </span>
+                      <span className="font-mono">
+                        {formatNumeralsByModeSSOT(
+                          identity.teacherPhone,
+                          settings.numeralMode
+                        )}
+                      </span>
+                    </span>
+                  )}
+                  <span>
+                    <span style={{ color: palette.secondaryHex }}>
+                      الصرح التعليمي:{" "}
+                    </span>
+                    {identity.platformBrandName}
+                  </span>
+                </div>
+                <div className="text-[8.2pt] font-extrabold text-slate-600">
+                  مع أطيب التمنيات لجميع الطلاب بالتفوق الدائم والدرجة النهائية 🌟
+                </div>
+              </div>
             </footer>
           </div>
         </div>

@@ -41,65 +41,106 @@ export function PedagogicalIdeaAndRuleCapsule({
     return null;
   }
 
+  const rawBanner = item.ideaBannerTitleAr || "";
+  const ideaNumMatch = rawBanner.match(/الفكرة\s*\(?(\d+|[٠-٩]+)\)?\s*[:\-–]?\s*(.*)/);
+  const ideaNumberText = ideaNumMatch?.[1] || "1";
+  const ideaCleanTitle = ideaNumMatch?.[2]?.trim() || rawBanner;
+  const isHomeworkSection = /الواجب\s*المنزلي|ثانياً/.test(rawBanner);
+
   return (
     <section
       style={{
         breakInside: "avoid",
-        borderColor: palette.borderHex,
-        boxShadow: "0 2px 6px rgba(76, 29, 149, 0.08)",
       }}
-      className="w-full min-w-0 rounded-xl border-2 bg-white overflow-hidden my-0.5"
+      className="w-full min-w-0 my-1 space-y-2"
     >
       {item.ideaBannerTitleAr && (
         <div
-          style={{ background: palette.headerGradientCss }}
-          className="px-3 py-1 text-white flex flex-wrap items-center justify-between gap-2 text-[0.92em] font-black"
+          style={{
+            background: isHomeworkSection
+              ? "linear-gradient(90deg, #FDF2F8 0%, #9D174D 100%)"
+              : palette.headerGradientCss,
+            borderColor: isHomeworkSection ? "#BE185D" : palette.primaryHex,
+          }}
+          className="rounded-xl border-2 p-1.5 text-white flex items-center justify-between gap-2 shadow-xs"
         >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="bg-white/20 px-1.5 py-0.5 rounded text-[0.82em] shrink-0">💡</span>
-            <span className="break-words">
-              {formatNumeralsByModeSSOT(item.ideaBannerTitleAr, numeralMode)}
+          <div className="flex items-center gap-2 min-w-0">
+            {!isHomeworkSection ? (
+              <span
+                style={{ color: palette.primaryHex }}
+                className="bg-white px-2.5 py-0.5 rounded-lg text-[0.88em] font-black shrink-0 shadow-2xs border border-slate-200"
+              >
+                الفكرة ({formatNumeralsByModeSSOT(ideaNumberText, numeralMode)})
+              </span>
+            ) : (
+              <span className="bg-white/20 px-2 py-0.5 rounded-lg text-[0.88em] font-black shrink-0">
+                📚 الواجب المنزلي
+              </span>
+            )}
+            <span className="font-black text-[0.95em] break-words">
+              {formatNumeralsByModeSSOT(ideaCleanTitle, numeralMode)}
             </span>
           </div>
-          {item.branchBadgeAr && (
-            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[0.76em] font-extrabold shrink-0">
-              {item.branchBadgeAr}
-            </span>
-          )}
+          <span className="px-2.5 py-0.5 rounded-lg bg-white/15 border border-white/25 text-white text-[0.76em] font-black shrink-0">
+            {item.branchBadgeAr || "المستوى: متوسط"}
+          </span>
         </div>
       )}
 
       {(item.conceptExplanationAr || item.framedRuleAr) && (
-        <div className="p-2 grid grid-cols-1 gap-1.5 bg-white">
+        <div
+          className={`grid ${
+            item.conceptExplanationAr && item.framedRuleAr ? "grid-cols-2" : "grid-cols-1"
+          } gap-2 items-stretch`}
+        >
           {item.conceptExplanationAr && (
             <div
-              style={{ backgroundColor: palette.softSurfaceHex, borderColor: palette.primaryHex }}
-              className="px-2.5 py-1 rounded-lg border-r-4 text-[0.9em] text-slate-800 leading-relaxed min-w-0"
+              style={{
+                backgroundColor: "#FFFDF5",
+                borderColor: "#F59E0B",
+              }}
+              className="p-2.5 rounded-xl border-2 text-[0.9em] text-slate-900 leading-relaxed min-w-0 flex flex-col justify-between shadow-2xs"
             >
-              <span style={{ color: palette.primaryHex }} className="font-black ml-1.5">
-                📘 مفهوم الفكرة:
-              </span>
-              <SafeKaTeXBiDiMathRenderer
-                text={item.conceptExplanationAr}
-                numeralMode={numeralMode}
-                notationLanguage={notationLanguage}
-              />
+              <div>
+                <div className="text-[#92400E] font-black mb-1 pb-1 border-b border-amber-200/80 flex items-center gap-1 text-[0.92em]">
+                  <span>💡</span>
+                  <span>المفهوم الرياضي والشرح:</span>
+                </div>
+                <div className="font-bold text-slate-800">
+                  <SafeKaTeXBiDiMathRenderer
+                    text={item.conceptExplanationAr}
+                    numeralMode={numeralMode}
+                    notationLanguage={notationLanguage}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
           {item.framedRuleAr && (
             <div
-              style={{ backgroundColor: palette.ruleBgHex, borderColor: palette.ruleBorderHex }}
-              className="px-2.5 py-1 rounded-lg border-2 border-dashed text-[0.92em] font-bold text-slate-900 leading-relaxed min-w-0"
+              style={{
+                backgroundColor: "#F5F7FF",
+                borderColor: "#818CF8",
+              }}
+              className="p-2.5 rounded-xl border-2 text-[0.92em] font-bold text-slate-900 leading-relaxed min-w-0 flex flex-col justify-between shadow-2xs"
             >
-              <span style={{ color: palette.secondaryHex }} className="font-black ml-1.5">
-                📐 القاعدة الرياضية المؤطرة:
-              </span>
-              <SafeKaTeXBiDiMathRenderer
-                text={item.framedRuleAr}
-                numeralMode={numeralMode}
-                notationLanguage={notationLanguage}
-              />
+              <div>
+                <div
+                  style={{ color: palette.primaryHex }}
+                  className="font-black mb-1 pb-1 border-b border-indigo-200/80 flex items-center gap-1 text-[0.92em]"
+                >
+                  <span>📐</span>
+                  <span>القاعدة والقانون المعتمد:</span>
+                </div>
+                <div className="font-extrabold text-slate-900">
+                  <SafeKaTeXBiDiMathRenderer
+                    text={item.framedRuleAr}
+                    numeralMode={numeralMode}
+                    notationLanguage={notationLanguage}
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -131,15 +172,12 @@ export function StructuredStepByStepSolutionBox({
   return (
     <div
       style={{
-        backgroundColor: palette.solvedBgHex,
-        borderColor: palette.solvedBorderHex,
-        color: palette.solvedTextHex,
         fontSize: `${effectiveEm}em`,
       }}
-      className="mt-1.5 p-2 rounded-lg border-2 space-y-1 min-w-0"
+      className="mt-2 pt-2 border-t border-slate-200/90 space-y-1.5 min-w-0"
     >
-      <div className="font-black flex flex-wrap items-center justify-between gap-1 border-b border-purple-900/10 pb-1 mb-1">
-        <span>✓ خطوات الحل والإجابة النموذجية:</span>
+      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900">
+        <span>خطوات الحل والشرح بالتفصيل:</span>
         {item.kind === "mcq" && item.correctMcqIndex !== undefined && (
           <span
             style={{
@@ -153,7 +191,7 @@ export function StructuredStepByStepSolutionBox({
           </span>
         )}
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {steps.map((rawStepText, idx) => {
           const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
           const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
@@ -162,25 +200,38 @@ export function StructuredStepByStepSolutionBox({
           return (
             <div
               key={idx}
-              style={{ breakInside: "avoid" }}
-              className="flex items-baseline gap-1.5 leading-relaxed min-w-0"
+              style={{
+                breakInside: "avoid",
+                backgroundColor: "#F8FAFC",
+                borderColor: "#E2E8F0",
+              }}
+              className="p-2 rounded-lg border leading-relaxed min-w-0 space-y-1 shadow-2xs"
             >
-              <span
-                style={{
-                  background: isLast ? palette.headerGradientCss : "#ffffff",
-                  color: isLast ? "#ffffff" : palette.primaryHex,
-                  borderColor: palette.borderHex,
-                }}
-                className="shrink-0 px-1.5 py-0.2 rounded-md border text-[0.78em] font-black shadow-2xs"
-              >
-                {isLast ? "∴ الناتج" : `خطوة ${formatNumeralsByModeSSOT(idx + 1, numeralMode)}`}
-              </span>
-              <div className={`min-w-0 flex-1 break-words ${isLast ? "font-black" : "font-semibold"}`}>
-                <SafeKaTeXBiDiMathRenderer
-                  text={cleanStepText}
-                  numeralMode={numeralMode}
-                  notationLanguage={notationLanguage}
-                />
+              <div className="flex items-center justify-start">
+                <span className="px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-900 text-[0.8em] font-black shadow-2xs">
+                  الخطوة {formatNumeralsByModeSSOT(idx + 1, numeralMode)}
+                </span>
+              </div>
+              <div className={`min-w-0 break-words text-slate-900 ${isLast ? "font-black" : "font-bold"}`}>
+                {isLast ? (
+                  <span>
+                    <strong style={{ color: palette.primaryHex }}>الناتج النهائي: </strong>
+                    <SafeKaTeXBiDiMathRenderer
+                      text={cleanStepText}
+                      numeralMode={numeralMode}
+                      notationLanguage={notationLanguage}
+                    />
+                  </span>
+                ) : (
+                  <span>
+                    {formatNumeralsByModeSSOT(idx + 1, numeralMode)}.{" "}
+                    <SafeKaTeXBiDiMathRenderer
+                      text={cleanStepText}
+                      numeralMode={numeralMode}
+                      notationLanguage={notationLanguage}
+                    />
+                  </span>
+                )}
               </div>
             </div>
           );
