@@ -80,16 +80,26 @@ export function triggerIsolatedA4Print(
     .katex .mfrac {
       margin: 0.2em 0.14em !important;
     }
+    /* Reset outer flex containers in print to prevent stretching and huge white voids */
+    .w-full.max-w-\[794px\],
+    .min-h-\[1123px\],
+    .flex.flex-col.justify-between {
+      display: block !important;
+      height: auto !important;
+      min-height: 0 !important;
+      justify-content: flex-start !important;
+    }
     .grid.grid-cols-2 {
       display: block !important;
       columns: 2 !important;
-      column-gap: 5mm !important;
+      column-gap: 4mm !important;
     }
     .grid.grid-cols-2 > * {
-      display: inline-block !important;
+      display: block !important;
       width: 100% !important;
-      margin-bottom: 2.5mm !important;
+      margin-bottom: 2mm !important;
       break-inside: auto !important;
+      page-break-inside: auto !important;
     }
     .a4-ministerial-sheet {
       width: 100% !important;
@@ -100,17 +110,26 @@ export function triggerIsolatedA4Print(
       box-shadow: none !important;
       overflow-x: hidden !important;
     }
-    header, footer, section {
-      break-inside: avoid;
-      page-break-inside: avoid;
-      min-width: 0 !important;
-      max-width: 100% !important;
+    header {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      margin-bottom: 2mm !important;
+    }
+    footer {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      margin-top: 3mm !important;
+    }
+    section {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
     }
     article {
       break-inside: auto !important;
       page-break-inside: auto !important;
       min-width: 0 !important;
       max-width: 100% !important;
+      margin-bottom: 2mm !important;
     }
     svg {
       max-width: 100% !important;

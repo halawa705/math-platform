@@ -50,13 +50,14 @@ export function PedagogicalIdeaAndRuleCapsule({
   return (
     <section
       style={{
-        breakInside: "avoid",
+        breakInside: "auto",
       }}
-      className="w-full min-w-0 my-1 space-y-2"
+      className="w-full min-w-0 my-1 space-y-1.5"
     >
       {item.ideaBannerTitleAr && (
         <div
           style={{
+            breakInside: "avoid",
             background: isHomeworkSection
               ? "linear-gradient(90deg, #FDF2F8 0%, #9D174D 100%)"
               : palette.headerGradientCss,

@@ -25,10 +25,10 @@ export function cleanBracketedField(val: string): string {
 
 export function extractConceptAndRule(block: string): { concept: string; rule: string } {
   const conceptMatch = block.match(
-    /(?:مفهوم\s*الفكرة|المفهوم_الرياضي|المفهوم\s*الرياضي|الشرح)\s*:\s*([\s\S]*?)(?=\n\s*(?:القاعدة|القانون|المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|$))/i
+    /(?:مفهوم\s*الفكرة|المفهوم_الرياضي|المفهوم\s*الرياضي|الشرح)\s*:\s*([\s\S]*?)(?=\n\s*(?:القاعدة|القانون|المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|الفكرة|$))/i
   );
   const ruleMatch = block.match(
-    /(?:القاعدة\s*الرياضية|القانون_أو_القاعدة|القانون\s*أو\s*القاعدة|صندوق_القاعدة|القانون)\s*:\s*([\s\S]*?)(?=\n\s*(?:المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|$))/i
+    /(?:القاعدة\s*الرياضية|القانون_أو_القاعدة|القانون\s*أو\s*القاعدة|صندوق_القاعدة|القانون)\s*:\s*([\s\S]*?)(?=\n\s*(?:المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|الفكرة|$))/i
   );
   return {
     concept: cleanBracketedField(conceptMatch?.[1] ?? ""),
@@ -142,11 +142,16 @@ export function parseSolvedExamplesFromSection(
   ideaTitle: string,
   concept: string
 ): Array<{ promptAr: string; steps: string[]; rawFinal: string; geometryRaw?: string }> {
-  const exSplits = examplesSection
+  // عزل قسم الأمثلة وبتر أي نص يخص الفكرة التالية أو نهايتها
+  const cleanSection = examplesSection.split(
+    /(?:^|\n)\s*(?:نهاية\s*الفكرة|(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i
+  )[0] || "";
+
+  const exSplits = cleanSection
     .split(/(?:^|\n)\s*(?=(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال\s*:\s*example-[0-9a-zA-Z_-]+|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i)
     .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل)/i.test(b));
 
-  const list = exSplits.length > 0 ? exSplits : [examplesSection];
+  const list = exSplits.length > 0 ? exSplits : [cleanSection];
   const results: Array<{ promptAr: string; steps: string[]; rawFinal: string; geometryRaw?: string }> = [];
 
   list.forEach((exBody) => {
@@ -160,10 +165,15 @@ export function parseSolvedExamplesFromSection(
       .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
       .trim();
 
-    const stepsMatch = exBody.match(/(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|$))/i);
+    const stepsMatch = exBody.match(
+      /(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i
+    );
     const rawFinal = exBody.match(/(?:الناتج\s*النهائي|الإجابة\s*النهائية)\s*:\s*([^\n]+)/i)?.[1]?.trim() || "";
     const steps = mergeLogicalSolutionSteps(stepsMatch?.[1] || "").filter(
-      (line) => !/^(?:معرف\s*المثال|نص\s*المسألة|نوع\s*المسألة|المثال\s*\d+|مثال\s*\d+)/i.test(line) && !/example-\d+-\d+/i.test(line)
+      (line) =>
+        !/^(?:معرف\s*المثال|معرف\s*الفكرة|نص\s*المسألة|نوع\s*المسألة|المثال\s*\d+|مثال\s*\d+|الفكرة\s*\S+)/i.test(line) &&
+        !/example-\d+-\d+/i.test(line) &&
+        !/(?:مفهوم\s*الفكرة|القاعدة\s*الرياضية|حاول\s*بنفسك|الواجب\s*المنزلي)/i.test(line)
     );
     if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);
 

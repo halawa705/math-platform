@@ -121,7 +121,7 @@ export default function TwoColumnNewspaperPacker({
         <div
           ref={sheetContainerRef}
           dir="rtl"
-          className="w-full max-w-[794px] min-h-[1123px] bg-white text-slate-950 shadow-2xl p-[5mm] flex flex-col justify-between relative overflow-hidden print:overflow-visible"
+          className="w-full max-w-[794px] min-h-[1123px] bg-white text-slate-950 shadow-2xl p-[5mm] flex flex-col justify-between relative overflow-hidden print:overflow-visible print:min-h-0 print:h-auto print:block print:p-0 print:shadow-none"
           style={{
             backgroundColor: "#ffffff",
             color: "#0f172a",
@@ -130,7 +130,7 @@ export default function TwoColumnNewspaperPacker({
             lineHeight: activeFont.optimalLineHeight,
           }}
         >
-          <div className="w-full min-w-0 flex-1 flex flex-col justify-between gap-3 relative z-10">
+          <div className="w-full min-w-0 flex-1 flex flex-col justify-between gap-3 relative z-10 print:block print:h-auto print:min-h-0">
             <div className="space-y-3 min-w-0">
               <header
                 style={{

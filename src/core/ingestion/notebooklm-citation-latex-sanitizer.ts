@@ -88,8 +88,8 @@ export function sanitizeNotebookLMCitationsAndLatex(
   // 3. إزالة فواصل --- العشوائية وعبارات المحادثة الاقتراحية في نهاية رد NotebookLM
   text = text
     .replace(/(?:^|\n|\s+)(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|هل\s+تود\s+الانتقال|هل\s+ترغب\s+في\s+الانتقال|بانتظار\s+تعليماتك|إذا\s+كنت\s+مستعداً)[\s\S]*$/gi, "")
-    .replace(/^\s*[-*_]{3,}\s*$/gm, "")
-    .replace(/\s+---+\s*/g, " ")
+    .replace(/^\s*[-*_]{3,}\s*$/gm, "\n\n")
+    .replace(/\s*---+\s*/g, "\n\n")
     .replace(/\[(?:TEXT|PROMPT|SOLUTION|ANSWER)\]\s*:?\s*/gi, "")
     .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "")
     .replace(
@@ -101,12 +101,8 @@ export function sanitizeNotebookLMCitationsAndLatex(
       "[$1]"
     );
 
-  // 4. إحصاء وتوحيد محددات \( ... \) و \[ ... \] وبيئات \begin{cases}...\end{cases}
-  text = text.replace(
-    /(\\begin\{(?:cases|matrix|pmatrix|bmatrix|aligned|array)\}[\s\S]*?\\end\{(?:cases|matrix|pmatrix|bmatrix|aligned|array)\})/g,
-    (envBlock) => (envBlock.startsWith("$") ? envBlock : `$${envBlock}$`)
-  );
-  text = text.replace(/\\+\((.+?)\\+\)/g, (_m, inner: string) => {
+  // 4. إحصاء وتوحيد محددات \( ... \) و \[ ... \]
+  text = text.replace(/\\+\(([\s\S]+?)\\+\)/g, (_m, inner: string) => {
     normalizedLatexDelimitersCount += 1;
     return `$${inner.trim()}$`;
   });
