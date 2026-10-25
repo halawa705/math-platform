@@ -8,6 +8,8 @@
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
+import { matchPrimaryGrade4GeometryFigure } from "./catalogs/primary-grade4-geometry-catalog";
+import { matchPrepSimilarityGeometryFigure } from "./catalogs/prep-similarity-geometry-catalog";
 import { buildTriangleMidsegmentFigure } from "./triangle-family/triangle-midsegment-branch";
 import { buildTriangleThalesParallelFigure } from "./triangle-family/triangle-thales-parallel-branch";
 import { buildTriangleMediansCentroidFigure } from "./triangle-family/triangle-medians-centroid-branch";
@@ -36,19 +38,26 @@ export const MODULE_ID_NATURAL_ARABIC_GEOMETRY_MATCHER =
 
 /**
  * يطابق الوصف العربي مع شكل هندسي قياسي دقيق، أو يعيد `undefined` إذا كان الوصف مسألة لفظية
- * أو مضلعاً عاماً لا ينطبق عليه شكل نظري قياسي (لمنع ظهور رسوم وهمية غير مطابقة للمسألة).
+ * بحتة لا تتضمن شكلاً هندسياً في الكتاب المدرسي.
  */
 export function matchOptionalGeometryFigureFromArabicDescription(
   arabicDescription: string,
   figureId = "matched_geom_fig",
-  notationLanguage: MathNotationLanguage = "arabic"
+  notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR | undefined {
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
 
-  // استبعاد المسائل اللفظية الحياتية أو المضلعات الخماسية/السداسية العامة من الرسوم القياسية
+  // 0. فحص سجلات المنهج القياسية (المرحلة الإعدادية والابتدائية)
+  const prepSimMatch = matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage);
+  if (prepSimMatch) return prepSimMatch;
+
+  const primary4Match = matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
+  if (primary4Match) return primary4Match;
+
+  // استبعاد المسائل اللفظية الحياتية التي لا تحتوي على رسم هندسي في كتاب الوزارة
   if (
-    /شاشة|كمبيوتر|تلفاز|صورة|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|خماسي|سداسي|سباعي|ثماني|مضلعان/i.test(
+    /شاشة|كمبيوتر|تلفاز|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|سباعي|ثماني/i.test(
       desc
     )
   ) {
@@ -140,7 +149,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
 export function matchArabicDescriptionToCanonicalGeometryFigure(
   arabicDescription: string,
   figureId = "matched_geom_fig",
-  notationLanguage: MathNotationLanguage = "arabic"
+  notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR {
   return (
     matchOptionalGeometryFigureFromArabicDescription(

@@ -62,7 +62,7 @@ export function AdaptiveMCQChoicesCard({
             >
               {CHOICE_LETTERS[cIdx]}
             </span>
-            <div className="flex-1 min-w-0 text-center font-extrabold text-slate-900 break-words">
+            <div className="flex-1 min-w-0 text-center font-extrabold text-slate-900 break-normal leading-tight">
               <SafeKaTeXBiDiMathRenderer
                 text={choice}
                 numeralMode={numeralMode}

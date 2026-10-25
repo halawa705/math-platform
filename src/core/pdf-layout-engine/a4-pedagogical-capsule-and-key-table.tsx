@@ -26,31 +26,65 @@ export const MODULE_ID_A4_PEDAGOGICAL_CAPSULE_AND_KEY_TABLE =
 
 const ARABIC_CHOICE_LETTERS = ["أ", "ب", "جـ", "د"] as const;
 
+const ARABIC_ORDINAL_MAP: Record<string, string> = {
+  "الأولى": "1", "الاولى": "1", "الأول": "1", "الاول": "1",
+  "الثانية": "2", "الثاني": "2",
+  "الثالثة": "3", "الثالث": "3",
+  "الرابعة": "4", "الرابع": "4",
+  "الخامسة": "5", "الخامس": "5",
+  "السادسة": "6", "السادس": "6",
+  "السابعة": "7", "السابع": "7",
+  "الثامنة": "8", "الثامن": "8",
+  "التاسعة": "9", "التاسع": "9",
+  "العاشرة": "10", "العاشر": "10",
+  "الحادية عشرة": "11", "الحادية عشر": "11",
+  "الثانية عشرة": "12", "الثانية عشر": "12",
+  "الثالثة عشرة": "13", "الثالثة عشر": "13",
+  "الرابعة عشرة": "14", "الرابعة عشر": "14",
+  "الخامسة عشرة": "15", "الخامسة عشر": "15",
+};
+
 export function PedagogicalIdeaAndRuleCapsule({
   item,
   palette,
   numeralMode,
   notationLanguage,
+  ideaIndex,
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
+  readonly ideaIndex?: number;
 }) {
   if (!item.ideaBannerTitleAr && !item.conceptExplanationAr && !item.framedRuleAr) {
     return null;
   }
 
   const rawBanner = item.ideaBannerTitleAr || "";
-  const ideaNumMatch = rawBanner.match(/الفكرة\s*\(?(\d+|[٠-٩]+)\)?\s*[:\-–]?\s*(.*)/);
-  const ideaNumberText = ideaNumMatch?.[1] || "1";
-  const ideaCleanTitle = ideaNumMatch?.[2]?.trim() || rawBanner;
+  let ideaNumberText = ideaIndex !== undefined ? String(ideaIndex) : "";
+  if (!ideaNumberText) {
+    const numMatch = rawBanner.match(/الفكرة\s*\(?(\d+|[٠-٩]+)\)?/);
+    if (numMatch?.[1]) {
+      ideaNumberText = numMatch[1];
+    } else {
+      for (const [word, val] of Object.entries(ARABIC_ORDINAL_MAP)) {
+        if (rawBanner.includes(word)) {
+          ideaNumberText = val;
+          break;
+        }
+      }
+    }
+  }
+  if (!ideaNumberText) ideaNumberText = "1";
+
   const isHomeworkSection = /الواجب\s*المنزلي|ثانياً/.test(rawBanner);
+  const displayTitle = rawBanner;
 
   return (
     <section
       style={{
-        breakInside: "auto",
+        breakInside: "avoid",
       }}
       className="w-full min-w-0 my-1 space-y-1.5"
     >
@@ -79,7 +113,7 @@ export function PedagogicalIdeaAndRuleCapsule({
               </span>
             )}
             <span className="font-black text-[0.95em] break-words">
-              {formatNumeralsByModeSSOT(ideaCleanTitle, numeralMode)}
+              {formatNumeralsByModeSSOT(displayTitle, numeralMode)}
             </span>
           </div>
           <span className="px-2.5 py-0.5 rounded-lg bg-white/15 border border-white/25 text-white text-[0.76em] font-black shrink-0">
@@ -124,7 +158,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 backgroundColor: "#F5F7FF",
                 borderColor: "#818CF8",
               }}
-              className="p-2.5 rounded-xl border-2 text-[0.92em] font-bold text-slate-900 leading-relaxed min-w-0 flex flex-col justify-between shadow-2xs"
+              className="p-2.5 rounded-xl border-2 text-[0.9em] font-bold text-slate-900 leading-relaxed min-w-0 flex flex-col justify-between shadow-2xs overflow-hidden"
             >
               <div>
                 <div
@@ -134,7 +168,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                   <span>📐</span>
                   <span>القاعدة والقانون المعتمد:</span>
                 </div>
-                <div className="font-extrabold text-slate-900">
+                <div className="font-extrabold text-slate-900 overflow-x-auto no-scrollbar max-w-full">
                   <SafeKaTeXBiDiMathRenderer
                     text={item.framedRuleAr}
                     numeralMode={numeralMode}
@@ -242,47 +276,5 @@ export function StructuredStepByStepSolutionBox({
   );
 }
 
-export function OfficialMcqAnswerKeySummaryTable({
-  questions,
-  palette,
-  numeralMode,
-  notationLanguage,
-}: {
-  readonly questions: readonly PrintableMathQuestionItem[];
-  readonly palette: PrintThemePaletteTokens;
-  readonly numeralMode: NumeralDisplayMode;
-  readonly notationLanguage: MathNotationLanguage;
-}) {
-  const mcqItems = questions.filter((q) => q.kind === "mcq" && q.mcqChoicesAr);
-  if (mcqItems.length === 0) return null;
+export { OfficialMcqAnswerKeySummaryTable } from "./official-mcq-answer-key-summary-table";
 
-  return (
-    <div style={{ borderColor: palette.primaryHex }} className="mt-3 pt-2 border-t-2 break-inside-avoid">
-      <div
-        style={{ backgroundColor: palette.badgeBgHex, color: palette.primaryHex }}
-        className="px-2.5 py-1 rounded-t-md font-black text-[0.82em] flex items-center justify-between border border-b-0 border-slate-300"
-      >
-        <span>🔑 جدول مفتاح إجابات الاختيار من متعدد السريع</span>
-        <span>إجمالي الأسئلة الموضوعية: {formatNumeralsByModeSSOT(mcqItems.length, numeralMode)}</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-r border-slate-300 bg-white text-[0.8em]">
-        {mcqItems.map((q) => {
-          const idx = q.correctMcqIndex ?? 0;
-          const letter = ARABIC_CHOICE_LETTERS[idx] || "أ";
-          const choiceVal = q.mcqChoicesAr?.[idx] || q.modelAnswerAr;
-          return (
-            <div key={q.id} className="px-2 py-1 border-l border-b border-slate-300 flex items-center justify-between gap-1 min-w-0">
-              <span style={{ backgroundColor: palette.primaryHex }} className="text-white font-black px-1.5 py-0.2 rounded text-[0.85em] shrink-0">
-                س{formatNumeralsByModeSSOT(q.questionNumber, numeralMode)}
-              </span>
-              <span style={{ color: palette.primaryHex }} className="font-black truncate">
-                ({letter}){" "}
-                <SafeKaTeXBiDiMathRenderer text={choiceVal} numeralMode={numeralMode} notationLanguage={notationLanguage} />
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}

@@ -90,16 +90,17 @@ export function triggerIsolatedA4Print(
       justify-content: flex-start !important;
     }
     .grid.grid-cols-2 {
-      display: block !important;
-      columns: 2 !important;
-      column-gap: 4mm !important;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 2.5mm !important;
+      align-items: start !important;
     }
     .grid.grid-cols-2 > * {
-      display: block !important;
+      display: flex !important;
+      flex-direction: column !important;
       width: 100% !important;
-      margin-bottom: 2mm !important;
-      break-inside: auto !important;
-      page-break-inside: auto !important;
+      min-width: 0 !important;
+      margin-bottom: 1.5mm !important;
     }
     .a4-ministerial-sheet {
       width: 100% !important;
@@ -121,15 +122,16 @@ export function triggerIsolatedA4Print(
       margin-top: 3mm !important;
     }
     section {
-      break-inside: auto !important;
-      page-break-inside: auto !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      width: 100% !important;
     }
     article {
-      break-inside: auto !important;
-      page-break-inside: auto !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
       min-width: 0 !important;
       max-width: 100% !important;
-      margin-bottom: 2mm !important;
+      margin-bottom: 1.5mm !important;
     }
     svg {
       max-width: 100% !important;

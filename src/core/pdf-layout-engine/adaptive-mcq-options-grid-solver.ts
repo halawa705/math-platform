@@ -29,7 +29,8 @@ export function estimateVisualChoiceCharacterLength(choiceText: string): number 
 }
 
 /**
- * يحدد عدد الأعمدة الأمثل (4 أو 2 أو 1) لتوزيع البدائل الأربعة بأقصى توفير للمساحة الرأسية.
+ * يحدد عدد الأعمدة الأمثل (4 أو 2 أو 1) لتوزيع البدائل الأربعة بأقصى توفير للمساحة الرأسية
+ * مع منع أي تقطيع مشوه للحروف العربية في نصف العمود.
  */
 export function resolveAdaptiveMCQColumnsCount(
   choices: readonly string[] | undefined,
@@ -41,14 +42,26 @@ export function resolveAdaptiveMCQColumnsCount(
     ...choices.map((c) => estimateVisualChoiceCharacterLength(c))
   );
 
-  // داخل نظام العمودين المتوازيين (عرض العمود ~ 95mm) نكون أكثر تحفظاً في عتبة الـ 4 أعمدة
-  const fourColThreshold = isInsideNarrowHalfColumn ? 12 : 18;
-  const twoColThreshold = isInsideNarrowHalfColumn ? 28 : 42;
+  const hasArabicWords = choices.some((c) => /[\u0600-\u06FF]{3,}/.test(c));
 
-  if (maxVisualLen <= fourColThreshold) {
+  if (isInsideNarrowHalfColumn) {
+    // في نصف العمود (عرض ~95 مم): البدائل المكونة من كلمات عربية يستحيل وضع 4 منها في سطر واحد دون تقطيع الحروف
+    // لذلك 4 أعمدة حصراً للأرقام والرموز والكسور المدمجة (<= 3 خانات وبدون كلمات عربية)
+    if (!hasArabicWords && maxVisualLen <= 3) {
+      return 4;
+    }
+    // خياران في السطر الأول وخياران في السطر الثاني (2x2) للكلمات والتعبيرات المتوسطة
+    if (maxVisualLen <= 24) {
+      return 2;
+    }
+    return 1;
+  }
+
+  // في العرض الكامل (صفحة بعمود واحد ~190 مم)
+  if (maxVisualLen <= 14) {
     return 4;
   }
-  if (maxVisualLen <= twoColThreshold) {
+  if (maxVisualLen <= 32) {
     return 2;
   }
   return 1;
