@@ -32,7 +32,7 @@ export function projectGeometryFigureToSVGMarkup(
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#0D9488";
   const numeralMode = options.numeralMode ?? "eastern";
-  const padding = 28;
+  const padding = Math.max(9, Math.min(13, Math.round(Math.min(width, height) * 0.1)));
 
   if (figure.vertices.length === 0) {
     return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="100%"></svg>`;
@@ -90,7 +90,7 @@ export function projectGeometryFigureToSVGMarkup(
         centerNode.screen.sy
       }" r="${rPx.toFixed(
         1
-      )}" fill="none" stroke="${strokeColor}" stroke-width="2" />`;
+      )}" fill="none" stroke="${strokeColor}" stroke-width="1.8" />`;
     }
   }
 
@@ -114,9 +114,9 @@ export function projectGeometryFigureToSVGMarkup(
 
       const dashAttr =
         seg.strokeStyle === "dashed"
-          ? `stroke-dasharray="5,4"`
+          ? `stroke-dasharray="4,3"`
           : seg.strokeStyle === "dotted"
-          ? `stroke-dasharray="2,3"`
+          ? `stroke-dasharray="2,2"`
           : "";
 
       let decorations = "";
@@ -125,16 +125,16 @@ export function projectGeometryFigureToSVGMarkup(
       if (seg.tickMarks) {
         const count = seg.tickMarks;
         for (let i = 0; i < count; i++) {
-          const offset = (i - (count - 1) / 2) * 5;
+          const offset = (i - (count - 1) / 2) * 4;
           const tx = mx + (dx / len) * offset;
           const ty = my + (dy / len) * offset;
-          decorations += `<line x1="${(tx - nx * 5).toFixed(1)}" y1="${(
+          decorations += `<line x1="${(tx - nx * 4).toFixed(1)}" y1="${(
             ty -
-            ny * 5
-          ).toFixed(1)}" x2="${(tx + nx * 5).toFixed(1)}" y2="${(
+            ny * 4
+          ).toFixed(1)}" x2="${(tx + nx * 4).toFixed(1)}" y2="${(
             ty +
-            ny * 5
-          ).toFixed(1)}" stroke="${accentColor}" stroke-width="1.8" />`;
+            ny * 4
+          ).toFixed(1)}" stroke="${accentColor}" stroke-width="1.5" />`;
         }
       }
 
@@ -142,39 +142,39 @@ export function projectGeometryFigureToSVGMarkup(
       if (seg.parallelArrows) {
         const ux = dx / len;
         const uy = dy / len;
-        const ax = mx - ux * 4;
-        const ay = my - uy * 4;
-        decorations += `<path d="M ${(ax - ux * 5 + nx * 4).toFixed(1)} ${(
+        const ax = mx - ux * 3;
+        const ay = my - uy * 3;
+        decorations += `<path d="M ${(ax - ux * 4 + nx * 3).toFixed(1)} ${(
           ay -
-          uy * 5 +
-          ny * 4
-        ).toFixed(1)} L ${(ax + ux * 3).toFixed(1)} ${(ay + uy * 3).toFixed(
+          uy * 4 +
+          ny * 3
+        ).toFixed(1)} L ${(ax + ux * 2.5).toFixed(1)} ${(ay + uy * 2.5).toFixed(
           1
-        )} L ${(ax - ux * 5 - nx * 4).toFixed(1)} ${(
+        )} L ${(ax - ux * 4 - nx * 3).toFixed(1)} ${(
           ay -
-          uy * 5 -
-          ny * 4
+          uy * 4 -
+          ny * 3
         ).toFixed(
           1
-        )}" fill="none" stroke="${accentColor}" stroke-width="1.8" stroke-linecap="round"/>`;
+        )}" fill="none" stroke="${accentColor}" stroke-width="1.5" stroke-linecap="round"/>`;
       }
 
-      // تسمية طول الضلع بالوحدة العربية
+      // تسمية طول الضلع بالوحدة العربية بصياغة متناسبة وخط رشيق
       if (seg.lengthLabel) {
         const formattedVal = formatNumeralsByModeSSOT(
           seg.lengthLabel.value,
           numeralMode
         );
-        const lx = mx + nx * 12;
-        const ly = my + ny * 12 + 4;
+        const lx = mx + nx * 7;
+        const ly = my + ny * 7 + 2.5;
         decorations += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(
           1
-        )}" text-anchor="middle" font-size="11" font-weight="800" fill="${accentColor}">${formattedVal} ${
+        )}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${accentColor}">${formattedVal} ${
           seg.lengthLabel.unit
         }</text>`;
       }
 
-      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" ${dashAttr} />${decorations}`;
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round" ${dashAttr} />${decorations}`;
     })
     .join("");
 
@@ -183,17 +183,17 @@ export function projectGeometryFigureToSVGMarkup(
       const vx = v.screen.sx - centerSx;
       const vy = v.screen.sy - centerSy;
       const vLen = Math.hypot(vx, vy) || 1;
-      const labelX = v.screen.sx + (vx / vLen) * 14;
-      const labelY = v.screen.sy + (vy / vLen) * 14 + 4;
+      const labelX = v.screen.sx + (vx / vLen) * 8;
+      const labelY = v.screen.sy + (vy / vLen) * 8 + 3;
 
-      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="3.2" fill="${strokeColor}" />
+      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2.2" fill="${strokeColor}" />
       <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(
         1
-      )}" text-anchor="middle" font-size="13" font-weight="800" fill="${strokeColor}">${
+      )}" text-anchor="middle" font-size="9.5" font-weight="800" fill="${strokeColor}">${
         v.label
       }</text>`;
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto max-h-[165px] select-none">${circleRimSvg}${segmentsSvg}${verticesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${segmentsSvg}${verticesSvg}</svg>`;
 }

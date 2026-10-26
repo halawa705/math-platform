@@ -122,6 +122,7 @@ export default function StudioBookletGeneratorTab({
     }
     setNotice(null);
     onApplyParsedQuestionsToSheet?.(items);
+    const ideasCount = ideas.length > 0 ? ideas.length : undefined;
     onApplyBookletTitleToSheet(
       buildStandardDocumentTitleSSOT({
         gradeId,
@@ -129,6 +130,7 @@ export default function StudioBookletGeneratorTab({
         lessonTitleInput: lessonTitle,
         promptText: prompt,
         rawReplyText: replies[1] || replies[2],
+        totalIdeasCount: ideasCount,
       })
     );
   };

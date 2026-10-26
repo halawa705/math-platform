@@ -80,7 +80,23 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
       .map((b) => b.trim())
       .filter((b) => b.length > 20);
 
-    rawBlocks.forEach((block, ideaIdx) => {
+    const mergedBlocks: string[] = [];
+    rawBlocks.forEach((block) => {
+      const titleMatch = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)/i);
+      const ideaTitle = titleMatch?.[1]?.trim() || "";
+      const lastBlock = mergedBlocks[mergedBlocks.length - 1];
+      const lastTitleMatch = lastBlock ? lastBlock.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)/i) : null;
+      const lastIdeaTitle = lastTitleMatch?.[1]?.trim() || "";
+
+      if (lastBlock && ideaTitle && ideaTitle === lastIdeaTitle) {
+        // دمج أجزاء نفس الفكرة عند تكرار عنوان الفكرة لنفس الأمثلة
+        mergedBlocks[mergedBlocks.length - 1] = `${lastBlock}\n\n${block}`;
+      } else {
+        mergedBlocks.push(block);
+      }
+    });
+
+    mergedBlocks.forEach((block, ideaIdx) => {
       const titleMatch = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)(?:[:|]\s*\[?([^\]\n|]+)\]?)?/i);
       const ideaNumAr = titleMatch?.[1]?.trim() || `${ideaIdx + 1}`;
       const ideaNameAr = titleMatch?.[2]?.trim() || "";

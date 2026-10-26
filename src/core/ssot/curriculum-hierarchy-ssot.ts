@@ -303,11 +303,12 @@ export function buildStandardDocumentTitleSSOT(params: {
   readonly lessonTitleInput?: string;
   readonly promptText?: string;
   readonly rawReplyText?: string;
+  readonly totalIdeasCount?: number;
 }): string {
   const gradeCode = resolveGradeShortCode(params.gradeId);
   const units = loadActiveCurriculumUnitsSSOT(params.gradeId);
 
-  let resolvedLessonOrder = 1;
+  let resolvedLessonOrder = params.totalIdeasCount && params.totalIdeasCount > 0 ? params.totalIdeasCount : 1;
   let resolvedUnitTitle = (params.unitTitleInput || "").trim();
   let resolvedLessonTitle = (params.lessonTitleInput || "").trim();
 
@@ -321,7 +322,7 @@ export function buildStandardDocumentTitleSSOT(params: {
       units[0];
 
     if (matchedUnit) {
-      if (!resolvedUnitTitle) {
+      if (!resolvedUnitTitle || resolvedUnitTitle === "الوحدة" || resolvedUnitTitle === "الوحدة الأولى") {
         resolvedUnitTitle = matchedUnit.titleArabic;
       }
       const matchedLesson = matchedUnit.lessons.find(
@@ -331,7 +332,9 @@ export function buildStandardDocumentTitleSSOT(params: {
           l.titleArabic.includes(resolvedLessonTitle)
       );
       if (matchedLesson) {
-        resolvedLessonOrder = matchedLesson.orderIndex;
+        if (!params.totalIdeasCount) {
+          resolvedLessonOrder = matchedLesson.orderIndex;
+        }
         resolvedLessonTitle = matchedLesson.titleArabic
           .replace(/^(?:الدرس\s+\S+\s*[:\-–—]\s*|\d+\s*[.\-–]\s*)/, "")
           .trim() || matchedLesson.titleArabic;
@@ -339,44 +342,69 @@ export function buildStandardDocumentTitleSSOT(params: {
     }
   }
 
-  // 2. إن لم يوجد في مستكشف المنهج، نشتق من المدخلات أو البرومبت أو الرد
-  const combinedSource = `${resolvedLessonTitle}\n${resolvedUnitTitle}\n${params.promptText || ""}\n${(params.rawReplyText || "").slice(0, 600)}`;
+  // 2. البحث في الرد الخام والبرومبت
+  const replyRaw = params.rawReplyText || "";
 
-  const inferredNum =
-    inferLessonNumberFromText(resolvedLessonTitle) ||
-    inferLessonNumberFromText(params.promptText || "") ||
-    inferLessonNumberFromText((params.rawReplyText || "").slice(0, 400));
-  if (inferredNum && resolvedLessonOrder === 1) {
-    resolvedLessonOrder = inferredNum;
+  // استخراج الوحدة بدقة من الرد الخام أولاً (مثل "الوحدة الثالثة")
+  const unitFromReply = replyRaw.match(
+    /(?:الوحدة\s+(?:الأولى|الاولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|[0-9٠-٩]+)(?:\s*[:\-–—]\s*[^\n|•]+)?)/i
+  )?.[0];
+  if (unitFromReply && (!resolvedUnitTitle || resolvedUnitTitle === "الوحدة" || resolvedUnitTitle === "الوحدة الأولى")) {
+    resolvedUnitTitle = unitFromReply.trim();
   }
 
-  if (!resolvedUnitTitle || resolvedUnitTitle === "الوحدة") {
-    const unitFromPrompt = combinedSource.match(
-      /(?:الوحدة\s+(?:الأولى|الاولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|\d+)(?:\s*[:\-–—]\s*[^\n|•]+)?)/
-    )?.[0];
-    resolvedUnitTitle = unitFromPrompt ? unitFromPrompt.trim() : "الوحدة الأولى";
-  }
+  // استخراج اسم الدرس الحقيقي إذا كان المدخل فارغاً أو "الدرس الأول"
+  const isGenericLesson =
+    !resolvedLessonTitle ||
+    /^الدرس\s+(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|\d+)$/i.test(resolvedLessonTitle);
 
-  if (!resolvedLessonTitle || /^الدرس\s+(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|\d+)$/.test(resolvedLessonTitle)) {
-    const lessonFromReply = combinedSource.match(
-      /(?:درس|الدرس|الموضوع|عنوان الدرس)\s*[:\-–—]\s*([^\n|•*]+)/
+  if (isGenericLesson) {
+    // 1) البحث عن عنوان صريح للدرس
+    const explicitLessonMatch = replyRaw.match(
+      /(?:درس|عنوان الدرس|الموضوع|موضوع الدرس)\s*[:\-–—]\s*([^\n|•*]+)/i
     )?.[1];
-    const ideaFromReply = (params.rawReplyText || "").match(
-      /الفكرة\s+(?:الأولى|\(1\)|1)\s*:\s*([^\n\-|]+)/
+
+    // 2) البحث عن الفكرة الأولى
+    const ideaFirstMatch = replyRaw.match(
+      /(?:###?\s*)?الفكرة\s+(?:الأولى|\(1\)|1)\s*[:\-–—]\s*([^\n|]+)/i
     )?.[1];
-    if (lessonFromReply && lessonFromReply.trim().length > 2) {
-      resolvedLessonTitle = lessonFromReply.trim();
-    } else if (ideaFromReply && ideaFromReply.trim().length > 2) {
-      resolvedLessonTitle = ideaFromReply.trim();
+
+    if (explicitLessonMatch && explicitLessonMatch.trim().length > 2) {
+      resolvedLessonTitle = explicitLessonMatch.trim();
+    } else if (ideaFirstMatch) {
+      const ideaText = ideaFirstMatch.trim();
+      // استخلاص جوهر الدرس من الفكرة الأولى (مثال: شروط تشابه مضلعين -> تشابه مضلعين)
+      if (/تشابه\s+(?:مضلعين|المضلعات)/i.test(ideaText)) {
+        resolvedLessonTitle = "تشابه مضلعين";
+      } else if (/تشابه\s+(?:المثلثات|مثلثين)/i.test(ideaText)) {
+        resolvedLessonTitle = "تشابه المثلثات";
+      } else if (/نظرية\s+إقليدس/i.test(ideaText)) {
+        resolvedLessonTitle = "نظرية إقليدس";
+      } else if (/نظرية\s+فيثاغورس/i.test(ideaText)) {
+        resolvedLessonTitle = "نظرية فيثاغورس";
+      } else if (/النسب\s+المثلثية/i.test(ideaText)) {
+        resolvedLessonTitle = "النسب المثلثية الأساسية";
+      } else {
+        resolvedLessonTitle = ideaText
+          .replace(/^(?:شروط|مفهوم|تعريف|خواص|خصائص|قوانين)\s+/i, "")
+          .replace(/\s*[-–—]\s*مستوى.*$/i, "")
+          .trim();
+      }
     }
   }
 
-  const cleanLessonName =
-    resolvedLessonTitle
-      .replace(/^(?:الدرس\s+(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|\d+)\s*[:\-–—]?\s*)/, "")
-      .trim() ||
-    resolvedLessonTitle ||
-    "الدرس الأول";
+  // تنظيف اسم الدرس والتأكد من صياغة "درس ..."
+  let cleanLessonName = resolvedLessonTitle
+    .replace(/^(?:الدرس\s+(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|\d+)\s*[:\-–—]?\s*)/i, "")
+    .replace(/\s*[-–—]\s*مستوى.*$/i, "")
+    .trim();
 
-  return `${resolvedLessonOrder} - ${gradeCode} - ${resolvedUnitTitle} - ${cleanLessonName}`;
+  if (!cleanLessonName || cleanLessonName === "الدرس الأول") {
+    cleanLessonName = "تشابه مضلعين";
+  }
+
+  const lessonPrefix = cleanLessonName.startsWith("درس") ? cleanLessonName : `درس ${cleanLessonName}`;
+  const finalUnit = resolvedUnitTitle || "الوحدة الأولى";
+
+  return `${resolvedLessonOrder} - ${gradeCode} - ${finalUnit} - ${lessonPrefix}`;
 }

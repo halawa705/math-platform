@@ -33,16 +33,16 @@ export function EmbeddedGeometrySVGDocker({
   return (
     <div
       style={{
-        width: "132px",
-        minWidth: "132px",
+        width: "152px",
+        minWidth: "152px",
         borderColor: borderHex,
         backgroundColor: softSurfaceHex,
       }}
-      className="border-2 rounded-lg p-1 flex items-center justify-center shrink-0"
+      className="border rounded-lg p-1 flex items-center justify-center shrink-0 overflow-hidden"
       dangerouslySetInnerHTML={{
         __html: projectGeometryFigureToSVGMarkup(geometryFigure, {
-          widthPx: 124,
-          heightPx: 88,
+          widthPx: 146,
+          heightPx: 102,
           strokeColorHex: primaryHex,
           accentColorHex: accentHex,
           numeralMode,

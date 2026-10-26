@@ -27,6 +27,12 @@ export function triggerIsolatedA4Print(
     .map((el) => el.outerHTML)
     .join("\n");
 
+  // تحديث عنوان نافذة المتصفح الرئيسية ليقترحه كروم كاسم افتراضي لحفظ ملف الـ PDF
+  const originalDocTitle = typeof document !== "undefined" ? document.title : "";
+  if (settings.customDocumentTitle && typeof document !== "undefined") {
+    document.title = settings.customDocumentTitle;
+  }
+
   const iframe = document.createElement("iframe");
   iframe.id = "isolated-math-a4-print-frame";
   iframe.setAttribute(
@@ -90,17 +96,17 @@ export function triggerIsolatedA4Print(
       justify-content: flex-start !important;
     }
     .grid.grid-cols-2 {
-      display: grid !important;
-      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 2.5mm !important;
-      align-items: start !important;
+      display: block !important;
+      columns: 2 !important;
+      column-gap: 3mm !important;
     }
     .grid.grid-cols-2 > * {
-      display: flex !important;
-      flex-direction: column !important;
+      display: block !important;
       width: 100% !important;
       min-width: 0 !important;
-      margin-bottom: 1.5mm !important;
+      margin-bottom: 2mm !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
     }
     .a4-ministerial-sheet {
       width: 100% !important;
@@ -124,6 +130,7 @@ export function triggerIsolatedA4Print(
     section {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
+      break-after: avoid !important;
       width: 100% !important;
     }
     article {
@@ -131,7 +138,7 @@ export function triggerIsolatedA4Print(
       page-break-inside: avoid !important;
       min-width: 0 !important;
       max-width: 100% !important;
-      margin-bottom: 1.5mm !important;
+      margin-bottom: 1.8mm !important;
     }
     svg {
       max-width: 100% !important;
@@ -152,6 +159,13 @@ export function triggerIsolatedA4Print(
   const runPrint = () => {
     iframe.contentWindow?.focus();
     iframe.contentWindow?.print();
+    if (typeof window !== "undefined" && originalDocTitle) {
+      const restoreTitle = () => {
+        document.title = originalDocTitle;
+      };
+      window.addEventListener("afterprint", restoreTitle, { once: true });
+      setTimeout(restoreTitle, 3500);
+    }
   };
 
   if (doc.fonts && doc.fonts.ready) {
