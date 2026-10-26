@@ -77,14 +77,25 @@ export function triggerIsolatedA4Print(
     .katex-mathml, .katex-error {
       display: none !important;
     }
-    .katex, .katex-display, .katex-html {
+    .katex-display {
       max-width: 100% !important;
+      margin: 0.2em 0 !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+    }
+    .katex {
+      max-width: 100% !important;
+      font-size: 0.92em !important;
       white-space: normal !important;
-      overflow-wrap: anywhere !important;
-      overflow: visible !important;
+    }
+    .katex .base {
+      white-space: normal !important;
+      flex-wrap: wrap !important;
+      display: inline-flex !important;
+      max-width: 100% !important;
     }
     .katex .mfrac {
-      margin: 0.2em 0.14em !important;
+      margin: 0.15em 0.1em !important;
     }
     /* Reset outer flex containers in print to prevent stretching and huge white voids */
     .w-full.max-w-\[794px\],
@@ -98,7 +109,7 @@ export function triggerIsolatedA4Print(
     .grid.grid-cols-2 {
       display: grid !important;
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 2.5mm !important;
+      gap: 2mm !important;
       align-items: start !important;
     }
     .grid.grid-cols-2 > * {
@@ -106,7 +117,7 @@ export function triggerIsolatedA4Print(
       flex-direction: column !important;
       width: 100% !important;
       min-width: 0 !important;
-      margin-bottom: 1.5mm !important;
+      margin-bottom: 1.2mm !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
@@ -130,8 +141,14 @@ export function triggerIsolatedA4Print(
       margin-top: 3mm !important;
     }
     section {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+      width: 100% !important;
+    }
+    .pedagogical-idea-capsule {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
+      margin-bottom: 1.5mm !important;
       width: 100% !important;
     }
     article {
@@ -139,7 +156,7 @@ export function triggerIsolatedA4Print(
       page-break-inside: avoid !important;
       min-width: 0 !important;
       max-width: 100% !important;
-      margin-bottom: 1.5mm !important;
+      margin-bottom: 1.2mm !important;
     }
     svg {
       max-width: 100% !important;

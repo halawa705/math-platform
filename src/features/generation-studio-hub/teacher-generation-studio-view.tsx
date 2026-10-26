@@ -39,12 +39,13 @@ const STUDIO_TABS: readonly SegmentedTabItem[] = [
 ];
 
 export default function TeacherGenerationStudioView() {
-  const [activeTabId, setActiveTabId] = useState<string>("exam");
+  const [activeTabId, setActiveTabId] = useState<string>("booklet");
   const [gradeId, setGradeId] = useState<string>("prep-3");
   const [branchId, setBranchId] = useState<MathBranchId>("plane_geometry");
+  const [lessonOrder, setLessonOrder] = useState<number>(15);
   const [unitTitle, setUnitTitle] = useState<string>("الوحدة الثالثة");
   const [lessonTitle, setLessonTitle] = useState<string>("تشابه المضلعات");
-  const [sheetTitle, setSheetTitle] = useState<string>("1 - 3ع - الوحدة الثالثة - تشابه المضلعات");
+  const [sheetTitle, setSheetTitle] = useState<string>("15 - 3ع - الوحدة الثالثة - تشابه المضلعات");
   const [sheetQuestions, setSheetQuestions] = useState<
     readonly PrintableMathQuestionItem[] | undefined
   >(undefined);
@@ -63,7 +64,7 @@ export default function TeacherGenerationStudioView() {
     setPane("preview");
   };
 
-  const contextSummary = `${grade.nameArabic} • ${unitTitle || "الوحدة"} • ${lessonTitle}`;
+  const contextSummary = `${grade.nameArabic} • درس (${lessonOrder}) • ${unitTitle || "الوحدة"} • ${lessonTitle}`;
 
   return (
     <div
@@ -95,10 +96,12 @@ export default function TeacherGenerationStudioView() {
             selectedBranchId={branchId}
             selectedUnitTitle={unitTitle}
             selectedLessonTitle={lessonTitle}
+            selectedLessonOrder={lessonOrder}
             onChangeGrade={setGradeId}
             onChangeBranch={setBranchId}
             onChangeUnitTitle={setUnitTitle}
             onChangeLessonTitle={setLessonTitle}
+            onChangeLessonOrder={setLessonOrder}
           />
         </StudioCollapsibleSectionCard>
 
@@ -121,8 +124,9 @@ export default function TeacherGenerationStudioView() {
                 gradeId={gradeId}
                 gradeNameAr={grade.nameArabic}
                 branchId={branchId}
-                unitTitleAr={unitTitle || "الوحدة الأولى"}
+                unitTitleAr={unitTitle || "الوحدة الثالثة"}
                 lessonTitle={lessonTitle}
+                lessonOrder={lessonOrder}
                 branchNameAr={branch.nameArabic}
                 onApplyBookletTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={applyQuestions}

@@ -26,6 +26,7 @@ import { StudentAnswerSpaceDocker } from "./student-answer-space-docker";
 import { QuestionGivenRequiredBadges } from "./question-given-required-badges";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
 import { resolveQuestionCardColorScheme } from "./question-card-palette-resolver";
+import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
 
 export const MODULE_ID_SIDE_BY_SIDE_DIAGRAM_DOCKER =
   "side_by_side_diagram_docker" as const;
@@ -107,10 +108,7 @@ export default function SideBySideDiagramDocker({
               <div className="flex-1 min-w-0 space-y-1 text-[0.96em] font-extrabold text-slate-900 leading-relaxed break-words">
                 <div>
                   <SafeKaTeXBiDiMathRenderer
-                    text={question.promptAr
-                      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]?/gi, "")
-                      .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية)[\s\S]*$/gi, "")
-                      .trim()}
+                    text={cleanStudentFacingMathPromptSSOT(question.promptAr)}
                     numeralMode={settings.numeralMode}
                     notationLanguage={settings.notationLanguage}
                   />

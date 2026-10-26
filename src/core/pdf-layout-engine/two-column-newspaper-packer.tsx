@@ -256,14 +256,8 @@ export default function TwoColumnNewspaperPacker({
                 <div className="space-y-3 min-w-0">
                   {ideaGroups.map((group, gIdx) => {
                     const isTwoCols = settings.columnsCount === 2;
-                    const solvedExamples = group.items.filter(
-                      (q) => q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-")
-                    );
-                    const drillsAndOthers = group.items.filter(
-                      (q) => !solvedExamples.includes(q)
-                    );
                     return (
-                      <div key={gIdx} className="space-y-2 min-w-0">
+                      <div key={gIdx} className="space-y-1.5 min-w-0">
                         {group.anchorQuestion && (
                           <div className="w-full min-w-0">
                             <PedagogicalIdeaAndRuleCapsule
@@ -275,24 +269,11 @@ export default function TwoColumnNewspaperPacker({
                             />
                           </div>
                         )}
-                        {solvedExamples.length > 0 && (
+                        {group.items.length > 0 && (
                           <div
                             className={`grid ${isTwoCols ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start min-w-0`}
                           >
-                            {solvedExamples.map((q) => (
-                              <SideBySideDiagramDocker
-                                key={q.id}
-                                question={q}
-                                settings={settings}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        {drillsAndOthers.length > 0 && (
-                          <div
-                            className={`grid ${isTwoCols ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start min-w-0`}
-                          >
-                            {drillsAndOthers.map((q) => (
+                            {group.items.map((q) => (
                               <SideBySideDiagramDocker
                                 key={q.id}
                                 question={q}

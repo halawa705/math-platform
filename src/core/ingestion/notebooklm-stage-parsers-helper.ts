@@ -9,6 +9,7 @@
 
 import { matchOptionalGeometryFigureFromArabicDescription } from "../geometry-engine/natural-arabic-geometry-matcher";
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
+import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -106,11 +107,10 @@ export function parseStage2ByIdeas(s2Raw: string): {
 
       splits.forEach((s) => {
         const qCode = s.match(/معرف\s*السؤال\s*:\s*((?:try|practice|drill)-\d+-\d+)/i)?.[1]?.toLowerCase();
-        const cleanPrompt = s
+        const basePrompt = s
           .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
-          .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
-          .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
           .trim();
+        const cleanPrompt = cleanStudentFacingMathPromptSSOT(basePrompt);
         drills.push({ rawText: s, promptText: cleanPrompt, qCode });
       });
     }
@@ -123,11 +123,10 @@ export function parseStage2ByIdeas(s2Raw: string): {
 
       splits.forEach((s) => {
         const qCode = s.match(/معرف\s*السؤال\s*:\s*((?:hw|homework)-\d+-\d+)/i)?.[1]?.toLowerCase();
-        const cleanPrompt = s
+        const basePrompt = s
           .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
-          .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
-          .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
           .trim();
+        const cleanPrompt = cleanStudentFacingMathPromptSSOT(basePrompt);
         allHomework.push({ rawText: s, promptText: cleanPrompt, qCode });
       });
     }
@@ -159,13 +158,11 @@ export function parseSolvedExamplesFromSection(
   list.forEach((exBody) => {
     const promptMatch = exBody.match(/(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*([\s\S]*?)(?=\n\s*(?:خطوات\s*الحل|الحل|الخطوة|الناتج\s*النهائي|$))/i);
     const rawProblem = promptMatch?.[1] || exBody.split(/\n\s*(?:خطوات\s*الحل|الحل|الخطوة)\s*:/i)[0]?.trim() || concept || ideaTitle;
-    const cleanProblem = rawProblem
+    const baseProblem = rawProblem
       .replace(/^(?:###\s*)?(?:المثال\s*\S+|مثال\s*\S+)\s*/i, "")
-      .replace(/\|\s*معرف\s*المثال\s*:\s*[\w-]+/gi, "")
-      .replace(/\|\s*نوع\s*المسألة\s*:\s*\[?[^|\n\]]+\]?/gi, "")
       .replace(/^(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*/i, "")
-      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
       .trim();
+    const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
 
     const stepsMatch = exBody.match(
       /(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i
@@ -200,16 +197,8 @@ export function buildStage2PrintableItem(params: {
   };
 }): PrintableMathQuestionItem {
   const mcqChoices = parseChoicesTupleFromBlock(params.block.promptText);
-  let promptAr = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
-
-  // تطهير نصوص الأسئلة من أي وسوم نظام أو رسوم هندسية أو عبارات اقتراحية
-  promptAr = promptAr
-    .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]?/gi, "")
-    .replace(/(?:^|\s+)رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\n.,؛]+/gi, "")
-    .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
-    .replace(/\|\s*نوع\s*المسألة\s*:\s*\[?[^|\n\]]+\]?/gi, "")
-    .replace(/\[\s*(?:أكمل|اختر|مقالي|مسألة|تطبيق|متقدم)\s*\]/gi, "")
-    .trim();
+  const rawPrompt = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
+  const promptAr = cleanStudentFacingMathPromptSSOT(rawPrompt);
 
   const isMcq = (params.block.rawText || "").includes("اختر") || mcqChoices !== undefined;
   const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) ||

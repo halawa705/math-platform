@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file studio-context-ribbon-bar.tsx
@@ -25,20 +25,24 @@ export interface StudioContextRibbonBarProps {
   readonly selectedBranchId: MathBranchId;
   readonly selectedUnitTitle?: string;
   readonly selectedLessonTitle: string;
+  readonly selectedLessonOrder?: number;
   readonly onChangeGrade: (gradeId: string) => void;
   readonly onChangeBranch: (branchId: MathBranchId) => void;
   readonly onChangeUnitTitle?: (unitTitle: string) => void;
   readonly onChangeLessonTitle: (lessonTitle: string) => void;
+  readonly onChangeLessonOrder?: (order: number) => void;
 }
 
 export default function StudioContextRibbonBar({
   selectedGradeId,
   selectedUnitTitle,
   selectedLessonTitle,
+  selectedLessonOrder = 15,
   onChangeGrade,
   onChangeBranch,
   onChangeUnitTitle,
   onChangeLessonTitle,
+  onChangeLessonOrder,
 }: StudioContextRibbonBarProps) {
   const [enabledGrades, setEnabledGrades] = useState(() =>
     loadEnabledGradesSSOT()
@@ -71,9 +75,9 @@ export default function StudioContextRibbonBar({
       aria-label="سياق الصف والوحدة والدرس من مستكشف المنهج"
       className="space-y-3 pt-2"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {/* ١. الصف الدراسي النشط */}
-        <div>
+        <div className="col-span-1">
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
             الصف الدراسي
           </label>
@@ -90,11 +94,25 @@ export default function StudioContextRibbonBar({
           </select>
         </div>
 
-        {/* ٢. الوحدة الدراسية المستخرجة من مستكشف المنهج */}
-        <div>
+        {/* ٢. رقم الدرس في المنهج */}
+        <div className="col-span-1">
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            الوحدة{" "}
-            {activeUnit ? `(الفرع: ${activeUnit.branchNameArabic})` : ""}:
+            رقم الدرس
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={selectedLessonOrder}
+            onChange={(e) => onChangeLessonOrder?.(Math.max(1, parseInt(e.target.value || "1", 10)))}
+            className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-center"
+          />
+        </div>
+
+        {/* ٣. الوحدة الدراسية */}
+        <div className="col-span-1">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">
+            الوحدة {activeUnit ? `(${activeUnit.branchNameArabic})` : ""}:
           </label>
           {units.length > 0 ? (
             <select
@@ -108,10 +126,11 @@ export default function StudioContextRibbonBar({
                   onChangeBranch(pickedUnit.branchId);
                   if (pickedUnit.lessons[0]) {
                     onChangeLessonTitle(pickedUnit.lessons[0].titleArabic);
+                    onChangeLessonOrder?.(pickedUnit.lessons[0].orderIndex);
                   }
                 }
               }}
-              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+              className="w-full min-h-[44px] px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
             >
               {units.map((u) => (
                 <option key={u.id} value={u.titleArabic}>
@@ -124,22 +143,26 @@ export default function StudioContextRibbonBar({
               type="text"
               value={selectedUnitTitle || ""}
               onChange={(e) => onChangeUnitTitle?.(e.target.value)}
-              placeholder="اكتب اسم الوحدة أو قسّم المنهج من المكتبة..."
-              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+              placeholder="الوحدة الثالثة..."
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
             />
           )}
         </div>
 
-        {/* ٣. الدرس المستهدف */}
-        <div>
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            الدرس
+        {/* ٤. الدرس المستهدف */}
+        <div className="col-span-1">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">
+            اسم الدرس
           </label>
           {lessonsList.length > 0 ? (
             <select
               value={selectedLessonTitle}
-              onChange={(e) => onChangeLessonTitle(e.target.value)}
-              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+              onChange={(e) => {
+                const pickedLesson = lessonsList.find((l) => l.titleArabic === e.target.value);
+                onChangeLessonTitle(e.target.value);
+                if (pickedLesson) onChangeLessonOrder?.(pickedLesson.orderIndex);
+              }}
+              className="w-full min-h-[44px] px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
             >
               {lessonsList.map((lesson) => (
                 <option key={lesson.id} value={lesson.titleArabic}>
@@ -152,8 +175,8 @@ export default function StudioContextRibbonBar({
               type="text"
               value={selectedLessonTitle}
               onChange={(e) => onChangeLessonTitle(e.target.value)}
-              placeholder="اكتب اسم الدرس..."
-              className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
+              placeholder="تشابه المضلعات..."
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
             />
           )}
         </div>

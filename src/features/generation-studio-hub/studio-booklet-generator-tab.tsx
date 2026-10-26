@@ -35,6 +35,7 @@ export interface StudioBookletGeneratorTabProps {
   readonly branchId?: MathBranchId;
   readonly unitTitleAr?: string;
   readonly lessonTitle: string;
+  readonly lessonOrder?: number;
   readonly branchNameAr: string;
   readonly onApplyBookletTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (
@@ -69,6 +70,7 @@ export default function StudioBookletGeneratorTab({
   branchId = "plane_geometry",
   unitTitleAr = "الوحدة الثالثة",
   lessonTitle,
+  lessonOrder = 15,
   branchNameAr,
   onApplyBookletTitleToSheet,
   onApplyParsedQuestionsToSheet,
@@ -128,6 +130,7 @@ export default function StudioBookletGeneratorTab({
         gradeId,
         unitTitleInput: unitTitleAr,
         lessonTitleInput: lessonTitle,
+        lessonOrderIndex: lessonOrder,
         promptText: prompt,
         rawReplyText: replies[1] || replies[2],
         totalIdeasCount: ideasCount,
