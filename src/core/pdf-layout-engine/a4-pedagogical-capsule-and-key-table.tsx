@@ -123,16 +123,20 @@ export function PedagogicalIdeaAndRuleCapsule({
       )}
 
       {(item.conceptExplanationAr || item.framedRuleAr) && (
-        <div className="space-y-1.5 w-full min-w-0">
+        <div
+          className={`grid ${
+            item.conceptExplanationAr && item.framedRuleAr ? "grid-cols-2" : "grid-cols-1"
+          } gap-1.5 items-stretch w-full min-w-0`}
+        >
           {item.conceptExplanationAr && (
             <div
               style={{
                 backgroundColor: "#FFFDF5",
                 borderColor: "#F59E0B",
               }}
-              className="p-2 px-2.5 rounded-xl border-2 text-[0.88em] text-slate-900 leading-relaxed min-w-0 shadow-2xs"
+              className="p-1.5 px-2 rounded-xl border-2 text-[0.85em] text-slate-900 leading-snug min-w-0 shadow-2xs"
             >
-              <div className="text-[#92400E] font-black mb-0.5 pb-0.5 border-b border-amber-200/80 flex items-center gap-1 text-[0.9em]">
+              <div className="text-[#92400E] font-black mb-0.5 pb-0.5 border-b border-amber-200/80 flex items-center gap-1 text-[0.88em]">
                 <span>💡</span>
                 <span>المفهوم الرياضي والشرح:</span>
               </div>
@@ -152,16 +156,16 @@ export function PedagogicalIdeaAndRuleCapsule({
                 backgroundColor: "#F5F7FF",
                 borderColor: "#818CF8",
               }}
-              className="p-2 px-2.5 rounded-xl border-2 text-[0.88em] font-bold text-slate-900 leading-relaxed min-w-0 shadow-2xs overflow-hidden"
+              className="p-1.5 px-2 rounded-xl border-2 text-[0.83em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
             >
               <div
                 style={{ color: palette.primaryHex }}
-                className="font-black mb-0.5 pb-0.5 border-b border-indigo-200/80 flex items-center gap-1 text-[0.9em]"
+                className="font-black mb-0.5 pb-0.5 border-b border-indigo-200/80 flex items-center gap-1 text-[0.88em]"
               >
                 <span>📐</span>
                 <span>القاعدة والقانون المعتمد:</span>
               </div>
-              <div className="font-extrabold text-slate-900 overflow-x-auto no-scrollbar max-w-full">
+              <div className="font-extrabold text-slate-900 max-w-full break-words">
                 <SafeKaTeXBiDiMathRenderer
                   text={item.framedRuleAr}
                   numeralMode={numeralMode}
@@ -195,6 +199,7 @@ export function StructuredStepByStepSolutionBox({
       : [item.modelAnswerAr];
 
   const effectiveEm = Number((0.84 * compactScale).toFixed(2));
+  const useTwoColShortSteps = steps.length >= 4;
 
   return (
     <div
@@ -203,7 +208,7 @@ export function StructuredStepByStepSolutionBox({
       }}
       className="mt-1.5 pt-1.5 border-t border-slate-200/90 space-y-1 min-w-0"
     >
-      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.92em]">
+      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
         <span>خطوات الحل والشرح بالتفصيل:</span>
         {item.kind === "mcq" && item.correctMcqIndex !== undefined && (
           <span
@@ -218,7 +223,7 @@ export function StructuredStepByStepSolutionBox({
           </span>
         )}
       </div>
-      <div className="space-y-0.5">
+      <div className={useTwoColShortSteps ? "grid grid-cols-2 gap-1 items-stretch" : "space-y-0.5"}>
         {steps.map((rawStepText, idx) => {
           const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
           const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
@@ -227,10 +232,15 @@ export function StructuredStepByStepSolutionBox({
             .replace(/^\d+[\.\-–]\s*/, "")
             .trim();
 
+          const visualLen = cleanStepText.replace(/\$[^$]*\$/g, "XXXXXX").length;
+          const isShortStep = useTwoColShortSteps && !isLast && visualLen <= 38;
+
           return (
             <div
               key={idx}
               className={`p-1 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs ${
+                useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
+              } ${
                 isLast
                   ? "bg-emerald-50/70 border-emerald-300 font-black text-slate-950"
                   : "bg-slate-50/70 border-slate-200 font-bold text-slate-900"

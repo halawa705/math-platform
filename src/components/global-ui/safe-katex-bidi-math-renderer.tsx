@@ -198,6 +198,16 @@ function renderPlainSegmentWithIsolatedIntervals(
   });
 }
 
+function splitCompoundInlineMathChains(input: string): string {
+  return input.replace(/(?<!\$)\$(?!\$)([^$]+)\$(?!\$)/g, (full, inner: string) => {
+    if (inner.includes("cases") || inner.length < 24) return full;
+    return `$${inner
+      .replace(/\s*\\(?:implies|Rightarrow)\s*/g, "$ $\\implies$ $")
+      .replace(/\s*\\(?:iff|Leftrightarrow|Longleftrightarrow)\s*/g, "$ $\\iff$ $")
+      .replace(/\s*,\s*\\quad\s*/g, "$ ، $")}$`;
+  });
+}
+
 export default function SafeKaTeXBiDiMathRenderer({
   text,
   numeralMode = "eastern",
@@ -207,14 +217,16 @@ export default function SafeKaTeXBiDiMathRenderer({
   if (!text) return null;
 
   const normalizedMath = normalizeToEgyptianSchoolMath(text);
-  const unitFixed = normalizeArabicUnitPlacementSSOT(normalizedMath);
+  const unitFixed = splitCompoundInlineMathChains(
+    normalizeArabicUnitPlacementSSOT(normalizedMath)
+  );
   const segments = unitFixed.split(/(\$\$[^$]+\$\$|\$[^$]+\$)/g);
   const hasFractionSegment = /\\(?:d|t)?frac\b/.test(unitFixed);
 
   return (
     <span
       className={`inline ${
-        hasFractionSegment ? "leading-[2.45] py-1 inline-block align-middle" : "leading-relaxed"
+        hasFractionSegment ? "leading-[1.95] py-0.5 inline-block align-middle" : "leading-relaxed"
       } break-words ${className}`}
     >
       {segments.map((segment, idx) => {
@@ -231,6 +243,7 @@ export default function SafeKaTeXBiDiMathRenderer({
             ? segment.slice(2, -2)
             : segment.slice(1, -1);
           const isFractionMath = /\\(?:d|t)?frac\b/.test(innerLatex);
+          const fractionsCount = (innerLatex.match(/\\(?:d|t)?frac\b/g) || []).length;
           const sanitized = sanitizeLatexForSchoolMath(
             innerLatex,
             numeralMode,
@@ -245,13 +258,14 @@ export default function SafeKaTeXBiDiMathRenderer({
               style={{
                 unicodeBidi: "isolate",
                 display: isBlockMath ? "block" : "inline-block",
-                maxWidth: "100%",
-                paddingTop: isFractionMath ? "0.32em" : undefined,
-                paddingBottom: isFractionMath ? "0.32em" : undefined,
-                margin: isFractionMath ? "0.12em 0.15em" : undefined,
+                whiteSpace: "nowrap",
+                fontSize: fractionsCount >= 3 ? "0.86em" : undefined,
+                paddingTop: isFractionMath ? "0.18em" : undefined,
+                paddingBottom: isFractionMath ? "0.18em" : undefined,
+                margin: isFractionMath ? "0.06em 0.12em" : undefined,
                 verticalAlign: "middle",
               }}
-              className="mx-0.5 font-bold align-middle max-w-full"
+              className="mx-0.5 font-bold align-middle"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
             />
           );

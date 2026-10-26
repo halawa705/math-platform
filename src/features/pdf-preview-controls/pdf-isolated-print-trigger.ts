@@ -1,9 +1,10 @@
 /**
  * @file pdf-isolated-print-trigger.ts
- * @description خاصية ذرية مستقلة: تنفيذ الطباعة المعزولة وتصدير الـ PDF المتجهي
- * - يضبط `@page { size: A4 portrait; margin: 7mm 8mm; }` مع عرض `100%` متمركز في منتصف الورقة تماماً
- *   للقضاء النهائي على مشكلة انحياز الصفحة لليسار أو ظهور هامش أبيض في اليمين.
- * - يمنع تمدد أي معادلة KaTeX خارج حدود العمود (`max-width: 100% !important; white-space: normal !important`).
+ * @description محرك استخراج وتصدير ملفات الـ PDF السيادي المستقل (Sovereign A4 PDF Exporter):
+ * - يعمل بنظام الصفحات المنفصلة المقاسة مسبقاً (`.sovereign-a4-page-sheet` بأبعاد `210mm × 297mm` دقيقة).
+ * - يلغي تماماً تدخل المتصفح في تقسيم الصفحات عبر `@page { size: A4 portrait; margin: 0mm !important; }`.
+ * - يحافظ على المعادلات الرياضية KaTeX أفقية متماسكة (`white-space: nowrap !important`) دون أي تكسير رأسي للحروف.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
 import {
@@ -27,9 +28,8 @@ export function triggerIsolatedA4Print(
     .map((el) => el.outerHTML)
     .join("\n");
 
-  // تحديث عنوان نافذة المتصفح الرئيسية ليقترحه كروم كاسم افتراضي لحفظ ملف الـ PDF
-  const originalDocTitle = typeof document !== "undefined" ? document.title : "";
-  if (settings.customDocumentTitle && typeof document !== "undefined") {
+  const originalDocTitle = document.title;
+  if (settings.customDocumentTitle) {
     document.title = settings.customDocumentTitle;
   }
 
@@ -37,7 +37,7 @@ export function triggerIsolatedA4Print(
   iframe.id = "isolated-math-a4-print-frame";
   iframe.setAttribute(
     "style",
-    "position:fixed;top:0;right:0;width:100%;height:100%;border:0;opacity:0.001;pointer-events:none;z-index:-1;"
+    "position:fixed;top:0;right:0;width:210mm;height:297mm;border:0;opacity:0.001;pointer-events:none;z-index:-1;"
   );
   document.body.appendChild(iframe);
 
@@ -54,7 +54,7 @@ export function triggerIsolatedA4Print(
   <style>
     @page {
       size: A4 portrait;
-      margin: 7mm 8mm;
+      margin: 0mm !important;
     }
     * {
       box-sizing: border-box;
@@ -64,99 +64,69 @@ export function triggerIsolatedA4Print(
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      overflow-x: hidden !important;
+      width: 210mm !important;
       background-color: #ffffff !important;
       color: #0f172a !important;
       font-family: ${fontSpec.cssFontStack} !important;
-      font-size: ${settings.exactFontSizePt}pt !important;
-      line-height: ${fontSpec.optimalLineHeight} !important;
       direction: rtl !important;
     }
     .katex-mathml, .katex-error {
       display: none !important;
     }
+    .katex, .katex-html, .katex .base {
+      white-space: nowrap !important;
+      direction: ltr !important;
+      unicode-bidi: isolate !important;
+    }
     .katex-display {
       max-width: 100% !important;
       margin: 0.2em 0 !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-    }
-    .katex {
-      max-width: 100% !important;
-      font-size: 0.92em !important;
-      white-space: normal !important;
-    }
-    .katex .base {
-      white-space: normal !important;
-      flex-wrap: wrap !important;
-      display: inline-flex !important;
-      max-width: 100% !important;
+      overflow-x: hidden !important;
     }
     .katex .mfrac {
-      margin: 0.15em 0.1em !important;
+      margin: 0.1em 0.1em !important;
     }
-    /* Reset outer flex containers in print to prevent stretching and huge white voids */
-    .w-full.max-w-\[794px\],
-    .min-h-\[1123px\],
-    .flex.flex-col.justify-between {
-      display: block !important;
-      height: auto !important;
-      min-height: 0 !important;
-      justify-content: flex-start !important;
+    .a4-ministerial-sheet {
+      width: 210mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #ffffff !important;
+    }
+    .sovereign-a4-page-sheet {
+      width: 210mm !important;
+      height: 297mm !important;
+      min-height: 297mm !important;
+      max-height: 297mm !important;
+      padding: 5mm 5.5mm !important;
+      margin: 0 !important;
+      background-color: #ffffff !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .sovereign-a4-page-sheet:last-of-type {
+      page-break-after: auto !important;
+      break-after: auto !important;
     }
     .grid.grid-cols-2 {
       display: grid !important;
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 2mm !important;
-      align-items: start !important;
     }
-    .grid.grid-cols-2 > * {
-      display: flex !important;
-      flex-direction: column !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      margin-bottom: 1.2mm !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+    .grid.grid-cols-4 {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     }
-    .a4-ministerial-sheet {
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 0 auto !important;
-      padding: 0 !important;
-      background-color: #ffffff !important;
-      box-shadow: none !important;
-      overflow-x: hidden !important;
-    }
-    header {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      margin-bottom: 2mm !important;
-    }
-    footer {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      margin-top: 3mm !important;
-    }
-    section {
-      break-inside: auto !important;
-      page-break-inside: auto !important;
-      width: 100% !important;
-    }
-    .pedagogical-idea-capsule {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      margin-bottom: 1.5mm !important;
-      width: 100% !important;
-    }
-    article {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
-      margin-bottom: 1.2mm !important;
+    .grid.grid-cols-12 {
+      display: grid !important;
+      grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
     }
     svg {
       max-width: 100% !important;
@@ -177,7 +147,7 @@ export function triggerIsolatedA4Print(
   const runPrint = () => {
     iframe.contentWindow?.focus();
     iframe.contentWindow?.print();
-    if (typeof window !== "undefined" && originalDocTitle) {
+    if (originalDocTitle) {
       const restoreTitle = () => {
         document.title = originalDocTitle;
       };

@@ -113,6 +113,15 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
       );
       const examples = parseSolvedExamplesFromSection(examplesPart, fullTitle, concept);
 
+      // تجاهل أي كتلة فارغة ناجمة عن أسطر نهاية الفكرة
+      if (
+        !concept &&
+        !rule &&
+        examples.every((e) => e.promptAr === fullTitle || e.steps.length === 0)
+      ) {
+        return;
+      }
+
       // إضافة الأمثلة المحلولة للفكرة
       examples.forEach((ex, exIdx) => {
         const geoMatch = ex.geometryRaw
