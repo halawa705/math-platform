@@ -67,7 +67,7 @@ export default function StudioBookletGeneratorTab({
   gradeId = "prep-3",
   gradeNameAr = "الصف الثالث الإعدادي",
   branchId = "plane_geometry",
-  unitTitleAr = "الوحدة الأولى",
+  unitTitleAr = "الوحدة الثالثة",
   lessonTitle,
   branchNameAr,
   onApplyBookletTitleToSheet,

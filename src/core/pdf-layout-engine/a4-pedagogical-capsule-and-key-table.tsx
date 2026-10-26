@@ -226,47 +226,40 @@ export function StructuredStepByStepSolutionBox({
           </span>
         )}
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {steps.map((rawStepText, idx) => {
           const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
           const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
-          const cleanStepText = rawStepText.replace(/^الناتج\s*النهائي\s*:\s*/i, "").trim();
+          const cleanStepText = rawStepText
+            .replace(/^الناتج\s*النهائي\s*:\s*/i, "")
+            .replace(/^\d+[\.\-–]\s*/, "")
+            .trim();
 
           return (
             <div
               key={idx}
-              style={{
-                breakInside: "avoid",
-                backgroundColor: "#F8FAFC",
-                borderColor: "#E2E8F0",
-              }}
-              className="p-2 rounded-lg border leading-relaxed min-w-0 space-y-1 shadow-2xs"
+              className={`p-1.5 px-2 rounded-md border min-w-0 flex items-start gap-1.5 text-[0.9em] leading-snug break-inside-avoid shadow-2xs ${
+                isLast
+                  ? "bg-emerald-50/70 border-emerald-300 font-black text-slate-950"
+                  : "bg-slate-50/70 border-slate-200 font-bold text-slate-900"
+              }`}
             >
-              <div className="flex items-center justify-start">
-                <span className="px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-900 text-[0.8em] font-black shadow-2xs">
-                  الخطوة {formatNumeralsByModeSSOT(idx + 1, numeralMode)}
-                </span>
-              </div>
-              <div className={`min-w-0 break-words text-slate-900 ${isLast ? "font-black" : "font-bold"}`}>
-                {isLast ? (
-                  <span>
-                    <strong style={{ color: palette.primaryHex }}>الناتج النهائي: </strong>
-                    <SafeKaTeXBiDiMathRenderer
-                      text={cleanStepText}
-                      numeralMode={numeralMode}
-                      notationLanguage={notationLanguage}
-                    />
-                  </span>
-                ) : (
-                  <span>
-                    {formatNumeralsByModeSSOT(idx + 1, numeralMode)}.{" "}
-                    <SafeKaTeXBiDiMathRenderer
-                      text={cleanStepText}
-                      numeralMode={numeralMode}
-                      notationLanguage={notationLanguage}
-                    />
-                  </span>
-                )}
+              <span
+                style={{
+                  backgroundColor: isLast ? palette.primaryHex : "#ffffff",
+                  color: isLast ? "#ffffff" : palette.primaryHex,
+                  borderColor: isLast ? palette.primaryHex : "#CBD5E1",
+                }}
+                className="shrink-0 px-1.5 py-0.5 rounded text-[0.76em] font-black border shadow-2xs mt-0.5"
+              >
+                {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(idx + 1, numeralMode)}`}
+              </span>
+              <div className="min-w-0 flex-1 break-words">
+                <SafeKaTeXBiDiMathRenderer
+                  text={cleanStepText}
+                  numeralMode={numeralMode}
+                  notationLanguage={notationLanguage}
+                />
               </div>
             </div>
           );

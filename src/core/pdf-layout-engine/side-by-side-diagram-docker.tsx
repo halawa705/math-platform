@@ -107,7 +107,10 @@ export default function SideBySideDiagramDocker({
               <div className="flex-1 min-w-0 space-y-1 text-[0.96em] font-extrabold text-slate-900 leading-relaxed break-words">
                 <div>
                   <SafeKaTeXBiDiMathRenderer
-                    text={question.promptAr}
+                    text={question.promptAr
+                      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]?/gi, "")
+                      .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية)[\s\S]*$/gi, "")
+                      .trim()}
                     numeralMode={settings.numeralMode}
                     notationLanguage={settings.notationLanguage}
                   />

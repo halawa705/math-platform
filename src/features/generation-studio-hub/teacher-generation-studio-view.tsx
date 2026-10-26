@@ -42,9 +42,9 @@ export default function TeacherGenerationStudioView() {
   const [activeTabId, setActiveTabId] = useState<string>("exam");
   const [gradeId, setGradeId] = useState<string>("prep-3");
   const [branchId, setBranchId] = useState<MathBranchId>("plane_geometry");
-  const [unitTitle, setUnitTitle] = useState<string>("");
-  const [lessonTitle, setLessonTitle] = useState<string>("الدرس الأول");
-  const [sheetTitle, setSheetTitle] = useState<string>("اختبار تقييمي في الرياضيات");
+  const [unitTitle, setUnitTitle] = useState<string>("الوحدة الثالثة");
+  const [lessonTitle, setLessonTitle] = useState<string>("تشابه المضلعات");
+  const [sheetTitle, setSheetTitle] = useState<string>("1 - 3ع - الوحدة الثالثة - تشابه المضلعات");
   const [sheetQuestions, setSheetQuestions] = useState<
     readonly PrintableMathQuestionItem[] | undefined
   >(undefined);

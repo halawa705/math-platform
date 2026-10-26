@@ -109,6 +109,7 @@ export function parseStage2ByIdeas(s2Raw: string): {
         const cleanPrompt = s
           .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
           .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
+          .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
           .trim();
         drills.push({ rawText: s, promptText: cleanPrompt, qCode });
       });
@@ -125,6 +126,7 @@ export function parseStage2ByIdeas(s2Raw: string): {
         const cleanPrompt = s
           .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
           .replace(/\|\s*معرف\s*السؤال\s*:\s*[\w-]+/gi, "")
+          .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
           .trim();
         allHomework.push({ rawText: s, promptText: cleanPrompt, qCode });
       });
@@ -198,7 +200,17 @@ export function buildStage2PrintableItem(params: {
   };
 }): PrintableMathQuestionItem {
   const mcqChoices = parseChoicesTupleFromBlock(params.block.promptText);
-  const promptAr = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
+  let promptAr = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
+
+  // تطهير نصوص الأسئلة من أي وسوم نظام أو رسوم هندسية أو عبارات اقتراحية
+  promptAr = promptAr
+    .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]?/gi, "")
+    .replace(/(?:^|\s+)رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\n.,؛]+/gi, "")
+    .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
+    .replace(/\|\s*نوع\s*المسألة\s*:\s*\[?[^|\n\]]+\]?/gi, "")
+    .replace(/\[\s*(?:أكمل|اختر|مقالي|مسألة|تطبيق|متقدم)\s*\]/gi, "")
+    .trim();
+
   const isMcq = (params.block.rawText || "").includes("اختر") || mcqChoices !== undefined;
   const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) ||
     params.solutionsMap.byIndex.get(params.questionNumber);

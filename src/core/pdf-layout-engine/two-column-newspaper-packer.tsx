@@ -41,17 +41,6 @@ export interface TwoColumnNewspaperPackerProps {
   readonly children?: React.ReactNode;
 }
 
-function interleaveItemsForTwoColumnFlow<T>(items: readonly T[]): readonly T[] {
-  if (items.length <= 2) return items;
-  const col1: T[] = [];
-  const col2: T[] = [];
-  for (let i = 0; i < items.length; i++) {
-    if (i % 2 === 0) col1.push(items[i]);
-    else col2.push(items[i]);
-  }
-  return [...col1, ...col2];
-}
-
 export default function TwoColumnNewspaperPacker({
   settings,
   questions,
@@ -303,10 +292,7 @@ export default function TwoColumnNewspaperPacker({
                           <div
                             className={`grid ${isTwoCols ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start min-w-0`}
                           >
-                            {(isTwoCols && drillsAndOthers.length <= 8
-                              ? interleaveItemsForTwoColumnFlow(drillsAndOthers)
-                              : drillsAndOthers
-                            ).map((q) => (
+                            {drillsAndOthers.map((q) => (
                               <SideBySideDiagramDocker
                                 key={q.id}
                                 question={q}
