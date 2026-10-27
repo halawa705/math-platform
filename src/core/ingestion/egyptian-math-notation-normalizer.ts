@@ -123,6 +123,10 @@ export function separateTopLevelArabicFromMathContent(rawLatex: string): string 
       if (!v) return "";
       if (t.isArabic) return ` ${v} `;
       if (/^[,،.;:]+$/.test(v)) return `${v} `;
+      if (v.startsWith("=")) {
+        const rest = v.replace(/^=\s*/, "").trim();
+        return rest ? ` = $${rest}$ ` : " = ";
+      }
       return ` $${v}$ `;
     })
     .join("")
@@ -232,7 +236,7 @@ export function normalizeToEgyptianSchoolMath(rawText: string): string {
     .replace(/\\+[()[\]]/g, " ")
     // 4. فك عبارات \text{...} العربية المعزولة خارج المعادلات
     .replace(
-      /\$\s*\\(?:text|mathrm|textbf|mathbf)\{\s*([\u0600-\u06FF\s،؛؟.!ـ]{2,})\s*\}\s*\$/g,
+      /(?:\$\s*)?\\(?:text|mathrm|textbf|mathbf)\{\s*([\u0600-\u06FF\s،؛؟.!ـ]{2,})\s*\}(?:\s*\$)?/g,
       " $1 "
     );
 

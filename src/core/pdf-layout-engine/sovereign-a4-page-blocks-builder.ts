@@ -218,23 +218,30 @@ export function packMeasuredBlocksIntoDiscreteA4Pages(
         : DEFAULT_ELASTIC_TOLERANCE;
     const maxElasticBudget = budget * effectiveTolerance;
 
-    // إذا كان البلوك كبسولة فكرة، يجب أن يتسع هو وأول صف أمثلة تحته معاً حتى لا تبقى الكبسولة يتيمة
+    // معالجة كبسولة الفكرة: تتسع مع أمثلتها، أو تستغل الفراغ المتبقي لاسم الفكرة وقاعدتها
     if (block.kind === "idea_capsule" && i + 1 < blocks.length) {
       const nextBlock = blocks[i + 1];
       const nextH = getBlockHeight(nextBlock);
       const combinedH = h + BLOCK_GAP_PX + nextH;
+      const gapBefore = currentBlocks.length > 0 ? BLOCK_GAP_PX : 0;
 
-      if (
-        currentBlocks.length > 0 &&
-        currentUsedPx + BLOCK_GAP_PX + combinedH > maxElasticBudget
-      ) {
-        flushPage();
+      if (currentBlocks.length === 0 || currentUsedPx + gapBefore + combinedH <= maxElasticBudget) {
+        currentBlocks.push(block, nextBlock);
+        currentUsedPx += gapBefore + combinedH;
+        i += 1;
+        continue;
       }
 
-      // نضيف الكبسولة وأول صف أمثلة معاً في نفس الصفحة حتماً
-      const gapBefore = currentBlocks.length > 0 ? BLOCK_GAP_PX : 0;
+      const remainingSpace = budget - currentUsedPx;
+      if (remainingSpace >= h + 20 && currentUsedPx + gapBefore + h <= maxElasticBudget) {
+        currentBlocks.push(block);
+        currentUsedPx += gapBefore + h;
+        continue;
+      }
+
+      flushPage();
       currentBlocks.push(block, nextBlock);
-      currentUsedPx += gapBefore + combinedH;
+      currentUsedPx = combinedH;
       i += 1;
       continue;
     }

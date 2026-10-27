@@ -11,13 +11,20 @@ import { cleanStudentFacingMathPromptSSOT } from "../src/core/ingestion/notebook
 
 describe("Booklet Quality & Surgical Fixes Suite", () => {
   it("Issue 1: Fixes BiDi polygon similarity sign position between two polygons", () => {
-    const input = "إذا كان المضلع ABCD المضلع XYZW ~ فإن";
-    const normalized = normalizeToEgyptianSchoolMath(input);
-    assert.match(normalized, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
-    assert.doesNotMatch(normalized, /XYZW\s*~/);
+    const inputAfter = "إذا كان المضلع ABCD المضلع XYZW ~ فإن";
+    const normalizedAfter = normalizeToEgyptianSchoolMath(inputAfter);
+    assert.match(normalizedAfter, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
+
+    const inputBefore = "إذا كان ~ ABCD XYZW فإن";
+    const normalizedBefore = normalizeToEgyptianSchoolMath(inputBefore);
+    assert.match(normalizedBefore, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
+
+    const inputVerb = "متوازيا أضلاع ABCD و XYZW يتشابهان وكان";
+    const normalizedVerb = normalizeToEgyptianSchoolMath(inputVerb);
+    assert.match(normalizedVerb, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
   });
 
-  it("Issue 2 & 4: Cleans leaked LaTeX artifacts and normalizes fractions", () => {
+  it("Issue 2 & 4: Cleans leaked LaTeX artifacts and unescapes text blocks", () => {
     const leaked1 = "$\\ = $ 5 سم";
     const cleaned1 = cleanStrayLatexArtifacts(leaked1);
     assert.doesNotMatch(cleaned1, /\\\s*=\s*/);
@@ -25,6 +32,10 @@ describe("Booklet Quality & Surgical Fixes Suite", () => {
     const leaked2 = "frac{12}{4}";
     const cleaned2 = wrapBalancedLatexCommands(leaked2);
     assert.match(cleaned2, /\\frac\{12\}\{4\}/);
+
+    const idea8 = "\\frac{P_1}{P_2} = \\frac{a}{b} \\implies \\text{قيمة الجزء} = \\frac{P_1 + P_2}{a + b}";
+    const cleanedIdea8 = normalizeToEgyptianSchoolMath(idea8);
+    assert.doesNotMatch(cleanedIdea8, /\\text\{/);
   });
 
   it("Issue 3: Sub-requirements line breaks formatting", () => {
@@ -34,7 +45,7 @@ describe("Booklet Quality & Surgical Fixes Suite", () => {
     assert.match(cleaned, /•\s*ثانياً:/);
   });
 
-  it("Issue 6: Binds Latin variables with Arabic measurement units", () => {
+  it("Issue 6: Binds Latin variables with Arabic measurement units and prevents equal sign flip", () => {
     const input1 = "وكان AB = 4 سم و BC = 5 سم";
     const result1 = normalizeArabicUnitPlacementSSOT(input1);
     assert.match(result1, /\$AB = 4\\text\{ سم\}\$/);
@@ -43,6 +54,11 @@ describe("Booklet Quality & Surgical Fixes Suite", () => {
     const input2 = "وقياس m(∠B) = 70°";
     const result2 = normalizeArabicUnitPlacementSSOT(input2);
     assert.match(result2, /\$m\(∠B\) = 70\^\\circ\$/);
+
+    const input3 = "محيط الأكبر $= 80$ سم";
+    const result3 = sanitizePolygonSimilarityAndUnitBiDi(input3);
+    assert.match(result3, /=\s*\$80\\text\{ سم\}\$/);
+    assert.doesNotMatch(result3, /80\s*=\s*سم/);
   });
 
   it("Issue 4: Converts bare tilde in math to \\sim and strips stray div slashes", () => {

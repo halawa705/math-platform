@@ -108,8 +108,7 @@ export function sanitizeLatexForSchoolMath(
       const fn = m.match(/sin|cos|tan|cot|sec|csc/i)?.[0]?.toLowerCase() ?? "sin";
       return `\\${fn}`;
     })
-    .replace(/\\div\b/g, " \\div ")
-    .replace(/\\times\b/g, " \\times ")
+    .replace(/\\(div|times)\b/g, " \\$1 ")
     .trim();
 
   cleaned = localizeMathExpressionNotationSSOT(cleaned, notationLanguage);
@@ -160,7 +159,10 @@ function renderPlainSegmentWithIsolatedIntervals(
   plainText: string,
   numeralMode: NumeralDisplayMode
 ): React.ReactNode {
-  const cleanedPlain = plainText.replace(/(?:^|\s)\\+(?=\s|$|[.,،؛:])/g, " ");
+  const cleanedPlain = plainText
+    .replace(/\\text\{\s*([\u0600-\u06FF\s،؛:.!؟ـ]{2,})\s*\}/g, " $1 ")
+    .replace(/\\+\s*=\s*\$+?|\\+\s*=/g, " = ")
+    .replace(/(?:^|\s)\\+(?=\s|$|[.,،؛:])/g, " ");
   const formatted = formatNumeralsByModeSSOT(cleanedPlain, numeralMode);
   const parts = formatted.split(/([[\]][\s0-9٠-٩a-zA-Zسصأب+\-∞,،/]+[[\]])/g);
   if (parts.length === 1) return formatted;
