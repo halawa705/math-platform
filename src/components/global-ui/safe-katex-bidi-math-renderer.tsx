@@ -35,35 +35,19 @@ const MAX_KATEX_CACHE_SIZE = 3000;
 const katexHtmlCache = new Map<string, string>();
 
 function buildHumanReadableMathFallback(latex: string): string {
+  const map: Record<string, string> = { times: " × ", div: " ÷ ", pm: " ± ", sim: " ∼ ", cong: " ≅ ", approx: " ≈ ", le: " ≤ ", leq: " ≤ ", ge: " ≥ ", geq: " ≥ ", ne: " ≠ ", neq: " ≠ ", implies: " ⇒ ", Rightarrow: " ⇒ ", iff: " ⇔ ", Leftrightarrow: " ⇔ ", perp: " ⊥ ", parallel: " ∥ ", in: " ∈ ", notin: " ∉ ", cup: " ∪ ", cap: " ∩ " };
   return latex
-    .replace(/\{\\displaystyle\s*([\s\S]*?)\}/g, "$1")
-    .replace(/\\displaystyle\b/g, "")
+    .replace(/\{\\displaystyle\s*([\s\S]*?)\}/g, "$1").replace(/\\displaystyle\b/g, "")
     .replace(/\\(?:text|mathrm|textbf|mathbf)\{([^{}]*)\}/g, "$1")
     .replace(/\\?begin\{?cases\}?([\s\S]*?)\\?end\{?cases\}?/gi, (_m, body: string) =>
-      body
-        .split(/\\\\|;/)
-        .map((r) => r.replace(/&/g, " : ").trim())
-        .filter(Boolean)
-        .join(" ، ")
+      body.split(/\\\\|;/).map((r) => r.replace(/&/g, " : ").trim()).filter(Boolean).join(" ، ")
     )
-    .replace(/\\?frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1 / $2)")
-    .replace(/\\?sqrt\{([^{}]+)\}/g, "√($1)")
+    .replace(/\\?frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1 / $2)").replace(/\\?sqrt\{([^{}]+)\}/g, "√($1)")
     .replace(/\\?(?:quad|qquad|enspace|begincases|endcases)\b/gi, " ")
-    .replace(/\\(times|div|pm|sim|cong|approx|le|leq|ge|geq|ne|neq|implies|Rightarrow|iff|Leftrightarrow|perp|parallel|in|notin|cup|cap)\b/g, (_m, op: string) => {
-      const map: Record<string, string> = { times: " × ", div: " ÷ ", pm: " ± ", sim: " ∼ ", cong: " ≅ ", approx: " ≈ ", le: " ≤ ", leq: " ≤ ", ge: " ≥ ", geq: " ≥ ", ne: " ≠ ", neq: " ≠ ", implies: " ⇒ ", Rightarrow: " ⇒ ", iff: " ⇔ ", Leftrightarrow: " ⇔ ", perp: " ⊥ ", parallel: " ∥ ", in: " ∈ ", notin: " ∉ ", cup: " ∪ ", cap: " ∩ " };
-      return map[op] || ` ${op} `;
-    })
-    .replace(/\\angle\b/g, "∠")
-    .replace(/\\triangle\b/g, "△")
-    .replace(/\^\s*\\circ\b|\\circ\b/g, "°")
-    .replace(/\\dots\b/g, "...")
-    .replace(/\\(?:phi|emptyset|varnothing)\b/g, "∅")
-    .replace(/\\(?:infty)\b/g, "∞")
-    .replace(/\bfrac\b/gi, "/")
-    .replace(/&/g, " ، ")
-    .replace(/[\\{}]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+    .replace(/\\(times|div|pm|sim|cong|approx|le|leq|ge|geq|ne|neq|implies|Rightarrow|iff|Leftrightarrow|perp|parallel|in|notin|cup|cap)\b/g, (_m, op: string) => map[op] || ` ${op} `)
+    .replace(/\\angle\b/g, "∠").replace(/\\triangle\b/g, "△").replace(/\^\s*\\circ\b|\\circ\b/g, "°")
+    .replace(/\\dots\b/g, "...").replace(/\\(?:phi|emptyset|varnothing)\b/g, "∅").replace(/\\(?:infty)\b/g, "∞")
+    .replace(/\bfrac\b/gi, "/").replace(/&/g, " ، ").replace(/[\\{}]/g, "").replace(/\s{2,}/g, " ").trim();
 }
 
 function renderKatexCached(latex: string, displayMode: boolean): string {
@@ -101,6 +85,8 @@ export function sanitizeLatexForSchoolMath(
 ): string {
   let cleaned = rawLatex
     .replace(/^\$+|\$+$/g, "")
+    .replace(/\\+\s*=\s*\$+?/g, " = ")
+    .replace(/\\+\s*=/g, " = ")
     .replace(/^\\+(?![a-zA-Z{])\s*/, "")
     .replace(/\s*\\+$/, "")
     .replace(/(^|[^\\a-zA-Z])(frac|sqrt|text|mathrm|textbf|mathbf)\{/g, "$1\\$2{")
@@ -167,31 +153,23 @@ function renderPlainSegmentWithIsolatedIntervals(
   const parts = formatted.split(/([[\]][\s0-9٠-٩a-zA-Zسصأب+\-∞,،/]+[[\]])/g);
   if (parts.length === 1) return formatted;
 
-  return parts.map((part, i) => {
-    if (/^[[\]].+[[\]]$/.test(part) && /[,،]/.test(part)) {
-      return (
-        <bdi
-          key={i}
-          dir="ltr"
-          style={{ unicodeBidi: "isolate" }}
-          className="inline-block font-bold mx-0.5 px-1 rounded bg-slate-100/80 text-slate-900"
-        >
-          {part}
-        </bdi>
-      );
-    }
-    return <React.Fragment key={i}>{part}</React.Fragment>;
-  });
+  return parts.map((part, i) =>
+    /^[[\]].+[[\]]$/.test(part) && /[,،]/.test(part) ? (
+      <bdi key={i} dir="ltr" style={{ unicodeBidi: "isolate" }} className="inline-block font-bold mx-0.5 px-1 rounded bg-slate-100/80 text-slate-900">
+        {part}
+      </bdi>
+    ) : (
+      <React.Fragment key={i}>{part}</React.Fragment>
+    )
+  );
 }
 
 function splitCompoundInlineMathChains(input: string): string {
-  return input.replace(/(?<!\$)\$(?!\$)([^$]+)\$(?!\$)/g, (full, inner: string) => {
-    if (inner.includes("cases") || inner.length < 24) return full;
-    return `$${inner
-      .replace(/\s*\\(?:implies|Rightarrow)\s*/g, "$ $\\implies$ $")
-      .replace(/\s*\\(?:iff|Leftrightarrow|Longleftrightarrow)\s*/g, "$ $\\iff$ $")
-      .replace(/\s*,\s*\\quad\s*/g, "$ ، $")}$`;
-  });
+  return input.replace(/(?<!\$)\$(?!\$)([^$]+)\$(?!\$)/g, (full, inner: string) =>
+    inner.includes("cases") || inner.length < 24
+      ? full
+      : `$${inner.replace(/\s*\\(?:implies|Rightarrow)\s*/g, "$ $\\implies$ $").replace(/\s*\\(?:iff|Leftrightarrow|Longleftrightarrow)\s*/g, "$ $\\iff$ $").replace(/\s*,\s*\\quad\s*/g, "$ ، $")}$`
+  );
 }
 
 export default function SafeKaTeXBiDiMathRenderer({
@@ -232,34 +210,20 @@ export default function SafeKaTeXBiDiMathRenderer({
           const fractionsCount = (innerLatex.match(/\\(?:d|t)?frac\b/g) || []).length;
           const hasCases = innerLatex.includes("cases");
           const isWideEquation = innerLatex.length > 40 || fractionsCount >= 2;
-          const dynamicFontSize = hasCases
-            ? "0.76em"
-            : fractionsCount >= 3
-              ? "0.80em"
-              : isWideEquation
-                ? "0.87em"
-                : undefined;
-          const sanitized = sanitizeLatexForSchoolMath(
-            innerLatex,
-            numeralMode,
-            notationLanguage
-          );
+          const dynamicFontSize = hasCases ? "0.76em" : fractionsCount >= 3 ? "0.80em" : isWideEquation ? "0.87em" : undefined;
+          const sanitized = sanitizeLatexForSchoolMath(innerLatex, numeralMode, notationLanguage);
           const renderedHtml = renderKatexCached(sanitized, isBlockMath);
 
           return (
             <bdi
-              key={idx}
-              dir="ltr"
+              key={idx} dir="ltr"
               style={{
-                unicodeBidi: "isolate",
-                display: isBlockMath ? "block" : "inline-block",
-                whiteSpace: hasCases ? "normal" : "nowrap",
-                fontSize: dynamicFontSize,
-                maxWidth: "100%",
+                unicodeBidi: "isolate", display: isBlockMath ? "block" : "inline-block",
+                whiteSpace: hasCases ? "normal" : "nowrap", fontSize: dynamicFontSize,
+                maxWidth: "100%", verticalAlign: "middle",
                 paddingTop: isFractionMath ? "0.18em" : undefined,
                 paddingBottom: isFractionMath ? "0.18em" : undefined,
                 margin: isFractionMath ? "0.06em 0.12em" : undefined,
-                verticalAlign: "middle",
               }}
               className="mx-0.5 font-bold align-middle"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}

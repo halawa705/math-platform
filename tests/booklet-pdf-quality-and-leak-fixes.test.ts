@@ -66,4 +66,27 @@ describe("Booklet Quality & Surgical Fixes Suite", () => {
     const divCleaned = cleanStrayLatexArtifacts(divLeak);
     assert.doesNotMatch(divCleaned, /\\div k\\/);
   });
+
+  it("Ingestion: Strictly isolates Rule from Examples and prevents Prompt steps duplication", () => {
+    const { extractConceptAndRule, parseSolvedExamplesFromSection } = require("../src/core/ingestion/notebooklm-stage-parsers-helper");
+    const testBlock = `الفكرة الأولى: المضلعان المتشابهان
+مفهوم الفكرة: تشابه المضلعات هو تطابق الزوايا المتناظرة وتناسب أطوال الأضلاع.
+القاعدة والقانون المعتمد: يتشابه المضلعان إذا وفقط إذا كانت الزوايا المتناظرة متطابقة والأضلاع المتناظرة متناسبة.
+AB/XY = BC/YZ = k
+المثال 1 معرف المثال: 01-example-01 نص المسألة: يتشابه المضلعان إذا كانت زواياهما المتناظرة ........ خطوات الحل: 1. نطبق التعريف الناتج النهائي: متساوية
+المثال 2 معرف المثال: 02-example-01 نص المسألة: إذا كان ABCD ~ XYZW خطوات الحل: 1. نكون تناسب الأضلاع الناتج النهائي: 4 سم`;
+
+    const { concept, rule, examplesPart } = extractConceptAndRule(testBlock);
+    assert.ok(concept.includes("تشابه المضلعات"));
+    assert.ok(rule.includes("يتشابه المضلعان"));
+    assert.ok(!rule.includes("المثال 1"), "Rule must NOT contain Example 1");
+    assert.ok(!rule.includes("المثال 2"), "Rule must NOT contain Example 2");
+
+    const examples = parseSolvedExamplesFromSection(examplesPart, "الفكرة الأولى", concept);
+    assert.equal(examples.length, 2);
+    assert.ok(!examples[0].promptAr.includes("خطوات الحل"), "Prompt 1 must NOT contain solution steps");
+    assert.ok(!examples[1].promptAr.includes("خطوات الحل"), "Prompt 2 must NOT contain solution steps");
+    assert.equal(examples[0].rawFinal, "متساوية");
+    assert.equal(examples[1].rawFinal, "4 سم");
+  });
 });

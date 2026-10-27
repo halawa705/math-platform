@@ -63,10 +63,9 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   const cleanS1 = sanitizeNotebookLMCitationsAndLatex(params.stage1Raw || "").cleanedText;
   const cleanS2 = sanitizeNotebookLMCitationsAndLatex(params.stage2Raw || "").cleanedText;
   const cleanS3 = sanitizeNotebookLMCitationsAndLatex(params.stage3Raw || "").cleanedText;
-  const resultItems: PrintableMathQuestionItem[] = [];
-
   const solutionsMap = parseStage3SolutionsMap(cleanS3);
   const { drillsByIdea, allHomework } = parseStage2ByIdeas(cleanS2);
+  const resultItems: PrintableMathQuestionItem[] = [];
 
   // 1. معالجة المرحلة 1 (الأفكار والمفاهيم والقواعد والأمثلة) مع ربط تدريبات حاول بنفسك بكل فكرة مباشرة
   if (cleanS1) {
@@ -105,12 +104,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
       const codeMatch = block.match(/معرف\s*الفكرة\s*:\s*(idea-\d+)/i);
       const ideaKey = codeMatch ? codeMatch[1].toLowerCase() : `idea-${ideaIdx + 1}`;
 
-      const { concept, rule } = extractConceptAndRule(block);
-
-      const examplesPart = block.replace(
-        /^[\s\S]*?(?=(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i,
-        ""
-      );
+      const { concept, rule, examplesPart } = extractConceptAndRule(block);
       const examples = parseSolvedExamplesFromSection(examplesPart, fullTitle, concept);
 
       // تجاهل أي كتلة فارغة ناجمة عن أسطر نهاية الفكرة
@@ -221,41 +215,24 @@ export function parseBookletResponseToPrintableItems(params: {
   });
 }
 
-export function mergeNotebookLMBookletThreeStagesToIR(
-  input: MergeBookletThreeStagesInput
-): BookletLessonContentIR {
+export function mergeNotebookLMBookletThreeStagesToIR(input: MergeBookletThreeStagesInput): BookletLessonContentIR {
   const items = mergeBookletThreeStagesRepliesToPrintableItems({
-    stage1Raw: input.stage1RawResponse,
-    stage2Raw: input.stage2RawResponse,
-    stage3Raw: input.stage3RawResponse,
-    branchId: input.branchId,
-    branchNameAr: input.unitTitleArabic,
-    unitId: input.unitId,
-    lessonId: input.lessonId,
-    lessonTitleArabic: input.lessonTitleArabic,
+    stage1Raw: input.stage1RawResponse, stage2Raw: input.stage2RawResponse, stage3Raw: input.stage3RawResponse,
+    branchId: input.branchId, branchNameAr: input.unitTitleArabic,
+    unitId: input.unitId, lessonId: input.lessonId, lessonTitleArabic: input.lessonTitleArabic,
   });
   const pedagogicalIdeas: IdeaPedagogicalNode[] = items.map((item, idx) => ({
-    ideaId: `idea_${idx + 1}`,
-    ideaOrderNumber: idx + 1,
+    ideaId: `idea_${idx + 1}`, ideaOrderNumber: idx + 1,
     ideaTitleArabic: item.ideaBannerTitleAr || `الفكرة ${idx + 1}`,
     conceptualExplanationArabic: item.conceptExplanationAr || item.promptAr,
     boxedRuleOrTheoremArabic: item.framedRuleAr || "",
-    workedExamples: [],
-    immediateStudentDrills: [],
+    workedExamples: [], immediateStudentDrills: [],
   }));
   return {
-    bookletId: input.bookletId,
-    gradeId: input.gradeId,
-    gradeNameArabic: input.gradeNameArabic,
-    termNumber: input.termNumber,
-    branchId: input.branchId,
-    unitId: input.unitId,
-    unitTitleArabic: input.unitTitleArabic,
-    lessonId: input.lessonId,
-    lessonTitleArabic: input.lessonTitleArabic,
+    bookletId: input.bookletId, gradeId: input.gradeId, gradeNameArabic: input.gradeNameArabic,
+    termNumber: input.termNumber, branchId: input.branchId, unitId: input.unitId,
+    unitTitleArabic: input.unitTitleArabic, lessonId: input.lessonId, lessonTitleArabic: input.lessonTitleArabic,
     executiveSummaryRulesArabic: pedagogicalIdeas.map((i) => i.boxedRuleOrTheoremArabic).filter(Boolean),
-    pedagogicalIdeas,
-    comprehensiveExercises: [],
-    homeworkAssignmentQuestions: [],
+    pedagogicalIdeas, comprehensiveExercises: [], homeworkAssignmentQuestions: [],
   };
 }

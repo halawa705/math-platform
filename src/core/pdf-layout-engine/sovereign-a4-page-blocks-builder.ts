@@ -173,36 +173,17 @@ export function packMeasuredBlocksIntoDiscreteA4Pages(
   let currentBlocks: SovereignA4RowBlock[] = [];
   let currentUsedPx = 0;
 
-  const getBudget = (pageIdx: number) =>
-    pageIdx === 1 ? FIRST_PAGE_BUDGET_PX : SUBSEQUENT_PAGE_BUDGET_PX;
-
-  const estimateFallbackPx = (b: SovereignA4RowBlock): number => {
-    if (b.kind === "idea_capsule") return 98;
-    if (b.kind === "idea_divider") return 22;
-    if (b.kind === "mcq_answer_key") return 180;
-    if (b.kind === "accreditation_footer") return 95;
-    return 190;
-  };
-
-  const getBlockHeight = (b: SovereignA4RowBlock): number =>
-    heightsMap.get(b.id) ?? estimateFallbackPx(b);
+  const getBudget = (p: number) => p === 1 ? FIRST_PAGE_BUDGET_PX : SUBSEQUENT_PAGE_BUDGET_PX;
+  const estimateFallbackPx = (b: SovereignA4RowBlock): number =>
+    b.kind === "idea_capsule" ? 98 : b.kind === "idea_divider" ? 22 : b.kind === "mcq_answer_key" ? 180 : b.kind === "accreditation_footer" ? 95 : 190;
+  const getBlockHeight = (b: SovereignA4RowBlock): number => heightsMap.get(b.id) ?? estimateFallbackPx(b);
 
   const flushPage = () => {
     if (currentBlocks.length === 0) return;
     const pNum = pages.length + 1;
     const budget = getBudget(pNum);
-    const scale =
-      currentUsedPx > budget
-        ? Number(Math.max(0.80, budget / currentUsedPx).toFixed(3))
-        : 1;
-    pages.push({
-      pageNumber: pNum,
-      isFirstPage: pNum === 1,
-      blocks: currentBlocks,
-      usedHeightPx: currentUsedPx,
-      budgetHeightPx: budget,
-      contentScale: scale,
-    });
+    const scale = currentUsedPx > budget ? Number(Math.max(0.80, budget / currentUsedPx).toFixed(3)) : 1;
+    pages.push({ pageNumber: pNum, isFirstPage: pNum === 1, blocks: currentBlocks, usedHeightPx: currentUsedPx, budgetHeightPx: budget, contentScale: scale });
     currentBlocks = [];
     currentUsedPx = 0;
   };
@@ -233,7 +214,7 @@ export function packMeasuredBlocksIntoDiscreteA4Pages(
       }
 
       const remainingSpace = budget - currentUsedPx;
-      if (remainingSpace >= h + 20 && currentUsedPx + gapBefore + h <= maxElasticBudget) {
+      if (remainingSpace >= h && currentUsedPx + gapBefore + h <= maxElasticBudget) {
         currentBlocks.push(block);
         currentUsedPx += gapBefore + h;
         continue;

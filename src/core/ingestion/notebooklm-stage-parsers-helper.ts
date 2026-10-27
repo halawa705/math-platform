@@ -24,16 +24,21 @@ export function cleanBracketedField(val: string): string {
   return val.replace(/\s*---+\s*$/g, "").replace(/^[\s\[*#]+|[\s\]*#]+$/g, "").trim();
 }
 
-export function extractConceptAndRule(block: string): { concept: string; rule: string } {
-  const conceptMatch = block.match(
-    /(?:مفهوم\s*الفكرة|المفهوم_الرياضي|المفهوم\s*الرياضي|الشرح)\s*:\s*([\s\S]*?)(?=\n\s*(?:القاعدة|القانون|المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|الفكرة|$))/i
+export function extractConceptAndRule(block: string): { concept: string; rule: string; examplesPart: string } {
+  const splitIdx = block.search(/(?=(?:\n|\s{2,}|\.\s+)(?:###?\s*)?(?:المثال|مثال|معرف\s*المثال|نص\s*المسألة))/i);
+  const headerPart = splitIdx !== -1 ? block.slice(0, splitIdx) : block;
+  const examplesPart = splitIdx !== -1 ? block.slice(splitIdx) : "";
+
+  const conceptMatch = headerPart.match(
+    /(?:مفهوم\s*الفكرة|المفهوم_الرياضي|المفهوم\s*الرياضي|الشرح)\s*:\s*([\s\S]*?)(?=(?:\n|\s{2,}|\.\s+)(?:القاعدة|القانون|صندوق|$))/i
   );
-  const ruleMatch = block.match(
-    /(?:القاعدة\s*الرياضية|القانون_أو_القاعدة|القانون\s*أو\s*القاعدة|صندوق_القاعدة|القانون)\s*:\s*([\s\S]*?)(?=\n\s*(?:المثال|مثال|نص|أولاً|ثانياً|حاول|تمارين|نهاية|الفكرة|$))/i
+  const ruleMatch = headerPart.match(
+    /(?:القاعدة\s*والقانون(?:\s*المعتمد)?|القاعدة\s*الرياضية|القاعدة|القانون_أو_القاعدة|القانون\s*أو\s*القاعدة|صندوق_القاعدة|القانون)\s*:\s*([\s\S]*)$/i
   );
   return {
     concept: cleanBracketedField(conceptMatch?.[1] ?? ""),
     rule: cleanBracketedField(ruleMatch?.[1] ?? ""),
+    examplesPart,
   };
 }
 
@@ -47,21 +52,19 @@ export function parseStage3SolutionsMap(stage3Cleaned: string): {
 
   const codeSplits = stage3Cleaned.split(/معرف\s*السؤال\s*:\s*((?:practice|homework|drill|try|hw)-\d+-\d+)/i);
   for (let i = 1; i < codeSplits.length; i += 2) {
-    const code = codeSplits[i].trim().toLowerCase();
     const rawBody = (codeSplits[i + 1] || "").split(/نموذج إجابة|معرف الفكرة/i)[0] || "";
     const steps = mergeLogicalSolutionSteps(
       rawBody.replace(/^\s*(?:خطوات الحل|الناتج النهائي المعتمد|سلم التصحيح)\s*:\s*/gim, "")
     ).filter((l) => !/^درج/i.test(l));
-    if (steps.length > 0) byCode.set(code, steps);
+    if (steps.length > 0) byCode.set(codeSplits[i].trim().toLowerCase(), steps);
   }
 
   const numSplits = stage3Cleaned.split(/(?:===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\][^\n]*===|حل\s+السؤال\s*\[?(\d+)\]?\s*:)/i);
   let seq = 1;
   for (let i = 1; i < numSplits.length; i += 3) {
     const qNum = Number(numSplits[i] || numSplits[i + 1]) || seq++;
-    const body = numSplits[i + 2] || "";
     const steps = mergeLogicalSolutionSteps(
-      body.replace(/^\s*(?:خطوات[_\s]الحل|الإجابة[_\s]الصحيحة|الناتج[_\s]النهائي)\s*:\s*/gim, "")
+      (numSplits[i + 2] || "").replace(/^\s*(?:خطوات[_\s]الحل|الإجابة[_\s]الصحيحة|الناتج[_\s]النهائي)\s*:\s*/gim, "")
     );
     if (steps.length > 0) byIndex.set(qNum, steps);
   }
@@ -98,37 +101,33 @@ export function parseStage2ByIdeas(s2Raw: string): {
     const hwMatch = block.match(/(?:ثانياً\s*:\s*)?تمارين\s*الواجب\s*المنزلي([\s\S]*?)(?=نهاية\s*الفكرة|###|$)/i);
     const hwBody = hwMatch ? hwMatch[1] : "";
 
-    const drills: ExtractedQuestionBlock[] = [];
-    if (tryBody) {
-      const splits = tryBody
-        .split(/(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\]))/i)
+    const parseQuestionSplits = (body: string, codeRe: RegExp, pfxRe: RegExp): ExtractedQuestionBlock[] =>
+      body
+        .split(/(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:سؤال|تمرين|مسألة|#\d+|\[\d+\]))/i)
         .map((s) => s.trim())
-        .filter((s) => s.length > 10);
+        .filter((s) => s.length > 10)
+        .map((s) => {
+          const qCode = s.match(codeRe)?.[1]?.toLowerCase();
+          const basePrompt = s.replace(pfxRe, "").trim();
+          return { rawText: s, promptText: cleanStudentFacingMathPromptSSOT(basePrompt), qCode };
+        });
 
-      splits.forEach((s) => {
-        const qCode = s.match(/معرف\s*السؤال\s*:\s*((?:try|practice|drill)-\d+-\d+)/i)?.[1]?.toLowerCase();
-        const basePrompt = s
-          .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
-          .trim();
-        const cleanPrompt = cleanStudentFacingMathPromptSSOT(basePrompt);
-        drills.push({ rawText: s, promptText: cleanPrompt, qCode });
-      });
-    }
+    const drills = tryBody
+      ? parseQuestionSplits(
+          tryBody,
+          /معرف\s*السؤال\s*:\s*((?:try|practice|drill)-\d+-\d+)/i,
+          /^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|تمرين\s*\(?\d+\)?|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i
+        )
+      : [];
 
     if (hwBody) {
-      const splits = hwBody
-        .split(/(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\]))/i)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 10);
-
-      splits.forEach((s) => {
-        const qCode = s.match(/معرف\s*السؤال\s*:\s*((?:hw|homework)-\d+-\d+)/i)?.[1]?.toLowerCase();
-        const basePrompt = s
-          .replace(/^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i, "")
-          .trim();
-        const cleanPrompt = cleanStudentFacingMathPromptSSOT(basePrompt);
-        allHomework.push({ rawText: s, promptText: cleanPrompt, qCode });
-      });
+      allHomework.push(
+        ...parseQuestionSplits(
+          hwBody,
+          /معرف\s*السؤال\s*:\s*((?:hw|homework)-\d+-\d+)/i,
+          /^(?:[-•*]\s*)?(?:\*\*)?(?:سؤال\s*\(?\d+\)?|مسألة\s*\(?\d+\)?|#\d+|\[\d+\])\s*(?:\|\s*معرف\s*السؤال\s*:\s*[\w-]+)?(?:\*\*)?\s*/i
+        )
+      );
     }
 
     drillsByIdea.set(key, drills);
@@ -149,13 +148,12 @@ export function parseSolvedExamplesFromSection(
   geometryRaw?: string;
   mcqChoicesAr?: readonly [string, string, string, string];
 }> {
-  // عزل قسم الأمثلة وبتر أي نص يخص الفكرة التالية أو نهايتها
   const cleanSection = examplesSection.split(
     /(?:^|\n)\s*(?:نهاية\s*الفكرة|(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i
   )[0] || "";
 
   const exSplits = cleanSection
-    .split(/(?:^|\n)\s*(?=(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال\s*:\s*example-[0-9a-zA-Z_-]+|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i)
+    .split(/(?=(?:\n|\s{2,}|\.\s+)(?:###\s*)?(?:المثال\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)|مثال\s*\([0-9٠-٩]+\)|مثال\s*[0-9٠-٩]+|معرف\s*المثال|المثال-[0-9٠-٩]+-[0-9٠-٩]+))/i)
     .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل)/i.test(b));
 
   const list = exSplits.length > 0 ? exSplits : [cleanSection];
@@ -168,18 +166,25 @@ export function parseSolvedExamplesFromSection(
   }> = [];
 
   list.forEach((exBody) => {
-    const promptMatch = exBody.match(/(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*([\s\S]*?)(?=\n\s*(?:خطوات\s*الحل|الحل|الخطوة|الناتج\s*النهائي|$))/i);
-    const rawProblem = promptMatch?.[1] || exBody.split(/\n\s*(?:خطوات\s*الحل|الحل|الخطوة)\s*:/i)[0]?.trim() || concept || ideaTitle;
+    const promptMatch = exBody.match(
+      /(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*([\s\S]*?)(?=(?:\n|\s+)(?:خطوات\s*الحل|خطوات_الحل|الحل\s*:|الخطوة\s*[0-9٠-٩:]|الناتج\s*النهائي|المثال|$))/i
+    );
+    const rawProblem = promptMatch?.[1] ||
+      exBody.split(/(?=(?:\n|\s+)(?:خطوات\s*الحل|خطوات_الحل|الحل\s*:|الخطوة\s*[0-9٠-٩:]))/i)[0]?.trim() ||
+      concept || ideaTitle;
+
     const baseProblem = rawProblem
       .replace(/^(?:###\s*)?(?:المثال\s*\S+|مثال\s*\S+)\s*/i, "")
+      .replace(/^(?:معرف\s*المثال\s*:\s*\S+\s*)/i, "")
       .replace(/^(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*/i, "")
-      .trim();
+      .split(/(?=(?:المثال|مثال|معرف\s*المثال))/i)[0].trim();
+
     const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
     const mcqChoices = parseChoicesTupleFromBlock(cleanProblem);
     const finalPrompt = mcqChoices ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
 
     const stepsMatch = exBody.match(
-      /(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i
+      /(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=(?:\n|\s+)(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i
     );
     const rawFinal = exBody.match(/(?:الناتج\s*النهائي|الإجابة\s*النهائية)\s*:\s*([^\n]+)/i)?.[1]?.trim() || "";
     const steps = mergeLogicalSolutionSteps(stepsMatch?.[1] || "").filter(
@@ -218,16 +223,11 @@ export function buildStage2PrintableItem(params: {
 }): PrintableMathQuestionItem {
   const mcqChoices = parseChoicesTupleFromBlock(params.block.promptText);
   const rawPrompt = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
-  const promptAr = cleanStudentFacingMathPromptSSOT(rawPrompt);
-
   const isMcq = (params.block.rawText || "").includes("اختر") || mcqChoices !== undefined;
   const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) ||
     params.solutionsMap.byIndex.get(params.questionNumber);
-
   const geoMatch = params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-  const geometryFigure = geoMatch?.[1]
-    ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `${params.id}_geo`)
-    : undefined;
+  const geometryFigure = geoMatch?.[1] ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `${params.id}_geo`) : undefined;
 
   return {
     id: params.id,
@@ -235,7 +235,7 @@ export function buildStage2PrintableItem(params: {
     kind: isMcq ? "mcq" : geometryFigure ? "essay_geometry" : "essay_algebra",
     branchBadgeAr: params.branchNameAr,
     marks: isMcq ? 1 : 2,
-    promptAr: promptAr || params.defaultPrompt,
+    promptAr: cleanStudentFacingMathPromptSSOT(rawPrompt) || params.defaultPrompt,
     mcqChoicesAr: mcqChoices,
     correctMcqIndex: resolveCorrectChoiceIndex(matchedSteps?.[matchedSteps.length - 1] || "", mcqChoices),
     modelAnswerAr: matchedSteps ? matchedSteps.join(" ⇐ ") : params.defaultAnswer,

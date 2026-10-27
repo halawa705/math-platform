@@ -23,6 +23,16 @@ const SHORT_ARABIC_MATH_SYMBOLS = new Set([
   "جا", "جتا", "ظا", "ظتا", "قا", "قتا", "لو", "نها", "أب", "بج", "جد", "أج", "دهـ",
 ]);
 
+const KNOWN_ARABIC_MATH_UNITS = new Set([
+  "سم", "سم²", "سم³", "م", "م²", "م³", "مم", "كم", "كم²", "متر", "لتر", "مللتر",
+  "جم", "كجم", "طن", "درجة", "دقيقة", "ثانية", "نيوتن", "داين", "جول", "وات",
+  "م/ث", "م/ث²", "كم/س", "وحدة طول", "وحدة مربعة", "وحدة مكعبة",
+]);
+
+function isMathUnit(phrase: string): boolean {
+  return KNOWN_ARABIC_MATH_UNITS.has(phrase.trim().replace(/^\\/g, ""));
+}
+
 function isArabicProsePhrase(phrase: string): boolean {
   const words = phrase.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return false;
@@ -30,25 +40,21 @@ function isArabicProsePhrase(phrase: string): boolean {
   return !SHORT_ARABIC_MATH_SYMBOLS.has(words[0].replace(/[:،؛.؟!]/g, ""));
 }
 
-/**
- * يفصل العبارات العربية الموجودة في المستوى الأعلى (خارج الأقواس المعقوفة `{...}`) عن المعادلة الرياضية،
- * بينما يغلف أي نص عربي داخل `{...}` (مثل بسط ومقام `\frac{...}{...}`) بـ `\text{...}` لحفظ المسافات بين الكلمات.
- */
 export function separateTopLevelArabicFromMathContent(rawLatex: string): string {
   const cleaned = rawLatex
     .replace(/^\\+(?![a-zA-Z{])\s*/, "")
+    .replace(/\\+\s*=\s*\$+?|\\+\s*=/g, " = ")
     .replace(/\s*\\+$/, "")
     .replace(/(^|[^\\])\b(frac|sqrt)\{/g, "$1\\$2{")
     .replace(/\\(?:text|mathrm|textbf)\{\s*(\\frac\{[\s\S]*?\})\s*\}/g, "$1")
     .trim();
   if (!cleaned) return "";
 
-  // حماية بيئات cases و matrix و aligned من التفكيك
   if (/\\begin\{(?:cases|matrix|pmatrix|bmatrix|aligned|array)\}/.test(cleaned)) {
     return `$${cleaned}$`;
   }
 
-  // 1. فك \text{...} الموجود في المستوى الأعلى فقط (خارج \frac و \sqrt و _ و ^)
+  // 1. فك \text{...} الموجود في المستوى الأعلى فقط إذا لم يكن وحدة قياس
   let topUnwrapped = "";
   let i = 0;
   let depth = 0;
@@ -68,6 +74,11 @@ export function separateTopLevelArabicFromMathContent(rawLatex: string): string 
         ? cleaned.slice(i).match(/^\\(?:text|mathrm|textbf|mathbf)\{\s*([^{}]*)\s*\}/)
         : null;
     if (textCmdMatch && /[\u0600-\u06FF]/.test(textCmdMatch[1])) {
+      if (isMathUnit(textCmdMatch[1])) {
+        topUnwrapped += textCmdMatch[0];
+        i += textCmdMatch[0].length;
+        continue;
+      }
       topUnwrapped += ` ${textCmdMatch[1].trim()} `;
       i += textCmdMatch[0].length;
       continue;
@@ -139,18 +150,11 @@ export function separateTopLevelArabicFromMathContent(rawLatex: string): string 
  */
 export function normalizeEgyptianIntervalsAndDomain(input: string): string {
   if (!input) return "";
-
   return input
     .replace(/\[\s*([^[\]()\n]{1,35}?)\s*[,،]\s*([^[\]()\n]{1,35}?)\s*\)/g, "[$1, $2[")
     .replace(/\(\s*([^[\]()\n]{1,35}?)\s*[,،]\s*([^[\]()\n]{1,35}?)\s*\]/g, "]$1, $2]")
-    .replace(
-      /\(\s*(-?(?:\\infty|∞)|[^[\]()\n]{1,25}?)\s*[,،]\s*(\+?(?:\\infty|∞))\s*\)/g,
-      "][$1, $2[".replace("][", "]")
-    )
-    .replace(
-      /\(\s*(-?(?:\\infty|∞))\s*[,،]\s*([^[\]()\n]{1,25}?)\s*\)/g,
-      "][$1, $2[".replace("][", "]")
-    )
+    .replace(/\(\s*(-?(?:\\infty|∞)|[^[\]()\n]{1,25}?)\s*[,،]\s*(\+?(?:\\infty|∞))\s*\)/g, "]$1, $2[")
+    .replace(/\(\s*(-?(?:\\infty|∞))\s*[,،]\s*([^[\]()\n]{1,25}?)\s*\)/g, "]$1, $2[")
     .replace(
       /(الفترة(?:\s+المفتوحة)?|فترة|تنتمي(?:\s+إلى)?|ينتمي(?:\s+إلى)?|\\in|∈|مجال(?:\s+الدالة)?|المدى|مدى(?:\s+الدالة)?|\\cup|∪|\\cap|∩|ح\s*-\s*)(\s*\$?\s*)\(\s*([^[\]()\n]{1,25}?)\s*[,،]\s*([^[\]()\n]{1,25}?)\s*\)/g,
       "$1$2]$3, $4["
@@ -158,25 +162,16 @@ export function normalizeEgyptianIntervalsAndDomain(input: string): string {
     .replace(/\\(?:setminus|smallsetminus)/g, " - ")
     .replace(/\\(?:emptyset|varnothing)/g, "\\phi")
     .replace(/\b(?:Domain\s+of\s+f|dom\s*\(\s*f\s*\))\b/gi, "مجال الدالة")
-    .replace(
-      /(?:\\mathbb\{R\}|\bR\b|ح)\s*(?:\\setminus|\\smallsetminus|\\|-)\s*\\?\{\s*([^{}\n]+?)\s*\\?\}/g,
-      "ح - \\{$1\\}"
-    );
+    .replace(/(?:\\mathbb\{R\}|\bR\b|ح)\s*(?:\\setminus|\\smallsetminus|\\|-)\s*\\?\{\s*([^{}\n]+?)\s*\\?\}/g, "ح - \\{$1\\}");
 }
 
-/**
- * يصلح أوامر LaTeX المكشوفة (بدون محددات `$`) في الأجزاء النصية غير المحاطة بـ `$...$`.
- */
 export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
   if (!input) return "";
-
   const parts = input.split(/(\$[^$]+\$)/g);
-
   return parts
     .map((segment) => {
       if (segment.startsWith("$") && segment.endsWith("$") && segment.length >= 2) {
-        const inner = segment
-          .slice(1, -1)
+        const inner = segment.slice(1, -1)
           .replace(/\\(?:dft|dfrac|tfrac)\{/g, "\\frac{")
           .replace(/(^|[^\\a-zA-Z])frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1\\frac{$2}{$3}")
           .replace(/(^|[^\\a-zA-Z])sqrt\{([^{}]+)\}/g, "$1\\sqrt{$2}");
@@ -186,25 +181,16 @@ export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
       return segment
         .replace(/\\(?:dft|dfrac|tfrac)\{/g, "\\frac{")
         .replace(/\\?(?:left|right|displaystyle|quad|qquad|enspace)\b/g, " ")
-        .replace(/\\?begin\{?cases\}?([\s\S]*?)\\?end\{?cases\}?/gi, (_m, casesBody: string) => {
-          const rows = casesBody
-            .split(/\\\\|;/)
-            .map((r) => r.replace(/&/g, " : ").trim())
-            .filter(Boolean);
-          return rows.join(" ، ");
-        })
+        .replace(/\\?begin\{?cases\}?([\s\S]*?)\\?end\{?cases\}?/gi, (_m, casesBody: string) =>
+          casesBody.split(/\\\\|;/).map((r) => r.replace(/&/g, " : ").trim()).filter(Boolean).join(" ، ")
+        )
         .replace(/(^|[^\\a-zA-Z])frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1$\\frac{$2}{$3}$")
         .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$\\frac{$1}{$2}$")
         .replace(/(^|[^\\a-zA-Z])sqrt(\[[0-9]+\])?\{([^{}]+)\}/g, "$1$\\sqrt$2{$3}$")
         .replace(/\\sqrt(\[[0-9]+\])?\{([^{}]+)\}/g, "$\\sqrt$1{$2}$")
-        .replace(
-          /\\(widehat|overline|overrightarrow|vec|bar|hat)\{([^{}]+)\}/g,
-          "$\\$1{$2}$"
-        )
+        .replace(/\\(widehat|overline|overrightarrow|vec|bar|hat)\{([^{}]+)\}/g, "$\\$1{$2}$")
         .replace(/([0-9٠-٩]+)\s*\^\s*\\circ/g, "$$$1^\\circ$$")
-        .replace(/\\therefore\b/g, " ∴ ")
-        .replace(/\\because\b/g, " ∵ ")
-        .replace(/\\dots\b/g, "...")
+        .replace(/\\therefore\b/g, " ∴ ").replace(/\\because\b/g, " ∵ ").replace(/\\dots\b/g, "...")
         .replace(
           /\\(times|div|pm|mp|le|leq|ge|geq|neq|ne|approx|equiv|cong|sim|perp|parallel|angle|triangle|in|notin|subset|subseteq|cup|cap|implies|Rightarrow|iff|Leftrightarrow|pi|theta|alpha|beta|gamma|delta|phi|infty|circ)\b/g,
           "$\\$1$"

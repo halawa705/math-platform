@@ -33,10 +33,8 @@ export function cleanStrayLatexArtifacts(input: string): string {
   if (!input) return "";
   let s = input
     .replace(/\\text\{\s*([\u0600-\u06FF\s،؛:.!؟ـ]{2,})\s*\}/g, " $1 ")
-    .replace(/\\+\s*=\s*\$+/g, " = ")
+    .replace(/\\+\s*=\s*\$+?|\\+\s*=/g, " = ")
     .replace(/\$+\s*\\+\s*=\s*\$+/g, " = ")
-    .replace(/\$+\s*\\+\s*=/g, " = ")
-    .replace(/\\+\s*=/g, " = ")
     .replace(/=\s*\\+/g, " = ")
     .replace(/(?:\$+\s*)?\\div\s*([a-zA-Z0-9٠-٩]+)\\+/g, " \\div $1 ")
     .replace(/\\+(?=\s|$|[.,،؛:!؟])/g, " ")
@@ -44,10 +42,8 @@ export function cleanStrayLatexArtifacts(input: string): string {
 
   const dollarCount = (s.match(/\$/g) || []).length;
   if (dollarCount % 2 !== 0) {
-    s = s.replace(/(?<=[=+\-*/])\s*\$/g, "");
-    s = s.replace(/\$\s*(?=[=+\-*/])/g, "");
-    s = s.replace(/^\s*\$(?!\$)/, "");
-    s = s.replace(/(?<!\$)\$\s*$/, "");
+    s = s.replace(/(?<=[=+\-*/])\s*\$/g, "").replace(/\$\s*(?=[=+\-*/])/g, "");
+    s = s.replace(/^\s*\$(?!\$)/, "").replace(/(?<!\$)\$\s*$/, "");
   }
   return s;
 }
@@ -155,29 +151,30 @@ export function wrapBalancedLatexCommands(str: string): string {
 export function sanitizePolygonSimilarityAndUnitBiDi(input: string): string {
   if (!input) return "";
 
-  // 1. ترويض التشابه المنزلق في BiDi بكل أنماطه:
-  // نمط (أ): علامة التشابه قبل المضلعين: ~ ABCD XYZW
+  // 1. ترويض التشابه المنزلق في BiDi بكل أنماطه (يشابه / ~ / متشابهان / يتشابهان)
   let text = input.replace(
+    /(?:(?:المضلعين|المضلع|المثلثين|المثلث)\s+)?([A-Za-z]{2,6})\s*(?:يشابه|\\sim|~|∼)\s*(?:المضلع\s+|المثلث\s+)?([A-Za-z]{2,6})\b/g,
+    (_m, p1: string, p2: string) => `المضلع $${p1} \\sim ${p2}$`
+  );
+
+  text = text.replace(
+    /(?:(?:المضلعين|المضلع|المثلثين|المثلث)\s+)?([A-Za-z]{2,6})\s*و\s*(?:المضلع\s+|المثلث\s+)?([A-Za-z]{2,6})\s*(?:متشابهان|متشابهين|يتشابهان)/g,
+    (_m, p1: string, p2: string) => `المضلع $${p1} \\sim ${p2}$`
+  );
+
+  text = text.replace(
     /(?:(?:المضلعين|المضلع|متوازيا أضلاع|المثلثين|المثلث)\s+)?(?:~|∼|\\sim)\s*([A-Za-z]{2,6})\s*(?:و|\s)\s*(?:المضلع\s+)?([A-Za-z]{2,6})\b/g,
     (_m, p1: string, p2: string) => `المضلع $${p1} \\sim ${p2}$`
   );
 
-  // نمط (ب): علامة التشابه بعد المضلعين: المضلع ABCD المضلع XYZW ~
   text = text.replace(
     /(?:المضلع\s+)?([A-Za-z]{2,6})\s+(?:المضلع\s+)?([A-Za-z]{2,6})\s*(?:~|∼|\\sim)(?=$|[\s,،؛:!?.])/g,
     (_m, p1: string, p2: string) => `المضلع $${p1} \\sim ${p2}$`
   );
 
-  // نمط (جـ): علامة التشابه بين المضلعين: ABCD ~ XYZW
   text = text.replace(
     /(?<!\$)\b([A-Za-z]{2,6})\s*(?:~|∼|\\sim)\s*(?:المضلع\s+)?([A-Za-z]{2,6})\b(?!\$)/g,
     (_m, p1: string, p2: string) => `$${p1} \\sim ${p2}$`
-  );
-
-  // نمط (د): ABCD و XYZW يتشابهان / متشابهان
-  text = text.replace(
-    /(?:متوازيا أضلاع|المضلعان|المضلعين|المضلع)\s+([A-Za-z]{2,6})\s*و\s*([A-Za-z]{2,6})\s*(?:يتشابهان|متشابهان)/g,
-    (_m, p1: string, p2: string) => `المضلع $${p1} \\sim ${p2}$`
   );
 
   text = text.replace(/المضلع\s+المضلع\s+/g, "المضلع ");
