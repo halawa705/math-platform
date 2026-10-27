@@ -160,7 +160,8 @@ export function buildSovereignA4RowBlocks(params: {
 const FIRST_PAGE_BUDGET_PX = 915;
 const SUBSEQUENT_PAGE_BUDGET_PX = 1020;
 const BLOCK_GAP_PX = 6;
-const ELASTIC_OVERFLOW_TOLERANCE = 1.10;
+const DEFAULT_ELASTIC_TOLERANCE = 1.15;
+const ANTI_ORPHAN_ELASTIC_TOLERANCE = 1.22;
 
 export function packMeasuredBlocksIntoDiscreteA4Pages(
   blocks: readonly SovereignA4RowBlock[],
@@ -192,7 +193,7 @@ export function packMeasuredBlocksIntoDiscreteA4Pages(
     const budget = getBudget(pNum);
     const scale =
       currentUsedPx > budget
-        ? Number(Math.max(0.84, budget / currentUsedPx).toFixed(3))
+        ? Number(Math.max(0.80, budget / currentUsedPx).toFixed(3))
         : 1;
     pages.push({
       pageNumber: pNum,
@@ -211,7 +212,11 @@ export function packMeasuredBlocksIntoDiscreteA4Pages(
     const h = getBlockHeight(block);
     const nextPageIdx = pages.length + 1;
     const budget = getBudget(nextPageIdx);
-    const maxElasticBudget = budget * ELASTIC_OVERFLOW_TOLERANCE;
+    const effectiveTolerance =
+      currentBlocks.length > 0 && currentUsedPx < budget * 0.48
+        ? ANTI_ORPHAN_ELASTIC_TOLERANCE
+        : DEFAULT_ELASTIC_TOLERANCE;
+    const maxElasticBudget = budget * effectiveTolerance;
 
     // إذا كان البلوك كبسولة فكرة، يجب أن يتسع هو وأول صف أمثلة تحته معاً حتى لا تبقى الكبسولة يتيمة
     if (block.kind === "idea_capsule" && i + 1 < blocks.length) {

@@ -45,22 +45,18 @@ export function resolveAdaptiveMCQColumnsCount(
   const hasArabicWords = choices.some((c) => /[\u0600-\u06FF]{3,}/.test(c));
 
   if (isInsideNarrowHalfColumn) {
-    // في نصف العمود (عرض ~95 مم): الأرقام والكسور والنسب والزوايا المدمجة (بدون كلمات عربية) توضع في 4 أعمدة في سطر واحد لتوفير المساحة
-    if (!hasArabicWords && maxVisualLen <= 7) {
-      return 4;
-    }
-    // خياران في السطر الأول وخياران في السطر الثاني (2x2) للكلمات والتعبيرات المتوسطة
-    if (maxVisualLen <= 24) {
+    // شبكة 2x2 متوازنة (أ في اليمين وب في اليسار / جـ تحت أ ود تحت ب) لمعظم البدائل
+    if (maxVisualLen <= 52) {
       return 2;
     }
     return 1;
   }
 
   // في العرض الكامل (صفحة بعمود واحد ~190 مم)
-  if (maxVisualLen <= 14) {
+  if (maxVisualLen <= 18) {
     return 4;
   }
-  if (maxVisualLen <= 32) {
+  if (maxVisualLen <= 52) {
     return 2;
   }
   return 1;

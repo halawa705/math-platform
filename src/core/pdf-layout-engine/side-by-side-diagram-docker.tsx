@@ -184,6 +184,7 @@ export default function SideBySideDiagramDocker({
             isBookletHomework={isBookletHomework}
             primaryHex={palette.primaryHex}
             answerSpaceStyle={settings.answerSpaceStyle}
+            isMcq={Boolean(question.mcqChoicesAr && question.mcqChoicesAr.length > 0)}
           />
         )}
     </article>
