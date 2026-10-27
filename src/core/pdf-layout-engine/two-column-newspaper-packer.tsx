@@ -5,7 +5,7 @@
  * @description المحرك السيادي لصفحات A4 المنفصلة والمقاسة حياً (Sovereign Measured Discrete A4 Pages Engine):
  * - يقيس الارتفاع الفعلي بالبيكسل لكل كبسولة فكرة ولكل صف ثنائي من الأمثلة/التدريبات بعد تحميل الخطوط ومعادلات KaTeX.
  * - يوزع المحتوى حتمياً على أوراق A4 مستقلة (`794px × 1123px` = `210mm × 297mm`) مرقمة (`صفحة X من Y`).
- * - يمنع تماماً انفصال كبسولة الفكرة عن أمثلتها، ويمنع انقسام خطوات المثال أفقياً، ويقضي على الفراغات البيضاء العملاقة.
+ * - يمنع تماماً انفصال كبسولة الفكرة عن أمثلتها، ويمنع انقسام خطوات المثال أفقياً، ويقضي على الفراغات البيضاء.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 198 سطراً).
  */
 
@@ -25,21 +25,11 @@ import {
   type PrintableMathQuestionItem,
 } from "./a4-vector-html-sheet-renderer";
 import {
-  OfficialMcqAnswerKeySummaryTable,
-  PedagogicalIdeaAndRuleCapsule,
-} from "./a4-pedagogical-capsule-and-key-table";
-import SideBySideDiagramDocker from "./side-by-side-diagram-docker";
-import {
   buildSovereignA4RowBlocks,
   packMeasuredBlocksIntoDiscreteA4Pages,
-  type SovereignA4RowBlock,
 } from "./sovereign-a4-page-blocks-builder";
-import {
-  SovereignDocumentAccreditationBox,
-  SovereignFirstPageHeader,
-  SovereignPageNumberFooterBar,
-  SovereignRunningPageHeader,
-} from "./sovereign-a4-page-chrome-elements";
+import { SovereignBlockRenderer } from "./sovereign-block-renderer";
+import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 
 export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER =
   "two_column_newspaper_packer" as const;
@@ -89,23 +79,10 @@ export default function TwoColumnNewspaperPacker({
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
-  const isSolvedMode =
-    settings.answerVisibilityMode !== "questions_only" ||
-    questions.some((q) => q.id.startsWith("booklet-s1-"));
-  const densityGap =
-    settings.densityMode === "ultra_compact"
-      ? "gap-1.5"
-      : settings.densityMode === "standard_balanced"
-        ? "gap-2"
-        : "gap-2.5";
+  const isSolvedMode = settings.answerVisibilityMode !== "questions_only" || questions.some((q) => q.id.startsWith("booklet-s1-"));
 
   const { blocks, totalIdeasCount } = React.useMemo(
-    () =>
-      buildSovereignA4RowBlocks({
-        questions,
-        columnsCount: settings.columnsCount,
-        includeAnswerKey: isSolvedMode,
-      }),
+    () => buildSovereignA4RowBlocks({ questions, columnsCount: settings.columnsCount, includeAnswerKey: isSolvedMode }),
     [questions, settings.columnsCount, isSolvedMode]
   );
 
@@ -136,64 +113,22 @@ export default function TwoColumnNewspaperPacker({
     [blocks, heightsMap]
   );
 
-  const renderBlockContent = (block: SovereignA4RowBlock) => {
-    if (block.kind === "idea_capsule") {
-      return (
-        <PedagogicalIdeaAndRuleCapsule
-          item={block.anchorQuestion}
-          palette={palette}
-          numeralMode={settings.numeralMode}
-          notationLanguage={settings.notationLanguage}
-          ideaIndex={block.ideaIndex}
-        />
-      );
-    }
-    if (block.kind === "question_pair") {
-      const isTwoCols = settings.columnsCount === 2 && block.items.length > 1;
-      return (
-        <div
-          className={`grid ${isTwoCols ? "grid-cols-2" : "grid-cols-1"} ${densityGap} items-start w-full min-w-0`}
-        >
-          {block.items.map((q) => (
-            <SideBySideDiagramDocker key={q.id} question={q} settings={settings} />
-          ))}
-        </div>
-      );
-    }
-    if (block.kind === "idea_divider") {
-      return (
-        <div className="py-0.5 flex items-center justify-center gap-2 text-[7.8pt] font-black text-slate-500">
-          <span className="w-12 border-t border-dashed border-slate-300" />
-          <span>نهاية الفكرة ({formatNumeralsByModeSSOT(block.ideaIndex, settings.numeralMode)})</span>
-          <span className="w-12 border-t border-dashed border-slate-300" />
-        </div>
-      );
-    }
-    if (block.kind === "mcq_answer_key") {
-      return (
-        <OfficialMcqAnswerKeySummaryTable
-          questions={questions}
-          palette={palette}
-          numeralMode={settings.numeralMode}
-          notationLanguage={settings.notationLanguage}
-        />
-      );
-    }
-    return (
-      <SovereignDocumentAccreditationBox
-        identity={identity}
-        palette={palette}
-        numeralMode={settings.numeralMode}
-      />
-    );
-  };
+  const renderBlock = (b: (typeof blocks)[number]) => (
+    <SovereignBlockRenderer
+      key={b.id}
+      block={b}
+      settings={settings}
+      palette={palette}
+      identity={identity}
+      questions={questions}
+    />
+  );
 
   return (
     <div
       ref={viewportWrapperRef}
       className="w-full overflow-hidden flex flex-col items-center bg-slate-200/70 dark:bg-slate-900/60 rounded-3xl p-2 sm:p-5 border border-slate-300/80 dark:border-slate-800 relative"
     >
-      {/* شريط معلومات محرك الصفحات السيادي */}
       {questions.length > 0 && (
         <div className="mb-3 px-4 py-1.5 rounded-full bg-slate-900 text-white text-xs font-black flex flex-wrap items-center gap-3 shadow-md">
           <span>📄 نظام إنتاج صفحات A4 السيادي المستقل</span>
@@ -225,7 +160,7 @@ export default function TwoColumnNewspaperPacker({
       >
         {blocks.map((b) => (
           <div key={b.id} data-sovereign-block-id={b.id} className="w-full min-w-0">
-            {renderBlockContent(b)}
+            {renderBlock(b)}
           </div>
         ))}
       </div>
@@ -251,59 +186,21 @@ export default function TwoColumnNewspaperPacker({
             </div>
           ) : (
             discretePages.map((page) => (
-              <section
+              <SovereignDiscretePageView
                 key={page.pageNumber}
-                style={{
-                  backgroundColor: "#ffffff",
-                  color: "#0f172a",
-                  fontFamily: activeFont.cssFontStack,
-                  fontSize: `${Number((settings.exactFontSizePt * page.contentScale).toFixed(2))}pt`,
-                  lineHeight: activeFont.optimalLineHeight,
-                }}
-                className="sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl px-[20px] py-[18px] flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none"
-              >
-                <div className="w-full min-w-0 flex-1 flex flex-col">
-                  {page.isFirstPage ? (
-                    <SovereignFirstPageHeader
-                      identity={identity}
-                      palette={palette}
-                      documentTitle={settings.customDocumentTitle}
-                      subtitleAr={subtitleAr}
-                      isSolvedMode={isSolvedMode}
-                      totalIdeasCount={totalIdeasCount}
-                      totalQuestionsCount={questions.length}
-                      totalMarks={totalMarks}
-                      numeralMode={settings.numeralMode}
-                    />
-                  ) : (
-                    <SovereignRunningPageHeader
-                      identity={identity}
-                      palette={palette}
-                      documentTitle={settings.customDocumentTitle}
-                      subtitleAr={subtitleAr}
-                      pageNumber={page.pageNumber}
-                      totalPages={discretePages.length}
-                      numeralMode={settings.numeralMode}
-                    />
-                  )}
-
-                  <div className="space-y-1.5 w-full min-w-0">
-                    {page.blocks.map((block) => (
-                      <div key={block.id} className="w-full min-w-0">
-                        {renderBlockContent(block)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <SovereignPageNumberFooterBar
-                  identity={identity}
-                  palette={palette}
-                  pageNumber={page.pageNumber}
-                  totalPages={discretePages.length}
-                  numeralMode={settings.numeralMode}
-                />
-              </section>
+                page={page}
+                totalPagesCount={discretePages.length}
+                settings={settings}
+                identity={identity}
+                palette={palette}
+                activeFont={activeFont}
+                subtitleAr={subtitleAr}
+                isSolvedMode={isSolvedMode}
+                totalIdeasCount={totalIdeasCount}
+                totalQuestionsCount={questions.length}
+                totalMarks={totalMarks}
+                renderBlockContent={renderBlock}
+              />
             ))
           )}
           {children}

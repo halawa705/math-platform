@@ -131,10 +131,12 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         resultItems.push({
           id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
           questionNumber: resultItems.length + 1,
-          kind: geoMatch ? "essay_geometry" : "essay_algebra",
+          kind: ex.mcqChoicesAr ? "mcq" : geoMatch ? "essay_geometry" : "essay_algebra",
           branchBadgeAr: params.branchNameAr,
           marks: 2,
           promptAr: ex.promptAr,
+          mcqChoicesAr: ex.mcqChoicesAr,
+          correctMcqIndex: resolveCorrectChoiceIndex(ex.rawFinal || ex.steps.join(" "), ex.mcqChoicesAr),
           modelAnswerAr: ex.steps.join(" ⇐ ") || ex.rawFinal || "تطبيق مباشر",
           solutionStepsAr: ex.steps.length > 0 ? ex.steps : undefined,
           geometryFigure: geoMatch,

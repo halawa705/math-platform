@@ -27,21 +27,11 @@ export const MODULE_ID_A4_PEDAGOGICAL_CAPSULE_AND_KEY_TABLE =
 const ARABIC_CHOICE_LETTERS = ["أ", "ب", "جـ", "د"] as const;
 
 const ARABIC_ORDINAL_MAP: Record<string, string> = {
-  "الأولى": "1", "الاولى": "1", "الأول": "1", "الاول": "1",
-  "الثانية": "2", "الثاني": "2",
-  "الثالثة": "3", "الثالث": "3",
-  "الرابعة": "4", "الرابع": "4",
-  "الخامسة": "5", "الخامس": "5",
-  "السادسة": "6", "السادس": "6",
-  "السابعة": "7", "السابع": "7",
-  "الثامنة": "8", "الثامن": "8",
-  "التاسعة": "9", "التاسع": "9",
-  "العاشرة": "10", "العاشر": "10",
-  "الحادية عشرة": "11", "الحادية عشر": "11",
-  "الثانية عشرة": "12", "الثانية عشر": "12",
-  "الثالثة عشرة": "13", "الثالثة عشر": "13",
-  "الرابعة عشرة": "14", "الرابعة عشر": "14",
-  "الخامسة عشرة": "15", "الخامسة عشر": "15",
+  "الأولى": "1", "الاولى": "1", "الأول": "1", "الاول": "1", "الثانية": "2", "الثاني": "2", "الثالثة": "3", "الثالث": "3",
+  "الرابعة": "4", "الرابع": "4", "الخامسة": "5", "الخامس": "5", "السادسة": "6", "السادس": "6", "السابعة": "7", "السابع": "7",
+  "الثامنة": "8", "الثامن": "8", "التاسعة": "9", "التاسع": "9", "العاشرة": "10", "العاشر": "10",
+  "الحادية عشرة": "11", "الحادية عشر": "11", "الثانية عشرة": "12", "الثانية عشر": "12",
+  "الثالثة عشرة": "13", "الثالثة عشر": "13", "الرابعة عشرة": "14", "الرابعة عشر": "14", "الخامسة عشرة": "15", "الخامسة عشر": "15",
 };
 
 export function PedagogicalIdeaAndRuleCapsule({
@@ -156,7 +146,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 backgroundColor: "#F5F7FF",
                 borderColor: "#818CF8",
               }}
-              className="p-1.5 px-2 rounded-xl border-2 text-[0.83em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
+              className="p-1.5 px-2 rounded-xl border-2 text-[0.78em] sm:text-[0.81em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
             >
               <div
                 style={{ color: palette.primaryHex }}
@@ -165,7 +155,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 <span>📐</span>
                 <span>القاعدة والقانون المعتمد:</span>
               </div>
-              <div className="font-extrabold text-slate-900 max-w-full break-words">
+              <div className="font-extrabold text-slate-900 max-w-full overflow-hidden break-words">
                 <SafeKaTeXBiDiMathRenderer
                   text={item.framedRuleAr}
                   numeralMode={numeralMode}

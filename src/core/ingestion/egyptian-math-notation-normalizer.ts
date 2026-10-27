@@ -9,6 +9,11 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
+import {
+  wrapBalancedLatexCommands,
+  sanitizePolygonSimilarityAndUnitBiDi,
+} from "./balanced-latex-command-wrapper";
+
 export const MODULE_ID_EGYPTIAN_MATH_NOTATION_NORMALIZER =
   "egyptian_math_notation_normalizer" as const;
 
@@ -200,7 +205,7 @@ export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
           /\\(times|div|pm|mp|le|leq|ge|geq|neq|ne|approx|equiv|cong|sim|perp|parallel|angle|triangle|in|notin|subset|subseteq|cup|cap|implies|Rightarrow|iff|Leftrightarrow|pi|theta|alpha|beta|gamma|delta|phi|infty|circ)\b/g,
           "$\\$1$"
         )
-        .replace(/\b(begincases|endcases|quad|qquad|frac)\b/gi, "")
+        .replace(/\b(begincases|endcases|quad|qquad)\b/gi, "")
         .replace(/\s*&\s*/g, " ، ")
         .replace(/(?:^|\s)\\+(?=\s|$|[.,،؛:])/g, " ");
     })
@@ -232,5 +237,7 @@ export function normalizeToEgyptianSchoolMath(rawText: string): string {
     );
 
   const withEgyptianIntervals = normalizeEgyptianIntervalsAndDomain(normalizedDelimiters);
-  return wrapNakedLatexCommandsOutsideDelimiters(withEgyptianIntervals);
+  const balancedMath = wrapBalancedLatexCommands(withEgyptianIntervals);
+  const bidiSanitized = sanitizePolygonSimilarityAndUnitBiDi(balancedMath);
+  return wrapNakedLatexCommandsOutsideDelimiters(bidiSanitized);
 }

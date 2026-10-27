@@ -144,5 +144,6 @@ export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
     .replace(/\|\s*معرف\s*المثال\s*:\s*[\w-]+/gi, "")
     .replace(/\[\s*(?:أكمل|اختر|مقالي|مسألة|تطبيق|متقدم)\s*\]/gi, "")
     .replace(/\bidea[-_]\d+\b/gi, "")
+    .replace(/(?<=[^\n])\s*(?=(?:أولاً|ثانياً|ثالثاً|رابعاً)\s*:)/g, "\n\n• ")
     .trim();
 }

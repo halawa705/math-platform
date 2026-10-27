@@ -49,27 +49,14 @@ function buildHumanReadableMathFallback(latex: string): string {
     .replace(/\\?frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1 / $2)")
     .replace(/\\?sqrt\{([^{}]+)\}/g, "√($1)")
     .replace(/\\?(?:quad|qquad|enspace|begincases|endcases)\b/gi, " ")
-    .replace(/\\times\b/g, " × ")
-    .replace(/\\div\b/g, " ÷ ")
-    .replace(/\\pm\b/g, " ± ")
-    .replace(/\\sim\b/g, " ∼ ")
-    .replace(/\\cong\b/g, " ≅ ")
-    .replace(/\\approx\b/g, " ≈ ")
-    .replace(/\\(?:le|leq)\b/g, " ≤ ")
-    .replace(/\\(?:ge|geq)\b/g, " ≥ ")
-    .replace(/\\(?:ne|neq)\b/g, " ≠ ")
-    .replace(/\\(?:implies|Rightarrow)\b/g, " ⇒ ")
-    .replace(/\\(?:iff|Leftrightarrow)\b/g, " ⇔ ")
+    .replace(/\\(times|div|pm|sim|cong|approx|le|leq|ge|geq|ne|neq|implies|Rightarrow|iff|Leftrightarrow|perp|parallel|in|notin|cup|cap)\b/g, (_m, op: string) => {
+      const map: Record<string, string> = { times: " × ", div: " ÷ ", pm: " ± ", sim: " ∼ ", cong: " ≅ ", approx: " ≈ ", le: " ≤ ", leq: " ≤ ", ge: " ≥ ", geq: " ≥ ", ne: " ≠ ", neq: " ≠ ", implies: " ⇒ ", Rightarrow: " ⇒ ", iff: " ⇔ ", Leftrightarrow: " ⇔ ", perp: " ⊥ ", parallel: " ∥ ", in: " ∈ ", notin: " ∉ ", cup: " ∪ ", cap: " ∩ " };
+      return map[op] || ` ${op} `;
+    })
     .replace(/\\angle\b/g, "∠")
     .replace(/\\triangle\b/g, "△")
-    .replace(/\\perp\b/g, " ⊥ ")
-    .replace(/\\parallel\b/g, " ∥ ")
     .replace(/\^\s*\\circ\b|\\circ\b/g, "°")
     .replace(/\\dots\b/g, "...")
-    .replace(/\\(?:in)\b/g, " ∈ ")
-    .replace(/\\(?:notin)\b/g, " ∉ ")
-    .replace(/\\(?:cup)\b/g, " ∪ ")
-    .replace(/\\(?:cap)\b/g, " ∩ ")
     .replace(/\\(?:phi|emptyset|varnothing)\b/g, "∅")
     .replace(/\\(?:infty)\b/g, "∞")
     .replace(/\bfrac\b/gi, "/")
@@ -129,6 +116,7 @@ export function sanitizeLatexForSchoolMath(
 
   // فك أي \frac أو \sqrt محبوسة خطأ داخل \text{...} لأن KaTeX لا يصرّف الكسور داخل وسوم النصوص
   cleaned = cleaned.replace(/\\(?:text|mathrm|textbf)\{\s*(\\frac\{[\s\S]*?\})\s*\}/g, "$1");
+  cleaned = cleaned.replace(/(?<=[A-Za-z0-9٠-٩])\s*~\s*(?=[A-Za-z0-9٠-٩])/g, " \\sim ");
 
   if (notationLanguage === "english") {
     // حماية كتل \text{...} بالكامل حتى لا تُمس الحروف والكلمات العربية مثل (المضلع، محيط، الأصغر)
@@ -139,12 +127,8 @@ export function sanitizeLatexForSchoolMath(
     });
 
     // استبدال المتغيرات والرموز المنفردة فقط خارج النصوص
-    protectedLatex = protectedLatex
-      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])س(?![\u0600-\u06FFa-zA-Z_])/g, "x")
-      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ص(?![\u0600-\u06FFa-zA-Z_])/g, "y")
-      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ع(?![\u0600-\u06FFa-zA-Z_])/g, "z")
-      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ك(?![\u0600-\u06FFa-zA-Z_])/g, "k")
-      .replace(/(?<![\u0600-\u06FFa-zA-Z\\_])ح(?![\u0600-\u06FFa-zA-Z_])/g, "\\mathbb{R}");
+    const varMap: Record<string, string> = { "س": "x", "ص": "y", "ع": "z", "ك": "k", "ح": "\\mathbb{R}" };
+    protectedLatex = protectedLatex.replace(/(?<![\u0600-\u06FFa-zA-Z\\_])([سصعكح])(?![\u0600-\u06FFa-zA-Z_])/g, (_m, ch: string) => varMap[ch] || ch);
 
     cleaned = protectedLatex.replace(/___MATH_TXT_(\d+)___/g, (_m, idx) => textBlocks[Number(idx)] || "");
   }
@@ -244,6 +228,15 @@ export default function SafeKaTeXBiDiMathRenderer({
             : segment.slice(1, -1);
           const isFractionMath = /\\(?:d|t)?frac\b/.test(innerLatex);
           const fractionsCount = (innerLatex.match(/\\(?:d|t)?frac\b/g) || []).length;
+          const hasCases = innerLatex.includes("cases");
+          const isWideEquation = innerLatex.length > 40 || fractionsCount >= 2;
+          const dynamicFontSize = hasCases
+            ? "0.76em"
+            : fractionsCount >= 3
+              ? "0.80em"
+              : isWideEquation
+                ? "0.87em"
+                : undefined;
           const sanitized = sanitizeLatexForSchoolMath(
             innerLatex,
             numeralMode,
@@ -258,8 +251,9 @@ export default function SafeKaTeXBiDiMathRenderer({
               style={{
                 unicodeBidi: "isolate",
                 display: isBlockMath ? "block" : "inline-block",
-                whiteSpace: "nowrap",
-                fontSize: fractionsCount >= 3 ? "0.86em" : undefined,
+                whiteSpace: hasCases ? "normal" : "nowrap",
+                fontSize: dynamicFontSize,
+                maxWidth: "100%",
                 paddingTop: isFractionMath ? "0.18em" : undefined,
                 paddingBottom: isFractionMath ? "0.18em" : undefined,
                 margin: isFractionMath ? "0.06em 0.12em" : undefined,

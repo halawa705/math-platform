@@ -157,10 +157,10 @@ export function buildSovereignA4RowBlocks(params: {
   };
 }
 
-const FIRST_PAGE_BUDGET_PX = 955;
+const FIRST_PAGE_BUDGET_PX = 915;
 const SUBSEQUENT_PAGE_BUDGET_PX = 1020;
 const BLOCK_GAP_PX = 6;
-const ELASTIC_OVERFLOW_TOLERANCE = 1.075;
+const ELASTIC_OVERFLOW_TOLERANCE = 1.10;
 
 export function packMeasuredBlocksIntoDiscreteA4Pages(
   blocks: readonly SovereignA4RowBlock[],

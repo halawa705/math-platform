@@ -142,7 +142,13 @@ export function parseSolvedExamplesFromSection(
   examplesSection: string,
   ideaTitle: string,
   concept: string
-): Array<{ promptAr: string; steps: string[]; rawFinal: string; geometryRaw?: string }> {
+): Array<{
+  promptAr: string;
+  steps: string[];
+  rawFinal: string;
+  geometryRaw?: string;
+  mcqChoicesAr?: readonly [string, string, string, string];
+}> {
   // عزل قسم الأمثلة وبتر أي نص يخص الفكرة التالية أو نهايتها
   const cleanSection = examplesSection.split(
     /(?:^|\n)\s*(?:نهاية\s*الفكرة|(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i
@@ -153,7 +159,13 @@ export function parseSolvedExamplesFromSection(
     .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل)/i.test(b));
 
   const list = exSplits.length > 0 ? exSplits : [cleanSection];
-  const results: Array<{ promptAr: string; steps: string[]; rawFinal: string; geometryRaw?: string }> = [];
+  const results: Array<{
+    promptAr: string;
+    steps: string[];
+    rawFinal: string;
+    geometryRaw?: string;
+    mcqChoicesAr?: readonly [string, string, string, string];
+  }> = [];
 
   list.forEach((exBody) => {
     const promptMatch = exBody.match(/(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*([\s\S]*?)(?=\n\s*(?:خطوات\s*الحل|الحل|الخطوة|الناتج\s*النهائي|$))/i);
@@ -163,6 +175,8 @@ export function parseSolvedExamplesFromSection(
       .replace(/^(?:نص\s*المسألة|نص\s*المثال|المسألة)\s*:\s*/i, "")
       .trim();
     const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
+    const mcqChoices = parseChoicesTupleFromBlock(cleanProblem);
+    const finalPrompt = mcqChoices ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
 
     const stepsMatch = exBody.match(
       /(?:خطوات\s*الحل|خطوات_الحل|الحل)\s*:\s*([\s\S]*?)(?=\n\s*(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i
@@ -177,7 +191,13 @@ export function parseSolvedExamplesFromSection(
     if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);
 
     const geoMatch = exBody.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-    results.push({ promptAr: cleanProblem || ideaTitle, steps, rawFinal, geometryRaw: geoMatch?.[1] });
+    results.push({
+      promptAr: finalPrompt || ideaTitle,
+      steps,
+      rawFinal,
+      geometryRaw: geoMatch?.[1],
+      mcqChoicesAr: mcqChoices,
+    });
   });
 
   return results;
