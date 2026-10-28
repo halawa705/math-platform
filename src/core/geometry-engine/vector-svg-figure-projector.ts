@@ -11,6 +11,7 @@ import {
   formatNumeralsByModeSSOT,
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
+import { projectGeometryAnglesSVGMarkup } from "./vector-svg-angle-projector";
 
 export const MODULE_ID_VECTOR_SVG_FIGURE_PROJECTOR =
   "vector_svg_figure_projector" as const;
@@ -65,32 +66,17 @@ export function projectGeometryFigureToSVGMarkup(
   );
 
   // حساب مركز ثقل الشكل لإزاحة تسميات الرؤوس للخارج بعيداً عن الأضلاع
-  const centerSx =
-    Array.from(vertexMap.values()).reduce((acc, v) => acc + v.screen.sx, 0) /
-    figure.vertices.length;
-  const centerSy =
-    Array.from(vertexMap.values()).reduce((acc, v) => acc + v.screen.sy, 0) /
-    figure.vertices.length;
+  const centerSx = Array.from(vertexMap.values()).reduce((acc, v) => acc + v.screen.sx, 0) / figure.vertices.length;
+  const centerSy = Array.from(vertexMap.values()).reduce((acc, v) => acc + v.screen.sy, 0) / figure.vertices.length;
 
   // إذا كان الشكل من عائلة الدائرة، نرسم محيط الدائرة المتجهي حول المركز
   let circleRimSvg = "";
   if (figure.familyId === "circle_family") {
-    const centerNode =
-      Array.from(vertexMap.values()).find((v) => v.id.includes("center")) ||
-      Array.from(vertexMap.values())[0];
-    const rimPoint = Array.from(vertexMap.values()).find(
-      (v) => v.id !== centerNode?.id
-    );
+    const centerNode = Array.from(vertexMap.values()).find((v) => v.id.includes("center")) || Array.from(vertexMap.values())[0];
+    const rimPoint = Array.from(vertexMap.values()).find((v) => v.id !== centerNode?.id);
     if (centerNode && rimPoint) {
-      const rPx = Math.hypot(
-        rimPoint.screen.sx - centerNode.screen.sx,
-        rimPoint.screen.sy - centerNode.screen.sy
-      );
-      circleRimSvg = `<circle cx="${centerNode.screen.sx}" cy="${
-        centerNode.screen.sy
-      }" r="${rPx.toFixed(
-        1
-      )}" fill="none" stroke="${strokeColor}" stroke-width="1.8" />`;
+      const rPx = Math.hypot(rimPoint.screen.sx - centerNode.screen.sx, rimPoint.screen.sy - centerNode.screen.sy);
+      circleRimSvg = `<circle cx="${centerNode.screen.sx}" cy="${centerNode.screen.sy}" r="${rPx.toFixed(1)}" fill="none" stroke="${strokeColor}" stroke-width="1.8" />`;
     }
   }
 
@@ -161,22 +147,30 @@ export function projectGeometryFigureToSVGMarkup(
 
       // تسمية طول الضلع بالوحدة العربية بصياغة متناسبة وخط رشيق
       if (seg.lengthLabel) {
-        const formattedVal = formatNumeralsByModeSSOT(
-          seg.lengthLabel.value,
-          numeralMode
-        );
+        const rawVal = seg.lengthLabel.value;
+        const formattedVal =
+          typeof rawVal === "number"
+            ? formatNumeralsByModeSSOT(rawVal, numeralMode)
+            : formatNumeralsByModeSSOT(String(rawVal), numeralMode);
+        const unitText = seg.lengthLabel.unit ? ` ${seg.lengthLabel.unit}` : "";
         const lx = mx + nx * 7;
         const ly = my + ny * 7 + 2.5;
         decorations += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(
           1
-        )}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${accentColor}">${formattedVal} ${
-          seg.lengthLabel.unit
-        }</text>`;
+        )}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${accentColor}">${formattedVal}${unitText}</text>`;
       }
 
       return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round" ${dashAttr} />${decorations}`;
     })
     .join("");
+
+  const anglesSvg = projectGeometryAnglesSVGMarkup({
+    angles: figure.angles,
+    vertexMap,
+    strokeColor,
+    accentColor,
+    numeralMode,
+  });
 
   const verticesSvg = Array.from(vertexMap.values())
     .map((v) => {
@@ -195,5 +189,5 @@ export function projectGeometryFigureToSVGMarkup(
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${segmentsSvg}${verticesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${segmentsSvg}${anglesSvg}${verticesSvg}</svg>`;
 }

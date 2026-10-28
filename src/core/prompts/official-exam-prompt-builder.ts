@@ -66,6 +66,7 @@ export function buildOfficialExamNotebookLMPrompt(
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
+      lessonTitleArabic: config.targetedLessonTitlesArabic.join(" ، "),
     }),
     "",
     "📐 صيغة الإخراج القياسية المطلوبة لكل سؤال (التزم بها حرفياً للاستيراد الآلي):",

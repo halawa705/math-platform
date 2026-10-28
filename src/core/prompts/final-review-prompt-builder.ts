@@ -74,6 +74,7 @@ export function buildFinalReviewNotebookLMPrompt(
   const sharedRules = buildSharedMathInvariantsPromptBlock({
     branchId: config.branchId,
     notationLanguage: config.notationLanguage,
+    unitTitleArabic: unitsList,
   });
 
   if (stage === 1) {

@@ -9,6 +9,7 @@
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { MATH_BRANCHES_SSOT } from "../ssot/math-branches-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
+import { buildSmartGeometryPromptGuidance } from "./smart-geometry-prompt-director";
 
 export const MODULE_ID_SHARED_MATH_PROMPT_INVARIANTS =
   "shared_math_prompt_invariants" as const;
@@ -29,6 +30,8 @@ export const TEN_GOLDEN_MATH_PROMPT_INVARIANTS: readonly string[] = [
 export function buildSharedMathInvariantsPromptBlock(params: {
   readonly branchId: MathBranchId;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly lessonTitleArabic?: string;
+  readonly unitTitleArabic?: string;
 }): string {
   const branchSpec = MATH_BRANCHES_SSOT[params.branchId];
   const notationRule =
@@ -36,11 +39,18 @@ export function buildSharedMathInvariantsPromptBlock(params: {
       ? "استخدم الرموز الرياضية اللاتينية (x, y, z, A, B, C, \\mathbb{R}, \\sin, \\cos, \\tan) في المعادلات والرؤوس الهندسية."
       : "استخدم الرموز الرياضية العربية المصرية المعتمدة (س، ص، ع، أ، ب، جـ، ح، ص، ط، ن، جا، جتا، ظا) في المعادلات والرؤوس الهندسية.";
 
+  const geometryDirective = buildSmartGeometryPromptGuidance({
+    branchId: params.branchId,
+    lessonTitleArabic: params.lessonTitleArabic,
+    unitTitleArabic: params.unitTitleArabic,
+  });
+
   return [
     `📌 التوجيه التخصصي لفرع (${branchSpec.nameArabic}):`,
     `- ${branchSpec.defaultPromptGuidance}`,
     `- نظام الرموز المعتمد: ${notationRule}`,
     "",
+    ...(geometryDirective ? [geometryDirective, ""] : []),
     "⛔ القواعد العشر الصارمة للإخراج الرياضي المصري (إلزامية بالكامل):",
     ...TEN_GOLDEN_MATH_PROMPT_INVARIANTS,
   ].join("\n");

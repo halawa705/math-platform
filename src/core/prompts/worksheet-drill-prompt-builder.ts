@@ -40,6 +40,7 @@ export function buildWorksheetDrillNotebookLMPrompt(
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
+      lessonTitleArabic: config.lessonTitleArabic,
     }),
   ].join("\n");
 }

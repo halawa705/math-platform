@@ -69,7 +69,7 @@ export interface CanonicalSegmentNode {
   readonly id: string;
   readonly fromVertexId: string;
   readonly toVertexId: string;
-  readonly lengthLabel?: { readonly value: number; readonly unit: ArabicMathUnit };
+  readonly lengthLabel?: { readonly value: number | string; readonly unit?: ArabicMathUnit | string };
   readonly tickMarks?: 1 | 2 | 3;
   readonly parallelArrows?: 1 | 2;
   readonly strokeStyle?: "solid" | "dashed" | "dotted";
@@ -81,8 +81,10 @@ export interface CanonicalAngleNode {
   readonly arm1VertexId: string;
   readonly arm2VertexId: string;
   readonly degrees?: number;
+  readonly degreesLabel?: string;
   readonly isRightAngle?: boolean;
   readonly arcCount?: 1 | 2;
+  readonly markSymbol?: "arc" | "dot" | "cross";
 }
 
 export interface CanonicalGeometryFigureIR {

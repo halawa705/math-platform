@@ -92,6 +92,8 @@ export function buildBookletStageNotebookLMPrompt(
   const sharedRules = buildSharedMathInvariantsPromptBlock({
     branchId: config.branchId,
     notationLanguage: config.notationLanguage,
+    lessonTitleArabic: config.lessonTitleArabic,
+    unitTitleArabic: config.unitTitleArabic,
   });
 
   if (config.stageNumber === 1) {
