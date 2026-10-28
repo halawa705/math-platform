@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file homework-drills-manager-view.tsx
@@ -9,6 +9,7 @@
  */
 
 import { useState } from "react";
+import StudioCollapsibleSectionCard from "@/features/generation-studio-hub/studio-collapsible-section-card";
 import HomeworkAssignmentBuilder from "./homework-assignment-builder";
 import StudentHomeworkInteractiveSolver from "./student-homework-interactive-solver";
 
@@ -19,20 +20,17 @@ export default function HomeworkDrillsManagerView() {
   const [refreshKey, setRefreshKey] = useState<number>(1);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-      <div className="lg:col-span-6">
-        <HomeworkAssignmentBuilder
-          onHomeworkPublished={() => setRefreshKey((prev) => prev + 1)}
-        />
-      </div>
-      <div className="lg:col-span-6">
-        <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="text-xs font-black text-teal-800 dark:text-teal-300 px-1">
-            👁️ معاينة حية لما يراه الطالب أونلاين على هاتفه فور النشر:
-          </div>
-          <StudentHomeworkInteractiveSolver key={refreshKey} />
-        </div>
-      </div>
+    <div className="space-y-3">
+      <HomeworkAssignmentBuilder
+        onHomeworkPublished={() => setRefreshKey((prev) => prev + 1)}
+      />
+      <StudioCollapsibleSectionCard
+        icon="👁️"
+        titleAr="معاينة ما يراه الطالب"
+        summaryAr="الواجبات المنشورة كما تظهر على هاتف الطالب"
+      >
+        <StudentHomeworkInteractiveSolver key={refreshKey} />
+      </StudioCollapsibleSectionCard>
     </div>
   );
 }

@@ -113,14 +113,14 @@ export default function HomeworkAssignmentBuilder({
   };
 
   return (
-    <div className="p-5 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="space-y-3">
         <div>
-          <h3 className="text-base font-black text-slate-900 dark:text-white">
-            📝 إعداد ونشر الواجب التفاعلي للطالب أونلاين (مربوط بمستكشف المنهج)
+          <h3 className="text-sm font-black text-slate-900 dark:text-white">
+            📝 إعداد ونشر واجب تفاعلي
           </h3>
-          <p className="text-xs font-bold text-slate-500">
-            اختر الصف والوحدة والدرس وعدد الأسئلة، ثم انسخ البرومبت لدفتر NotebookLM الخاص بالصف
+          <p className="text-[11px] font-bold text-slate-500">
+            اختر الصف والدرس وعدد الأسئلة، ثم انسخ البرومبت لدفتر NotebookLM الخاص بالصف
           </p>
         </div>
         <button
@@ -130,19 +130,17 @@ export default function HomeworkAssignmentBuilder({
             setCopiedPrompt(true);
             setTimeout(() => setCopiedPrompt(false), 3000);
           }}
-          className="min-h-[44px] px-4 py-2 rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black shadow-sm cursor-pointer"
+          className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black cursor-pointer"
         >
-          {copiedPrompt
-            ? "✓ تم نسخ البرومبت وفتح NotebookLM!"
-            : "📋 ١. نسخ برومبت الواجب وفتح NotebookLM لهذا الصف ↗"}
+          {copiedPrompt ? "✓ تم نسخ البرومبت وفتح NotebookLM" : "١. نسخ برومبت الواجب وفتح NotebookLM ↗"}
         </button>
       </div>
 
       {/* القوائم الثلاث المربوطة بشجرة مستكشف المنهج + تحديد أعداد الأسئلة */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-        <div>
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            ١. الصف الدراسي:
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+            الصف الدراسي
           </label>
           <select
             value={gradeId}
@@ -157,9 +155,9 @@ export default function HomeworkAssignmentBuilder({
           </select>
         </div>
 
-        <div>
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            ٢. الوحدة {activeUnit ? `(${activeUnit.branchNameArabic})` : ""}:
+        <div className="col-span-2">
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+            الوحدة {activeUnit ? `(${activeUnit.branchNameArabic})` : ""}
           </label>
           <select
             value={selectedUnitId}
@@ -182,9 +180,9 @@ export default function HomeworkAssignmentBuilder({
           </select>
         </div>
 
-        <div>
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            ٣. الدرس المستهدف:
+        <div className="col-span-2">
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+            الدرس المستهدف
           </label>
           <select
             value={selectedLessonId}
@@ -200,8 +198,8 @@ export default function HomeworkAssignmentBuilder({
         </div>
 
         <div>
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            أسئلة اختر (MCQ):
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+            أسئلة اختر (MCQ)
           </label>
           <input
             type="number"
@@ -214,8 +212,8 @@ export default function HomeworkAssignmentBuilder({
         </div>
 
         <div>
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            مسائل مقالية:
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+            مسائل مقالية
           </label>
           <input
             type="number"
@@ -229,11 +227,11 @@ export default function HomeworkAssignmentBuilder({
       </div>
 
       {units.length === 0 && (
-        <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 text-xs font-bold text-amber-900 flex items-center justify-between">
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center justify-between gap-2">
           <span>لم تقم بتقسيم وحدات هذا الصف بعد في مستكشف المنهج.</span>
           <Link
             href="/library"
-            className="px-3 py-1 rounded-xl bg-amber-600 text-white font-black"
+            className="min-h-[44px] px-3 inline-flex items-center rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black shrink-0"
           >
             تقسيم المنهج الآن ↗
           </Link>
@@ -242,37 +240,35 @@ export default function HomeworkAssignmentBuilder({
 
       {/* نص برومبت الواجب القابل للتعديل */}
       <div className="space-y-1.5">
-        <label className="block text-xs font-extrabold text-indigo-900 dark:text-indigo-300">
-          ✨ نص برومبت الواجب الموجه إلى NotebookLM (يمكنك قراءته أو تعديله):
+        <label className="block text-[11px] font-bold text-slate-500">
+          نص برومبت الواجب الموجه إلى NotebookLM (يمكنك تعديله)
         </label>
         <textarea
           rows={4}
           value={editablePrompt}
           onChange={(e) => setEditablePrompt(e.target.value)}
-          className="w-full p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-slate-950 text-xs font-bold leading-relaxed"
+          className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-bold leading-relaxed"
         />
       </div>
 
       {/* صندوق لصق رد NotebookLM ونشره أونلاين */}
       <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-200">
-          📥 ٢. الصق رد NotebookLM هنا لتحويله إلى واجب تفاعلي أونلاين للطالب:
+        <label className="block text-[11px] font-bold text-slate-500">
+          ٢. الصق رد NotebookLM هنا لتحويله إلى واجب تفاعلي للطالب
         </label>
         <textarea
           rows={4}
           value={notebookReply}
           onChange={(e) => setNotebookReply(e.target.value)}
           placeholder="الصق رد أسئلة الواجب من NotebookLM هنا..."
-          className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
+          className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-bold leading-relaxed"
         />
         <button
           type="button"
           onClick={handlePublishOnlineHomework}
-          className="w-full min-h-[46px] py-2.5 rounded-2xl bg-gradient-to-l from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs sm:text-sm font-black shadow-sm cursor-pointer"
+          className="w-full min-h-[48px] rounded-2xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-black cursor-pointer"
         >
-          {publishedSuccess
-            ? "✓ تم نشر الواجب فوراً في بوابة الطالب أونلاين!"
-            : "🚀 نشر الواجب الآن ليظهر للطالب أونلاين في بوابته"}
+          {publishedSuccess ? "✓ تم نشر الواجب في بوابة الطالب" : "نشر الواجب للطلاب"}
         </button>
       </div>
     </div>
