@@ -1,11 +1,12 @@
 /**
  * @file flow-items-builder.ts
  * @description يحوّل أسئلة المذكرة إلى كائنات تدفق مرنة: لكل فكرة كبسولة (فكرة+قاعدة) بعرض كامل، ثم أمثلتها المحلولة
- * ثم تدريباتها كأسئلة بعرض العمود (أو الكامل إن كان التخطيط عموداً واحداً)، ثم فاصل نهاية الفكرة، وفي الأخير جدول
- * الإجابات واعتماد المستند.
+ * ثم تدريباتها كأسئلة بعرض العمود (أو الكامل إن كان التخطيط عموداً واحداً)، ثم فاصل «نهاية الفكرة» للأفكار فقط
+ * (لا للواجب المنزلي ولا لأقسام المراجعة)، وفي الأخير جدول الإجابات واعتماد المستند.
  */
 
 import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
+import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
 import type { FlowItem } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_ITEMS_BUILDER = "flow_items_builder" as const;
@@ -62,8 +63,8 @@ export function buildFlowItems(params: {
       items.push({ id: `flow-q-${ideaIndex}-${question.id}`, kind: "question", span: questionSpan, question });
     }
 
-    const isHomework = /الواجب\s*المنزلي|ثانياً/.test(group.anchorQuestion?.ideaBannerTitleAr || "");
-    if (group.anchorQuestion && !isHomework) {
+    const isIdeaGroup = group.anchorQuestion && resolveFlowBannerKind(group.anchorQuestion.ideaBannerTitleAr) === "idea";
+    if (isIdeaGroup) {
       items.push({ id: `flow-divider-${ideaIndex}`, kind: "idea_divider", span: "full", ideaIndex });
     }
   });

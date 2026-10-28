@@ -40,7 +40,7 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
       );
     case "question":
       return (
-        <div className="w-full min-w-0">
+        <div className="w-full min-w-0 flex-1 flex flex-col">
           <SideBySideDiagramDocker question={item.question} settings={settings} />
         </div>
       );

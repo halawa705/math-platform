@@ -3,7 +3,7 @@
 /**
  * @file sovereign-discrete-page-view.tsx
  * @description ورقة A4 منفصلة (794×1123px) تعرض مقاطع التدفق: مقاطع بعرض كامل، ومقاطع بعمودين متوازنين (الأيمن ثم الأيسر).
- * حجم الخط ثابت = الحجم المختار بالضبط (لا تصغير)، والفراغ المتبقي يُوزَّع كمسافة مرنة بين الكائنات.
+ * حجم الخط ثابت = الحجم المختار بالضبط (لا تصغير)، والفراغ المتبقي يُوزَّع كمسافة مرنة ثم كتمديد محدود لبطاقات الأسئلة (targetHeightPxById).
  */
 
 import React from "react";
@@ -36,15 +36,32 @@ export interface SovereignDiscretePageViewProps {
   readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
 }
 
-function FlowColumn({ items, gapPx, renderFlowItem }: {
+/** غلاف الكائن في الصفحة: يمنحه الارتفاع المستهدف (عند التمديد) ويملأ المحتوى هذا الارتفاع بدل ترك فراغ تحت البطاقة. */
+function FlowItemSlot({ item, targetHeightPx, renderFlowItem }: {
+  readonly item: FlowItem;
+  readonly targetHeightPx: number | undefined;
+  readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
+}) {
+  return (
+    <div
+      className="w-full min-w-0 flex flex-col"
+      style={targetHeightPx ? { minHeight: `${targetHeightPx}px` } : undefined}
+    >
+      <div className="flex-1 min-w-0 flex flex-col">{renderFlowItem(item)}</div>
+    </div>
+  );
+}
+
+function FlowColumn({ items, gapPx, targets, renderFlowItem }: {
   readonly items: readonly FlowItem[];
   readonly gapPx: number;
+  readonly targets: Readonly<Record<string, number>>;
   readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
 }) {
   return (
     <div className="flex flex-col min-w-0" style={{ gap: `${gapPx}px` }}>
       {items.map((item) => (
-        <div key={item.id} className="w-full min-w-0">{renderFlowItem(item)}</div>
+        <FlowItemSlot key={item.id} item={item} targetHeightPx={targets[item.id]} renderFlowItem={renderFlowItem} />
       ))}
     </div>
   );
@@ -93,15 +110,20 @@ export function SovereignDiscretePageView({
         <div className="w-full min-w-0 flex flex-col" style={{ gap: `${page.gapPx}px` }}>
           {page.segments.map((segment, index) =>
             segment.kind === "full" ? (
-              <div key={segment.item.id} className="w-full min-w-0">{renderFlowItem(segment.item)}</div>
+              <FlowItemSlot
+                key={segment.item.id}
+                item={segment.item}
+                targetHeightPx={page.targetHeightPxById[segment.item.id]}
+                renderFlowItem={renderFlowItem}
+              />
             ) : (
               <div
                 key={`columns-${index}`}
                 className="grid grid-cols-2 items-start w-full min-w-0"
                 style={{ columnGap: `${FLOW_COLUMN_GAP_PX}px` }}
               >
-                <FlowColumn items={segment.rightItems} gapPx={page.gapPx} renderFlowItem={renderFlowItem} />
-                <FlowColumn items={segment.leftItems} gapPx={page.gapPx} renderFlowItem={renderFlowItem} />
+                <FlowColumn items={segment.rightItems} gapPx={page.gapPx} targets={page.targetHeightPxById} renderFlowItem={renderFlowItem} />
+                <FlowColumn items={segment.leftItems} gapPx={page.gapPx} targets={page.targetHeightPxById} renderFlowItem={renderFlowItem} />
               </div>
             )
           )}

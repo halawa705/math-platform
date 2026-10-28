@@ -20,6 +20,7 @@ import type {
   PrintableMathQuestionItem,
   PrintThemePaletteTokens,
 } from "./a4-vector-html-sheet-renderer";
+import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
 
 export const MODULE_ID_A4_PEDAGOGICAL_CAPSULE_AND_KEY_TABLE =
   "a4_pedagogical_capsule_and_key_table" as const;
@@ -68,7 +69,9 @@ export function PedagogicalIdeaAndRuleCapsule({
   }
   if (!ideaNumberText) ideaNumberText = "1";
 
-  const isHomeworkSection = /الواجب\s*المنزلي|ثانياً/.test(rawBanner);
+  const bannerKind = resolveFlowBannerKind(rawBanner);
+  const isHomeworkSection = bannerKind === "homework";
+  const isPlainSection = bannerKind === "section";
   const displayTitle = rawBanner;
 
   return (
@@ -90,7 +93,7 @@ export function PedagogicalIdeaAndRuleCapsule({
           className="rounded-xl border-2 p-1.5 text-white flex items-center justify-between gap-2 shadow-xs"
         >
           <div className="flex items-center gap-2 min-w-0">
-            {!isHomeworkSection ? (
+            {isPlainSection ? null : !isHomeworkSection ? (
               <span
                 style={{ color: palette.primaryHex }}
                 className="bg-white px-2.5 py-0.5 rounded-lg text-[0.88em] font-black shrink-0 shadow-2xs border border-slate-200"

@@ -3,6 +3,8 @@
  * @description محرك استخراج وتصدير ملفات الـ PDF السيادي المستقل (Sovereign A4 PDF Exporter):
  * - يعمل بنظام الصفحات المنفصلة المقاسة مسبقاً (`.sovereign-a4-page-sheet` بأبعاد `210mm × 297mm` دقيقة).
  * - يلغي تماماً تدخل المتصفح في تقسيم الصفحات عبر `@page { size: A4 portrait; margin: 0mm !important; }`.
+ * - هوامش الصفحة المطبوعة بالبكسل (18px 20px) تطابق تماماً هوامش المعاينة التي قاسها المحرك (كانت 5mm 5.5mm فتضيق
+ *   العمود بـ ~1.6px ويلتف النص بسطر إضافي ويفيض آخر الصفحة).
  * - يحافظ على المعادلات الرياضية KaTeX أفقية متماسكة (`white-space: nowrap !important`) دون أي تكسير رأسي للحروف.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
@@ -100,7 +102,7 @@ export function triggerIsolatedA4Print(
       height: 297mm !important;
       min-height: 297mm !important;
       max-height: 297mm !important;
-      padding: 5mm 5.5mm !important;
+      padding: 18px 20px !important;
       margin: 0 !important;
       background-color: #ffffff !important;
       border: none !important;

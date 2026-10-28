@@ -22,6 +22,8 @@
 # Misc
 .DS_Store
 *.pem
+*.zip
+docs/pdf-layout-fix-patch/
 
 # Debug
 npm-debug.log*

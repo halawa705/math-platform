@@ -84,7 +84,7 @@ export default function SideBySideDiagramDocker({
         boxShadow: "0 2px 6px rgba(15, 23, 42, 0.05)",
         breakInside: "avoid",
       }}
-      className="min-w-0 w-full rounded-xl border-2 flex flex-col justify-between break-inside-avoid print:break-inside-avoid"
+      className="min-w-0 w-full flex-1 rounded-xl border-2 flex flex-col justify-between break-inside-avoid print:break-inside-avoid"
     >
       <div className="p-2.5 pb-2 min-w-0">
         <QuestionCardBadgeHeader

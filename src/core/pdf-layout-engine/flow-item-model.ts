@@ -41,12 +41,22 @@ export interface FlowPage {
   readonly segments: readonly FlowPageSegment[];
   readonly usedHeightPx: number;
   readonly budgetHeightPx: number;
-  /** المسافة الفعلية بين الكائنات بعد توزيع الفراغ المتبقي (2px–10px). */
+  /** المسافة الفعلية بين الكائنات بعد توزيع الفراغ المتبقي. */
   readonly gapPx: number;
+  /** الارتفاع المستهدف للبطاقات الممدَّدة فقط (id ← px)؛ البطاقة غير المذكورة تبقى بارتفاعها المقاس. */
+  readonly targetHeightPxById: Readonly<Record<string, number>>;
+  /** صحيح إن لم يتسع محتوى الصفحة لميزانيتها (كائن أطول من الصفحة) — يُبلَّغ عنه ولا يُخفى. */
+  readonly overflowsBudget: boolean;
 }
 
-export function resolveFlowItemWidthKind(item: FlowItem): "full" | "column" {
-  return item.span;
+/** مفتاح الارتفاع المقاس لكائن سؤال إذا عُرض بعرض الصفحة كاملاً (يُستخدم للسؤال الوحيد في مقطع الأعمدة). */
+export function fullWidthHeightKey(itemId: string): string {
+  return `${itemId}::full`;
+}
+
+/** البطاقات التي يجوز تمديدها لملء الفراغ: الأسئلة فقط (الكبسولات والفواصل والجداول تبقى كما هي). */
+export function isStretchableFlowItem(item: FlowItem): boolean {
+  return item.kind === "question";
 }
 
 /** ارتفاع تقديري قبل اكتمال القياس الحي فقط. */

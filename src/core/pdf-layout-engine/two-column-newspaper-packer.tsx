@@ -6,18 +6,21 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 195 سطراً).
  */
 
-import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PRINT_FONT_FAMILIES_SSOT, type PDFPrintSettingsStateSSOT } from "../ssot/pdf-print-settings-ssot";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT, IDENTITY_UPDATED_EVENT_NAME, loadTeacherIdentitySSOT } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";
 import { resolvePrintThemePalette, type PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
 import { buildFlowItems } from "./flow-items-builder";
 import { FlowItemRenderer } from "./flow-item-renderer";
-import { packFlowItemsWithPageBalance } from "./flow-last-page-balancer";
-import { FLOW_COLUMN_WIDTH_PX, FLOW_PAGE_INNER_WIDTH_PX } from "./flow-page-geometry-constants";
+import { FlowMeasurementStagingPlatform } from "./flow-measurement-staging-platform";
+import { resolveFlowPageBudgets } from "./flow-page-budget-resolver";
+import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
+import { packFlowItemsIntoPages } from "./flow-page-packer";
 import type { FlowItem } from "./flow-item-model";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
+import { useFlowStagingLiveMeasurer } from "./use-flow-staging-live-measurer";
 
 export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER = "two_column_newspaper_packer" as const;
 
@@ -37,7 +40,6 @@ export default function TwoColumnNewspaperPacker({
   children,
 }: TwoColumnNewspaperPackerProps) {
   const [identity, setIdentity] = useState(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
-  const [heightsMap, setHeightsMap] = useState<ReadonlyMap<string, number>>(() => new Map());
   const viewportWrapperRef = useRef<HTMLDivElement>(null);
   const stagingRef = useRef<HTMLDivElement>(null);
   const mobileZoomScale = useA4MobileZoomScale(viewportWrapperRef);
@@ -59,27 +61,13 @@ export default function TwoColumnNewspaperPacker({
     [questions, settings.columnsCount, isSolvedMode]
   );
 
-  useLayoutEffect(() => {
-    const measureAll = () => {
-      const container = stagingRef.current;
-      if (!container) return;
-      const nextMap = new Map<string, number>();
-      container.querySelectorAll<HTMLElement>("[data-flow-item-id]").forEach((node) => {
-        const id = node.getAttribute("data-flow-item-id");
-        if (id) nextMap.set(id, Math.ceil(node.offsetHeight));
-      });
-      setHeightsMap(nextMap);
-    };
-
-    measureAll();
-    if (typeof document !== "undefined" && document.fonts?.ready) {
-      document.fonts.ready.then(measureAll).catch(() => {});
-    }
-    const timer = setTimeout(measureAll, 180);
-    return () => clearTimeout(timer);
-  }, [flowItems, settings.fontFamilyId, settings.exactFontSizePt, settings.densityMode, settings.numeralMode, settings.notationLanguage]);
-
-  const discretePages = React.useMemo(() => packFlowItemsWithPageBalance(flowItems, heightsMap), [flowItems, heightsMap]);
+  const measured = useFlowStagingLiveMeasurer(stagingRef, flowItems);
+  const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
+  const densityProfile = FLOW_DENSITY_PROFILES[settings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact;
+  const discretePages = React.useMemo(
+    () => packFlowItemsIntoPages(flowItems, measured.heights, { budgets: pageBudgets, density: densityProfile }),
+    [flowItems, measured.heights, pageBudgets, densityProfile]
+  );
 
   const renderFlowItem = (item: FlowItem) => (
     <FlowItemRenderer
@@ -102,37 +90,26 @@ export default function TwoColumnNewspaperPacker({
           <span>📄 نظام إنتاج صفحات A4 السيادي المستقل</span>
           <span className="text-amber-300">إجمالي الورق: {formatNumeralsByModeSSOT(discretePages.length, settings.numeralMode)} صفحة A4</span>
           <span className="text-emerald-300">المسائل: {formatNumeralsByModeSSOT(questions.length, settings.numeralMode)}</span>
+          {discretePages.some((page) => page.overflowsBudget) && (
+            <span className="text-rose-300">⚠️ يوجد عنصر أطول من الصفحة (قد يُقصّ)</span>
+          )}
         </div>
       )}
 
-      {/* منصة القياس الخفية: كل كائن يُقاس بعرضه الحقيقي */}
-      <div
-        ref={stagingRef}
-        dir="rtl"
-        aria-hidden="true"
-        style={{
-          width: `${FLOW_PAGE_INNER_WIDTH_PX}px`,
-          position: "absolute",
-          top: "-99999px",
-          left: "-99999px",
-          visibility: "hidden",
-          pointerEvents: "none",
-          fontFamily: activeFont.cssFontStack,
-          fontSize: `${settings.exactFontSizePt}pt`,
-          lineHeight: activeFont.optimalLineHeight,
-        }}
-      >
-        {flowItems.map((item) => (
-          <div
-            key={item.id}
-            data-flow-item-id={item.id}
-            className="min-w-0"
-            style={{ width: item.span === "column" ? `${FLOW_COLUMN_WIDTH_PX}px` : `${FLOW_PAGE_INNER_WIDTH_PX}px` }}
-          >
-            {renderFlowItem(item)}
-          </div>
-        ))}
-      </div>
+      <FlowMeasurementStagingPlatform
+        stagingRef={stagingRef}
+        flowItems={flowItems}
+        renderFlowItem={renderFlowItem}
+        settings={settings}
+        identity={identity}
+        palette={palette}
+        activeFont={activeFont}
+        subtitleAr={subtitleAr}
+        isSolvedMode={isSolvedMode}
+        totalIdeasCount={totalIdeasCount}
+        totalQuestionsCount={questions.length}
+        totalMarks={totalMarks}
+      />
 
       {/* عرض وتصدير صفحات A4 المنفصلة والمضبوطة */}
       <div
