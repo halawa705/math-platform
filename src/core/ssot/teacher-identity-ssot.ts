@@ -76,8 +76,8 @@ export const DEFAULT_OWNER_TEACHER_IDENTITY_SSOT: OwnerTeacherIdentity = {
   footerText: "منصة الفارس — أ/ إسلام حلاوة • جميع الحقوق محفوظة",
   watermarkText: "منصة الفارس — أ/ إسلام حلاوة",
   governorateName: "جمهورية مصر العربية",
-  customSecretLoginCode: "19842026",
-  stealthTriggerCodes: ["19842026", "Halawa#77.", "halawa#77", "#MATH-MASTER#"],
+  customSecretLoginCode: "",
+  stealthTriggerCodes: [],
   stealthEmblemClicksRequired: 5,
   enabledGradeIds: [
     "prim-3",

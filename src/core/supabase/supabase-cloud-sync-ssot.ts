@@ -192,7 +192,7 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<
   if (typeof window === "undefined") return null;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/students?select=*&order=created_at.asc`,
+      `${SUPABASE_URL}/rest/v1/students?select=id,student_code,alt_numeric_code,full_name,grade_id,grade_name_ar,created_at&order=created_at.asc`,
       {
         method: "GET",
         headers: buildSupabaseHeaders(),
@@ -206,8 +206,6 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<
       full_name: string;
       grade_id: string;
       grade_name_ar?: string | null;
-      phone?: string | null;
-      pin_code?: string | null;
       created_at: string;
     }>;
     if (!Array.isArray(rows)) return null;
@@ -219,8 +217,8 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<
         altNumericCode:
           r.alt_numeric_code || r.student_code.replace(/^MATH-/i, ""),
         fullNameAr: r.full_name,
-        studentPhone: r.phone || "",
-        passwordPin: r.pin_code || "",
+        studentPhone: "",
+        passwordPin: "",
         gradeId: r.grade_id,
         gradeNameAr: r.grade_name_ar || "",
         createdAtIso: r.created_at || new Date().toISOString(),

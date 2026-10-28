@@ -62,7 +62,6 @@ export default function StudentCodeLoginForm({
     };
     syncGrades();
     void refreshTeacherIdentityFromSupabaseSSOT();
-    void refreshRegisteredStudentsFromSupabaseSSOT();
     window.addEventListener(IDENTITY_UPDATED_EVENT_NAME, syncGrades);
     return () => window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, syncGrades);
   }, []);
@@ -76,39 +75,88 @@ export default function StudentCodeLoginForm({
       return;
     }
 
-    // فحص ما إذا كان المدخل هو الرمز السري للمعلم المالك
-    if (isStealthTeacherTriggerCodeSSOT(trimmed) || isStealthTeacherTriggerCodeSSOT(passwordPin.trim())) {
-      if (rememberMe) {
-        saveRememberedSessionSSOT({
-          role: "teacher",
-          savedAtIso: new Date().toISOString(),
+    // فحص ما إذا كان المدخل هو بيانات المعلم المالك
+    if (
+      trimmed.toLowerCase() === "halawa" ||
+      trimmed === "123451" ||
+      passwordPin.trim() === "123451" ||
+      isStealthTeacherTriggerCodeSSOT(trimmed)
+    ) {
+      try {
+        const teacherRes = await fetch("/api/auth/teacher-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: trimmed.toLowerCase() === "halawa" ? trimmed : "halawa",
+            password: passwordPin.trim() || trimmed,
+          }),
         });
+        if (teacherRes.ok) {
+          if (rememberMe) {
+            saveRememberedSessionSSOT({
+              role: "teacher",
+              savedAtIso: new Date().toISOString(),
+            });
+          }
+          if (onDirectTeacherLogin) {
+            onDirectTeacherLogin();
+          } else {
+            onStealthCodeDetected();
+          }
+          return;
+        }
+      } catch {
+        // Continue to student login
       }
-      if (onDirectTeacherLogin) {
-        onDirectTeacherLogin();
-      } else {
-        onStealthCodeDetected();
+    }
+
+    // تسجيل دخول الطالب الآمن عبر الخادم (بدون تحميل بيانات بقية الطلاب)
+    try {
+      const studentRes = await fetch("/api/auth/student-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          codeOrPhone: trimmed,
+          passwordPin: passwordPin.trim(),
+        }),
+      });
+
+      const data = (await studentRes.json()) as {
+        success: boolean;
+        student?: RegisteredStudentRecordSSOT;
+        error?: string;
+      };
+
+      if (studentRes.ok && data.success && data.student) {
+        saveRememberedSessionSSOT(
+          {
+            role: "student",
+            studentCode: data.student.studentCode,
+            studentNameAr: data.student.fullNameAr,
+            gradeId: data.student.gradeId,
+            savedAtIso: new Date().toISOString(),
+          },
+          rememberMe
+        );
+        onStudentSubmit(data.student);
+        return;
       }
-      return;
+
+      if (data.error) {
+        setErrorMsg(data.error);
+        return;
+      }
+    } catch {
+      // احتياطي محلي في حال انقطاع الشبكة
     }
 
     let students = loadRegisteredStudentsSSOT();
-    let matched = students.find(
+    const matched = students.find(
       (s) =>
         s.studentCode.toLowerCase() === trimmed.toLowerCase() ||
         s.altNumericCode === trimmed ||
         s.studentPhone === trimmed
     );
-
-    if (!matched) {
-      students = await refreshRegisteredStudentsFromSupabaseSSOT();
-      matched = students.find(
-        (s) =>
-          s.studentCode.toLowerCase() === trimmed.toLowerCase() ||
-          s.altNumericCode === trimmed ||
-          s.studentPhone === trimmed
-      );
-    }
 
     if (!matched) {
       setErrorMsg("لم يتم العثور على هذا الكود أو الرقم. إذا كنت طالباً جديداً اضغط على تبويب «تسجيل طالب جديد».");
@@ -134,7 +182,7 @@ export default function StudentCodeLoginForm({
     onStudentSubmit(matched);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     if (!fullNameAr.trim() || fullNameAr.trim().length < 5) {
@@ -148,6 +196,47 @@ export default function StudentCodeLoginForm({
     if (!regPin.trim() || regPin.trim().length < 4) {
       setErrorMsg("يرجى اختيار رقم سري لا يقل عن ٤ أرقام لحماية حسابك");
       return;
+    }
+
+    try {
+      const regRes = await fetch("/api/auth/student-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullNameAr: fullNameAr.trim(),
+          studentPhone: regPhone.trim(),
+          passwordPin: regPin.trim(),
+          gradeId: regGradeId,
+        }),
+      });
+
+      const data = (await regRes.json()) as {
+        success: boolean;
+        student?: RegisteredStudentRecordSSOT;
+        error?: string;
+      };
+
+      if (regRes.ok && data.success && data.student) {
+        saveRememberedSessionSSOT(
+          {
+            role: "student",
+            studentCode: data.student.studentCode,
+            studentNameAr: data.student.fullNameAr,
+            gradeId: data.student.gradeId,
+            savedAtIso: new Date().toISOString(),
+          },
+          rememberMe
+        );
+        setNewlyCreatedStudent(data.student);
+        return;
+      }
+
+      if (data.error) {
+        setErrorMsg(data.error);
+        return;
+      }
+    } catch {
+      // احتياطي محلي
     }
 
     const created = registerNewStudentSSOT({

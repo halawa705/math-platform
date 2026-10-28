@@ -3,7 +3,8 @@
 /**
  * @file unified-portal-login-view.tsx
  * @description الصفحة الموحدة لتسجيل الدخول وإنشاء حساب الطالب (Mobile-First):
- * - تتحقق تلقائياً من جلسة «تذكرني» (`loadRememberedSessionSSOT`) لتوجيه المعلم إلى `/dashboard` أو الطالب إلى `/student` فوراً دون طلب الكود كل مرة.
+ * - تتحقق تلقائياً من جلسة «تذكرني» للمعلم عبر فحص الكوكي المشفر بالخادم (`/api/auth/teacher-session-check`)
+ *   أو جلسة الطالب لتوجيهه فوراً دون طلب الكود كل مرة.
  * - تقرأ الهوية والتذييل من مصدر الحقيقة الموحد `loadTeacherIdentitySSOT`.
  */
 
@@ -14,6 +15,7 @@ import {
   loadTeacherIdentitySSOT,
   loadRememberedSessionSSOT,
   saveRememberedSessionSSOT,
+  clearRememberedSessionSSOT,
   type OwnerTeacherIdentity,
 } from "@/core/ssot/teacher-identity-ssot";
 import GlobalThemeModeToggleButton from "@/components/global-ui/global-theme-mode-toggle-button";
@@ -31,7 +33,16 @@ export default function UnifiedPortalLoginView() {
     setIdentity(loadTeacherIdentitySSOT());
     const remembered = loadRememberedSessionSSOT();
     if (remembered?.role === "teacher") {
-      router.replace("/dashboard");
+      fetch("/api/auth/teacher-session-check")
+        .then((res) => res.json())
+        .then((data: { isAuthenticated?: boolean }) => {
+          if (data?.isAuthenticated) {
+            router.replace("/dashboard");
+          } else {
+            clearRememberedSessionSSOT();
+          }
+        })
+        .catch(() => {});
     } else if (remembered?.role === "student") {
       router.replace("/student");
     }

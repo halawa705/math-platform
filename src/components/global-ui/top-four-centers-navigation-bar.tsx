@@ -102,6 +102,7 @@ export default function TopFourCentersNavigationBar({
   const isStudentMode = activeCenter === "student";
 
   const handleLogout = () => {
+    void fetch("/api/auth/teacher-logout", { method: "POST" });
     clearRememberedSessionSSOT();
     router.push("/");
   };
