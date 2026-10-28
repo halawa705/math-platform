@@ -31,6 +31,12 @@ export function extractBalancedCurlyBraces(
 
 export function cleanStrayLatexArtifacts(input: string): string {
   if (!input) return "";
+  if (input.includes("\n")) {
+    return input
+      .split("\n")
+      .map((line) => cleanStrayLatexArtifacts(line))
+      .join("\n");
+  }
   let s = input
     .replace(/\\text\{\s*([\u0600-\u06FF\s،؛:.!؟ـ]{2,})\s*\}/g, " $1 ")
     .replace(/\\+\s*=\s*\$+?|\\+\s*=/g, " = ")

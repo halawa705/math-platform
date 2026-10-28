@@ -60,8 +60,18 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   readonly lessonId: string;
   readonly lessonTitleArabic: string;
 }): readonly PrintableMathQuestionItem[] {
-  const cleanS1 = sanitizeNotebookLMCitationsAndLatex(params.stage1Raw || "").cleanedText;
-  const cleanS2 = sanitizeNotebookLMCitationsAndLatex(params.stage2Raw || "").cleanedText;
+  let rawS1 = params.stage1Raw || "";
+  let rawS2 = params.stage2Raw || "";
+  if (!rawS2) {
+    const s2MarkerMatch = rawS1.match(/(?:^|\n)\s*(?:##?\s*)?(?:مذكرة\s*الطالب|تمارين\s*وواجبات\s*بدون\s*حلول)/i);
+    if (s2MarkerMatch && s2MarkerMatch.index !== undefined) {
+      rawS2 = rawS1.slice(s2MarkerMatch.index);
+      rawS1 = rawS1.slice(0, s2MarkerMatch.index);
+    }
+  }
+
+  const cleanS1 = sanitizeNotebookLMCitationsAndLatex(rawS1).cleanedText;
+  const cleanS2 = sanitizeNotebookLMCitationsAndLatex(rawS2).cleanedText;
   const cleanS3 = sanitizeNotebookLMCitationsAndLatex(params.stage3Raw || "").cleanedText;
   const solutionsMap = parseStage3SolutionsMap(cleanS3);
   const { drillsByIdea, allHomework } = parseStage2ByIdeas(cleanS2);
@@ -70,12 +80,12 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   // 1. معالجة المرحلة 1 (الأفكار والمفاهيم والقواعد والأمثلة) مع ربط تدريبات حاول بنفسك بكل فكرة مباشرة
   if (cleanS1) {
     const cleanBlocksText = cleanS1
-      .replace(/\s*(?:---|___|\*\*\*)\s*/g, "\n\n")
-      .replace(/(?:^|[^\n])\s*(?=(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/gi, "\n\n");
+      .replace(/(?:^|\n)\s*نهاية\s*الفكرة[^\n]*/gi, "")
+      .replace(/\s*(?:---|___|\*\*\*)\s*/g, "\n\n");
 
     const rawBlocks = cleanBlocksText
-      .replace(/^[\s\S]*?(?=(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i, "")
-      .split(/(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية|الثانية|[0-9٠-٩]+))/i)
+      .replace(/^[\s\S]*?(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:ال[^\s:\n|]+(?:\s*عشر[ةه])?|[0-9٠-٩]+))/i, "")
+      .split(/(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:ال[^\s:\n|]+(?:\s*عشر[ةه])?|[0-9٠-٩]+))/i)
       .map((b) => b.trim())
       .filter((b) => b.length > 20);
 

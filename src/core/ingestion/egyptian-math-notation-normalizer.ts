@@ -141,7 +141,7 @@ export function separateTopLevelArabicFromMathContent(rawLatex: string): string 
       return ` $${v}$ `;
     })
     .join("")
-    .replace(/\s{2,}/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
     .trim();
 }
 
@@ -167,7 +167,7 @@ export function normalizeEgyptianIntervalsAndDomain(input: string): string {
 
 export function wrapNakedLatexCommandsOutsideDelimiters(input: string): string {
   if (!input) return "";
-  const parts = input.split(/(\$[^$]+\$)/g);
+  const parts = input.split(/(\$[^$\n]+\$)/g);
   return parts
     .map((segment) => {
       if (segment.startsWith("$") && segment.endsWith("$") && segment.length >= 2) {
@@ -220,9 +220,13 @@ export function normalizeToEgyptianSchoolMath(rawText: string): string {
     .replace(/\$\$([\s\S]*?)\$\$/g, "$$$1$$")
     // 3. إزالة أي محددات مكسورة يتيمة مثل \( أو \)
     .replace(/\\+[()[\]]/g, " ")
-    // 4. فك عبارات \text{...} العربية المعزولة خارج المعادلات
+    // 4. فك عبارات \text{...} العربية المعزولة خارج المعادلات مع الحفاظ على علامات $
     .replace(
-      /(?:\$\s*)?\\(?:text|mathrm|textbf|mathbf)\{\s*([\u0600-\u06FF\s،؛؟.!ـ]{2,})\s*\}(?:\s*\$)?/g,
+      /\$\s*\\(?:text|mathrm|textbf|mathbf)\{\s*([\u0600-\u06FF\s،؛؟.!ـ]{2,})\s*\}\s*\$/g,
+      " $1 "
+    )
+    .replace(
+      /(?<!\$)\b\\(?:text|mathrm|textbf|mathbf)\{\s*([\u0600-\u06FF\s،؛؟.!ـ]{2,})\s*\}(?!\$)/g,
       " $1 "
     );
 

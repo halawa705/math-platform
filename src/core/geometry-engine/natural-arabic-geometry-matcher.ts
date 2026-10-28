@@ -55,9 +55,9 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   const primary4Match = matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
   if (primary4Match) return primary4Match;
 
-  // استبعاد المسائل اللفظية الحياتية التي لا تحتوي على رسم هندسي في كتاب الوزارة
+  // استبعاد المسائل اللفظية الحياتية أو الإحداثية التي لا تحتوي على رسم هندسي في كتاب الوزارة
   if (
-    /شاشة|كمبيوتر|تلفاز|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|سباعي|ثماني/i.test(
+    /شاشة|كمبيوتر|تلفاز|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|سباعي|ثماني|مستوى\s*إحداثي|رسم\s*بياني|إحداثيات|نقطة\s*الأصل|خريطة|مجهر|حشرة|ظل/i.test(
       desc
     )
   ) {
@@ -139,7 +139,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (/مستوى\s*مائل|قوى|رد\s*الفعل/i.test(desc)) {
     return buildInclinedPlaneForcesFigure({ figureId, notationLanguage });
   }
-  if (/مثلث/i.test(desc)) {
+  if (/مثلث/i.test(desc) && /يوازي|توازي|طاليس/i.test(desc)) {
     return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
   }
 
