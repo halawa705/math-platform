@@ -6,8 +6,8 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
-import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ssot";
-import type { MathNotationLanguage } from "../../ssot/numeral-and-unit-ssot";
+import type { CanonicalGeometryFigureIR } from "../../../../ssot/geometry-archetype-ssot";
+import type { MathNotationLanguage } from "../../../../ssot/numeral-and-unit-ssot";
 import {
   buildSimilarQuadsWithRadicalsAndAnglesFigure,
   buildSimilarQuadsWithObtuseAngleFigure,
@@ -24,7 +24,7 @@ import {
   buildSimilarHousePentagonsFigure,
   buildTriangleSecantSimilarQuadsFigure,
 } from "./prep-similarity-composite-figures-builder";
-import { composeParametricSimilarQuadsFigure } from "../parametric-similarity-description-parser";
+import { composeParametricSimilarQuadsFigure } from "../../../parametric-similarity-description-parser";
 
 export const MODULE_ID_PREP_SIMILARITY_GEOMETRY_CATALOG =
   "prep_similarity_geometry_catalog" as const;

@@ -9,11 +9,11 @@ import type {
   CanonicalSegmentNode,
   CanonicalVertexNode,
   CanonicalAngleNode,
-} from "../../ssot/geometry-archetype-ssot";
+} from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
   type MathNotationLanguage,
-} from "../../ssot/numeral-and-unit-ssot";
+} from "../../../../ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_PREP_SIMILARITY_DELTOIDS_KITES_BUILDER =
   "prep_similarity_deltoids_kites_builder" as const;

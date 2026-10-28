@@ -11,11 +11,11 @@ import type {
   CanonicalGeometryFigureIR,
   CanonicalSegmentNode,
   CanonicalVertexNode,
-} from "../../ssot/geometry-archetype-ssot";
+} from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
   type MathNotationLanguage,
-} from "../../ssot/numeral-and-unit-ssot";
+} from "../../../../ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_PRIMARY_GRADE4_GEOMETRY_CATALOG =
   "primary_grade4_geometry_catalog" as const;

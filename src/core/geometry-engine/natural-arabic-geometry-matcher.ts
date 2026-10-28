@@ -8,8 +8,13 @@
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
-import { matchPrimaryGrade4GeometryFigure } from "./catalogs/primary-grade4-geometry-catalog";
-import { matchPrepSimilarityGeometryFigure } from "./catalogs/prep-similarity-geometry-catalog";
+import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
+import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog";
+import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog";
+import { matchPrepGrade1GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-congruence-catalog";
+import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
+import { matchPrepSimilarityGeometryFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
+import { matchPrepGrade3TriangleSimilarityFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { buildTriangleMidsegmentFigure } from "./triangle-family/triangle-midsegment-branch";
 import { buildTriangleThalesParallelFigure } from "./triangle-family/triangle-thales-parallel-branch";
 import { buildTriangleMediansCentroidFigure } from "./triangle-family/triangle-medians-centroid-branch";
@@ -48,9 +53,24 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
 
-  // 0. فحص سجلات المنهج القياسية (المرحلة الإعدادية والابتدائية)
+  // 0. فحص سجلات المنهج القياسية مرتبة حسب المراحل والصفوف
+  const prepTriSim = matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage);
+  if (prepTriSim) return prepTriSim;
+
   const prepSimMatch = matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage);
   if (prepSimMatch) return prepSimMatch;
+
+  const prep2Match = matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage);
+  if (prep2Match) return prep2Match;
+
+  const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
+  if (prep1Match) return prep1Match;
+
+  const primary6Match = matchPrimaryGrade6GeometryFigure(desc, figureId, notationLanguage);
+  if (primary6Match) return primary6Match;
+
+  const primary5Match = matchPrimaryGrade5GeometryFigure(desc, figureId, notationLanguage);
+  if (primary5Match) return primary5Match;
 
   const primary4Match = matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
   if (primary4Match) return primary4Match;

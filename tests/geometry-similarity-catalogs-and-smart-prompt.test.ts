@@ -5,7 +5,8 @@
 
 import { describe, it, expect } from "vitest";
 import { isGeometryContext, buildSmartGeometryPromptGuidance } from "../src/core/prompts/smart-geometry-prompt-director";
-import { matchPrepSimilarityGeometryFigure } from "../src/core/geometry-engine/catalogs/prep-similarity-geometry-catalog";
+import { matchPrepSimilarityGeometryFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
+import { matchPrepGrade3TriangleSimilarityFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { parseNaturalGeometryTextSpecs, composeParametricSimilarQuadsFigure } from "../src/core/geometry-engine/parametric-similarity-description-parser";
 import { projectGeometryFigureToSVGMarkup } from "../src/core/geometry-engine/vector-svg-figure-projector";
 
@@ -102,5 +103,48 @@ describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
     expect(composed).toBeDefined();
     expect(composed?.segments.some((s) => s.lengthLabel?.value === "7")).toBe(true);
     expect(composed?.angles.some((a) => a.degrees === 40)).toBe(true);
+  });
+
+  it("matches Grade 3 Prep Triangle Similarity: Butterfly/Cross ΔABC ~ ΔADE", () => {
+    const desc = "تشابه مثلثين متقابلين بالرأس عند A شكل مقص ΔABC ~ ΔADE وأطوال 10 سم و 12 سم";
+    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
+
+    expect(figure).toBeDefined();
+    expect(figure?.titleArabic).toContain("مقص");
+    expect(figure?.vertices.length).toBe(5);
+  });
+
+  it("matches Grade 3 Prep Triangle Similarity: Nested with Common Angle B", () => {
+    const desc = "تشابه مثلثين بزاوية مشتركة B وقاطع داخلي ΔABC ~ ΔDBA";
+    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
+
+    expect(figure).toBeDefined();
+    expect(figure?.titleArabic).toContain("زاوية مشتركة B");
+    expect(figure?.segments.some((s) => s.lengthLabel?.value === 27)).toBe(true);
+  });
+
+  it("matches Grade 3 Prep Triangle Similarity: Thales Parallel Line XY || BC", () => {
+    const desc = "تشابه مثلثين بتوازي طاليس XY // BC و AXY ~ ABC";
+    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
+
+    expect(figure).toBeDefined();
+    expect(figure?.branchId).toBe("triangle_thales_parallel_line");
+  });
+
+  it("matches Grade 3 Prep Triangle Similarity: Euclid Altitude Similarity in Right Triangle", () => {
+    const desc = "تشابه المثلثات القائمة بإسقاط عمود BD ⊥ AC من رأس القائمة ونظرية إقليدس ADB ~ BDC";
+    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
+
+    expect(figure).toBeDefined();
+    expect(figure?.branchId).toBe("triangle_euclid_right_altitude");
+    expect(figure?.angles.some((a) => a.isRightAngle)).toBe(true);
+  });
+
+  it("matches Grade 3 Prep Triangle Similarity: Separate with 120° Angle", () => {
+    const desc = "تشابه مثلثين منفصلين بزاوية 120° ΔABC ~ ΔDEF";
+    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
+
+    expect(figure).toBeDefined();
+    expect(figure?.angles.some((a) => a.degrees === 120)).toBe(true);
   });
 });
