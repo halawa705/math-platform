@@ -1,30 +1,17 @@
 /**
  * @file notebooklm-booklet-stages-merger.ts
- * @description دامج ومحلل ردود المراحل الثلاث للمذكرة الدراسية بتفنيط صارم يمنع تسرب الأفكار أو دمج الأمثلة:
- * - المرحلة 1: يفصل كل فكرة وقاعدتها، ويفصل الأمثلة المتعددة ولا يبتلع الأمثلة اللاحقة في خطوات المثال الأول.
- * - المرحلة 2: يطهر المقدمات الترويسية، ويفصل تدريبات حاول بنفسك وتمارين الواجب المنزلي بدقة متناهية.
- * - المرحلة 3: يربط خطوات الحلول بالمعرفات والأرقام بدقة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 190 سطراً).
+ * @description دامج ومحلل ردود المراحل الثلاث للمذكرة الدراسية بتفنيط صارم يمنع تسرب الأفكار أو دمج الأمثلة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 195 سطراً).
  */
 
-import type {
-  BookletLessonContentIR,
-  IdeaPedagogicalNode,
-} from "../ir/booklet-lesson-content-ir";
+import type { BookletLessonContentIR, IdeaPedagogicalNode } from "../ir/booklet-lesson-content-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchOptionalGeometryFigureFromArabicDescription } from "../geometry-engine/natural-arabic-geometry-matcher";
-import {
-  convertQuestionAssessmentIRToPrintableItem,
-  type PrintableMathQuestionItem,
-} from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
+import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
+import { parseNotebookLMExamQuestionsToIR, resolveCorrectChoiceIndex } from "./notebooklm-exam-questions-parser";
 import {
-  parseChoicesTupleFromBlock,
-  parseNotebookLMExamQuestionsToIR,
-  resolveCorrectChoiceIndex,
-  stripInlineChoicesFromPromptText,
-} from "./notebooklm-exam-questions-parser";
-import {
+  IDEA_HEADER_SPLIT_REGEX,
   buildStage2PrintableItem,
   extractConceptAndRule,
   parseSolvedExamplesFromSection,
@@ -32,8 +19,7 @@ import {
   parseStage3SolutionsMap,
 } from "./notebooklm-stage-parsers-helper";
 
-export const MODULE_ID_NOTEBOOKLM_BOOKLET_STAGES_MERGER =
-  "notebooklm_booklet_stages_merger" as const;
+export const MODULE_ID_NOTEBOOKLM_BOOKLET_STAGES_MERGER = "notebooklm_booklet_stages_merger" as const;
 
 export interface MergeBookletThreeStagesInput {
   readonly bookletId: string;
@@ -64,7 +50,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   let rawS2 = params.stage2Raw || "";
   if (!rawS2) {
     const s2MarkerMatch = rawS1.match(/(?:^|\n)\s*(?:##?\s*)?(?:مذكرة\s*الطالب|تمارين\s*وواجبات\s*بدون\s*حلول)/i);
-    if (s2MarkerMatch && s2MarkerMatch.index !== undefined) {
+    if (s2MarkerMatch?.index !== undefined) {
       rawS2 = rawS1.slice(s2MarkerMatch.index);
       rawS1 = rawS1.slice(0, s2MarkerMatch.index);
     }
@@ -77,28 +63,20 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   const { drillsByIdea, allHomework } = parseStage2ByIdeas(cleanS2);
   const resultItems: PrintableMathQuestionItem[] = [];
 
-  // 1. معالجة المرحلة 1 (الأفكار والمفاهيم والقواعد والأمثلة) مع ربط تدريبات حاول بنفسك بكل فكرة مباشرة
   if (cleanS1) {
-    const cleanBlocksText = cleanS1
-      .replace(/(?:^|\n)\s*نهاية\s*الفكرة[^\n]*/gi, "")
-      .replace(/\s*(?:---|___|\*\*\*)\s*/g, "\n\n");
-
-    const rawBlocks = cleanBlocksText
-      .replace(/^[\s\S]*?(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:ال[^\s:\n|]+(?:\s*عشر[ةه])?|[0-9٠-٩]+))/i, "")
-      .split(/(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:ال[^\s:\n|]+(?:\s*عشر[ةه])?|[0-9٠-٩]+))/i)
+    const cleanBlocksText = cleanS1.replace(/(?:^|\n)\s*نهاية\s*الفكرة[^\n]*/gi, "").replace(/\s*(?:---|___|\*\*\*)\s*/g, "\n\n");
+    const firstIdeaIdx = cleanBlocksText.search(IDEA_HEADER_SPLIT_REGEX);
+    const rawBlocks = (firstIdeaIdx !== -1 ? cleanBlocksText.slice(firstIdeaIdx) : cleanBlocksText)
+      .split(IDEA_HEADER_SPLIT_REGEX)
       .map((b) => b.trim())
       .filter((b) => b.length > 20);
 
     const mergedBlocks: string[] = [];
     rawBlocks.forEach((block) => {
-      const titleMatch = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)/i);
-      const ideaTitle = titleMatch?.[1]?.trim() || "";
+      const ideaTitle = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)/i)?.[1]?.trim() || "";
       const lastBlock = mergedBlocks[mergedBlocks.length - 1];
-      const lastTitleMatch = lastBlock ? lastBlock.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)/i) : null;
-      const lastIdeaTitle = lastTitleMatch?.[1]?.trim() || "";
-
+      const lastIdeaTitle = lastBlock?.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)/i)?.[1]?.trim() || "";
       if (lastBlock && ideaTitle && ideaTitle === lastIdeaTitle) {
-        // دمج أجزاء نفس الفكرة عند تكرار عنوان الفكرة لنفس الأمثلة
         mergedBlocks[mergedBlocks.length - 1] = `${lastBlock}\n\n${block}`;
       } else {
         mergedBlocks.push(block);
@@ -106,32 +84,20 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
     });
 
     mergedBlocks.forEach((block, ideaIdx) => {
-      const titleMatch = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)(?:[:|]\s*\[?([^\]\n|]+)\]?)?/i);
+      const titleMatch = block.match(/(?:###?\s*)?الفكرة\s+([^:\n|]+)(?:[:|]\s*([^\n|]+))?/i);
       const ideaNumAr = titleMatch?.[1]?.trim() || `${ideaIdx + 1}`;
-      const ideaNameAr = titleMatch?.[2]?.trim() || "";
+      const ideaNameAr = (titleMatch?.[2] || "").replace(/^\[|\]$/g, "").trim();
       const fullTitle = `الفكرة ${ideaNumAr}${ideaNameAr ? `: ${ideaNameAr}` : ""}`;
-
-      const codeMatch = block.match(/معرف\s*الفكرة\s*:\s*(idea-\d+)/i);
-      const ideaKey = codeMatch ? codeMatch[1].toLowerCase() : `idea-${ideaIdx + 1}`;
+      const ideaKey = block.match(/معرف\s*الفكرة\s*:\s*(idea-\d+)/i)?.[1]?.toLowerCase() || `idea-${ideaIdx + 1}`;
 
       const { concept, rule, examplesPart } = extractConceptAndRule(block);
       const examples = parseSolvedExamplesFromSection(examplesPart, fullTitle, concept);
+      if (!concept && !rule && examples.every((e) => e.promptAr === fullTitle || e.steps.length === 0)) return;
 
-      // تجاهل أي كتلة فارغة ناجمة عن أسطر نهاية الفكرة
-      if (
-        !concept &&
-        !rule &&
-        examples.every((e) => e.promptAr === fullTitle || e.steps.length === 0)
-      ) {
-        return;
-      }
-
-      // إضافة الأمثلة المحلولة للفكرة
       examples.forEach((ex, exIdx) => {
         const geoMatch = ex.geometryRaw
           ? matchOptionalGeometryFigureFromArabicDescription(ex.geometryRaw, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
           : undefined;
-
         resultItems.push({
           id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
           questionNumber: resultItems.length + 1,
@@ -150,7 +116,6 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         });
       });
 
-      // إضافة تدريبات حاول بنفسك الخاصة بهذه الفكرة مباشرة تحت أمثلتها
       const matchingDrills = drillsByIdea.get(ideaKey) || drillsByIdea.get(`idx-${ideaIdx + 1}`) || [];
       matchingDrills.forEach((drill, dIdx) => {
         resultItems.push(
@@ -186,23 +151,20 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
     }
   }
 
-  // 2. إضافة تمارين الواجب المنزلي الشاملة في نهاية الدرس
-  if (allHomework.length > 0) {
-    allHomework.forEach((hw, hIdx) => {
-      resultItems.push(
-        buildStage2PrintableItem({
-          id: `booklet-s2-hw-${hIdx + 1}`,
-          questionNumber: resultItems.length + 1,
-          block: hw,
-          branchNameAr: params.branchNameAr,
-          defaultPrompt: `سؤال واجب (${hIdx + 1})`,
-          defaultAnswer: "واجب منزلي للتقييم والتصحيح",
-          bannerTitleAr: hIdx === 0 ? "📚 تمارين الواجب المنزلي الشاملة على الدرس" : undefined,
-          solutionsMap,
-        })
-      );
-    });
-  }
+  allHomework.forEach((hw, hIdx) => {
+    resultItems.push(
+      buildStage2PrintableItem({
+        id: `booklet-s2-hw-${hIdx + 1}`,
+        questionNumber: resultItems.length + 1,
+        block: hw,
+        branchNameAr: params.branchNameAr,
+        defaultPrompt: `سؤال واجب (${hIdx + 1})`,
+        defaultAnswer: "واجب منزلي للتقييم والتصحيح",
+        bannerTitleAr: hIdx === 0 ? "📚 تمارين الواجب المنزلي الشاملة على الدرس" : undefined,
+        solutionsMap,
+      })
+    );
+  });
 
   return resultItems;
 }
@@ -216,12 +178,8 @@ export function parseBookletResponseToPrintableItems(params: {
   readonly lessonTitleArabic: string;
 }): readonly PrintableMathQuestionItem[] {
   return mergeBookletThreeStagesRepliesToPrintableItems({
-    stage1Raw: params.rawText,
-    branchId: params.branchId,
-    branchNameAr: params.branchNameAr,
-    unitId: params.unitId,
-    lessonId: params.lessonId,
-    lessonTitleArabic: params.lessonTitleArabic,
+    stage1Raw: params.rawText, branchId: params.branchId, branchNameAr: params.branchNameAr,
+    unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: params.lessonTitleArabic,
   });
 }
 

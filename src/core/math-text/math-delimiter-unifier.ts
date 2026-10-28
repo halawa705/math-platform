@@ -23,5 +23,9 @@ export function unifyMathDelimiters(raw: string): string {
     .replace(/\\+\$/g, "$")
     .replace(/\$\$([\s\S]*?)\$\$/g, (_m, inner: string) => asInlineMath(inner))
     .replace(/\\+\(([\s\S]*?)\\+\)/g, (_m, inner: string) => asInlineMath(inner))
-    .replace(/\\+\[([\s\S]*?)\\+\]/g, (_m, inner: string) => asInlineMath(inner));
+    .replace(/\\+\[([\s\S]*?)\\+\]/g, (_m, inner: string) => asInlineMath(inner))
+    .replace(/(سم|مم|كم|م)(\s*\})\s*\^\s*\{?2\}?/g, "$1²$2")
+    .replace(/(سم|مم|كم|م)(\s*\})\s*\^\s*\{?3\}?/g, "$1³$2")
+    .replace(/(سم|مم|كم|م)\s*(?:\$\s*\^\s*\{?2\}?\s*\$|\^\s*\{?2\}?)/g, "$1²")
+    .replace(/(سم|مم|كم|م)\s*(?:\$\s*\^\s*\{?3\}?\s*\$|\^\s*\{?3\}?)/g, "$1³");
 }

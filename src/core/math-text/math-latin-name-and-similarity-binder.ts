@@ -54,12 +54,12 @@ export function bindLatinNamesAndSimilarity(line: string): string {
 
   out = replaceOutsideMath(
     out,
-    /(?<![A-Za-z0-9\\_^'])([A-Z]{1,6}'*)(?![A-Za-z0-9_'])/g,
+    /(?<![A-Za-z0-9\\_^'-])([A-Z]{1,6}'*)(?![A-Za-z0-9_'-])/g,
     (_m, name: string) => `$${name}$`
   );
   out = replaceOutsideMath(
     out,
-    /(?<![A-Za-z0-9\\_^'])([a-z])(?![A-Za-z0-9_'])/g,
+    /(?<![A-Za-z0-9\\_^'-])([a-z])(?![A-Za-z0-9_'-])/g,
     (_m, name: string) => `$${name}$`
   );
   return out;
