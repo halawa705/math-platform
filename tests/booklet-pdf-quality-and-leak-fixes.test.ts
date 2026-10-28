@@ -1,45 +1,39 @@
 import { describe, it, expect } from "vitest";
 import assert from "node:assert/strict";
-import {
-  wrapBalancedLatexCommands,
-  cleanStrayLatexArtifacts,
-  sanitizePolygonSimilarityAndUnitBiDi,
-} from "../src/core/ingestion/balanced-latex-command-wrapper";
-import { normalizeToEgyptianSchoolMath } from "../src/core/ingestion/egyptian-math-notation-normalizer";
-import { normalizeArabicUnitPlacementSSOT } from "../src/core/ssot/numeral-and-unit-ssot";
+import { canonicalizeMathText } from "../src/core/math-text/math-text-canonicalizer";
 import { cleanStudentFacingMathPromptSSOT } from "../src/core/ingestion/notebooklm-citation-latex-sanitizer";
 import {
   extractConceptAndRule,
   parseSolvedExamplesFromSection,
 } from "../src/core/ingestion/notebooklm-stage-parsers-helper";
 
-describe("Booklet Quality & Surgical Fixes Suite", () => {
-  it("Issue 1: Fixes BiDi polygon similarity sign position between two polygons", () => {
-    const inputAfter = "إذا كان المضلع ABCD المضلع XYZW ~ فإن";
-    const normalizedAfter = normalizeToEgyptianSchoolMath(inputAfter);
-    assert.match(normalizedAfter, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
+const NBSP = "\u00A0";
 
-    const inputBefore = "إذا كان ~ ABCD XYZW فإن";
-    const normalizedBefore = normalizeToEgyptianSchoolMath(inputBefore);
-    assert.match(normalizedBefore, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
-
-    const inputVerb = "متوازيا أضلاع ABCD و XYZW يتشابهان وكان";
-    const normalizedVerb = normalizeToEgyptianSchoolMath(inputVerb);
-    assert.match(normalizedVerb, /المضلع\s*\$ABCD\s*\\sim\s*XYZW\$/);
+describe("Booklet Quality & Surgical Fixes Suite (canonical pipeline)", () => {
+  it("Issue 1: polygon similarity is one isolated LTR block in every phrasing", () => {
+    for (const input of [
+      "المضلع ABCD يشابه المضلع XYZW",
+      "إذا كان المضلع ABCD ~ المضلع XYZW",
+      "المضلع ~ ABCD XYZW",
+    ]) {
+      const out = canonicalizeMathText(input);
+      assert.match(out, /\$ABCD \\sim XYZW\$/);
+      assert.doesNotMatch(out, /المضلع\s+المضلع/);
+    }
+    const names = canonicalizeMathText("المضلعين ABCD و XYZW متشابهان");
+    expect(names).toContain("$ABCD$");
+    expect(names).toContain("$XYZW$");
   });
 
-  it("Issue 2 & 4: Cleans leaked LaTeX artifacts and unescapes text blocks", () => {
-    const leaked1 = "$\\ = $ 5 سم";
-    const cleaned1 = cleanStrayLatexArtifacts(leaked1);
-    assert.doesNotMatch(cleaned1, /\\\s*=\s*/);
-
-    const leaked2 = "frac{12}{4}";
-    const cleaned2 = wrapBalancedLatexCommands(leaked2);
-    assert.match(cleaned2, /\\frac\{12\}\{4\}/);
-
-    const idea8 = "\\frac{P_1}{P_2} = \\frac{a}{b} \\implies \\text{قيمة الجزء} = \\frac{P_1 + P_2}{a + b}";
-    const cleanedIdea8 = normalizeToEgyptianSchoolMath(idea8);
-    assert.doesNotMatch(cleanedIdea8, /\\text\{/);
+  it("Issue 2 & 4: leaked LaTeX artifacts never survive", () => {
+    expect(canonicalizeMathText("$\\ = $ 5 سم")).not.toMatch(/\\/);
+    expect(canonicalizeMathText("frac{12}{4}")).toContain("$\\frac{12}{4}$");
+    const idea8 = canonicalizeMathText(
+      "\\frac{P_1}{P_2} = \\frac{a}{b} \\implies \\text{قيمة الجزء} = \\frac{P_1 + P_2}{a + b}"
+    );
+    expect(idea8).not.toMatch(/\\text\{/);
+    expect(idea8).toContain("قيمة الجزء");
+    expect(canonicalizeMathText("بالقسمة على k: \\div k\\")).not.toMatch(/\\div k\\/);
   });
 
   it("Issue 3: Sub-requirements line breaks formatting", () => {
@@ -49,26 +43,13 @@ describe("Booklet Quality & Surgical Fixes Suite", () => {
     assert.match(cleaned, /•\s*ثانياً:/);
   });
 
-  it("Issue 6: Binds Latin variables with Arabic measurement units and prevents equal sign flip", () => {
-    const input1 = "وكان AB = 4 سم و BC = 5 سم";
-    const result1 = normalizeArabicUnitPlacementSSOT(input1);
-    assert.match(result1, /\$AB = 4\\text\{ سم\}\$/);
-    assert.match(result1, /\$BC = 5\\text\{ سم\}\$/);
-
-    const input2 = "وقياس m(∠B) = 70°";
-    const result2 = normalizeArabicUnitPlacementSSOT(input2);
-    assert.match(result2, /\$m\(∠B\) = 70\^\\circ\$/);
-
-    const input3 = "محيط الأكبر $= 80$ سم";
-    const result3 = sanitizePolygonSimilarityAndUnitBiDi(input3);
-    assert.match(result3, /=\s*\$80\\text\{ سم\}\$/);
-    assert.doesNotMatch(result3, /80\s*=\s*سم/);
-  });
-
-  it("Issue 4: Converts bare tilde in math to \\sim and strips stray div slashes", () => {
-    const divLeak = "بالقسمة على k: \\div k\\";
-    const divCleaned = cleanStrayLatexArtifacts(divLeak);
-    assert.doesNotMatch(divCleaned, /\\div k\\/);
+  it("Issue 6: Latin variables bind with Arabic units; relation sign never flips", () => {
+    const lengths = canonicalizeMathText("وكان AB = 4 سم و BC = 5 سم");
+    expect(lengths).toContain(`$AB = 4$${NBSP}سم`);
+    expect(lengths).toContain(`$BC = 5$${NBSP}سم`);
+    expect(canonicalizeMathText("وقياس m(∠B) = 70°")).toContain("$m(\\angle B) = 70^\\circ$");
+    const perimeter = canonicalizeMathText("محيط الأكبر $= 80$ سم");
+    expect(perimeter).toBe(`محيط الأكبر = $80$${NBSP}سم`);
   });
 
   it("Ingestion: Strictly isolates Rule from Examples and prevents Prompt steps duplication", () => {
