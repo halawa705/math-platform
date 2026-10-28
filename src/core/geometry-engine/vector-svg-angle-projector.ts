@@ -55,9 +55,9 @@ export function projectGeometryAnglesSVGMarkup(
     const u2x = dx2 / len2;
     const u2y = dy2 / len2;
 
-    // 1. زاوية قائمة (Right Angle Box)
+    // 1. زاوية قائمة (Right Angle Box مع تظليل ناعم)
     if (ang.isRightAngle) {
-      const boxSize = 8;
+      const boxSize = 8.5;
       const p1x = vx + u1x * boxSize;
       const p1y = vy + u1y * boxSize;
       const cornerX = vx + (u1x + u2x) * boxSize;
@@ -66,7 +66,7 @@ export function projectGeometryAnglesSVGMarkup(
       const p2y = vy + u2y * boxSize;
 
       elements.push(
-        `<path d="M ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${cornerX.toFixed(1)} ${cornerY.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)}" fill="none" stroke="${opts.strokeColor}" stroke-width="1.3" />`
+        `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${cornerX.toFixed(1)} ${cornerY.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)} Z" fill="${opts.accentColor}" fill-opacity="0.15" stroke="${opts.strokeColor}" stroke-width="1.3" />`
       );
       continue;
     }
@@ -89,8 +89,12 @@ export function projectGeometryAnglesSVGMarkup(
     const ex = vx + Math.cos(endAng) * rArc;
     const ey = vy + Math.sin(endAng) * rArc;
 
+    // قطاع زاوي ممتلئ بلون شفاف مضيء + قوس ناصع
     elements.push(
-      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${opts.accentColor}" stroke-width="1.2" />`
+      `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${opts.accentColor}" fill-opacity="0.14" stroke="none" />`
+    );
+    elements.push(
+      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${opts.accentColor}" stroke-width="1.4" />`
     );
 
     // المنصف الزاوي لوضع النص أو العلامة

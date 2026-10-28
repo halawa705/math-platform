@@ -12,6 +12,7 @@ import {
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
 import { projectGeometryAnglesSVGMarkup } from "./vector-svg-angle-projector";
+import { projectGeometrySurfaceShadingSVGMarkup } from "./vector-svg-surface-shading-projector";
 
 export const MODULE_ID_VECTOR_SVG_FIGURE_PROJECTOR =
   "vector_svg_figure_projector" as const;
@@ -145,7 +146,7 @@ export function projectGeometryFigureToSVGMarkup(
         )}" fill="none" stroke="${accentColor}" stroke-width="1.5" stroke-linecap="round"/>`;
       }
 
-      // تسمية طول الضلع بالوحدة العربية بصياغة متناسبة وخط رشيق
+      // تسمية طول الضلع داخل كبسولة عائمة بيضاء أنيقة تمنع التداخل (Floating Pill Badge)
       if (seg.lengthLabel) {
         const rawVal = seg.lengthLabel.value;
         const formattedVal =
@@ -153,16 +154,19 @@ export function projectGeometryFigureToSVGMarkup(
             ? formatNumeralsByModeSSOT(rawVal, numeralMode)
             : formatNumeralsByModeSSOT(String(rawVal), numeralMode);
         const unitText = seg.lengthLabel.unit ? ` ${seg.lengthLabel.unit}` : "";
+        const textStr = `${formattedVal}${unitText}`;
+        const pillW = Math.max(textStr.length * 5.2 + 6, 16);
         const lx = mx + nx * 7;
         const ly = my + ny * 7 + 2.5;
-        decorations += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(
-          1
-        )}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${accentColor}">${formattedVal}${unitText}</text>`;
+
+        decorations += `<rect x="${(lx - pillW / 2).toFixed(1)}" y="${(ly - 7.5).toFixed(1)}" width="${pillW.toFixed(1)}" height="10.5" rx="3" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.7" opacity="0.95" /><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="7.8" font-weight="800" font-family="system-ui, sans-serif" fill="${accentColor}">${textStr}</text>`;
       }
 
-      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round" ${dashAttr} />${decorations}`;
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="1.8" stroke-linecap="round" ${dashAttr} />${decorations}`;
     })
     .join("");
+
+  const surfaceTintsSvg = projectGeometrySurfaceShadingSVGMarkup({ figure, vertexMap });
 
   const anglesSvg = projectGeometryAnglesSVGMarkup({
     angles: figure.angles,
@@ -177,17 +181,14 @@ export function projectGeometryFigureToSVGMarkup(
       const vx = v.screen.sx - centerSx;
       const vy = v.screen.sy - centerSy;
       const vLen = Math.hypot(vx, vy) || 1;
-      const labelX = v.screen.sx + (vx / vLen) * 8;
-      const labelY = v.screen.sy + (vy / vLen) * 8 + 3;
+      const labelX = v.screen.sx + (vx / vLen) * 9;
+      const labelY = v.screen.sy + (vy / vLen) * 9 + 3;
 
-      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2.2" fill="${strokeColor}" />
-      <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(
-        1
-      )}" text-anchor="middle" font-size="9.5" font-weight="800" fill="${strokeColor}">${
-        v.label
-      }</text>`;
+      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" />
+      <circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" />
+      <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${v.label}</text>`;
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${segmentsSvg}${anglesSvg}${verticesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${surfaceTintsSvg}${segmentsSvg}${anglesSvg}${verticesSvg}</svg>`;
 }
