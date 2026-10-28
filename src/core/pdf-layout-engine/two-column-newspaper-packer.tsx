@@ -24,12 +24,13 @@ import {
   resolvePrintThemePalette,
   type PrintableMathQuestionItem,
 } from "./a4-vector-html-sheet-renderer";
-import {
-  buildSovereignA4RowBlocks,
-  packMeasuredBlocksIntoDiscreteA4Pages,
-} from "./sovereign-a4-page-blocks-builder";
-import { SovereignBlockRenderer } from "./sovereign-block-renderer";
+import { buildFlowItems } from "./flow-items-builder";
+import { FlowItemRenderer } from "./flow-item-renderer";
+import { packFlowItemsWithPageBalance } from "./flow-last-page-balancer";
+import { FLOW_COLUMN_WIDTH_PX, FLOW_PAGE_INNER_WIDTH_PX } from "./flow-page-geometry-constants";
+import type { FlowItem } from "./flow-item-model";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
+import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
 
 export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER =
   "two_column_newspaper_packer" as const;
@@ -49,13 +50,13 @@ export default function TwoColumnNewspaperPacker({
   sheetContainerRef,
   children,
 }: TwoColumnNewspaperPackerProps) {
-  const [mobileZoomScale, setMobileZoomScale] = useState<number>(1);
   const [identity, setIdentity] = useState(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
   const [heightsMap, setHeightsMap] = useState<ReadonlyMap<string, number>>(
     () => new Map()
   );
   const viewportWrapperRef = useRef<HTMLDivElement>(null);
   const stagingRef = useRef<HTMLDivElement>(null);
+  const mobileZoomScale = useA4MobileZoomScale(viewportWrapperRef);
 
   useEffect(() => {
     setIdentity(loadTeacherIdentitySSOT());
@@ -64,37 +65,24 @@ export default function TwoColumnNewspaperPacker({
     return () => window.removeEventListener(IDENTITY_UPDATED_EVENT_NAME, sync);
   }, []);
 
-  useEffect(() => {
-    const updateScale = () => {
-      const w = viewportWrapperRef.current?.clientWidth || window.innerWidth;
-      setMobileZoomScale(
-        w < 820 ? Number(Math.max(0.42, Math.min(1, (w - 16) / 794)).toFixed(2)) : 1
-      );
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
-
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
   const isSolvedMode = settings.answerVisibilityMode !== "questions_only" || questions.some((q) => q.id.startsWith("booklet-s1-"));
 
-  const { blocks, totalIdeasCount } = React.useMemo(
-    () => buildSovereignA4RowBlocks({ questions, columnsCount: settings.columnsCount, includeAnswerKey: isSolvedMode }),
+  const { items: flowItems, totalIdeasCount } = React.useMemo(
+    () => buildFlowItems({ questions, columnsCount: settings.columnsCount, includeAnswerKey: isSolvedMode }),
     [questions, settings.columnsCount, isSolvedMode]
   );
 
-  // قياس الارتفاع الفعلي بالبيكسل لكل صف ذري بعد تصيير الخطوط ومعادلات KaTeX
+  // قياس الارتفاع الحي لكل كائن بعرضه الحقيقي (عمود أو كامل) بعد تصيير الخطوط ومعادلات KaTeX
   useLayoutEffect(() => {
     const measureAll = () => {
       const container = stagingRef.current;
       if (!container) return;
       const nextMap = new Map<string, number>();
-      const nodes = container.querySelectorAll<HTMLElement>("[data-sovereign-block-id]");
-      nodes.forEach((node) => {
-        const id = node.getAttribute("data-sovereign-block-id");
+      container.querySelectorAll<HTMLElement>("[data-flow-item-id]").forEach((node) => {
+        const id = node.getAttribute("data-flow-item-id");
         if (id) nextMap.set(id, Math.ceil(node.offsetHeight));
       });
       setHeightsMap(nextMap);
@@ -106,17 +94,17 @@ export default function TwoColumnNewspaperPacker({
     }
     const timer = setTimeout(measureAll, 180);
     return () => clearTimeout(timer);
-  }, [blocks, settings.fontFamilyId, settings.exactFontSizePt, settings.densityMode, settings.numeralMode, settings.notationLanguage]);
+  }, [flowItems, settings.fontFamilyId, settings.exactFontSizePt, settings.densityMode, settings.numeralMode, settings.notationLanguage]);
 
   const discretePages = React.useMemo(
-    () => packMeasuredBlocksIntoDiscreteA4Pages(blocks, heightsMap),
-    [blocks, heightsMap]
+    () => packFlowItemsWithPageBalance(flowItems, heightsMap),
+    [flowItems, heightsMap]
   );
 
-  const renderBlock = (b: (typeof blocks)[number]) => (
-    <SovereignBlockRenderer
-      key={b.id}
-      block={b}
+  const renderFlowItem = (item: FlowItem) => (
+    <FlowItemRenderer
+      key={item.id}
+      item={item}
       settings={settings}
       palette={palette}
       identity={identity}
@@ -141,13 +129,13 @@ export default function TwoColumnNewspaperPacker({
         </div>
       )}
 
-      {/* منصة القياس الخفية لحساب الارتفاعات الحقيقية بالبيكسل */}
+      {/* منصة القياس الخفية: كل كائن يُقاس بعرضه الحقيقي (عمود أو كامل) لا بعرض الصفحة كلها */}
       <div
         ref={stagingRef}
         dir="rtl"
         aria-hidden="true"
         style={{
-          width: "754px",
+          width: `${FLOW_PAGE_INNER_WIDTH_PX}px`,
           position: "absolute",
           top: "-99999px",
           left: "-99999px",
@@ -158,9 +146,14 @@ export default function TwoColumnNewspaperPacker({
           lineHeight: activeFont.optimalLineHeight,
         }}
       >
-        {blocks.map((b) => (
-          <div key={b.id} data-sovereign-block-id={b.id} className="w-full min-w-0">
-            {renderBlock(b)}
+        {flowItems.map((item) => (
+          <div
+            key={item.id}
+            data-flow-item-id={item.id}
+            className="min-w-0"
+            style={{ width: item.span === "column" ? `${FLOW_COLUMN_WIDTH_PX}px` : `${FLOW_PAGE_INNER_WIDTH_PX}px` }}
+          >
+            {renderFlowItem(item)}
           </div>
         ))}
       </div>
@@ -199,7 +192,7 @@ export default function TwoColumnNewspaperPacker({
                 totalIdeasCount={totalIdeasCount}
                 totalQuestionsCount={questions.length}
                 totalMarks={totalMarks}
-                renderBlockContent={renderBlock}
+                renderFlowItem={renderFlowItem}
               />
             ))
           )}

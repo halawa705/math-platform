@@ -107,7 +107,7 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
   numeralMode: "western",
   notationLanguage: "english",
   fontFamilyId: "cairo",
-  exactFontSizePt: 13,
+  exactFontSizePt: 12.5,
   answerVisibilityMode: "questions_only",
   densityMode: "ultra_compact",
   columnsCount: 2,
