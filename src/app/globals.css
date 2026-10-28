@@ -53,6 +53,12 @@ body {
   margin: 0.14em 0.1em !important;
 }
 
+/* صندوق ملاءمة المعادلة: عند عدم كفاية التصغير يُسمح بالكسر عند علامات العلاقة */
+.math-fit-wrap .katex,
+.math-fit-wrap .katex-html {
+  white-space: normal !important;
+}
+
 @media print {
   @page {
     size: A4 portrait;

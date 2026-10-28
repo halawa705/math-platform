@@ -6,8 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
-import { normalizeArabicUnitPlacementSSOT } from "../ssot/numeral-and-unit-ssot";
-import { normalizeToEgyptianSchoolMath } from "./egyptian-math-notation-normalizer";
+import { canonicalizeMathText } from "../math-text/math-text-canonicalizer";
 
 export const MODULE_ID_NOTEBOOKLM_CITATION_LATEX_SANITIZER =
   "notebooklm_citation_latex_sanitizer" as const;
@@ -16,27 +15,6 @@ export interface SanitizedNotebookLMResponseResult {
   readonly cleanedText: string;
   readonly removedCitationsCount: number;
   readonly normalizedLatexDelimitersCount: number;
-}
-
-/**
- * يوازن علامات `$` في كل سطر على حدة حتى لا يؤدي نسيان علامة `$` واحدة إلى ابتلاع الفقرة كلها.
- */
-export function balanceInlineDollarDelimitersPerLine(input: string): string {
-  if (!input) return "";
-  return input
-    .split("\n")
-    .map((line) => {
-      const cleanedLine = line.replace(/\\+\$/g, "$");
-      const dollarMatches = cleanedLine.match(/\$/g);
-      if (!dollarMatches || dollarMatches.length % 2 === 0) {
-        return cleanedLine;
-      }
-      if (dollarMatches.length === 1 && !/[=+\-^\\/]/.test(cleanedLine)) {
-        return cleanedLine.replace(/\$/, "");
-      }
-      return `${cleanedLine}$`;
-    })
-    .join("\n");
 }
 
 /**
@@ -102,24 +80,8 @@ export function sanitizeNotebookLMCitationsAndLatex(
       "[$1]"
     );
 
-  // 4. إحصاء وتوحيد محددات \( ... \) و \[ ... \]
-  text = text.replace(/\\+\(([\s\S]+?)\\+\)/g, (_m, inner: string) => {
-    normalizedLatexDelimitersCount += 1;
-    return `$${inner.trim()}$`;
-  });
-  text = text.replace(/\\+\[([\s\S]+?)\\+\]/g, (_m, inner: string) => {
-    normalizedLatexDelimitersCount += 1;
-    return `$${inner.trim()}$`;
-  });
-
-  // 5. تطبيع الرياضيات المصرية (الفترات ]a, b[، المجال ح - {...}، أوامر LaTeX المكشوفة، وفصل الجمل العربية)
-  text = normalizeToEgyptianSchoolMath(text);
-
-  // 6. تطبيع مواضع وحدات القياس العربية لتأتي دائماً بعد العدد ("8 سم" بدلاً من "سم 8")
-  text = normalizeArabicUnitPlacementSSOT(text);
-
-  // 7. موازنة محددات $ في كل سطر لمنع انكسار التصيير
-  text = balanceInlineDollarDelimitersPerLine(text);
+  // 4. خط الأنابيب الرياضي الوحيد: توحيد المحددات + الفترات + العربي داخل الرياضيات + التشابه + الوحدات + بوابة التسرب
+  text = canonicalizeMathText(text);
 
   return {
     cleanedText: text.trim(),

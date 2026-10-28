@@ -78,6 +78,9 @@ export function triggerIsolatedA4Print(
       direction: ltr !important;
       unicode-bidi: isolate !important;
     }
+    .math-fit-wrap .katex, .math-fit-wrap .katex-html {
+      white-space: normal !important;
+    }
     .katex-display {
       max-width: 100% !important;
       margin: 0.2em 0 !important;
