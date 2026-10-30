@@ -19,6 +19,7 @@ import { matchPrepGrade1TriangleAnglesFigure } from "./curriculum-catalogs/prep-
 import { matchPrepGrade1QuadrilateralsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-quadrilaterals-catalog";
 import { matchPrepGrade1SpecialQuadsFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-special-quads-followup-catalog";
 import { matchPrepGrade1PolygonsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-polygons-catalog";
+import { matchPrepGrade1CoordinatesFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-coordinates-catalog";
 import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
 import { matchPrepGrade2TriangleCongruenceFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-congruence-catalog";
 import { matchPrepGrade2PythagorasConverseFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-pythagoras-converse-catalog";
@@ -70,50 +71,31 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     if (prep1Congruence) return prep1Congruence;
   }
 
-  const prepTriSim = matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage);
-  if (prepTriSim) return prepTriSim;
-  const prep3LineEq = matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage);
-  if (prep3LineEq) return prep3LineEq;
-  const prepSimMatch = matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage);
-  if (prepSimMatch) return prepSimMatch;
-  const prep2Congruence = matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage);
-  if (prep2Congruence) return prep2Congruence;
-  const prep2Pythagoras = matchPrepGrade2PythagorasConverseFigure(desc, figureId, notationLanguage);
-  if (prep2Pythagoras) return prep2Pythagoras;
-  const prep2Parallel = matchPrepGrade2ParallelApplicationsFigure(desc, figureId, notationLanguage);
-  if (prep2Parallel) return prep2Parallel;
-  const prep2Medians = matchPrepGrade2TriangleMediansFigure(desc, figureId, notationLanguage);
-  if (prep2Medians) return prep2Medians;
-  const prep2Isosceles = matchPrepGrade2IsoscelesTriangleFigure(desc, figureId, notationLanguage);
-  if (prep2Isosceles) return prep2Isosceles;
-  const prep2IsoFollowup = matchPrepGrade2IsoscelesFollowupFigure(desc, figureId, notationLanguage);
-  if (prep2IsoFollowup) return prep2IsoFollowup;
-  const prep2PolyAngles = matchPrepGrade2PolygonAnglesFigure(desc, figureId, notationLanguage);
-  if (prep2PolyAngles) return prep2PolyAngles;
-  const prep2Match = matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage);
-  if (prep2Match) return prep2Match;
-  const prep1AnglesFollowup = matchPrepGrade1AnglesFollowupFigure(desc, figureId, notationLanguage);
-  if (prep1AnglesFollowup) return prep1AnglesFollowup;
-  const prep1Angles = matchPrepGrade1AnglesRelationshipsFigure(desc, figureId, notationLanguage);
-  if (prep1Angles) return prep1Angles;
-  const prep1Parallel = matchPrepGrade1ParallelismFigure(desc, figureId, notationLanguage);
-  if (prep1Parallel) return prep1Parallel;
-  const prep1TriAngles = matchPrepGrade1TriangleAnglesFigure(desc, figureId, notationLanguage);
-  if (prep1TriAngles) return prep1TriAngles;
-  const prep1Quads = matchPrepGrade1QuadrilateralsFigure(desc, figureId, notationLanguage);
-  if (prep1Quads) return prep1Quads;
-  const prep1SpecialQuads = matchPrepGrade1SpecialQuadsFollowupFigure(desc, figureId, notationLanguage);
-  if (prep1SpecialQuads) return prep1SpecialQuads;
-  const prep1Polygons = matchPrepGrade1PolygonsFigure(desc, figureId, notationLanguage);
-  if (prep1Polygons) return prep1Polygons;
-  const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
-  if (prep1Match) return prep1Match;
-  const primary6Match = matchPrimaryGrade6GeometryFigure(desc, figureId, notationLanguage);
-  if (primary6Match) return primary6Match;
-  const primary5Match = matchPrimaryGrade5GeometryFigure(desc, figureId, notationLanguage);
-  if (primary5Match) return primary5Match;
-  const primary4Match = matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
-  if (primary4Match) return primary4Match;
+  const stageRes =
+    matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage) ??
+    matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2PythagorasConverseFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2ParallelApplicationsFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2TriangleMediansFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2IsoscelesTriangleFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2IsoscelesFollowupFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2PolygonAnglesFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1AnglesFollowupFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1AnglesRelationshipsFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1ParallelismFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1TriangleAnglesFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1QuadrilateralsFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1SpecialQuadsFollowupFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1PolygonsFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1CoordinatesFigure(desc, figureId, notationLanguage) ??
+    matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage) ??
+    matchPrimaryGrade6GeometryFigure(desc, figureId, notationLanguage) ??
+    matchPrimaryGrade5GeometryFigure(desc, figureId, notationLanguage) ??
+    matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
+  if (stageRes) return stageRes;
 
   if (/شاشة|كمبيوتر|تلفاز|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|سباعي|ثماني|مستوى\s*إحداثي|رسم\s*بياني|إحداثيات|نقطة\s*الأصل|خريطة|مجهر|حشرة|ظل/i.test(desc)) {
     return undefined;
