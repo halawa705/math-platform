@@ -17,6 +17,7 @@ import { matchPrepGrade1ParallelismFigure } from "./curriculum-catalogs/prep-sta
 import { matchPrepGrade1TriangleAnglesFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-angles-catalog";
 import { matchPrepGrade1QuadrilateralsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-quadrilaterals-catalog";
 import { matchPrepGrade1SpecialQuadsFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-special-quads-followup-catalog";
+import { matchPrepGrade1PolygonsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-polygons-catalog";
 import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
 import { matchPrepGrade2TriangleCongruenceFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-congruence-catalog";
 import { matchPrepGrade2PythagorasConverseFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-pythagoras-converse-catalog";
@@ -102,6 +103,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (prep1Quads) return prep1Quads;
   const prep1SpecialQuads = matchPrepGrade1SpecialQuadsFollowupFigure(desc, figureId, notationLanguage);
   if (prep1SpecialQuads) return prep1SpecialQuads;
+  const prep1Polygons = matchPrepGrade1PolygonsFigure(desc, figureId, notationLanguage);
+  if (prep1Polygons) return prep1Polygons;
   const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
   if (prep1Match) return prep1Match;
   const primary6Match = matchPrimaryGrade6GeometryFigure(desc, figureId, notationLanguage);
