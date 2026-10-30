@@ -23,7 +23,7 @@ function replaceLatexFractionsAndRoots(src: string): string {
   return s;
 }
 
-export function normalizeMathAnswerText(raw: string): string {
+function normalizeMathAnswerText(raw: string): string {
   let s = digitsToWestern(String(raw ?? ""));
   s = s.replace(/\\text\s*\{([^{}]*)\}/g, "$1").replace(/\\left|\\right|\\,|\\;|\\!/g, "");
   s = replaceLatexFractionsAndRoots(s);

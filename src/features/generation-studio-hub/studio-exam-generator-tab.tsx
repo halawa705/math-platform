@@ -28,8 +28,7 @@ import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioExamOnlinePublishPanel from "./studio-exam-online-publish-panel";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
-export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB =
-  "studio_exam_generator_tab" as const;
+export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB = "studio_exam_generator_tab" as const;
 
 export interface StudioExamGeneratorTabProps {
   readonly gradeId?: string;
@@ -39,9 +38,7 @@ export interface StudioExamGeneratorTabProps {
   readonly lessonTitle: string;
   readonly branchNameAr: string;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
-  readonly onApplyParsedQuestionsToSheet?: (
-    questions: readonly PrintableMathQuestionItem[]
-  ) => void;
+  readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
 
 export default function StudioExamGeneratorTab({
@@ -67,35 +64,20 @@ export default function StudioExamGeneratorTab({
 
   useEffect(() => {
     const baseCfg = {
-      gradeNameArabic: gradeNameAr,
-      termNumber: 1 as const,
-      branchId,
-      targetedLessonTitlesArabic: [lessonTitle],
-      mcqQuestionsCount: mcqCount,
-      totalMarks: mcqCount + proofCount * 3,
-      durationTextArabic: "ساعة ونصف",
-      difficultyProfile: difficulty,
+      gradeNameArabic: gradeNameAr, termNumber: 1 as const, branchId,
+      targetedLessonTitlesArabic: [lessonTitle], mcqQuestionsCount: mcqCount,
+      totalMarks: mcqCount + proofCount * 3, durationTextArabic: "ساعة ونصف", difficultyProfile: difficulty,
     };
     setPrompt(
       isOnlineMode
-        ? buildOnlineExamNotebookLMPrompt({
-            ...baseCfg,
-            shortAnswerQuestionsCount: proofCount,
-          })
-        : buildOfficialExamNotebookLMPrompt({
-            ...baseCfg,
-            essayAndProofQuestionsCount: proofCount,
-          })
+        ? buildOnlineExamNotebookLMPrompt({ ...baseCfg, shortAnswerQuestionsCount: proofCount })
+        : buildOfficialExamNotebookLMPrompt({ ...baseCfg, essayAndProofQuestionsCount: proofCount })
     );
   }, [gradeNameAr, branchId, lessonTitle, mcqCount, proofCount, difficulty, isOnlineMode]);
 
   const parseReply = () =>
     parseNotebookLMExamQuestionsToIR({
-      rawText: reply,
-      branchId,
-      unitId: "exam-unit",
-      lessonId: "exam-lesson",
-      lessonTitleArabic: lessonTitle,
+      rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
     });
 
   const handleRender = () => {
@@ -110,25 +92,15 @@ export default function StudioExamGeneratorTab({
         .filter((q) => q.figureDiagnosticsAr && q.figureDiagnosticsAr.length > 0)
         .map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! }))
     );
-    onApplyParsedQuestionsToSheet?.(
-      parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
-    );
+    onApplyParsedQuestionsToSheet?.(parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)));
     onApplyExamTitleToSheet(
       buildStandardDocumentTitleSSOT({
-        gradeId,
-        unitTitleInput: unitTitleAr,
-        lessonTitleInput: lessonTitle,
-        promptText: prompt,
-        rawReplyText: reply,
+        gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: lessonTitle, promptText: prompt, rawReplyText: reply,
       })
     );
   };
 
-  const handlePublish = async (p: {
-    durationMinutes: number;
-    availabilityDays: number;
-    revealAnswers: boolean;
-  }) => {
+  const handlePublish = async (p: { durationMinutes: number; availabilityDays: number; revealAnswers: boolean }) => {
     const parsed = parseReply();
     if (parsed.length === 0) {
       setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة.");
@@ -139,44 +111,28 @@ export default function StudioExamGeneratorTab({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          gradeId,
-          gradeNameArabic: gradeNameAr,
-          titleAr: `اختبار — ${lessonTitle}`,
-          durationMinutes: p.durationMinutes,
-          availabilityDays: p.availabilityDays,
-          revealAnswers: p.revealAnswers,
+          gradeId, gradeNameArabic: gradeNameAr, titleAr: `اختبار — ${lessonTitle}`,
+          durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, revealAnswers: p.revealAnswers,
           questions: parsed,
         }),
       });
       const data = (await res.json()) as {
-        success: boolean;
-        examCode?: string;
-        publishedCount?: number;
-        excludedQuestionNumbers?: readonly number[];
-        error?: string;
+        success: boolean; examCode?: string; publishedCount?: number; excludedQuestionNumbers?: readonly number[]; error?: string;
       };
       if (!res.ok || !data.success) {
         setPublishMsg(`⚠️ ${data.error || "تعذر نشر الاختبار عبر الخادم."}`);
         return;
       }
       publishOnlineExamSSOT({
-        examId: data.examCode,
-        gradeId,
-        gradeNameArabic: gradeNameAr,
-        titleAr: `اختبار — ${lessonTitle}`,
-        durationMinutes: p.durationMinutes,
-        availabilityDays: p.availabilityDays,
-        questions: parsed,
+        examId: data.examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: `اختبار — ${lessonTitle}`,
+        durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, questions: parsed,
       });
       void refreshPublishedExamsFromSupabaseSSOT();
       const excl = data.excludedQuestionNumbers ?? [];
-      const exclNote =
-        excl.length > 0
-          ? ` ⚠️ استُبعدت الأسئلة رقم (${excl.join("، ")}) لأنها غير قابلة للتصحيح الآلي (برهان/مقالي).`
-          : "";
-      setPublishMsg(
-        `✓ تم نشر الاختبار (${data.publishedCount ?? parsed.length} أسئلة) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.${exclNote}`
-      );
+      const exclNote = excl.length > 0
+        ? ` ⚠️ استُبعدت الأسئلة رقم (${excl.join("، ")}) لأنها غير قابلة للتصحيح الآلي (برهان/مقالي).`
+        : "";
+      setPublishMsg(`✓ تم نشر الاختبار (${data.publishedCount ?? parsed.length} أسئلة) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.${exclNote}`);
     } catch {
       setPublishMsg("⚠️ تعذر الاتصال بالخادم لنشر الاختبار.");
     }
@@ -192,37 +148,20 @@ export default function StudioExamGeneratorTab({
         <div className="space-y-2.5 pt-2">
           <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 dark:bg-slate-800/70 text-xs font-black text-indigo-950 dark:text-teal-300 cursor-pointer">
             <span>⚡ اختبار إلكتروني (تصحيح آلي)</span>
-            <input
-              type="checkbox"
-              checked={isOnlineMode}
-              onChange={(e) => setIsOnlineMode(e.target.checked)}
-              className="w-4 h-4 accent-indigo-700"
-            />
+            <input type="checkbox" checked={isOnlineMode} onChange={(e) => setIsOnlineMode(e.target.checked)} className="w-4 h-4 accent-indigo-700" />
           </label>
           <div className="grid grid-cols-2 gap-2.5">
             <StudioNumberStepperField labelAr="أسئلة اختر" value={mcqCount} max={40} onChange={setMcqCount} />
-            <StudioNumberStepperField
-              labelAr={isOnlineMode ? "أسئلة إجابة قصيرة" : "مقالي وبرهان"}
-              value={proofCount}
-              max={25}
-              onChange={setProofCount}
-            />
+            <StudioNumberStepperField labelAr={isOnlineMode ? "أسئلة إجابة قصيرة" : "مقالي وبرهان"} value={proofCount} max={25} onChange={setProofCount} />
           </div>
           <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
-            {(
-              [
-                { id: "standard_balanced", label: "متوازن" },
-                { id: "olympiad_challenge", label: "متفوقين" },
-              ] as const
-            ).map((o) => (
+            {([{ id: "standard_balanced", label: "متوازن" }, { id: "olympiad_challenge", label: "متفوقين" }] as const).map((o) => (
               <button
                 key={o.id}
                 type="button"
                 onClick={() => setDifficulty(o.id)}
                 className={`min-h-[44px] rounded-xl text-xs font-black cursor-pointer ${
-                  difficulty === o.id
-                    ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400"
+                  difficulty === o.id ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-sm" : "text-slate-600 dark:text-slate-400"
                 }`}
               >
                 {o.label}
@@ -237,33 +176,16 @@ export default function StudioExamGeneratorTab({
         stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لتحويله إلى ورقة اختبار."
         promptText={prompt}
         onChangePrompt={setPrompt}
-        onCopyPromptAndOpenNotebook={() => {
-          copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 3000);
-        }}
+        onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
         isPromptCopied={copied}
         replyValue={reply}
-        onChangeReply={(v) => {
-          setNotice(null);
-          setReply(v);
-        }}
+        onChangeReply={(v) => { setNotice(null); setReply(v); }}
         replyPlaceholderAr="الصق رد أسئلة الاختبار هنا..."
       />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />
-
-      <StudioExamOnlinePublishPanel
-        gradeNameAr={gradeNameAr}
-        statusMessageAr={publishMsg}
-        onPublish={handlePublish}
-      />
-
-      <StudioStickyPrimaryActionBar
-        primaryLabelAr="📄 تصيير الاختبار ومعاينته"
-        onPrimary={handleRender}
-        noticeAr={notice}
-      />
+      <StudioExamOnlinePublishPanel gradeNameAr={gradeNameAr} statusMessageAr={publishMsg} onPublish={handlePublish} />
+      <StudioStickyPrimaryActionBar primaryLabelAr="📄 تصيير الاختبار ومعاينته" onPrimary={handleRender} noticeAr={notice} />
     </div>
   );
 }

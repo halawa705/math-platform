@@ -5,26 +5,21 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 140 سطراً).
  */
 
+import {
+  SUPABASE_PUBLIC_KEY,
+  SUPABASE_URL,
+} from "@/core/supabase/supabase-config-ssot";
+
 export const MODULE_ID_EXAM_SERVER_SUPABASE_HELPER =
   "exam_server_supabase_helper" as const;
 
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://ribcyosvoiwtrpynyzjp.supabase.co";
-
 const SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_-_NDzAmrswsChgitYYrIKw_iEmWYIqD";
+  process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_PUBLIC_KEY;
 
 const memoryFallbackTables: Record<string, Array<Record<string, unknown>>> = {
   exam_answer_keys: [],
   exam_attempts: [],
 };
-
-export function isServiceKeyConfigured(): boolean {
-  return SUPABASE_URL.length > 0 && SERVICE_KEY.length > 0;
-}
 
 function headers(prefer?: string): Record<string, string> {
   return {

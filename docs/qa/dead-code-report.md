@@ -1,0 +1,172 @@
+# تقرير الكود الميت (2026-10-30)
+
+إجمالي الملفات: 271
+
+## 1) ملفات يتيمة مباشرة (15)
+- core/geometry-engine/analytic-function-family/rational-piecewise-trig-curve-branch.ts
+- core/pdf-layout-engine/local-woff2-fonts-stylesheet.ts
+- core/statistics-engine/boxplot-scatter-normal-branch.ts
+- core/statistics-engine/frequency-distribution-table-branch.ts
+- core/statistics-engine/frequency-polygon-ogive-branch.ts
+- core/statistics-engine/histogram-bar-chart-branch.ts
+- core/statistics-engine/pie-sector-chart-branch.ts
+- core/validation/algebra-equation-inequality-validator.ts
+- core/validation/calculus-derivatives-integrals-validator.ts
+- core/validation/euclidean-geometry-theorems-validator.ts
+- core/validation/functions-domain-vertex-validator.ts
+- core/validation/mechanics-statics-dynamics-validator.ts
+- core/validation/real-intervals-operations-validator.ts
+- core/validation/statistics-metrics-validator.ts
+- core/validation/trigonometry-ratios-identities-validator.ts
+
+## 2) ملفات ميتة بسبب أن من يستوردها يتيم (2)
+- core/ir/math-ast-expression-ir.ts
+- core/statistics-engine/statistics-dataset-root-core.ts
+
+## 3) رموز معلنة ولا يستعملها أحد إطلاقاً (1)
+- app/layout.tsx :: metadata
+
+## 4) رموز مصدَّرة لكن تُستعمل داخل ملفها فقط — احذف كلمة export (143)
+- app/api/cron/supabase-keepalive/route.ts :: dynamic
+- components/global-ui/calm-empty-state-card.tsx :: CalmEmptyStateCardProps
+- components/global-ui/calm-labeled-input-field.tsx :: CalmLabeledInputFieldProps
+- components/global-ui/calm-page-title-header.tsx :: CalmPageTitleHeaderProps
+- components/global-ui/math-formula-fit-box.tsx :: MathFormulaFitBoxProps
+- components/global-ui/safe-katex-bidi-math-renderer.tsx :: SafeKaTeXBiDiMathRendererProps
+- components/global-ui/segmented-workspace-tabs-bar.tsx :: SegmentedWorkspaceTabsBarProps
+- components/global-ui/top-four-centers-navigation-bar.tsx :: PlatformCenterRouteId
+- components/global-ui/top-four-centers-navigation-bar.tsx :: TopFourCentersNavigationBarProps
+- core/exam-grading/online-exam-public-key-splitter.ts :: OnlineAnswerMode
+- core/exam-grading/online-exam-public-key-splitter.ts :: OnlineExamSplitResult
+- core/geometry-engine/analytic-function-family/cartesian-plane-root-core.ts :: CartesianPlaneRootInstance
+- core/geometry-engine/circle-family/circle-root-core.ts :: CircleRootInstance
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-congruence-catalog.ts :: Grade1FigureBuildOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog.ts :: Grade2FigureBuildOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-butterfly-similarity-builder.ts :: TriangleButterflySimilarityOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-euclid-similarity-builder.ts :: TriangleEuclidSimilarityOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-nested-similarity-builder.ts :: TriangleNestedSimilarityOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-separate-similarity-builder.ts :: TriangleSeparateSimilarityOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-thales-similarity-builder.ts :: TriangleThalesSimilarityOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-similarity-composite-figures-builder.ts :: SimilarityCompositeFiguresOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-similarity-deltoids-kites-builder.ts :: SimilarityDeltoidsKitesOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-similarity-general-quads-builder.ts :: SimilarityGeneralQuadsOptions
+- core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-similarity-special-quads-builder.ts :: SimilaritySpecialQuadsOptions
+- core/geometry-engine/curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog.ts :: Grade4FigureBuildOptions
+- core/geometry-engine/curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog.ts :: Grade5FigureBuildOptions
+- core/geometry-engine/curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog.ts :: Grade6FigureBuildOptions
+- core/geometry-engine/fact-compositor/geo-figure-composer.ts :: ComposeResult
+- core/geometry-engine/fact-compositor/geo-shape-placers.ts :: LengthMap
+- core/geometry-engine/fact-compositor/geo-triangle-placer.ts :: TriangleKnowns
+- core/geometry-engine/fact-compositor/geo-triangle-placer.ts :: TrianglePoints
+- core/geometry-engine/graph-compositor/graph-svg-projector.ts :: GraphSVGProjectorOptions
+- core/geometry-engine/parametric-similarity-description-parser.ts :: ParsedSimilaritySpecs
+- core/geometry-engine/parametric-similarity-description-parser.ts :: parseNaturalGeometryTextSpecs
+- core/geometry-engine/quadrilateral-family/quadrilateral-root-core.ts :: QuadrilateralRootInstance
+- core/geometry-engine/triangle-family/triangle-midsegment-branch.ts :: TriangleMidsegmentParams
+- core/geometry-engine/triangle-family/triangle-root-core.ts :: BaseTriangleKind
+- core/geometry-engine/triangle-family/triangle-root-core.ts :: TriangleRootConfig
+- core/geometry-engine/triangle-family/triangle-root-core.ts :: TriangleRootInstance
+- core/geometry-engine/vector-svg-angle-projector.ts :: AngleProjectorScreenVertex
+- core/geometry-engine/vector-svg-angle-projector.ts :: AngleProjectorOptions
+- core/geometry-engine/vector-svg-figure-projector.ts :: SVGProjectorOptions
+- core/geometry-engine/vector-svg-surface-shading-projector.ts :: SurfaceShadingOptions
+- core/ingestion/notebooklm-citation-latex-sanitizer.ts :: SanitizedNotebookLMResponseResult
+- core/ingestion/notebooklm-stage-parsers-helper.ts :: ExtractedQuestionBlock
+- core/ir/question-assessment-ir.ts :: MathQuestionCognitiveDepth
+- core/ir/question-assessment-ir.ts :: DeductiveProofStepIR
+- core/ir/question-assessment-ir.ts :: MathSubQuestionPartIR
+- core/ir/question-assessment-ir.ts :: AuthenticExamSourceCitationIR
+- core/math-text/math-canonical-text-node-parser.ts :: MathRenderNode
+- core/math-text/math-leak-final-gate.ts :: findResidualLeaks
+- core/math-text/math-relation-operator-splitter.ts :: RelationSplitPart
+- core/pdf-layout-engine/adaptive-mcq-choices-card.tsx :: AdaptiveMCQChoicesCardProps
+- core/pdf-layout-engine/autofit-ladders.ts :: AutoFitRung
+- core/pdf-layout-engine/autofit-status-badge.tsx :: AutoFitStatusBadgeProps
+- core/pdf-layout-engine/autofit-sweep-reducer.ts :: AutoFitSweepAction
+- core/pdf-layout-engine/embedded-geometry-svg-docker.tsx :: EmbeddedGeometrySVGDockerProps
+- core/pdf-layout-engine/flow-banner-kind-resolver.ts :: FlowBannerKind
+- core/pdf-layout-engine/flow-column-balance-solver.ts :: BalancedColumnSplit
+- core/pdf-layout-engine/flow-item-renderer.tsx :: FlowItemRendererProps
+- core/pdf-layout-engine/flow-layout-quality-audit.ts :: FlowPageAuditRow
+- core/pdf-layout-engine/flow-measurement-staging-platform.tsx :: FlowMeasurementStagingPlatformProps
+- core/pdf-layout-engine/flow-page-packer.ts :: FlowPackOptions
+- core/pdf-layout-engine/flow-page-segments-builder.ts :: FlowHeightLookup
+- core/pdf-layout-engine/page-fill-report-chip.tsx :: PageFillReportChipProps
+- core/pdf-layout-engine/question-card-badge-header.tsx :: QuestionCardBadgeHeaderProps
+- core/pdf-layout-engine/question-card-palette-resolver.ts :: QuestionCardColorScheme
+- core/pdf-layout-engine/question-figure-box-size.ts :: FigureBoxSizePx
+- core/pdf-layout-engine/question-figure-svg-renderer.ts :: RenderQuestionFigureSvgOptions
+- core/pdf-layout-engine/question-given-required-badges.tsx :: QuestionGivenRequiredBadgesProps
+- core/pdf-layout-engine/side-by-side-diagram-docker.tsx :: SideBySideDiagramDockerProps
+- core/pdf-layout-engine/sovereign-discrete-page-view.tsx :: SovereignDiscretePageViewProps
+- core/pdf-layout-engine/student-answer-space-docker.tsx :: StudentAnswerSpaceDockerProps
+- core/pdf-layout-engine/two-column-newspaper-packer.tsx :: TwoColumnNewspaperPackerProps
+- core/pdf-layout-engine/use-flow-staging-live-measurer.ts :: FlowMeasureSnapshot
+- core/prompts/booklet-three-stages-prompt-builder.ts :: BookletStagePromptConfig
+- core/prompts/final-review-prompt-builder.ts :: FinalReviewPromptConfig
+- core/prompts/official-exam-prompt-builder.ts :: OfficialExamPromptBuilderConfig
+- core/prompts/online-exam-prompt-builder.ts :: OnlineExamPromptBuilderConfig
+- core/prompts/smart-geometry-prompt-director.ts :: GeometryPromptDetectionParams
+- core/prompts/smart-geometry-prompt-director.ts :: isGeometryContext
+- core/prompts/worksheet-drill-prompt-builder.ts :: WorksheetDrillPromptConfig
+- core/ssot/cartesian-graph-spec-ssot.ts :: GraphFunctionKind
+- core/ssot/curriculum-hierarchy-ssot.ts :: CurriculumLessonNode
+- core/ssot/geometry-archetype-ssot.ts :: GeometryFamilyId
+- core/ssot/geometry-archetype-ssot.ts :: TriangleDerivedBranchId
+- core/ssot/geometry-archetype-ssot.ts :: CircleDerivedBranchId
+- core/ssot/geometry-archetype-ssot.ts :: QuadrilateralDerivedBranchId
+- core/ssot/geometry-archetype-ssot.ts :: Solid3DDerivedBranchId
+- core/ssot/geometry-archetype-ssot.ts :: GeometryCanonicalBranchId
+- core/ssot/math-branches-ssot.ts :: MathBranchDefinition
+- core/supabase/supabase-realtime-submissions-channel.ts :: RealtimeWatchedTable
+- core/supabase/supabase-realtime-submissions-channel.ts :: SupabaseRealtimeChangePayload
+- core/validation/question-options-integrity-auditor.ts :: MCQIntegrityAuditReport
+- features/curriculum-library-hub/curriculum-saved-units-list.tsx :: CurriculumSavedUnitsListProps
+- features/curriculum-library-hub/overmath-google-drive-vault.ts :: VaultDocumentKind
+- features/electronic-exams-hub/exam-submissions-detail-drawer.tsx :: ExamSubmissionsDetailDrawerProps
+- features/electronic-exams-hub/student-honor-certificate-generator.tsx :: StudentHonorCertificateGeneratorProps
+- features/electronic-exams-hub/student-virtual-math-keypad.tsx :: StudentVirtualMathKeypadProps
+- features/generation-studio-hub/studio-booklet-generator-tab.tsx :: StudioBookletGeneratorTabProps
+- features/generation-studio-hub/studio-collapsible-section-card.tsx :: StudioCollapsibleSectionCardProps
+- features/generation-studio-hub/studio-context-ribbon-bar.tsx :: StudioContextRibbonBarProps
+- features/generation-studio-hub/studio-exam-generator-tab.tsx :: StudioExamGeneratorTabProps
+- features/generation-studio-hub/studio-exam-online-publish-panel.tsx :: StudioExamOnlinePublishPanelProps
+- features/generation-studio-hub/studio-final-review-generator-tab.tsx :: StudioFinalReviewGeneratorTabProps
+- features/generation-studio-hub/studio-mobile-pane-floating-switch.tsx :: StudioMobilePaneFloatingSwitchProps
+- features/generation-studio-hub/studio-number-stepper-field.tsx :: StudioNumberStepperFieldProps
+- features/generation-studio-hub/studio-single-stage-paste-panel.tsx :: StudioSingleStagePastePanelProps
+- features/generation-studio-hub/studio-stage-stepper-pills.tsx :: StudioStageStepItem
+- features/generation-studio-hub/studio-stage-stepper-pills.tsx :: StudioStageStepperPillsProps
+- features/generation-studio-hub/studio-sticky-primary-action-bar.tsx :: StudioStickyPrimaryActionBarProps
+- features/generation-studio-hub/studio-worksheet-generator-tab.tsx :: StudioWorksheetGeneratorTabProps
+- features/homework-drills-hub/student-homework-interactive-solver.tsx :: StudentHomeworkInteractiveSolverProps
+- features/pdf-preview-controls/pdf-answer-space-style-selector.tsx :: PDFAnswerSpaceStyleSelectorProps
+- features/pdf-preview-controls/pdf-answer-visibility-mode.tsx :: PDFAnswerVisibilityModeProps
+- features/pdf-preview-controls/pdf-autofit-mode-selector.tsx :: PDFAutoFitModeSelectorProps
+- features/pdf-preview-controls/pdf-color-theme-selector.tsx :: PDFColorThemeSelectorProps
+- features/pdf-preview-controls/pdf-columns-layout-toggle.tsx :: PDFColumnsLayoutToggleProps
+- features/pdf-preview-controls/pdf-controls-grouped-tool-panel.tsx :: PDFControlsGroupedToolPanelProps
+- features/pdf-preview-controls/pdf-density-budget-selector.tsx :: PDFDensityBudgetSelectorProps
+- features/pdf-preview-controls/pdf-exact-fontsize-control.tsx :: PDFExactFontSizeControlProps
+- features/pdf-preview-controls/pdf-font-family-selector.tsx :: PDFFontFamilySelectorProps
+- features/pdf-preview-controls/pdf-header-branding-editor.tsx :: PDFHeaderBrandingEditorProps
+- features/pdf-preview-controls/pdf-notation-direction-switch.tsx :: PDFNotationDirectionSwitchProps
+- features/pdf-preview-controls/pdf-numeral-system-switch.tsx :: PDFNumeralSystemSwitchProps
+- features/pdf-preview-controls/pdf-preview-orchestrator.tsx :: PDFPreviewOrchestratorProps
+- features/student-learning-portal/exam-session/exam-question-card.tsx :: ExamQuestionCardProps
+- features/student-learning-portal/exam-session/exam-result-screen.tsx :: ExamResultScreenProps
+- features/student-learning-portal/exam-session/exam-top-progress-bar.tsx :: ExamTopProgressBarProps
+- features/student-learning-portal/student-assigned-exams-tab.tsx :: StudentAssignedExamsTabProps
+- features/teacher-home-dashboard/dashboard-overview-charts-panel.tsx :: DashboardOverviewChartsPanelProps
+- features/teacher-home-dashboard/exam-strengths-weaknesses-analyzer.ts :: QuestionDiagnosticStat
+- features/teacher-home-dashboard/exam-strengths-weaknesses-analyzer.ts :: SingleExamDiagnosticReport
+- features/teacher-home-dashboard/exam-strengths-weaknesses-analyzer.ts :: CumulativeGradeDiagnosticReport
+- features/teacher-home-dashboard/grade-deep-diagnostic-analytics-panel.tsx :: GradeDeepDiagnosticAnalyticsPanelProps
+- features/teacher-home-dashboard/honor-roll-podium.tsx :: HonorRollPodiumProps
+- features/teacher-settings-hub/settings-enabled-grades-section.tsx :: SettingsEnabledGradesSectionProps
+- features/teacher-settings-hub/settings-notebooklm-links-section.tsx :: SettingsNotebooklmLinksSectionProps
+- features/teacher-settings-hub/settings-platform-logo-section.tsx :: SettingsPlatformLogoSectionProps
+- features/teacher-settings-hub/settings-teacher-identity-section.tsx :: SettingsTeacherIdentitySectionProps
+- features/unified-auth/stealth-teacher-unlock-trigger.tsx :: StealthTeacherUnlockTriggerProps
+- features/unified-auth/student-auth-submission-helper.tsx :: LoginAttemptOutcome
+- middleware.ts :: middleware

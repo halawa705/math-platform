@@ -6,7 +6,6 @@
  * هو نفسه المستخدم في القياس الخفي وفي الصفحة الفعلية فتتطابق الارتفاعات المقاسة مع المعروضة.
  */
 
-import React from "react";
 import type { PDFPrintSettingsStateSSOT } from "../ssot/pdf-print-settings-ssot";
 import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";

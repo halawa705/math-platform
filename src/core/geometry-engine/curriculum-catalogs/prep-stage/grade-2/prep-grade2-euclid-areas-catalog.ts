@@ -9,9 +9,7 @@
 import type {
   CanonicalGeometryFigureIR,
   CanonicalSegmentNode,
-  CanonicalVertexNode,
-  CanonicalAngleNode,
-} from "../../../../ssot/geometry-archetype-ssot";
+  CanonicalVertexNode,} from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
   type MathNotationLanguage,
@@ -28,7 +26,7 @@ export interface Grade2FigureBuildOptions {
 /**
  * مثلثان مشتركان في قاعدة واحدة ومحصوران بين مستقيمين متوازيين (تساوي المساحات)
  */
-export function buildGrade2TrianglesSameBaseEqualAreaFigure(
+function buildGrade2TrianglesSameBaseEqualAreaFigure(
   opts: Grade2FigureBuildOptions
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";

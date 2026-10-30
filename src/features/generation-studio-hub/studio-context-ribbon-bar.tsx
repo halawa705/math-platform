@@ -4,7 +4,6 @@
  * @file studio-context-ribbon-bar.tsx
  * @description شريط السياق الهادئ لاختيار (الصف الدراسي النشط -> الوحدة الحقيقية -> الدرس الحقيقي)
  * مربوط حصرياً بمستكشف المنهج (`loadActiveCurriculumUnitsSSOT`) وبالصفوف المفعلة (`loadEnabledGradesSSOT`).
- * خالٍ تماماً من أي وحدات وهمية أو قوائم فروع مزدحمة.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
@@ -17,8 +16,7 @@ import {
 import { loadEnabledGradesSSOT } from "@/core/ssot/teacher-identity-ssot";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 
-export const MODULE_ID_STUDIO_CONTEXT_RIBBON_BAR =
-  "studio_context_ribbon_bar" as const;
+export const MODULE_ID_STUDIO_CONTEXT_RIBBON_BAR = "studio_context_ribbon_bar" as const;
 
 export interface StudioContextRibbonBarProps {
   readonly selectedGradeId: string;
@@ -44,61 +42,42 @@ export default function StudioContextRibbonBar({
   onChangeLessonTitle,
   onChangeLessonOrder,
 }: StudioContextRibbonBarProps) {
-  const [enabledGrades, setEnabledGrades] = useState(() =>
-    loadEnabledGradesSSOT()
-  );
+  const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
 
   useEffect(() => {
-    const activeGrades = loadEnabledGradesSSOT();
-    setEnabledGrades(activeGrades);
+    setEnabledGrades(loadEnabledGradesSSOT());
     const loaded = loadActiveCurriculumUnitsSSOT(selectedGradeId);
     setUnits(loaded);
-    if (loaded.length > 0) {
-      const firstUnit = loaded[0];
-      if (firstUnit) {
-        onChangeUnitTitle?.(firstUnit.titleArabic);
-        onChangeBranch(firstUnit.branchId);
-        if (firstUnit.lessons[0]) {
-          onChangeLessonTitle(firstUnit.lessons[0].titleArabic);
-        }
-      }
+    const firstUnit = loaded[0];
+    if (firstUnit) {
+      onChangeUnitTitle?.(firstUnit.titleArabic);
+      onChangeBranch(firstUnit.branchId);
+      if (firstUnit.lessons[0]) onChangeLessonTitle(firstUnit.lessons[0].titleArabic);
     }
   }, [selectedGradeId]);
 
-  const activeUnit =
-    units.find((u) => u.titleArabic === selectedUnitTitle) || units[0];
+  const activeUnit = units.find((u) => u.titleArabic === selectedUnitTitle) || units[0];
   const lessonsList = activeUnit?.lessons || [];
 
   return (
-    <section
-      aria-label="سياق الصف والوحدة والدرس من مستكشف المنهج"
-      className="space-y-3 pt-2"
-    >
+    <section aria-label="سياق الصف والوحدة والدرس من مستكشف المنهج" className="space-y-3 pt-2">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {/* ١. الصف الدراسي النشط */}
         <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            الصف الدراسي
-          </label>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">الصف الدراسي</label>
           <select
             value={selectedGradeId}
             onChange={(e) => onChangeGrade(e.target.value)}
             className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
           >
             {enabledGrades.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.nameArabic}
-              </option>
+              <option key={g.id} value={g.id}>{g.nameArabic}</option>
             ))}
           </select>
         </div>
 
-        {/* ٢. رقم الدرس في المنهج */}
         <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
-            رقم الدرس
-          </label>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">رقم الدرس</label>
           <input
             type="number"
             min={1}
@@ -109,7 +88,6 @@ export default function StudioContextRibbonBar({
           />
         </div>
 
-        {/* ٣. الوحدة الدراسية */}
         <div className="col-span-1">
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">
             الوحدة {activeUnit ? `(${activeUnit.branchNameArabic})` : ""}:
@@ -118,9 +96,7 @@ export default function StudioContextRibbonBar({
             <select
               value={activeUnit?.titleArabic || ""}
               onChange={(e) => {
-                const pickedUnit = units.find(
-                  (u) => u.titleArabic === e.target.value
-                );
+                const pickedUnit = units.find((u) => u.titleArabic === e.target.value);
                 onChangeUnitTitle?.(e.target.value);
                 if (pickedUnit) {
                   onChangeBranch(pickedUnit.branchId);
@@ -133,9 +109,7 @@ export default function StudioContextRibbonBar({
               className="w-full min-h-[44px] px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
             >
               {units.map((u) => (
-                <option key={u.id} value={u.titleArabic}>
-                  [{u.branchNameArabic}] {u.titleArabic}
-                </option>
+                <option key={u.id} value={u.titleArabic}>[{u.branchNameArabic}] {u.titleArabic}</option>
               ))}
             </select>
           ) : (
@@ -149,11 +123,8 @@ export default function StudioContextRibbonBar({
           )}
         </div>
 
-        {/* ٤. الدرس المستهدف */}
         <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">
-            اسم الدرس
-          </label>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">اسم الدرس</label>
           {lessonsList.length > 0 ? (
             <select
               value={selectedLessonTitle}
@@ -165,9 +136,7 @@ export default function StudioContextRibbonBar({
               className="w-full min-h-[44px] px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
             >
               {lessonsList.map((lesson) => (
-                <option key={lesson.id} value={lesson.titleArabic}>
-                  {lesson.orderIndex}. {lesson.titleArabic}
-                </option>
+                <option key={lesson.id} value={lesson.titleArabic}>{lesson.orderIndex}. {lesson.titleArabic}</option>
               ))}
             </select>
           ) : (
@@ -184,13 +153,8 @@ export default function StudioContextRibbonBar({
 
       {units.length === 0 && (
         <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
-          <span>
-            💡 لم تقم بتقسيم منهج هذا الصف بعد في مستكشف المنهج.
-          </span>
-          <Link
-            href="/library"
-            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black"
-          >
+          <span>💡 لم تقم بتقسيم منهج هذا الصف بعد في مستكشف المنهج.</span>
+          <Link href="/library" className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black">
             🧭 انتقل لمستكشف المنهج لتقسيم هذا الصف الآن ↗
           </Link>
         </div>
@@ -198,4 +162,3 @@ export default function StudioContextRibbonBar({
     </section>
   );
 }
-

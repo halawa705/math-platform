@@ -9,10 +9,10 @@ import type { PageDensityBudgetMode } from "../ssot/pdf-print-settings-ssot";
 export const MODULE_ID_FLOW_PAGE_GEOMETRY_CONSTANTS =
   "flow_page_geometry_constants" as const;
 
-export const FLOW_PAGE_WIDTH_PX = 794;
-export const FLOW_PAGE_HEIGHT_PX = 1123;
-export const FLOW_PAGE_PADDING_X_PX = 20;
-export const FLOW_PAGE_PADDING_Y_PX = 18;
+const FLOW_PAGE_WIDTH_PX = 794;
+const FLOW_PAGE_HEIGHT_PX = 1123;
+const FLOW_PAGE_PADDING_X_PX = 20;
+const FLOW_PAGE_PADDING_Y_PX = 18;
 
 /** عرض المحتوى الداخلي = عرض الورقة − الهامشين الأفقيين (يطابق px-[20px] في الصفحة وفي الطباعة). */
 export const FLOW_PAGE_INNER_WIDTH_PX = FLOW_PAGE_WIDTH_PX - FLOW_PAGE_PADDING_X_PX * 2;

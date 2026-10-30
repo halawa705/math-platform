@@ -15,7 +15,7 @@ export const MODULE_ID_ADAPTIVE_MCQ_OPTIONS_GRID_SOLVER =
 /**
  * يحسب الطول البصري الصافي للبديل بعد تجريد أوامر LaTeX مثل `\frac` و `\sqrt` والمحددات `$`.
  */
-export function estimateVisualChoiceCharacterLength(choiceText: string): number {
+function estimateVisualChoiceCharacterLength(choiceText: string): number {
   if (!choiceText) return 0;
   const stripped = choiceText
     .replace(/\$/g, "")

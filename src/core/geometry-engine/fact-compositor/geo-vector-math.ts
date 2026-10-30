@@ -9,7 +9,7 @@ export interface Vec2 { readonly x: number; readonly y: number }
 export const vAdd = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x + b.x, y: a.y + b.y });
 export const vSub = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x - b.x, y: a.y - b.y });
 export const vScale = (a: Vec2, k: number): Vec2 => ({ x: a.x * k, y: a.y * k });
-export const vDot = (a: Vec2, b: Vec2): number => a.x * b.x + a.y * b.y;
+const vDot = (a: Vec2, b: Vec2): number => a.x * b.x + a.y * b.y;
 export const vLen = (a: Vec2): number => Math.hypot(a.x, a.y);
 export const vDist = (a: Vec2, b: Vec2): number => vLen(vSub(a, b));
 /** نقطة على القطعة a→b عند النسبة t (0 = a ، 1 = b). */

@@ -24,7 +24,7 @@ export interface FlowPageBudgetsPx {
   readonly nextPagePx: number;
 }
 
-export const FALLBACK_FLOW_PAGE_BUDGETS: FlowPageBudgetsPx = {
+const FALLBACK_FLOW_PAGE_BUDGETS: FlowPageBudgetsPx = {
   firstPagePx: FLOW_FALLBACK_FIRST_PAGE_BUDGET_PX,
   nextPagePx: FLOW_FALLBACK_NEXT_PAGE_BUDGET_PX,
 };

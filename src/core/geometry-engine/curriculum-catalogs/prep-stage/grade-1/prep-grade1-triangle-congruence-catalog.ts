@@ -28,7 +28,7 @@ export interface Grade1FigureBuildOptions {
 /**
  * مثلثان متطابقان بحالة ضلعين وزاوية محصورة (SAS)
  */
-export function buildGrade1TriangleCongruenceSASFigure(
+function buildGrade1TriangleCongruenceSASFigure(
   opts: Grade1FigureBuildOptions
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";

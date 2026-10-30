@@ -2,9 +2,7 @@
 
 /**
  * @file studio-booklet-generator-tab.tsx
- * @description تبويب مذكرة شرح الدرس بتصميم هادئ: شريط مراحل (١ ← ٢ ← ٣) يعرض مرحلة واحدة فقط في كل مرة
- * (برومبت + صندوق لصق خاص بها)، وأعداد الأسئلة داخل قسم قابل للطي، وزر إنشاء لاصق أسفل الشاشة.
- * المرحلة ٢ تقرأ أفكار المرحلة ١، والمرحلة ٣ (اختيارية) تقرأ أسئلة المرحلة ٢.
+ * @description تبويب مذكرة شرح الدرس بتصميم هادئ: شريط مراحل (١ ← ٢ ← ٣) يعرض مرحلة واحدة فقط في كل مرة.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 200 سطر).
  */
 
@@ -27,8 +25,7 @@ import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
-export const MODULE_ID_STUDIO_BOOKLET_GENERATOR_TAB =
-  "studio_booklet_generator_tab" as const;
+export const MODULE_ID_STUDIO_BOOKLET_GENERATOR_TAB = "studio_booklet_generator_tab" as const;
 
 export interface StudioBookletGeneratorTabProps {
   readonly gradeId?: string;
@@ -39,30 +36,13 @@ export interface StudioBookletGeneratorTabProps {
   readonly lessonOrder?: number;
   readonly branchNameAr: string;
   readonly onApplyBookletTitleToSheet: (newTitle: string) => void;
-  readonly onApplyParsedQuestionsToSheet?: (
-    questions: readonly PrintableMathQuestionItem[]
-  ) => void;
+  readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
 
 const STAGE_COPY = {
-  1: {
-    short: "الشرح والأمثلة",
-    title: "المرحلة ١ — الأفكار والأمثلة المحلولة",
-    hint: "أفكار الدرس + القاعدة + أمثلة محلولة بالخطوات.",
-    placeholder: "الصق رد المرحلة ١ هنا...",
-  },
-  2: {
-    short: "التدريبات والواجب",
-    title: "المرحلة ٢ — تدريبات الدرس والواجب",
-    hint: "تقرأ أفكار المرحلة ١ وتولد التدريبات والواجب بالأعداد التي حددتها.",
-    placeholder: "الصق رد المرحلة ٢ هنا...",
-  },
-  3: {
-    short: "الإجابات",
-    title: "المرحلة ٣ (اختيارية) — الإجابات النموذجية",
-    hint: "تقرأ أسئلة المرحلة ٢ وتكتب حلولها النموذجية.",
-    placeholder: "الصق رد المرحلة ٣ هنا...",
-  },
+  1: { short: "الشرح والأمثلة", title: "المرحلة ١ — الأفكار والأمثلة المحلولة", hint: "أفكار الدرس + القاعدة + أمثلة محلولة بالخطوات.", placeholder: "الصق رد المرحلة ١ هنا..." },
+  2: { short: "التدريبات والواجب", title: "المرحلة ٢ — تدريبات الدرس والواجب", hint: "تقرأ أفكار المرحلة ١ وتولد التدريبات والواجب بالأعداد التي حددتها.", placeholder: "الصق رد المرحلة ٢ هنا..." },
+  3: { short: "الإجابات", title: "المرحلة ٣ (اختيارية) — الإجابات النموذجية", hint: "تقرأ أسئلة المرحلة ٢ وتكتب حلولها النموذجية.", placeholder: "الصق رد المرحلة ٣ هنا..." },
 } as const;
 
 export default function StudioBookletGeneratorTab({
@@ -93,32 +73,18 @@ export default function StudioBookletGeneratorTab({
   useEffect(() => {
     setPrompt(
       buildBookletStageNotebookLMPrompt({
-        stageNumber: activeStage,
-        gradeNameArabic: gradeNameAr,
-        termNumber: 1,
-        branchId,
-        unitTitleArabic: unitTitleAr,
-        lessonTitleArabic: lessonTitle,
-        solvedExamplesPerIdea: examplesPerIdea,
-        drillsPerIdea,
-        homeworkMcqCount: hwMcq,
-        homeworkEssayCount: hwEssay,
-        extractedStage1Ideas: ideas,
-        extractedStage2Questions: questions,
+        stageNumber: activeStage, gradeNameArabic: gradeNameAr, termNumber: 1, branchId,
+        unitTitleArabic: unitTitleAr, lessonTitleArabic: lessonTitle,
+        solvedExamplesPerIdea: examplesPerIdea, drillsPerIdea, homeworkMcqCount: hwMcq, homeworkEssayCount: hwEssay,
+        extractedStage1Ideas: ideas, extractedStage2Questions: questions,
       })
     );
   }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, examplesPerIdea, drillsPerIdea, hwMcq, hwEssay, ideas, questions]);
 
   const buildPdf = (withStage3: boolean) => {
     const items = mergeBookletThreeStagesRepliesToPrintableItems({
-      stage1Raw: replies[1],
-      stage2Raw: replies[2],
-      stage3Raw: withStage3 ? replies[3] : "",
-      branchId,
-      branchNameAr,
-      unitId: "booklet-unit",
-      lessonId: "booklet-lesson",
-      lessonTitleArabic: lessonTitle,
+      stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "",
+      branchId, branchNameAr, unitId: "booklet-unit", lessonId: "booklet-lesson", lessonTitleArabic: lessonTitle,
     });
     if (items.length === 0) {
       setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء.");
@@ -131,16 +97,10 @@ export default function StudioBookletGeneratorTab({
         .map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! }))
     );
     onApplyParsedQuestionsToSheet?.(items);
-    const ideasCount = ideas.length > 0 ? ideas.length : undefined;
     onApplyBookletTitleToSheet(
       buildStandardDocumentTitleSSOT({
-        gradeId,
-        unitTitleInput: unitTitleAr,
-        lessonTitleInput: lessonTitle,
-        lessonOrderIndex: lessonOrder,
-        promptText: prompt,
-        rawReplyText: replies[1] || replies[2],
-        totalIdeasCount: ideasCount,
+        gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: lessonTitle, lessonOrderIndex: lessonOrder,
+        promptText: prompt, rawReplyText: replies[1] || replies[2], totalIdeasCount: ideas.length > 0 ? ideas.length : undefined,
       })
     );
   };
@@ -151,10 +111,7 @@ export default function StudioBookletGeneratorTab({
     <div className="space-y-3">
       <StudioStageStepperPills
         steps={([1, 2, 3] as const).map((n) => ({
-          stageNum: n,
-          shortTitleAr: STAGE_COPY[n].short,
-          isFilled: replies[n].trim().length > 5,
-          isOptional: n === 3,
+          stageNum: n, shortTitleAr: STAGE_COPY[n].short, isFilled: replies[n].trim().length > 5, isOptional: n === 3,
         }))}
         activeStageNum={activeStage}
         onSelectStage={(n) => setActiveStage(n as BookletPromptStageNumber)}
@@ -185,10 +142,7 @@ export default function StudioBookletGeneratorTab({
         }}
         isPromptCopied={copied}
         replyValue={replies[activeStage]}
-        onChangeReply={(v) => {
-          setNotice(null);
-          setReplies((prev) => ({ ...prev, [activeStage]: v }));
-        }}
+        onChangeReply={(v) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: v })); }}
         replyPlaceholderAr={stage.placeholder}
         contextNoteAr={
           activeStage === 2 && ideas.length > 0

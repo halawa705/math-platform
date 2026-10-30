@@ -5,7 +5,6 @@
  * @description شارة حالة الملاءمة التلقائية لصفحات الـ A4 (P-8 + X-4).
  */
 
-import React from "react";
 import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import type { AutoFitSweepState } from "./autofit-sweep-reducer";
 

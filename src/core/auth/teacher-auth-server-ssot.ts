@@ -15,8 +15,8 @@ import {
 
 export { base64UrlEncode, base64UrlDecode, getHmacCryptoKey };
 
-export const TEACHER_ADMIN_DEFAULT_USER = "halawa" as const;
-export const TEACHER_ADMIN_DEFAULT_PASS = "123451" as const;
+const TEACHER_ADMIN_DEFAULT_USER = "halawa" as const;
+const TEACHER_ADMIN_DEFAULT_PASS = "123451" as const;
 export const TEACHER_AUTH_COOKIE_NAME = "math_platform_teacher_session" as const;
 export const TEACHER_AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 يوماً بالثواني
 
@@ -30,7 +30,7 @@ function getSecretKey(): string {
   );
 }
 
-export function getTeacherMasterCredentials(): {
+function getTeacherMasterCredentials(): {
   readonly username: string;
   readonly password: string;
 } {

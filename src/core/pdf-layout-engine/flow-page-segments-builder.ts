@@ -68,7 +68,7 @@ export function buildSegmentsForSlice(
   return segments;
 }
 
-export function segmentHeightPx(segment: FlowPageSegment, heightOf: FlowHeightLookup, gapPx: number): number {
+function segmentHeightPx(segment: FlowPageSegment, heightOf: FlowHeightLookup, gapPx: number): number {
   if (segment.kind === "full") return segment.heightPx;
   return Math.max(
     stackHeightPx(segment.rightItems.map(heightOf), gapPx),

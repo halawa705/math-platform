@@ -26,8 +26,7 @@ import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
-export const MODULE_ID_STUDIO_FINAL_REVIEW_GENERATOR_TAB =
-  "studio_final_review_generator_tab" as const;
+export const MODULE_ID_STUDIO_FINAL_REVIEW_GENERATOR_TAB = "studio_final_review_generator_tab" as const;
 
 export interface StudioFinalReviewGeneratorTabProps {
   readonly gradeId?: string;
@@ -36,9 +35,7 @@ export interface StudioFinalReviewGeneratorTabProps {
   readonly unitTitleAr?: string;
   readonly branchNameAr: string;
   readonly onApplyReviewTitleToSheet: (newTitle: string) => void;
-  readonly onApplyParsedQuestionsToSheet?: (
-    questions: readonly PrintableMathQuestionItem[]
-  ) => void;
+  readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
 
 const STAGE_COPY = {
@@ -124,10 +121,7 @@ export default function StudioFinalReviewGeneratorTab({
       buildStandardDocumentTitleSSOT({
         gradeId,
         unitTitleInput: unitTitleAr,
-        lessonTitleInput:
-          scope === "final_exam_night_capsule"
-            ? "المراجعة النهائية الشاملة"
-            : "مراجعة اختبار الشهر",
+        lessonTitleInput: scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر",
         promptText: prompt,
         rawReplyText: replies[1] || replies[2],
       })
@@ -139,20 +133,16 @@ export default function StudioFinalReviewGeneratorTab({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
-        {(
-          [
-            { id: "final_exam_night_capsule", label: "🌟 ليلة الامتحان" },
-            { id: "monthly_revision", label: "📅 مراجعة الشهر" },
-          ] as const
-        ).map((opt) => (
+        {([
+          { id: "final_exam_night_capsule", label: "🌟 ليلة الامتحان" },
+          { id: "monthly_revision", label: "📅 مراجعة الشهر" },
+        ] as const).map((opt) => (
           <button
             key={opt.id}
             type="button"
             onClick={() => setScope(opt.id)}
             className={`min-h-[44px] rounded-xl text-xs font-black cursor-pointer ${
-              scope === opt.id
-                ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-sm"
-                : "text-slate-600 dark:text-slate-400"
+              scope === opt.id ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-sm" : "text-slate-600 dark:text-slate-400"
             }`}
           >
             {opt.label}
@@ -171,11 +161,7 @@ export default function StudioFinalReviewGeneratorTab({
         onSelectStage={(n) => setActiveStage(n as FinalReviewStageNumber)}
       />
 
-      <StudioCollapsibleSectionCard
-        icon="🔢"
-        titleAr="أعداد الأسئلة"
-        summaryAr={`${mcqCount} اختر • ${essayCount} مقالي`}
-      >
+      <StudioCollapsibleSectionCard icon="🔢" titleAr="أعداد الأسئلة" summaryAr={`${mcqCount} اختر • ${essayCount} مقالي`}>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
           <StudioNumberStepperField labelAr="أسئلة اختر" value={mcqCount} min={1} max={60} onChange={setMcqCount} />
           <StudioNumberStepperField labelAr="أسئلة مقالية" value={essayCount} min={1} max={40} onChange={setEssayCount} />
@@ -194,16 +180,9 @@ export default function StudioFinalReviewGeneratorTab({
         }}
         isPromptCopied={copied}
         replyValue={replies[activeStage]}
-        onChangeReply={(v) => {
-          setNotice(null);
-          setReplies((prev) => ({ ...prev, [activeStage]: v }));
-        }}
+        onChangeReply={(v) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: v })); }}
         replyPlaceholderAr={stage.placeholder}
-        contextNoteAr={
-          activeStage === 3 && essays.length > 0
-            ? `تمت قراءة ${essays.length} مسألة مقالية من المرحلة ٢ وإدراجها في البرومبت`
-            : undefined
-        }
+        contextNoteAr={activeStage === 3 && essays.length > 0 ? `تمت قراءة ${essays.length} مسألة مقالية من المرحلة ٢ وإدراجها في البرومبت` : undefined}
       />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />

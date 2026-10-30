@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 70 سطراً).
  */
 
-import React from "react";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
 import type { NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";

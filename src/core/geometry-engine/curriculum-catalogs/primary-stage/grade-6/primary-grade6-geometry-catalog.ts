@@ -27,7 +27,7 @@ export interface Grade6FigureBuildOptions {
 /**
  * دائرة مع نصف قطر r مرسوم ومحدد بوحدة سم
  */
-export function buildGrade6CircleRadiusFigure(
+function buildGrade6CircleRadiusFigure(
   opts: Grade6FigureBuildOptions
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";

@@ -28,7 +28,7 @@ export interface Grade4FigureBuildOptions {
 /**
  * خطوط مستقيمة متوازية أو متعامدة
  */
-export function buildGrade4LinesRelationFigure(
+function buildGrade4LinesRelationFigure(
   relation: "parallel" | "perpendicular" | "intersecting",
   opts: Grade4FigureBuildOptions
 ): CanonicalGeometryFigureIR {
@@ -80,7 +80,7 @@ export function buildGrade4LinesRelationFigure(
 /**
  * زاوية محددة النوع (قائمة، حادة، منفرجة)
  */
-export function buildGrade4AngleTypeFigure(
+function buildGrade4AngleTypeFigure(
   kind: "right" | "acute" | "obtuse",
   opts: Grade4FigureBuildOptions
 ): CanonicalGeometryFigureIR {
@@ -110,7 +110,7 @@ export function buildGrade4AngleTypeFigure(
 /**
  * مستطيل أو مربع لحساب المحيط والمساحة مع الأبعاد
  */
-export function buildGrade4PerimeterAreaFigure(
+function buildGrade4PerimeterAreaFigure(
   shape: "rectangle" | "square",
   opts: Grade4FigureBuildOptions
 ): CanonicalGeometryFigureIR {

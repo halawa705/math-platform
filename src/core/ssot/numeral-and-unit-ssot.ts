@@ -49,7 +49,7 @@ const EASTERN_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "�
 /**
  * يحول أي نص أو رقم إلى الأرقام العربية الغربية القياسية (0-9) للحسابات الداخلية.
  */
-export function toWesternNumeralsSSOT(input: string | number): string {
+function toWesternNumeralsSSOT(input: string | number): string {
   return String(input).replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632));
 }
 
@@ -157,3 +157,5 @@ export function localizeGeometricVertexLabelSSOT(
   }
   return ENGLISH_TO_ARABIC_VERTEX_MAP[clean.toUpperCase()] || clean;
 }
+
+export const ARABIC_CHOICE_LETTERS = ["أ", "ب", "جـ", "د"] as const;

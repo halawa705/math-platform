@@ -6,9 +6,9 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطر).
  */
 
-import React from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import {
+  ARABIC_CHOICE_LETTERS,
   formatNumeralsByModeSSOT,
   type MathNotationLanguage,
   type NumeralDisplayMode,
@@ -20,8 +20,6 @@ import type {
 
 export const MODULE_ID_OFFICIAL_MCQ_ANSWER_KEY_SUMMARY_TABLE =
   "official_mcq_answer_key_summary_table" as const;
-
-const ARABIC_CHOICE_LETTERS = ["أ", "ب", "جـ", "د"] as const;
 
 export function OfficialMcqAnswerKeySummaryTable({
   questions,

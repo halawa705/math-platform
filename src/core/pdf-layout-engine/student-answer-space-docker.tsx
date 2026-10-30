@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 70 سطراً).
  */
 
-import React from "react";
 import type { AnswerSpaceStyleMode } from "../ssot/pdf-print-settings-ssot";
 
 export interface StudentAnswerSpaceDockerProps {

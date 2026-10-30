@@ -11,15 +11,13 @@ import {
   STUDENT_AUTH_COOKIE_MAX_AGE,
   STUDENT_AUTH_COOKIE_NAME,
 } from "@/core/auth/student-auth-server-ssot";
-
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://ribcyosvoiwtrpynyzjp.supabase.co";
+import {
+  SUPABASE_PUBLIC_KEY,
+  SUPABASE_URL,
+} from "@/core/supabase/supabase-config-ssot";
 
 const SUPABASE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_-_NDzAmrswsChgitYYrIKw_iEmWYIqD";
+  process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_PUBLIC_KEY;
 
 export async function POST(request: Request) {
   try {

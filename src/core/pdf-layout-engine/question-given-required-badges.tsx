@@ -6,7 +6,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 70 سطراً).
  */
 
-import React from "react";
 import type { NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 

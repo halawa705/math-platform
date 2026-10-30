@@ -30,12 +30,9 @@ export interface PublishedOnlineExam {
 }
 
 const PUBLISHED_EXAMS_STORAGE_KEY = "math_platform_published_exams_v2" as const;
-
 export const PUBLISHED_EXAMS_UPDATED_EVENT = "math-platform-exams-updated" as const;
 
-function normalizeAndAutoExpireExams(
-  rawList: readonly PublishedOnlineExam[]
-): {
+function normalizeAndAutoExpireExams(rawList: readonly PublishedOnlineExam[]): {
   readonly exams: readonly PublishedOnlineExam[];
   readonly NewlyExpired: readonly PublishedOnlineExam[];
 } {
@@ -44,35 +41,15 @@ function normalizeAndAutoExpireExams(
 
   const normalized = rawList.map((item) => {
     const publishedAtIso = item.publishedAtIso || new Date().toISOString();
-    const availabilityDays =
-      typeof item.availabilityDays === "number" && item.availabilityDays > 0
-        ? item.availabilityDays
-        : 7;
-    const expiresAtIso =
-      item.expiresAtIso ||
-      new Date(
-        Date.parse(publishedAtIso) + availabilityDays * 86_400_000
-      ).toISOString();
+    const availabilityDays = typeof item.availabilityDays === "number" && item.availabilityDays > 0 ? item.availabilityDays : 7;
+    const expiresAtIso = item.expiresAtIso || new Date(Date.parse(publishedAtIso) + availabilityDays * 86_400_000).toISOString();
 
-    const isTimerExpired = Date.parse(expiresAtIso) <= nowMs;
-    if (item.status === "active" && isTimerExpired) {
-      const archivedItem: PublishedOnlineExam = {
-        ...item,
-        availabilityDays,
-        publishedAtIso,
-        expiresAtIso,
-        status: "archived",
-      };
+    if (item.status === "active" && Date.parse(expiresAtIso) <= nowMs) {
+      const archivedItem: PublishedOnlineExam = { ...item, availabilityDays, publishedAtIso, expiresAtIso, status: "archived" };
       newlyExpired.push(archivedItem);
       return archivedItem;
     }
-
-    return {
-      ...item,
-      availabilityDays,
-      publishedAtIso,
-      expiresAtIso,
-    };
+    return { ...item, availabilityDays, publishedAtIso, expiresAtIso };
   });
 
   return { exams: normalized, NewlyExpired: newlyExpired };
@@ -87,10 +64,7 @@ export function loadAllPublishedExamsSSOT(): readonly PublishedOnlineExam[] {
     if (!Array.isArray(parsed)) return [];
     const { exams, NewlyExpired } = normalizeAndAutoExpireExams(parsed);
     if (NewlyExpired.length > 0) {
-      window.localStorage.setItem(
-        PUBLISHED_EXAMS_STORAGE_KEY,
-        JSON.stringify(exams)
-      );
+      window.localStorage.setItem(PUBLISHED_EXAMS_STORAGE_KEY, JSON.stringify(exams));
     }
     return exams;
   } catch {
@@ -101,55 +75,36 @@ export function loadAllPublishedExamsSSOT(): readonly PublishedOnlineExam[] {
 function persistExams(exams: readonly PublishedOnlineExam[]): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(
-      PUBLISHED_EXAMS_STORAGE_KEY,
-      JSON.stringify(exams)
-    );
+    window.localStorage.setItem(PUBLISHED_EXAMS_STORAGE_KEY, JSON.stringify(exams));
     window.dispatchEvent(new CustomEvent(PUBLISHED_EXAMS_UPDATED_EVENT));
   } catch {
     // ignore storage write error
   }
 }
 
-export async function refreshPublishedExamsFromSupabaseSSOT(): Promise<
-  readonly PublishedOnlineExam[]
-> {
+export async function refreshPublishedExamsFromSupabaseSSOT(): Promise<readonly PublishedOnlineExam[]> {
   const local = loadAllPublishedExamsSSOT();
   const cloud = await pullPublishedExamsFromSupabaseCloud();
   if (!cloud) return local;
 
   const byId = new Map<string, PublishedOnlineExam>();
-  for (const e of local) {
-    byId.set(e.examId, e);
-  }
+  for (const e of local) byId.set(e.examId, e);
   for (const c of cloud) {
     const existing = byId.get(c.examId);
-    const finalStatus =
-      existing?.status === "archived" || c.status === "archived"
-        ? "archived"
-        : "active";
+    const finalStatus = existing?.status === "archived" || c.status === "archived" ? "archived" : "active";
     byId.set(c.examId, { ...c, status: finalStatus });
   }
 
-  const merged = Array.from(byId.values()).sort((a, b) =>
-    b.publishedAtIso.localeCompare(a.publishedAtIso)
-  );
+  const merged = Array.from(byId.values()).sort((a, b) => b.publishedAtIso.localeCompare(a.publishedAtIso));
   const { exams } = normalizeAndAutoExpireExams(merged);
   persistExams(exams);
   return exams;
 }
 
-export function loadActiveExamsForGradeSSOT(
-  gradeId: string
-): readonly PublishedOnlineExam[] {
-  return loadAllPublishedExamsSSOT().filter(
-    (e) => e.gradeId === gradeId && e.status === "active"
-  );
+export function loadActiveExamsForGradeSSOT(gradeId: string): readonly PublishedOnlineExam[] {
+  return loadAllPublishedExamsSSOT().filter((e) => e.gradeId === gradeId && e.status === "active");
 }
 
-/**
- * يخزن النسخة العامة فقط من الاختبار محلياً (بدون أي إجابات صحيحة أو حلول).
- */
 export function publishOnlineExamSSOT(input: {
   readonly examId?: string;
   readonly gradeId: string;
@@ -179,10 +134,7 @@ export function publishOnlineExamSSOT(input: {
     status: "active",
   };
 
-  persistExams([
-    created,
-    ...existing.filter((e) => e.examId !== created.examId),
-  ]);
+  persistExams([created, ...existing.filter((e) => e.examId !== created.examId)]);
   notifyRealtimeTableUpdated("electronic_exams");
   return created;
 }
@@ -218,20 +170,11 @@ export function formatExamExpiryRemainingAr(expiresAtIso: string): {
   if (days > 0) {
     return {
       isExpired: false,
-      labelAr:
-        hours > 0
-          ? `متبقي ${days} يوم و ${hours} ساعة قبل الأرشفة`
-          : `متبقي ${days} يوم قبل الأرشفة`,
+      labelAr: hours > 0 ? `متبقي ${days} يوم و ${hours} ساعة قبل الأرشفة` : `متبقي ${days} يوم قبل الأرشفة`,
     };
   }
   if (hours > 0) {
-    return {
-      isExpired: false,
-      labelAr: `متبقي ${hours} ساعة و ${minutes} دقيقة قبل الأرشفة`,
-    };
+    return { isExpired: false, labelAr: `متبقي ${hours} ساعة و ${minutes} دقيقة قبل الأرشفة` };
   }
-  return {
-    isExpired: false,
-    labelAr: `متبقي ${minutes} دقيقة قبل الأرشفة`,
-  };
+  return { isExpired: false, labelAr: `متبقي ${minutes} دقيقة قبل الأرشفة` };
 }

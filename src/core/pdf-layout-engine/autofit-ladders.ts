@@ -17,12 +17,12 @@ export interface AutoFitRung {
 const r = (fontPt: number, figureScale: number, answerLines: 1 | 2 | 3, compactHeader: boolean, hideAccreditation: boolean): AutoFitRung =>
   ({ fontPt, figureScale, answerLines, compactHeader, hideAccreditation });
 
-export const BOOKLET_FILL_LADDER: readonly AutoFitRung[] = [
+const BOOKLET_FILL_LADDER: readonly AutoFitRung[] = [
   r(14, 1, 2, false, false), r(13.5, 1, 2, false, false), r(13, 1, 2, false, false),
   r(12.5, 1, 2, false, false), r(12, 1, 2, false, false), r(11.5, 1, 2, false, false),
 ];
 
-export const EXAM_MAX_PAGES_LADDER: readonly AutoFitRung[] = [
+const EXAM_MAX_PAGES_LADDER: readonly AutoFitRung[] = [
   r(13, 1.15, 3, false, false), r(12.5, 1, 3, false, false), r(12, 1, 2, false, false),
   r(12, 0.9, 2, true, false), r(11.5, 0.85, 2, true, true), r(11.5, 0.8, 1, true, true),
   r(11, 0.75, 1, true, true), r(10.5, 0.7, 1, true, true),

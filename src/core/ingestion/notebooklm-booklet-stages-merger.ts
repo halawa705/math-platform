@@ -4,7 +4,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 195 سطراً).
  */
 
-import type { BookletLessonContentIR, IdeaPedagogicalNode } from "../ir/booklet-lesson-content-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
@@ -21,21 +20,6 @@ import {
 } from "./notebooklm-stage-parsers-helper";
 
 export const MODULE_ID_NOTEBOOKLM_BOOKLET_STAGES_MERGER = "notebooklm_booklet_stages_merger" as const;
-
-export interface MergeBookletThreeStagesInput {
-  readonly bookletId: string;
-  readonly gradeId: string;
-  readonly gradeNameArabic: string;
-  readonly termNumber: 1 | 2;
-  readonly branchId: MathBranchId;
-  readonly unitId: string;
-  readonly unitTitleArabic: string;
-  readonly lessonId: string;
-  readonly lessonTitleArabic: string;
-  readonly stage1RawResponse: string;
-  readonly stage2RawResponse?: string;
-  readonly stage3RawResponse?: string;
-}
 
 export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   readonly stage1Raw: string;
@@ -175,40 +159,4 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   });
 
   return resultItems;
-}
-
-export function parseBookletResponseToPrintableItems(params: {
-  readonly rawText: string;
-  readonly branchId: MathBranchId;
-  readonly branchNameAr: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-  readonly lessonTitleArabic: string;
-}): readonly PrintableMathQuestionItem[] {
-  return mergeBookletThreeStagesRepliesToPrintableItems({
-    stage1Raw: params.rawText, branchId: params.branchId, branchNameAr: params.branchNameAr,
-    unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: params.lessonTitleArabic,
-  });
-}
-
-export function mergeNotebookLMBookletThreeStagesToIR(input: MergeBookletThreeStagesInput): BookletLessonContentIR {
-  const items = mergeBookletThreeStagesRepliesToPrintableItems({
-    stage1Raw: input.stage1RawResponse, stage2Raw: input.stage2RawResponse, stage3Raw: input.stage3RawResponse,
-    branchId: input.branchId, branchNameAr: input.unitTitleArabic,
-    unitId: input.unitId, lessonId: input.lessonId, lessonTitleArabic: input.lessonTitleArabic,
-  });
-  const pedagogicalIdeas: IdeaPedagogicalNode[] = items.map((item, idx) => ({
-    ideaId: `idea_${idx + 1}`, ideaOrderNumber: idx + 1,
-    ideaTitleArabic: item.ideaBannerTitleAr || `الفكرة ${idx + 1}`,
-    conceptualExplanationArabic: item.conceptExplanationAr || item.promptAr,
-    boxedRuleOrTheoremArabic: item.framedRuleAr || "",
-    workedExamples: [], immediateStudentDrills: [],
-  }));
-  return {
-    bookletId: input.bookletId, gradeId: input.gradeId, gradeNameArabic: input.gradeNameArabic,
-    termNumber: input.termNumber, branchId: input.branchId, unitId: input.unitId,
-    unitTitleArabic: input.unitTitleArabic, lessonId: input.lessonId, lessonTitleArabic: input.lessonTitleArabic,
-    executiveSummaryRulesArabic: pedagogicalIdeas.map((i) => i.boxedRuleOrTheoremArabic).filter(Boolean),
-    pedagogicalIdeas, comprehensiveExercises: [], homeworkAssignmentQuestions: [],
-  };
 }

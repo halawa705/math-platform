@@ -41,9 +41,7 @@ import GradeDeepDiagnosticAnalyticsPanel from "./grade-deep-diagnostic-analytics
 import DashboardOverviewChartsPanel from "./dashboard-overview-charts-panel";
 
 export default function TeacherExecutiveDashboardView() {
-  const [identity, setIdentity] = useState<OwnerTeacherIdentity>(
-    DEFAULT_OWNER_TEACHER_IDENTITY_SSOT
-  );
+  const [identity, setIdentity] = useState<OwnerTeacherIdentity>(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
   const [enabledGrades, setEnabledGrades] = useState<readonly CurriculumGradeNode[]>([]);
   const [selectedGradeId, setSelectedGradeId] = useState<string>("");
   const [refreshTick, setRefreshTick] = useState<number>(0);
@@ -54,9 +52,7 @@ export default function TeacherExecutiveDashboardView() {
       setIdentity(loadTeacherIdentitySSOT());
       const grades = loadEnabledGradesSSOT();
       setEnabledGrades(grades);
-      setSelectedGradeId((prev) =>
-        grades.some((g) => g.id === prev) ? prev : grades[0]?.id || ""
-      );
+      setSelectedGradeId((prev) => (grades.some((g) => g.id === prev) ? prev : grades[0]?.id || ""));
     };
     const bump = () => setRefreshTick((t) => t + 1);
     const pullCloud = () => {
@@ -99,20 +95,10 @@ export default function TeacherExecutiveDashboardView() {
   const totalSubmitted = metrics.reduce((s, m) => s + m.completedExamsCount, 0);
   const totalUnreviewed = metrics.reduce((s, m) => s + m.unreviewedSubmissionsCount, 0);
   const gradesWithScores = metrics.filter((m) => m.completedExamsCount > 0);
-  const overallAverage =
-    totalSubmitted > 0
-      ? Math.round(
-          gradesWithScores.reduce(
-            (s, m) => s + m.averageScorePercentage * m.completedExamsCount,
-            0
-          ) / totalSubmitted
-        )
-      : null;
-  const participationRate =
-    totalRegistered > 0
-      ? Math.min(100, Math.round((totalSubmitted / totalRegistered) * 100))
-      : 0;
-
+  const overallAverage = totalSubmitted > 0
+    ? Math.round(gradesWithScores.reduce((s, m) => s + m.averageScorePercentage * m.completedExamsCount, 0) / totalSubmitted)
+    : null;
+  const participationRate = totalRegistered > 0 ? Math.min(100, Math.round((totalSubmitted / totalRegistered) * 100)) : 0;
   const activeMetric = metrics.find((m) => m.gradeId === selectedGradeId) || metrics[0];
 
   const kpis: readonly { label: string; value: string; tone: string }[] = [
@@ -123,50 +109,30 @@ export default function TeacherExecutiveDashboardView() {
   ];
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen pb-28 md:pb-14 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100"
-    >
+    <div dir="rtl" className="min-h-screen pb-28 md:pb-14 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100">
       <TopFourCentersNavigationBar activeCenter="dashboard" />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-black">
-              {identity.teacherFullName}
-              {identity.teacherNickname ? ` (${identity.teacherNickname})` : ""}
+              {identity.teacherFullName}{identity.teacherNickname ? ` (${identity.teacherNickname})` : ""}
             </h1>
             <p className="text-xs font-bold text-slate-500 flex items-center gap-2">
               <span>نظرة سريعة على {identity.platformBrandName}</span>
               <span
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isRealtimeConnected
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                    : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                  isRealtimeConnected ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
                 }`}
               >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isRealtimeConnected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
-                  }`}
-                />
+                <span className={`w-1.5 h-1.5 rounded-full ${isRealtimeConnected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
                 {isRealtimeConnected ? "بث لحظي نشط (Realtime)" : "مزامنة دورية"}
               </span>
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              href="/assessments"
-              className="px-4 py-2 rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black"
-            >
-              الاختبارات
-            </Link>
-            <Link
-              href="/studio"
-              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-black"
-            >
-              الاستوديو
-            </Link>
+            <Link href="/assessments" className="px-4 py-2 rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black">الاختبارات</Link>
+            <Link href="/studio" className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-black">الاستوديو</Link>
           </div>
         </header>
 
@@ -189,9 +155,7 @@ export default function TeacherExecutiveDashboardView() {
                   type="button"
                   onClick={() => setSelectedGradeId(g.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap cursor-pointer transition ${
-                    selectedGradeId === g.id
-                      ? "bg-indigo-900 text-white dark:bg-teal-600"
-                      : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+                    selectedGradeId === g.id ? "bg-indigo-900 text-white dark:bg-teal-600" : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300"
                   }`}
                 >
                   {g.nameArabic}
@@ -212,11 +176,7 @@ export default function TeacherExecutiveDashboardView() {
         </section>
 
         {activeMetric && (
-          <GradeDeepDiagnosticAnalyticsPanel
-            gradeId={activeMetric.gradeId}
-            gradeNameAr={activeMetric.gradeNameAr}
-            refreshTick={refreshTick}
-          />
+          <GradeDeepDiagnosticAnalyticsPanel gradeId={activeMetric.gradeId} gradeNameAr={activeMetric.gradeNameAr} refreshTick={refreshTick} />
         )}
 
         <DashboardOverviewChartsPanel

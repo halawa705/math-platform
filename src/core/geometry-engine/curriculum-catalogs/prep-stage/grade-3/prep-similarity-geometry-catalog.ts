@@ -29,11 +29,6 @@ import { composeParametricSimilarQuadsFigure } from "../../../parametric-similar
 export const MODULE_ID_PREP_SIMILARITY_GEOMETRY_CATALOG =
   "prep_similarity_geometry_catalog" as const;
 
-export interface SimilarityFigureBuildOptions {
-  readonly figureId: string;
-  readonly notationLanguage?: MathNotationLanguage;
-}
-
 /**
  * مطابقة أوصاف وأسئلة درس التشابه وتحويلها إلى الشكل الهندسي المتجهي الدقيق
  */

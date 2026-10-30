@@ -7,7 +7,7 @@
  * (3) لا تخرج المعادلة عن حدود العمود أبداً. يُعاد الضبط عند تغيّر العرض أو بعد تحميل الخطوط.
  */
 
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 export const MODULE_ID_MATH_FORMULA_FIT_BOX = "math_formula_fit_box" as const;
 

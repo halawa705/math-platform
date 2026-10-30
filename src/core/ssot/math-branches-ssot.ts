@@ -166,5 +166,3 @@ export const MATH_BRANCHES_SSOT: Record<MathBranchId, MathBranchDefinition> = {
     defaultPromptGuidance: "التركيز على السرعة والعجلة، قوانين نيوتن للحركة، البكرات، الدفع والتصادم، والشغل والطاقة.",
   },
 };
-
-export const ALL_MATH_BRANCHES_LIST: readonly MathBranchDefinition[] = Object.values(MATH_BRANCHES_SSOT);

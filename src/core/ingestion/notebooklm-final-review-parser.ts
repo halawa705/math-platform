@@ -7,7 +7,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
-import type { QuestionAssessmentIR } from "../ir/question-assessment-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import {
   convertQuestionAssessmentIRToPrintableItem,
@@ -18,14 +17,6 @@ import { parseNotebookLMExamQuestionsToIR } from "./notebooklm-exam-questions-pa
 
 export const MODULE_ID_NOTEBOOKLM_FINAL_REVIEW_PARSER =
   "notebooklm_final_review_parser" as const;
-
-export interface ParsedFinalReviewCapsuleIR {
-  readonly reviewId: string;
-  readonly branchId: MathBranchId;
-  readonly titleArabic: string;
-  readonly goldenRulesCapsuleArabic: readonly string[];
-  readonly reviewQuestions: readonly QuestionAssessmentIR[];
-}
 
 function extractStage3EssaySolutionsByNumber(
   stage3Cleaned: string
@@ -149,41 +140,4 @@ export function mergeFinalReviewThreeStagesToPrintableItems(params: {
   }
 
   return resultItems;
-}
-
-export function parseNotebookLMFinalReviewResponse(params: {
-  readonly reviewId: string;
-  readonly branchId: MathBranchId;
-  readonly titleArabic: string;
-  readonly rawResponse: string;
-}): ParsedFinalReviewCapsuleIR {
-  const reviewQuestions = parseNotebookLMExamQuestionsToIR({
-    rawText: params.rawResponse,
-    branchId: params.branchId,
-    unitId: "final-review-unit",
-    lessonId: params.reviewId,
-    lessonTitleArabic: params.titleArabic,
-  });
-
-  return {
-    reviewId: params.reviewId,
-    branchId: params.branchId,
-    titleArabic: params.titleArabic,
-    goldenRulesCapsuleArabic: [],
-    reviewQuestions,
-  };
-}
-
-export function parseFinalReviewResponseToPrintableItems(params: {
-  readonly rawText: string;
-  readonly branchId: MathBranchId;
-  readonly branchNameAr: string;
-  readonly titleArabic: string;
-}): readonly PrintableMathQuestionItem[] {
-  return mergeFinalReviewThreeStagesToPrintableItems({
-    stage1Raw: params.rawText,
-    branchId: params.branchId,
-    branchNameAr: params.branchNameAr,
-    titleArabic: params.titleArabic,
-  });
 }

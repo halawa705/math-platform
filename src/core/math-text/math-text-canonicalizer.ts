@@ -30,7 +30,7 @@ function tidyLine(line: string, indentation: string): string {
   return (indentation + joined).replace(/[ \t]+$/g, "");
 }
 
-export function canonicalizeMathLine(line: string): string {
+function canonicalizeMathLine(line: string): string {
   let l = convertEnglishUnitsToArabic(line);
   l = balanceDollarsInLine(l);
   l = convertEgyptianIntervals(l);

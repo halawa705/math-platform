@@ -16,7 +16,7 @@ import {
 
 export const MODULE_ID_SOLID3D_ROOT_CORE = "solid3d_root_core" as const;
 
-export function project3DPointToOblique2D(
+function project3DPointToOblique2D(
   x: number,
   y: number,
   z: number,

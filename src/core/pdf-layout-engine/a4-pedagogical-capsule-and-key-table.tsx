@@ -2,14 +2,10 @@
 
 /**
  * @file a4-pedagogical-capsule-and-key-table.tsx
- * @description مكون ذري مستقل لتصيير:
- * 1. كبسولة الفكرة والمفهوم الرياضي والقانون المؤطر (`PedagogicalIdeaAndRuleCapsule`) بعرض كامل للورقة (`col-span-full`).
- * 2. صندوق خطوات الحل النموذجي المرقم (`StructuredStepByStepSolutionBox`) بدون تكرار لفظ "الناتج النهائي".
- * 3. جدول مفتاح إجابات الاختيار من متعدد الرسمي (`OfficialMcqAnswerKeySummaryTable`) في أسفل الورقة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * @description مكون ذري مستقل لتصيير كبسولة الفكرة والمفهوم الرياضي والقانون المؤطر (`PedagogicalIdeaAndRuleCapsule`) بعرض كامل للورقة (`col-span-full`).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
-import React from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import {
   formatNumeralsByModeSSOT,
@@ -24,8 +20,6 @@ import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
 
 export const MODULE_ID_A4_PEDAGOGICAL_CAPSULE_AND_KEY_TABLE =
   "a4_pedagogical_capsule_and_key_table" as const;
-
-const ARABIC_CHOICE_LETTERS = ["أ", "ب", "جـ", "د"] as const;
 
 const ARABIC_ORDINAL_MAP: Record<string, string> = {
   "الأولى": "1", "الاولى": "1", "الأول": "1", "الاول": "1", "الثانية": "2", "الثاني": "2", "الثالثة": "3", "الثالث": "3",
@@ -76,9 +70,7 @@ export function PedagogicalIdeaAndRuleCapsule({
 
   return (
     <div
-      style={{
-        breakInside: "avoid",
-      }}
+      style={{ breakInside: "avoid" }}
       className="pedagogical-idea-capsule w-full min-w-0 my-1 space-y-1.5"
     >
       {item.ideaBannerTitleAr && (
@@ -123,10 +115,7 @@ export function PedagogicalIdeaAndRuleCapsule({
         >
           {item.conceptExplanationAr && (
             <div
-              style={{
-                backgroundColor: "#FFFDF5",
-                borderColor: "#F59E0B",
-              }}
+              style={{ backgroundColor: "#FFFDF5", borderColor: "#F59E0B" }}
               className="p-1.5 px-2 rounded-xl border-2 text-[0.85em] text-slate-900 leading-snug min-w-0 shadow-2xs"
             >
               <div className="text-[#92400E] font-black mb-0.5 pb-0.5 border-b border-amber-200/80 flex items-center gap-1 text-[0.88em]">
@@ -145,10 +134,7 @@ export function PedagogicalIdeaAndRuleCapsule({
 
           {item.framedRuleAr && (
             <div
-              style={{
-                backgroundColor: "#F5F7FF",
-                borderColor: "#818CF8",
-              }}
+              style={{ backgroundColor: "#F5F7FF", borderColor: "#818CF8" }}
               className="p-1.5 px-2 rounded-xl border-2 text-[0.78em] sm:text-[0.81em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
             >
               <div
@@ -173,96 +159,5 @@ export function PedagogicalIdeaAndRuleCapsule({
   );
 }
 
-export function StructuredStepByStepSolutionBox({
-  item,
-  palette,
-  numeralMode,
-  notationLanguage,
-  compactScale = 1,
-}: {
-  readonly item: PrintableMathQuestionItem;
-  readonly palette: PrintThemePaletteTokens;
-  readonly numeralMode: NumeralDisplayMode;
-  readonly notationLanguage: MathNotationLanguage;
-  readonly compactScale?: number;
-}) {
-  const steps =
-    item.solutionStepsAr && item.solutionStepsAr.length > 0
-      ? item.solutionStepsAr
-      : [item.modelAnswerAr];
-
-  const effectiveEm = Number((0.84 * compactScale).toFixed(2));
-  const useTwoColShortSteps = steps.length >= 4;
-
-  return (
-    <div
-      style={{
-        fontSize: `${effectiveEm}em`,
-      }}
-      className="mt-1.5 pt-1.5 border-t border-slate-200/90 space-y-1 min-w-0"
-    >
-      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
-        <span>خطوات الحل والشرح بالتفصيل:</span>
-        {item.kind === "mcq" && item.correctMcqIndex !== undefined && (
-          <span
-            style={{
-              backgroundColor: palette.primaryHex,
-              color: "#ffffff",
-              borderColor: palette.borderHex,
-            }}
-            className="px-2 py-0.5 rounded-md border text-[0.82em] font-black shadow-2xs"
-          >
-            الإجابة الصحيحة: ({ARABIC_CHOICE_LETTERS[item.correctMcqIndex]})
-          </span>
-        )}
-      </div>
-      <div className={useTwoColShortSteps ? "grid grid-cols-2 gap-1 items-stretch" : "space-y-0.5"}>
-        {steps.map((rawStepText, idx) => {
-          const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
-          const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
-          const cleanStepText = rawStepText
-            .replace(/^الناتج\s*النهائي\s*:\s*/i, "")
-            .replace(/^\d+[\.\-–]\s*/, "")
-            .trim();
-
-          const visualLen = cleanStepText.replace(/\$[^$]*\$/g, "XXXXXX").length;
-          const isShortStep = useTwoColShortSteps && !isLast && visualLen <= 38;
-
-          return (
-            <div
-              key={idx}
-              className={`p-1 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs ${
-                useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
-              } ${
-                isLast
-                  ? "bg-emerald-50/70 border-emerald-300 font-black text-slate-950"
-                  : "bg-slate-50/70 border-slate-200 font-bold text-slate-900"
-              }`}
-            >
-              <span
-                style={{
-                  backgroundColor: isLast ? palette.primaryHex : "#ffffff",
-                  color: isLast ? "#ffffff" : palette.primaryHex,
-                  borderColor: isLast ? palette.primaryHex : "#CBD5E1",
-                }}
-                className="shrink-0 px-1 py-0.2 rounded text-[0.74em] font-black border shadow-2xs mt-0.5"
-              >
-                {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(idx + 1, numeralMode)}`}
-              </span>
-              <div className="min-w-0 flex-1 break-words">
-                <SafeKaTeXBiDiMathRenderer
-                  text={cleanStepText}
-                  numeralMode={numeralMode}
-                  notationLanguage={notationLanguage}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
+export { StructuredStepByStepSolutionBox } from "./structured-step-by-step-solution-box";
 export { OfficialMcqAnswerKeySummaryTable } from "./official-mcq-answer-key-summary-table";
-

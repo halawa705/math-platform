@@ -8,14 +8,14 @@ export const MODULE_ID_ARABIC_MEASUREMENT_UNITS_SSOT =
   "arabic_measurement_units_ssot" as const;
 
 /** مرتبة من الأطول للأقصر كي تتطابق `سم²` قبل `سم` و`م/ث²` قبل `م`. */
-export const ARABIC_UNIT_WORDS_LONGEST_FIRST: readonly string[] = [
+const ARABIC_UNIT_WORDS_LONGEST_FIRST: readonly string[] = [
   "كم/س", "م/ث²", "م/ث", "سم²", "سم³", "كم²", "كم³", "مم²", "م²", "م³",
   "سم", "مم", "كم", "كجم", "جم", "طن", "مللتر", "لتر", "متر",
   "درجة", "دقيقة", "ثانية", "ساعة", "نيوتن", "داين", "جول", "وات", "جنيه", "قرش", "م",
 ];
 
 /** وحدات الطول والوزن والحجم فقط، تُقلب إذا سبقت العدد (`سم 8` ← `8 سم`). وتستثنى الكلمات الملتبسة (درجة، م). */
-export const ARABIC_UNIT_WORDS_SAFE_TO_SWAP: readonly string[] = [
+const ARABIC_UNIT_WORDS_SAFE_TO_SWAP: readonly string[] = [
   "سم²", "سم³", "م²", "م³", "سم", "مم", "كم", "متر", "لتر", "كجم", "جم",
 ];
 

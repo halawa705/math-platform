@@ -14,7 +14,7 @@ import { buildSmartGeometryPromptGuidance } from "./smart-geometry-prompt-direct
 export const MODULE_ID_SHARED_MATH_PROMPT_INVARIANTS =
   "shared_math_prompt_invariants" as const;
 
-export const TEN_GOLDEN_MATH_PROMPT_INVARIANTS: readonly string[] = [
+const TEN_GOLDEN_MATH_PROMPT_INVARIANTS: readonly string[] = [
   "1. إحاطة جميع الرموز والمعادلات والكسور والأسس والجذور بمحددات LaTeX القياسية `$...$` فقط (مثل `$\\frac{3}{5}$`، `$\\sqrt{25}$`، `$س^2 - 5س + 6 = 0$`)، مع حظر وضع الجمل العربية الطويلة داخل `\\text{...}`.",
   "2. الاصطلاح المصري للفترات والمجموعات: تُكتب الفترة المفتوحة بالمعكوفات المقلوبة `$]أ, ب[$` ونصف المفتوحة `$[أ, ب[$` أو `$]أ, ب]$`، وتُخصص الأقواس الدائرية `$(س, ص)$` للأزواج المرتبة وإحداثيات النقاط فقط.",
   "3. مجال الدوال وفرق المجموعات: يُحظر استخدام الرمز `\\setminus` نهائياً؛ ويُكتب فرق المجموعات ومجال الدالة الكسرية بعلامة الطرح الوزارية `-` (مثل: `$ح - \\{3\\}$`، والمجموعة الخالية `$\\phi$`).",

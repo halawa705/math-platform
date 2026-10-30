@@ -6,19 +6,16 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
+import { SUPABASE_PUBLIC_KEY, SUPABASE_URL } from "./supabase-config-ssot";
+
 export const MODULE_ID_SUPABASE_REALTIME_SUBMISSIONS_CHANNEL =
   "supabase_realtime_submissions_channel" as const;
 
-export const SUPABASE_REALTIME_POSTGRES_EVENT =
+const SUPABASE_REALTIME_POSTGRES_EVENT =
   "math-platform-realtime-postgres-change" as const;
 
-const SUPABASE_HTTP_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://ribcyosvoiwtrpynyzjp.supabase.co";
-
-const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_-_NDzAmrswsChgitYYrIKw_iEmWYIqD";
+const SUPABASE_HTTP_URL = SUPABASE_URL;
+const SUPABASE_ANON_KEY = SUPABASE_PUBLIC_KEY;
 
 export type RealtimeWatchedTable =
   | "exam_submissions"
@@ -31,7 +28,7 @@ export interface SupabaseRealtimeChangePayload {
   readonly timestampIso: string;
 }
 
-export function buildSupabaseRealtimeWebSocketUrl(): string {
+function buildSupabaseRealtimeWebSocketUrl(): string {
   const wsBase = SUPABASE_HTTP_URL.replace(/^http/i, "ws");
   return `${wsBase}/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_ANON_KEY)}&vsn=1.0.0`;
 }

@@ -7,7 +7,7 @@
 export const MODULE_ID_LATEX_COMMAND_UNICODE_SYMBOL_MAP =
   "latex_command_unicode_symbol_map" as const;
 
-export const LATEX_COMMAND_TO_UNICODE: Readonly<Record<string, string>> = {
+const LATEX_COMMAND_TO_UNICODE: Readonly<Record<string, string>> = {
   times: "×", div: "÷", pm: "±", mp: "∓", cdot: "·",
   le: "≤", leq: "≤", ge: "≥", geq: "≥", ne: "≠", neq: "≠", approx: "≈", equiv: "≡",
   cong: "≅", sim: "∼", perp: "⊥", parallel: "∥", angle: "∠", triangle: "△", Delta: "Δ",

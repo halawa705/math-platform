@@ -28,7 +28,7 @@ export interface Grade5FigureBuildOptions {
 /**
  * مثلث مع ارتفاع ساقط على القاعدة لحساب المساحة (نصف القاعدة × الارتفاع)
  */
-export function buildGrade5TriangleAltitudeAreaFigure(
+function buildGrade5TriangleAltitudeAreaFigure(
   opts: Grade5FigureBuildOptions
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";

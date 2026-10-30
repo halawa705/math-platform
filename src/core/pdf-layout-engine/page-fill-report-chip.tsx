@@ -5,7 +5,6 @@
  * @description شريحة تقرير امتلاء كل صفحة من صفحات الـ A4 للمعلم (لا تظهر في الطباعة).
  */
 
-import React from "react";
 import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import type { FlowPage } from "./flow-item-model";
 import { auditFlowPages } from "./flow-layout-quality-audit";

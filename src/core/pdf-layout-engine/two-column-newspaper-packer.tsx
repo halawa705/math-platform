@@ -93,11 +93,7 @@ export default function TwoColumnNewspaperPacker({
     [questions, effSettings.columnsCount, isSolvedMode, effSettings.hideAccreditation]
   );
 
-  const measured = useFlowStagingLiveMeasurer(
-    stagingRef,
-    `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`,
-    measureStamp
-  );
+  const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = FLOW_DENSITY_PROFILES[effSettings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact;
   const discretePages = React.useMemo(
@@ -107,23 +103,11 @@ export default function TwoColumnNewspaperPacker({
 
   const inputSignature = `${questions.map((q) => q.id).join(",")}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.numeralMode}|${settings.notationLanguage}|${settings.customDocumentTitle}`;
   const sweep = useAutoFitSweepController({
-    mode,
-    rungCount: ladder.length,
-    targetMaxPages: settings.targetMaxPages,
-    inputSignature,
-    measureStamp: measured.stamp,
-    pages: discretePages,
+    mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: discretePages,
   });
 
-  useEffect(() => {
-    setActiveRung(sweep.phase === "idle" ? 0 : sweep.probeRungIndex);
-  }, [sweep.phase, sweep.probeRungIndex]);
-
-  useEffect(() => {
-    if (sweep.phase !== "sweeping") {
-      onPagesCountChange?.(discretePages.length);
-    }
-  }, [discretePages.length, sweep.phase, onPagesCountChange]);
+  useEffect(() => { setActiveRung(sweep.phase === "idle" ? 0 : sweep.probeRungIndex); }, [sweep.phase, sweep.probeRungIndex]);
+  useEffect(() => { if (sweep.phase !== "sweeping") onPagesCountChange?.(discretePages.length); }, [discretePages.length, sweep.phase, onPagesCountChange]);
 
   const stableRef = useRef({ pages: discretePages, settings: effSettings, heights: measured.heights });
   if (sweep.phase !== "sweeping" || stableRef.current.pages.length === 0) {
@@ -141,57 +125,32 @@ export default function TwoColumnNewspaperPacker({
   );
 
   return (
-    <div
-      ref={viewportWrapperRef}
-      className="w-full overflow-hidden flex flex-col items-center bg-slate-200/70 dark:bg-slate-900/60 rounded-3xl p-2 sm:p-5 border border-slate-300/80 dark:border-slate-800 relative"
-    >
+    <div ref={viewportWrapperRef} className="w-full overflow-hidden flex flex-col items-center bg-slate-200/70 dark:bg-slate-900/60 rounded-3xl p-2 sm:p-5 border border-slate-300/80 dark:border-slate-800 relative">
       {questions.length > 0 && (
         <div className="print:hidden mb-3 px-4 py-1.5 rounded-2xl bg-slate-900 text-white text-xs font-black flex flex-wrap items-center gap-3 shadow-md">
           <span>📄 نظام إنتاج صفحات A4 السيادي المستقل</span>
           <span className="text-amber-300">إجمالي الورق: {formatNumeralsByModeSSOT(viewPages.length, viewSettings.numeralMode)} صفحة A4</span>
           <span className="text-emerald-300">المسائل: {formatNumeralsByModeSSOT(questions.length, viewSettings.numeralMode)}</span>
-          <AutoFitStatusBadge
-            sweep={sweep}
-            fontPt={viewSettings.exactFontSizePt}
-            targetMaxPages={settings.targetMaxPages}
-            questionsCount={questions.length}
-            numeralMode={viewSettings.numeralMode}
-          />
+          <AutoFitStatusBadge sweep={sweep} fontPt={viewSettings.exactFontSizePt} targetMaxPages={settings.targetMaxPages} questionsCount={questions.length} numeralMode={viewSettings.numeralMode} />
           <PageFillReportChip pages={viewPages} heights={viewHeights} numeralMode={viewSettings.numeralMode} />
-          {viewPages.some((page) => page.overflowsBudget) && (
-            <span className="text-rose-300">⚠️ يوجد عنصر أطول من الصفحة (قد يُقصّ)</span>
-          )}
+          {viewPages.some((page) => page.overflowsBudget) && <span className="text-rose-300">⚠️ يوجد عنصر أطول من الصفحة (قد يُقصّ)</span>}
         </div>
       )}
 
       <FlowMeasurementStagingPlatform
-        stagingRef={stagingRef}
-        flowItems={flowItems}
-        renderFlowItem={renderStagingItem}
-        settings={effSettings}
-        identity={identity}
-        palette={palette}
-        activeFont={activeFont}
-        subtitleAr={subtitleAr}
-        isSolvedMode={isSolvedMode}
-        totalIdeasCount={totalIdeasCount}
-        totalQuestionsCount={questions.length}
-        totalMarks={totalMarks}
+        stagingRef={stagingRef} flowItems={flowItems} renderFlowItem={renderStagingItem} settings={effSettings}
+        identity={identity} palette={palette} activeFont={activeFont} subtitleAr={subtitleAr} isSolvedMode={isSolvedMode}
+        totalIdeasCount={totalIdeasCount} totalQuestionsCount={questions.length} totalMarks={totalMarks}
       />
 
       {sweep.phase === "sweeping" && (
-        <div className="print:hidden mb-2 px-3 py-1 rounded-full bg-indigo-900/80 text-white text-xs font-black">
-          ⏳ جارٍ ضبط الصفحات تلقائياً…
-        </div>
+        <div className="print:hidden mb-2 px-3 py-1 rounded-full bg-indigo-900/80 text-white text-xs font-black">⏳ جارٍ ضبط الصفحات تلقائياً…</div>
       )}
 
       <div
         style={{
-          width: "794px",
-          transform: `scale(${mobileZoomScale})`,
-          transformOrigin: "top center",
-          marginBottom:
-            mobileZoomScale < 1 ? `${Math.round((mobileZoomScale - 1) * 1123 * Math.max(1, viewPages.length))}px` : "0px",
+          width: "794px", transform: `scale(${mobileZoomScale})`, transformOrigin: "top center",
+          marginBottom: mobileZoomScale < 1 ? `${Math.round((mobileZoomScale - 1) * 1123 * Math.max(1, viewPages.length))}px` : "0px",
         }}
         className="transition-transform duration-200"
       >
@@ -204,19 +163,9 @@ export default function TwoColumnNewspaperPacker({
           ) : (
             viewPages.map((page) => (
               <SovereignDiscretePageView
-                key={page.pageNumber}
-                page={page}
-                totalPagesCount={viewPages.length}
-                settings={viewSettings}
-                identity={identity}
-                palette={palette}
-                activeFont={activeFont}
-                subtitleAr={subtitleAr}
-                isSolvedMode={isSolvedMode}
-                totalIdeasCount={totalIdeasCount}
-                totalQuestionsCount={questions.length}
-                totalMarks={totalMarks}
-                renderFlowItem={renderViewItem}
+                key={page.pageNumber} page={page} totalPagesCount={viewPages.length} settings={viewSettings}
+                identity={identity} palette={palette} activeFont={activeFont} subtitleAr={subtitleAr} isSolvedMode={isSolvedMode}
+                totalIdeasCount={totalIdeasCount} totalQuestionsCount={questions.length} totalMarks={totalMarks} renderFlowItem={renderViewItem}
               />
             ))
           )}

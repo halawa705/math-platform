@@ -7,7 +7,6 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 120 سطراً).
  */
 
-import React from "react";
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
 
 export interface QuestionCardBadgeHeaderProps {

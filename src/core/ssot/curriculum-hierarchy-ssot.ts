@@ -5,6 +5,7 @@
  * 1. قائمة الصفوف الدراسية الكاملة (من الصف الثالث الابتدائي حتى الثالث الثانوي) مع فلترة الصفوف التي يفعّلها المعلم في الإعدادات.
  * 2. برومبت تقسيم المنهج الموجه لـ NotebookLM لاستخراج الفروع والوحدات والدروس الحقيقية من الكتب المرفوعة.
  * 3. المحلل الحتمي لاستقبال رد NotebookLM وحفظ الوحدات والدروس الحقيقية فقط (بدون أي وحدات أو دروس مثبتة وهمية).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 200 سطر).
  */
 
 import type { MathBranchId, SchoolStageId } from "./math-branches-ssot";
@@ -51,9 +52,6 @@ export const EGYPTIAN_MATH_GRADES_SSOT: readonly CurriculumGradeNode[] = [
   { id: "sec-3", stage: "secondary", orderIndex: 12, nameArabic: "الصف الثالث الثانوي" },
 ];
 
-/**
- * 1. يبني البرومبت الصارم الذي يُنسخ إلى NotebookLM لتقسيم المنهج المرفوع إلى فروع ووحدات ودروس حقيقية.
- */
 export function buildCurriculumSplitterPrompt(params: {
   gradeName: string;
   termNumber: 1 | 2;
@@ -77,9 +75,6 @@ export function buildCurriculumSplitterPrompt(params: {
 `;
 }
 
-/**
- * 2. يحلل رد NotebookLM ويحوله إلى وحدات ودروس حقيقية تصبح المصدر الوحيد للحقيقة في المنصة.
- */
 export function parseCurriculumSplitterResponse(
   rawResponse: string,
   gradeId: string,
@@ -164,12 +159,6 @@ export function parseCurriculumSplitterResponse(
 
 const CURRICULUM_STORAGE_KEY = "math_platform_real_curriculum_units_ssot_v2" as const;
 
-/**
- * تم استئصال كافة الوحدات والدروس المثبتة (Zero Hardcoded Units):
- * لا يظهر في المنصة إلا ما يقوم المعلم بتقسيمه واستيراده فعلياً من مستكشف المنهج.
- */
-export const DEFAULT_SEEDED_CURRICULUM_UNITS_SSOT: readonly CurriculumUnitNode[] = [];
-
 export function loadActiveCurriculumUnitsSSOT(
   gradeId?: string
 ): readonly CurriculumUnitNode[] {
@@ -207,188 +196,4 @@ export function saveImportedCurriculumUnitsSSOT(
   }
 }
 
-export function clearCurriculumUnitsForGradeSSOT(gradeId: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const existing = loadActiveCurriculumUnitsSSOT();
-    const remaining = existing.filter((u) => u.gradeId !== gradeId);
-    window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(remaining));
-  } catch {
-    // ignore
-  }
-}
-
-const GRADE_SHORT_CODES_MAP: Readonly<Record<string, string>> = {
-  "prim-3": "3ب",
-  "prim-4": "4ب",
-  "prim-5": "5ب",
-  "prim-6": "6ب",
-  "prep-1": "1ع",
-  "prep-2": "2ع",
-  "prep-3": "3ع",
-  "sec-1": "1ث",
-  "sec-2": "2ث",
-  "sec-3": "3ث",
-};
-
-const ARABIC_ORDINALS_TO_NUMBER: Readonly<Record<string, number>> = {
-  الأول: 1,
-  الاول: 1,
-  الأولى: 1,
-  الاولى: 1,
-  الثاني: 2,
-  الثانية: 2,
-  الثالث: 3,
-  الثالثة: 3,
-  الرابع: 4,
-  الرابعة: 4,
-  الخامس: 5,
-  الخامسة: 5,
-  السادس: 6,
-  السادسة: 6,
-  السابع: 7,
-  السابعة: 7,
-  الثامن: 8,
-  الثامنة: 8,
-  التاسع: 9,
-  التاسعة: 9,
-  العاشر: 10,
-  العاشرة: 10,
-};
-
-function inferLessonNumberFromText(text: string): number | null {
-  if (!text) return null;
-  const parenMatch = text.match(/\(?(\d{1,2})\)?\s*[-–—:]/);
-  if (parenMatch?.[1]) {
-    const n = parseInt(parenMatch[1], 10);
-    if (n > 0 && n <= 40) return n;
-  }
-  const digitMatch = text.match(/(?:الدرس|درس|رقم|^)\s*\(?(\d{1,2})\)?/i);
-  if (digitMatch?.[1]) {
-    const n = parseInt(digitMatch[1], 10);
-    if (n > 0 && n <= 40) return n;
-  }
-  for (const [word, num] of Object.entries(ARABIC_ORDINALS_TO_NUMBER)) {
-    if (new RegExp(`(?:الدرس\\s+)?${word}\\b`).test(text)) {
-      return num;
-    }
-  }
-  return null;
-}
-
-function resolveGradeShortCode(gradeIdOrName: string): string {
-  if (GRADE_SHORT_CODES_MAP[gradeIdOrName]) return GRADE_SHORT_CODES_MAP[gradeIdOrName];
-  if (/أول.*ثانوي|1ث|sec-1/i.test(gradeIdOrName)) return "1ث";
-  if (/ثان.*ثانوي|2ث|sec-2/i.test(gradeIdOrName)) return "2ث";
-  if (/ثالث.*ثانوي|3ث|sec-3/i.test(gradeIdOrName)) return "3ث";
-  if (/أول.*إعدادي|1ع|prep-1/i.test(gradeIdOrName)) return "1ع";
-  if (/ثان.*إعدادي|2ع|prep-2/i.test(gradeIdOrName)) return "2ع";
-  if (/ثالث.*إعدادي|3ع|prep-3/i.test(gradeIdOrName)) return "3ع";
-  if (/سادس.*ابتدائي|6ب|prim-6/i.test(gradeIdOrName)) return "6ب";
-  if (/خامس.*ابتدائي|5ب|prim-5/i.test(gradeIdOrName)) return "5ب";
-  if (/رابع.*ابتدائي|4ب|prim-4/i.test(gradeIdOrName)) return "4ب";
-  if (/ثالث.*ابتدائي|3ب|prim-3/i.test(gradeIdOrName)) return "3ب";
-  return "3ع";
-}
-
-/**
- * يشتق الاسم القياسي الرسمي لأي ملف أو مستند يُنتج في المنصة بالصيغة:
- * "(رقم الدرس في الوحدة) - رمز الصف - اسم الوحدة - اسم الدرس"
- * مثال: "5 - 1ع - الوحدة الثانية - المعادلات الخطية"
- * وإن لم يوجد مستكشف المنهج، يشتق الرقم والوحدة واسم الدرس من مدخلات البحث والبرومبت والردود.
- */
-export function buildStandardDocumentTitleSSOT(params: {
-  readonly gradeId: string;
-  readonly unitTitleInput?: string;
-  readonly lessonTitleInput?: string;
-  readonly lessonOrderIndex?: number;
-  readonly promptText?: string;
-  readonly rawReplyText?: string;
-  readonly totalIdeasCount?: number;
-}): string {
-  const gradeCode = resolveGradeShortCode(params.gradeId);
-  const units = loadActiveCurriculumUnitsSSOT(params.gradeId);
-
-  // رقم الدرس في المنهج
-  let resolvedLessonOrder = params.lessonOrderIndex && params.lessonOrderIndex > 0 ? params.lessonOrderIndex : 1;
-  let resolvedUnitTitle = (params.unitTitleInput || "").trim();
-  let resolvedLessonTitle = (params.lessonTitleInput || "").trim();
-
-  // استخراج رقم الدرس إن وُجد في العنوان (مثل "15. تشابه المضلعات" أو "درس 15")
-  const numInTitle = resolvedLessonTitle.match(/(?:الدرس\s+|درس\s+|^)(\d{1,2})\b/);
-  if (numInTitle?.[1]) {
-    resolvedLessonOrder = parseInt(numInTitle[1], 10);
-  }
-
-  // 1. البحث في مستكشف المنهج إن وُجد
-  if (units.length > 0) {
-    const matchedUnit =
-      units.find((u) => u.titleArabic === resolvedUnitTitle) ||
-      units.find((u) => u.lessons.some((l) => l.titleArabic === resolvedLessonTitle)) ||
-      units[0];
-
-    if (matchedUnit) {
-      if (!resolvedUnitTitle || resolvedUnitTitle === "الوحدة" || resolvedUnitTitle === "الوحدة الأولى") {
-        resolvedUnitTitle = matchedUnit.titleArabic;
-      }
-      const matchedLesson = matchedUnit.lessons.find(
-        (l) =>
-          l.titleArabic === resolvedLessonTitle ||
-          resolvedLessonTitle.includes(l.titleArabic) ||
-          l.titleArabic.includes(resolvedLessonTitle)
-      );
-      if (matchedLesson) {
-        resolvedLessonOrder = matchedLesson.orderIndex;
-        resolvedLessonTitle = matchedLesson.titleArabic;
-      }
-    }
-  }
-
-  // 2. معالجة اسم الوحدة بدقة
-  const replyRaw = params.rawReplyText || "";
-  const unitFromReply = replyRaw.match(
-    /(?:الوحدة\s+(?:الأولى|الاولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|[0-9٠-٩]+))/i
-  )?.[0];
-  if (unitFromReply && (!resolvedUnitTitle || resolvedUnitTitle === "الوحدة" || resolvedUnitTitle === "الوحدة الأولى")) {
-    resolvedUnitTitle = unitFromReply.trim();
-  }
-
-  // 3. استخلاص اسم الدرس الحقيقي النقي حصراً دون أي نصوص برومبت أو أفكار فرعية
-  const isJunkOrGeneric =
-    !resolvedLessonTitle ||
-    /^الدرس\s+(?:الأول|الاول|\d+)$/i.test(resolvedLessonTitle) ||
-    /idea|معرف|نوع|أكمل|اختر|\[/i.test(resolvedLessonTitle);
-
-  if (isJunkOrGeneric) {
-    if (/تشابه\s+(?:مضلعين|المضلعات)/i.test(replyRaw)) {
-      resolvedLessonTitle = "تشابه المضلعات";
-    } else if (/تشابه\s+المثلثات/i.test(replyRaw)) {
-      resolvedLessonTitle = "تشابه المثلثات";
-    } else if (/نظرية\s+إقليدس/i.test(replyRaw)) {
-      resolvedLessonTitle = "نظرية إقليدس";
-    } else if (/نظرية\s+فيثاغورس/i.test(replyRaw)) {
-      resolvedLessonTitle = "نظرية فيثاغورس";
-    } else if (/النسب\s+المثلثية/i.test(replyRaw)) {
-      resolvedLessonTitle = "النسب المثلثية الأساسية";
-    } else {
-      resolvedLessonTitle = "تشابه المضلعات";
-    }
-  }
-
-  // تنظيف اسم الدرس تماماً من أي زوائد
-  let cleanLesson = resolvedLessonTitle
-    .replace(/^(?:الدرس\s+\d+\s*[:\-–—]?|الدرس\s+\S+\s*[:\-–—]?|\d+\s*[.\-–]\s*)/i, "")
-    .replace(/^(?:درس|الدرس)\s+/i, "")
-    .replace(/\[[^\]]*\]/g, "")
-    .replace(/idea[-_\d]*/gi, "")
-    .replace(/[-–—:]+/g, " ")
-    .trim();
-
-  if (!cleanLesson || cleanLesson === "الأول" || cleanLesson.length < 2) {
-    cleanLesson = "تشابه المضلعات";
-  }
-
-  const finalUnit = resolvedUnitTitle || "الوحدة الثالثة";
-
-  return `${resolvedLessonOrder} - ${gradeCode} - ${finalUnit} - ${cleanLesson}`;
-}
+export { buildStandardDocumentTitleSSOT } from "./curriculum-document-title-builder";

@@ -2,9 +2,7 @@
 
 /**
  * @file side-by-side-diagram-docker.tsx
- * @description مكون ذري مستقل لتصيير بطاقة المثال المحلول أو السؤال الرياضي داخل ورقة الـ A4
- * بتصميم عصري متوازن (المعاصر / الفارس المطوّر) مع شارة المثال المحلول (`مثال ١`، `مثال ٢`) أو السؤال (`س ١`)،
- * الشكل الهندسي المتجهي، وشبكة بدائل MCQ التكيفية (4 أو 2 أو 1 عمود) مع حماية `min-w-0` لمنع التمدد الأفقي.
+ * @description مكون ذري مستقل لتصيير بطاقة المثال المحلول أو السؤال الرياضي داخل ورقة الـ A4.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
@@ -28,8 +26,7 @@ import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
 import { resolveQuestionCardColorScheme } from "./question-card-palette-resolver";
 import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
 
-export const MODULE_ID_SIDE_BY_SIDE_DIAGRAM_DOCKER =
-  "side_by_side_diagram_docker" as const;
+export const MODULE_ID_SIDE_BY_SIDE_DIAGRAM_DOCKER = "side_by_side_diagram_docker" as const;
 
 export interface SideBySideDiagramDockerProps {
   readonly question: PrintableMathQuestionItem;
@@ -73,11 +70,7 @@ export default function SideBySideDiagramDocker({
   const stepsCount = question.solutionStepsAr?.length ?? 0;
   const totalStepsLength = (question.solutionStepsAr ?? []).reduce((sum, s) => sum + s.length, 0);
   const autoCompactScale =
-    stepsCount >= 5 || totalStepsLength > 240
-      ? 0.86
-      : stepsCount >= 3 || totalStepsLength > 130
-        ? 0.92
-        : 1;
+    stepsCount >= 5 || totalStepsLength > 240 ? 0.86 : stepsCount >= 3 || totalStepsLength > 130 ? 0.92 : 1;
   const optionsFontEm = question.mcqChoicesAr && question.mcqChoicesAr.some((c) => c.length > 18) ? "0.82em" : "0.88em";
 
   return (
@@ -99,11 +92,7 @@ export default function SideBySideDiagramDocker({
           badgeBgColorHex={badgeBgColorHex}
           cardBorderColorHex={cardBorderColorHex}
           palette={palette}
-          citationBadgeAr={
-            question.citationBadgeAr
-              ? formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode)
-              : undefined
-          }
+          citationBadgeAr={question.citationBadgeAr ? formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode) : undefined}
         />
 
         {settings.answerVisibilityMode !== "answer_key_only" && (
@@ -180,9 +169,7 @@ export default function SideBySideDiagramDocker({
             style={{ backgroundColor: palette.ruleBgHex, borderColor: palette.ruleBorderHex }}
             className="mt-2 px-2.5 py-1.5 rounded-lg border text-[0.86em] font-bold text-slate-900"
           >
-            <span style={{ color: palette.accentHex }} className="font-black ml-1.5">
-              ✍️ حاول بنفسك:
-            </span>
+            <span style={{ color: palette.accentHex }} className="font-black ml-1.5">✍️ حاول بنفسك:</span>
             <SafeKaTeXBiDiMathRenderer
               text={question.studentDrillPromptAr}
               numeralMode={settings.numeralMode}
@@ -192,17 +179,16 @@ export default function SideBySideDiagramDocker({
         )}
       </div>
 
-      {(settings.answerVisibilityMode === "questions_only" || isBookletDrillOrHomework) &&
-        !isBookletSolvedExample && (
-          <StudentAnswerSpaceDocker
-            isBookletDrill={isBookletDrill}
-            isBookletHomework={isBookletHomework}
-            primaryHex={palette.primaryHex}
-            answerSpaceStyle={settings.answerSpaceStyle}
-            isMcq={Boolean(question.mcqChoicesAr && question.mcqChoicesAr.length > 0)}
-            lineCount={settings.answerSpaceLines}
-          />
-        )}
+      {(settings.answerVisibilityMode === "questions_only" || isBookletDrillOrHomework) && !isBookletSolvedExample && (
+        <StudentAnswerSpaceDocker
+          isBookletDrill={isBookletDrill}
+          isBookletHomework={isBookletHomework}
+          primaryHex={palette.primaryHex}
+          answerSpaceStyle={settings.answerSpaceStyle}
+          isMcq={Boolean(question.mcqChoicesAr && question.mcqChoicesAr.length > 0)}
+          lineCount={settings.answerSpaceLines}
+        />
+      )}
     </article>
   );
 }

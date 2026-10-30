@@ -4,15 +4,12 @@
  * @file student-learning-portal-view.tsx
  * @description بوابة الطالب: تعتمد على هوية الطالب المسجل فعلياً (جلسة الدخول)، وتعرض صفحة رئيسية هادئة
  * تبدأ بقاعة المتميزين لصفه فقط ثم رسماً بيانياً لدرجاته الفعلية. لا توجد أي بيانات وهمية.
- * وإن دخل المعلم لمعاينة الشاشة يختار صفاً لمعاينته.
  */
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
-import SegmentedWorkspaceTabsBar, {
-  type SegmentedTabItem,
-} from "@/components/global-ui/segmented-workspace-tabs-bar";
+import SegmentedWorkspaceTabsBar, { type SegmentedTabItem } from "@/components/global-ui/segmented-workspace-tabs-bar";
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
   STUDENTS_REGISTRY_UPDATED_EVENT,
@@ -41,8 +38,7 @@ import StudentAssignedVideosTab from "./student-assigned-videos-tab";
 import StudentAssignedBookletsTab from "./student-assigned-booklets-tab";
 import StudentAssignedHomeworkTab from "./student-assigned-homework-tab";
 
-export const MODULE_ID_STUDENT_LEARNING_PORTAL_VIEW =
-  "student_learning_portal_view" as const;
+export const MODULE_ID_STUDENT_LEARNING_PORTAL_VIEW = "student_learning_portal_view" as const;
 
 const STUDENT_PORTAL_TABS: readonly SegmentedTabItem[] = [
   { id: "overview", labelAr: "الرئيسية", subtitleAr: "المتميزون ودرجاتي", icon: "📊" },
@@ -63,9 +59,7 @@ export default function StudentLearningPortalView() {
   const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [metric, setMetric] = useState<GradeAnalyticsMetric | null>(null);
   const [history, setHistory] = useState<readonly StudentExamHistoryItem[]>([]);
-  const [footerText, setFooterText] = useState<string>(
-    DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText
-  );
+  const [footerText, setFooterText] = useState<string>(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText);
 
   useEffect(() => {
     const grades = loadEnabledGradesSSOT();
@@ -121,18 +115,13 @@ export default function StudentLearningPortalView() {
   if (!ready) return null;
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen pb-28 md:pb-14 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100"
-    >
+    <div dir="rtl" className="min-h-screen pb-28 md:pb-14 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100">
       <TopFourCentersNavigationBar activeCenter="student" />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-lg sm:text-xl font-black">
-              {isTeacherPreview ? "معاينة شاشة الطالب" : `أهلاً ${studentName}`}
-            </h1>
+            <h1 className="text-lg sm:text-xl font-black">{isTeacherPreview ? "معاينة شاشة الطالب" : `أهلاً ${studentName}`}</h1>
             <p className="text-xs font-bold text-teal-700 dark:text-teal-400">{gradeName}</p>
           </div>
           {isTeacherPreview && (
@@ -142,23 +131,16 @@ export default function StudentLearningPortalView() {
               className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black"
             >
               {enabledGrades.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.nameArabic}
-                </option>
+                <option key={g.id} value={g.id}>{g.nameArabic}</option>
               ))}
             </select>
           )}
         </div>
 
-        <SegmentedWorkspaceTabsBar
-          tabs={STUDENT_PORTAL_TABS}
-          activeTabId={activeTabId}
-          onSelectTab={setActiveTabId}
-        />
+        <SegmentedWorkspaceTabsBar tabs={STUDENT_PORTAL_TABS} activeTabId={activeTabId} onSelectTab={setActiveTabId} />
 
         {activeTabId === "overview" && metric && (
           <div className="space-y-6">
-            {/* قاعة المتميزين أولاً وبشكل ظاهر */}
             <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 space-y-4">
               <h2 className="text-base font-black">👑 قاعة المتميزين</h2>
               <HonorRollPodium
@@ -170,14 +152,11 @@ export default function StudentLearningPortalView() {
               />
             </section>
 
-            {/* رسم بياني لدرجات الطالب الفعلية */}
             <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 space-y-4">
               <h2 className="text-base font-black">📈 درجاتي مقارنة بمتوسط صفي</h2>
               {history.length === 0 ? (
                 <p className="text-xs font-bold text-slate-500 py-4 text-center">
-                  {isTeacherPreview
-                    ? "تظهر هنا درجات الطالب الفعلية بعد أدائه للاختبارات."
-                    : "لم تؤدِّ أي اختبار بعد. ستظهر درجاتك هنا بعد أول اختبار."}
+                  {isTeacherPreview ? "تظهر هنا درجات الطالب الفعلية بعد أدائه للاختبارات." : "لم تؤدِّ أي اختبار بعد. ستظهر درجاتك هنا بعد أول اختبار."}
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -190,15 +169,8 @@ export default function StudentLearningPortalView() {
                         </span>
                       </div>
                       <div className="relative h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                        <div
-                          style={{ width: `${item.studentPercentage}%` }}
-                          className="absolute inset-y-0 right-0 rounded-full bg-gradient-to-l from-teal-500 to-emerald-600"
-                        />
-                        <div
-                          style={{ right: `${item.classAveragePercentage}%` }}
-                          className="absolute inset-y-0 w-0.5 bg-slate-500"
-                          title="متوسط الصف"
-                        />
+                        <div style={{ width: `${item.studentPercentage}%` }} className="absolute inset-y-0 right-0 rounded-full bg-gradient-to-l from-teal-500 to-emerald-600" />
+                        <div style={{ right: `${item.classAveragePercentage}%` }} className="absolute inset-y-0 w-0.5 bg-slate-500" title="متوسط الصف" />
                       </div>
                     </div>
                   ))}
@@ -209,21 +181,14 @@ export default function StudentLearningPortalView() {
         )}
 
         {activeTabId === "live_exam" && (
-          <StudentAssignedExamsTab
-            studentCode={studentCode}
-            studentNameAr={studentName}
-            gradeId={studentGradeId}
-            isTeacherPreview={isTeacherPreview}
-          />
+          <StudentAssignedExamsTab studentCode={studentCode} studentNameAr={studentName} gradeId={studentGradeId} isTeacherPreview={isTeacherPreview} />
         )}
         {activeTabId === "videos" && <StudentAssignedVideosTab gradeId={studentGradeId} />}
         {activeTabId === "booklets" && <StudentAssignedBookletsTab gradeId={studentGradeId} />}
         {activeTabId === "homework" && <StudentAssignedHomeworkTab gradeId={studentGradeId} />}
       </main>
 
-      <footer className="max-w-4xl mx-auto w-full px-4 pt-10 text-center text-xs font-bold text-slate-400">
-        {footerText}
-      </footer>
+      <footer className="max-w-4xl mx-auto w-full px-4 pt-10 text-center text-xs font-bold text-slate-400">{footerText}</footer>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export const MODULE_ID_NOTEBOOKLM_STAGE_PARSERS_HELPER = "notebooklm_stage_parse
 export const IDEA_HEADER_SPLIT_REGEX =
   /(?=(?:^|\n)\s*(?:###?\s*)?الفكرة\s+(?:الأولى|الاولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|الحادية\s*عشر[ةه]|الثانية\s*عشر[ةه]|الثالثة\s*عشر[ةه]|الرابعة\s*عشر[ةه]|الخامسة\s*عشر[ةه]|السادسة\s*عشر[ةه]|السابعة\s*عشر[ةه]|الثامنة\s*عشر[ةه]|التاسعة\s*عشر[ةه]|العشرون|[0-9٠-٩]+))/i;
 
-export function cleanBracketedField(val: string): string {
+function cleanBracketedField(val: string): string {
   return val.replace(/\s*---+\s*$/g, "").replace(/^[\s\[*#]+|[\s\]*#]+$/g, "").trim();
 }
 
@@ -85,9 +85,7 @@ export function parseStage2ByIdeas(s2Raw: string): {
   if (!s2Raw) return { drillsByIdea, allHomework };
 
   const firstIdeaIdx = s2Raw.search(IDEA_HEADER_SPLIT_REGEX);
-  const ideaBlocks = (firstIdeaIdx !== -1 ? s2Raw.slice(firstIdeaIdx) : s2Raw)
-    .split(IDEA_HEADER_SPLIT_REGEX)
-    .filter((b) => b.length > 20);
+  const ideaBlocks = (firstIdeaIdx !== -1 ? s2Raw.slice(firstIdeaIdx) : s2Raw).split(IDEA_HEADER_SPLIT_REGEX).filter((b) => b.length > 20);
 
   ideaBlocks.forEach((block, idx) => {
     const key = block.match(/معرف\s*الفكرة\s*:\s*(idea-\d+)/i)?.[1]?.toLowerCase() || `idea-${idx + 1}`;
@@ -173,8 +171,7 @@ export function buildStage2PrintableItem(params: {
   const mcqChoices = parseChoicesTupleFromBlock(params.block.promptText);
   const rawPrompt = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
   const isMcq = (params.block.rawText || "").includes("اختر") || (params.block.kindTag || "").includes("اختر") || mcqChoices !== undefined;
-  const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) ||
-    params.solutionsMap.byIndex.get(params.questionNumber);
+  const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) || params.solutionsMap.byIndex.get(params.questionNumber);
   const graphMatch = params.block.rawText.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
   const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
   const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;

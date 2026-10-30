@@ -5,14 +5,11 @@
  * @description خطاف إدارة جلسة الاختبار الإلكتروني للطالب:
  * يستدعي `/api/exams/start` لحساب الوقت المتبقي من وقت الخادم الفعلي (لا يعيد الضبط عند التحديث)،
  * ويحفظ مسودة الإجابات في `sessionStorage` فقط، ويرسل التسليم لـ `/api/exams/submit`.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 170 سطراً).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import type {
-  OnlineQuestionResult,
-  StudentAnswerInput,
-} from "@/core/exam-grading/online-exam-grader";
+import type { OnlineQuestionResult, StudentAnswerInput } from "@/core/exam-grading/online-exam-grader";
 import type { PublishedOnlineExam } from "@/features/electronic-exams-hub/published-online-exams-store";
 import {
   findStudentSubmissionForExamSSOT,
@@ -38,9 +35,7 @@ export function useExamSession(params: {
   const { exam, studentCode, studentNameAr, isTeacherPreview, onExamSubmitted } = params;
   const [answers, setAnswers] = useState<Record<string, StudentAnswerInput>>({});
   const [flaggedIds, setFlaggedIds] = useState<Record<string, boolean>>({});
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(
-    (exam?.durationMinutes || 30) * 60
-  );
+  const [remainingSeconds, setRemainingSeconds] = useState<number>((exam?.durationMinutes || 30) * 60);
   const [startedAtIso, setStartedAtIso] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -78,9 +73,7 @@ export function useExamSession(params: {
       if (prev) {
         setResultPct(prev.percentageScore);
         if (prev.resultJson?.items) setResultItems(prev.resultJson.items);
-        if (prev.answersJson) {
-          setAnswers(prev.answersJson as Record<string, StudentAnswerInput>);
-        }
+        if (prev.answersJson) setAnswers(prev.answersJson as Record<string, StudentAnswerInput>);
         return;
       }
     }
@@ -96,12 +89,8 @@ export function useExamSession(params: {
           body: JSON.stringify({ examCode: exam.examId }),
         });
         const data = (await res.json()) as {
-          success: boolean;
-          alreadySubmitted?: boolean;
-          percentage?: number;
-          startedAtIso?: string;
-          serverNowIso?: string;
-          durationMinutes?: number;
+          success: boolean; alreadySubmitted?: boolean; percentage?: number;
+          startedAtIso?: string; serverNowIso?: string; durationMinutes?: number;
         };
         if (cancelled) return;
         if (res.status === 409 && data.alreadySubmitted && data.percentage !== undefined) {
@@ -123,9 +112,7 @@ export function useExamSession(params: {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [exam, studentCode, isTeacherPreview, draftKey]);
 
   const updateAnswer = useCallback(
@@ -133,11 +120,7 @@ export function useExamSession(params: {
       setAnswers((prev) => {
         const next = { ...prev, [questionId]: { ...prev[questionId], ...patch } };
         if (draftKey && typeof window !== "undefined") {
-          try {
-            window.sessionStorage.setItem(draftKey, JSON.stringify(next));
-          } catch {
-            // ignore
-          }
+          try { window.sessionStorage.setItem(draftKey, JSON.stringify(next)); } catch { /* ignore */ }
         }
         return next;
       });
@@ -157,20 +140,11 @@ export function useExamSession(params: {
       const res = await fetch("/api/exams/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          examCode: exam.examId,
-          studentNameAr,
-          answers,
-        }),
+        body: JSON.stringify({ examCode: exam.examId, studentNameAr, answers }),
       });
       const data = (await res.json()) as {
-        success: boolean;
-        percentage?: number;
-        totalEarnedMarks?: number;
-        totalAllocatedMarks?: number;
-        items?: readonly OnlineQuestionResult[];
-        review?: readonly ExamQuestionReviewInfo[] | null;
-        error?: string;
+        success: boolean; percentage?: number; totalEarnedMarks?: number; totalAllocatedMarks?: number;
+        items?: readonly OnlineQuestionResult[]; review?: readonly ExamQuestionReviewInfo[] | null; error?: string;
       };
       if (!res.ok && res.status !== 409) {
         setErrorMsg(data.error || "تعذر تسليم الاختبار.");
@@ -183,22 +157,14 @@ export function useExamSession(params: {
       setResultItems(items);
       setReviewList(data.review ?? null);
       recordStudentOnlineExamSubmissionSSOT({
-        exam,
-        studentCode,
-        studentNameAr,
-        percentageScore: pct,
+        exam, studentCode, studentNameAr, percentageScore: pct,
         startedAtIso: startedAtIso || new Date().toISOString(),
         answersJson: answers,
         resultJson: {
-          items,
-          totalEarnedMarks: data.totalEarnedMarks ?? 0,
-          totalAllocatedMarks: data.totalAllocatedMarks ?? 0,
-          percentage: pct,
+          items, totalEarnedMarks: data.totalEarnedMarks ?? 0, totalAllocatedMarks: data.totalAllocatedMarks ?? 0, percentage: pct,
         },
       });
-      if (draftKey && typeof window !== "undefined") {
-        window.sessionStorage.removeItem(draftKey);
-      }
+      if (draftKey && typeof window !== "undefined") window.sessionStorage.removeItem(draftKey);
       onExamSubmitted?.();
     } catch {
       setErrorMsg("تعذر الاتصال بالخادم لتسليم الاختبار.");
@@ -222,16 +188,7 @@ export function useExamSession(params: {
   }, [exam, isTeacherPreview, resultPct, submitExam]);
 
   return {
-    answers,
-    flaggedIds,
-    remainingSeconds,
-    submitting,
-    errorMsg,
-    resultPct,
-    resultItems,
-    reviewList,
-    updateAnswer,
-    toggleFlag,
-    submitExam,
+    answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, resultItems, reviewList,
+    updateAnswer, toggleFlag, submitExam,
   };
 }
