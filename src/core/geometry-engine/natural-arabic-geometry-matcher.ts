@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file natural-arabic-geometry-matcher.ts
  * @description المترجم الحتمي الموحد للوصف العربي الطبيعي (`[رسم هندسي: ...]`) إلى فروع السجل الهندسي القياسي (`CanonicalGeometryFigureIR`).
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
@@ -168,7 +168,7 @@ export function matchGeometryWithDiagnostics(
   }
   const legacy = matchOptionalGeometryFigureFromArabicDescription(desc, figureId, notation);
   if (legacy) {
-    return { ...finalizeVerifiedFigure(legacy, composed.warnings), source: "catalog" };
+    return { ...finalizeVerifiedFigure(legacy, composed.figure ? composed.warnings : []), source: "catalog" };
   }
   if (composed.figure) {
     return { ...finalizeVerifiedFigure(composed.figure, composed.warnings), source: "compositor" };
@@ -178,3 +178,4 @@ export function matchGeometryWithDiagnostics(
     source: "none",
   };
 }
+

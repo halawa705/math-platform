@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file geo-fact-parser.ts
  * @description يحوّل سطر حقيقة واحداً (بعد التطبيع) إلى GeoFact، أو null إن لم يفهمه.
  */
@@ -91,3 +91,4 @@ export function parseGeoFactString(s: string): GeoFact | null {
   }
   return null;
 }
+

@@ -1,7 +1,10 @@
-/**
+﻿/**
  * @file geo-fact-splitter.ts
  * @description يقسّم وصف الشكل إلى سطور حقائق، ويوحّد الرموز (≈ // ⊥ ∈ °) قبل التحليل.
  */
+import { convertGeometryLatexToPlainText } from "../description-intake/geometry-latex-to-plain-normalizer";
+import { restructureGeometryClauses } from "../description-intake/geometry-clause-restructurer";
+
 export const MODULE_ID_GEO_FACT_SPLITTER = "geo_fact_splitter" as const;
 
 const EASTERN = "٠١٢٣٤٥٦٧٨٩";
@@ -25,12 +28,24 @@ export function normalizeGeometryText(raw: string): string {
 const LEADING_CONNECTORS = /^(?:فيه|فيها|حيث|بحيث|إذا\s*كان|لتكن|ليكن|لتكن|ثم|و(?=\s+(?![أ-ي]ـ?\s*=)))\s*/;
 
 export function splitDescriptionIntoFactStrings(description: string): string[] {
-  const text = normalizeGeometryText(description);
+  const text = restructureGeometryClauses(normalizeGeometryText(convertGeometryLatexToPlainText(description)));
   const raw = text
     .split(/[;؛\n،]|(?<=\D)\.(?=\s)/)
     .map((s) => { let t = s.trim(); for (let i = 0; i < 2; i++) t = t.replace(LEADING_CONNECTORS, "").trim(); return t; })
     .filter((s) => s.length > 0);
-  return raw.flatMap(splitSimilarityPair).flatMap(expandEqualityChain);
+  return orderFactsByDependency(raw.flatMap(splitSimilarityPair).flatMap(expandEqualityChain));
+}
+
+const DECLARATION_FACT = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|رباعي|دائرة)/;
+const BASE_POINT_FACT = /(?:∈|منتصف|\sعلى\s|^(?:نمد|مد|امدد)\s)/;
+const DERIVED_LINE_FACT = /(?:متوسط|ينصف|منصف|⊥|\/\/)/;
+const INTERSECTION_FACT = /(?:∩|×|يتقاطعان)/;
+
+/** يضمن تعريف الأشكال أولاً ثم النقاط المشتقة ثم العلاقات/الأطوال (ترتيب ثابت يحفظ الترتيب الأصلي داخل كل فئة). */
+function orderFactsByDependency(facts: string[]): string[] {
+  const rank = (f: string) =>
+    DECLARATION_FACT.test(f) ? 0 : BASE_POINT_FACT.test(f) ? 1 : DERIVED_LINE_FACT.test(f) ? 2 : INTERSECTION_FACT.test(f) ? 3 : 4;
+  return facts.map((f, i) => ({ f, i, r: rank(f) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.f);
 }
 
 const SHAPE_WORD = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|رباعي)/;
@@ -52,3 +67,7 @@ function expandEqualityChain(fact: string): string[] {
   const m = fact.match(CHAIN);
   return m ? [`${m[1]} = ${m[2]}`, `${m[1]} = ${m[3]}`, `${m[2]} = ${m[3]}`] : [fact];
 }
+
+
+
+

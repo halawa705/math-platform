@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
+import StudioGeometryUnderstoodFactsPanel from "./studio-geometry-understood-facts-panel";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_STUDIO_VISUAL_GEOMETRY_LAB_TAB =
@@ -115,6 +116,8 @@ export default function StudioVisualGeometryLabTab() {
         </ul>
       )}
 
+      <StudioGeometryUnderstoodFactsPanel description={desc} />
+
       {/* شريط نماذج سريعة من المنهج المدرسي للاختبار */}
       <div className="space-y-1">
         <div className="text-[10px] font-extrabold text-slate-500">
@@ -192,5 +195,6 @@ export default function StudioVisualGeometryLabTab() {
     </div>
   );
 }
+
 
 
