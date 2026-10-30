@@ -7,6 +7,7 @@
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
+import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
 import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
 import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog";
 import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog";
@@ -160,6 +161,16 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   );
 }
 
+/** يصقل الشكل ليطابق معطياته ثم يضيف أي مخالفات متبقية كتحذيرات ظاهرة للمعلم (لا إخفاء صامت). */
+function finalizeVerifiedFigure(
+  figure: CanonicalGeometryFigureIR,
+  warnings: readonly string[]
+): { readonly figure: CanonicalGeometryFigureIR; readonly warnings: readonly string[] } {
+  const refined = refineFigureToMatchGivens(figure);
+  const remaining = refined.report.issues.filter((i) => i.severity === "error").map((i) => `تحقق الشكل: ${i.message}`);
+  return { figure: refined.figure, warnings: [...warnings, ...remaining] };
+}
+
 export function matchGeometryWithDiagnostics(
   desc: string,
   figureId: string,
@@ -171,14 +182,14 @@ export function matchGeometryWithDiagnostics(
 } {
   const composed = composeFigureFromGeometryDescription(desc, figureId, notation);
   if (composed.figure && composed.warnings.length === 0) {
-    return { figure: composed.figure, warnings: [], source: "compositor" };
+    return { ...finalizeVerifiedFigure(composed.figure, []), source: "compositor" };
   }
   const legacy = matchOptionalGeometryFigureFromArabicDescription(desc, figureId, notation);
   if (legacy) {
-    return { figure: legacy, warnings: composed.warnings, source: "catalog" };
+    return { ...finalizeVerifiedFigure(legacy, composed.warnings), source: "catalog" };
   }
   if (composed.figure) {
-    return { figure: composed.figure, warnings: composed.warnings, source: "compositor" };
+    return { ...finalizeVerifiedFigure(composed.figure, composed.warnings), source: "compositor" };
   }
   return {
     warnings: composed.warnings.length ? composed.warnings : ["لم يُتعرَّف على الشكل من الوصف."],
