@@ -85,7 +85,7 @@ export function matchPrepGrade1ParallelismFigure(
   }
 
   // 11. شكل 3-2 ص 191: تداخل حرف U زاويتان داخلتان 70° و 110°
-  if (/داخلتان.*70°|تداخل.*70°|110°.*70°.*تداخل/i.test(d)) {
+  if (/(?:توازي|متوازي|جهة\s*واحدة|حرف\s*U).*داخلتان.*70°|داخلتان.*70°.*(?:توازي|متوازي)|تداخل.*70°|110°.*70°.*تداخل/i.test(d)) {
     return buildParallelConsecutiveInteriorAnglesFigure({ figureId, notationLanguage });
   }
 

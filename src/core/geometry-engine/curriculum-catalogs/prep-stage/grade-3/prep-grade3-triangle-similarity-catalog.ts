@@ -57,7 +57,7 @@ export function matchPrepGrade3TriangleSimilarityFigure(
   }
 
   // 4. قاطع عكسي غير موازي (ADH أو AED)
-  if (/قاطع\s*عكسي|غير\s*مواز|ABC\s*~\s*ADH|ABC\s*~\s*AED|ADH|AED/i.test(d)) {
+  if (/قاطع\s*عكسي|غير\s*مواز|ABC\s*~\s*ADH|ABC\s*~\s*AED|(?:\b(?:ADH|AED)\b.*(?:تشابه|~|عكسي))/i.test(d)) {
     return buildTriangleAntiparallelSecantFigure({ figureId, notationLanguage });
   }
 
