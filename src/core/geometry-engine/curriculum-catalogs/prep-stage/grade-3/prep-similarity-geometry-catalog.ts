@@ -54,7 +54,7 @@ export function matchPrepSimilarityGeometryFigure(
   }
 
   // 3. شبه منحرف قائم الزاوية مع مجاهيل جبرية (X - 3) و (Y + 1)
-  if ((/شبه\s*منحرف.*قائم/i.test(d) && /تشابه|متشابه/i.test(d)) || /شبه\s*منحرف.*مجاهيل|X\s*-\s*3|Y\s*\+\s*1/i.test(d)) {
+  if (/شبه\s*منحرف/i.test(d) && (/تشابه|متشابه/i.test(d) || /مجاهيل/i.test(d) || /X\s*-\s*3|Y\s*\+\s*1/i.test(d))) {
     return buildSimilarRightTrapezoidsWithVariablesFigure({ figureId, notationLanguage });
   }
 
