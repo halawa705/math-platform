@@ -39,6 +39,8 @@ export default function SideBySideDiagramDocker({
 }: SideBySideDiagramDockerProps) {
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const formattedQNum = formatNumeralsByModeSSOT(question.questionNumber, settings.numeralMode);
+  const formattedIdeaIndex =
+    question.ideaIndex !== undefined ? formatNumeralsByModeSSOT(question.ideaIndex, settings.numeralMode) : undefined;
   const isBookletDrill = question.id.includes("-drill-");
   const isBookletSolvedExample = question.id.startsWith("booklet-s1-") && !isBookletDrill;
   const isBookletHomework = question.id.includes("-hw-") || question.id.startsWith("booklet-s2-");
@@ -93,6 +95,7 @@ export default function SideBySideDiagramDocker({
           cardBorderColorHex={cardBorderColorHex}
           palette={palette}
           citationBadgeAr={question.citationBadgeAr ? formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode) : undefined}
+          formattedIdeaIndex={formattedIdeaIndex}
         />
 
         {settings.answerVisibilityMode !== "answer_key_only" && (

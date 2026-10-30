@@ -91,6 +91,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         resultItems.push({
           id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
           questionNumber: resultItems.length + 1,
+          ideaIndex: ideaIdx + 1,
           kind: ex.mcqChoicesAr ? "mcq" : geoMatch || graphSpec ? "essay_geometry" : "essay_algebra",
           branchBadgeAr: params.branchNameAr,
           marks: 2,
@@ -114,7 +115,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
           buildStage2PrintableItem({
             id: `booklet-s1-drill-${ideaIdx + 1}-${dIdx + 1}`,
             questionNumber: resultItems.length + 1,
-            block: drill,
+            block: { ...drill, ideaIndex: ideaIdx + 1 },
             branchNameAr: params.branchNameAr,
             defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
             defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
@@ -137,6 +138,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         resultItems.push({
           ...item,
           questionNumber: resultItems.length + 1,
+          ideaIndex: 1,
           ideaBannerTitleAr: idx === 0 ? `أولاً: شرح الأفكار والأمثلة المحلولة — ${params.lessonTitleArabic}` : undefined,
         });
       });
@@ -147,7 +149,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
     resultItems.push(
       buildStage2PrintableItem({
         id: `booklet-s2-hw-${hIdx + 1}`,
-        questionNumber: resultItems.length + 1,
+        questionNumber: hIdx + 1,
         block: hw,
         branchNameAr: params.branchNameAr,
         defaultPrompt: `سؤال واجب (${hIdx + 1})`,

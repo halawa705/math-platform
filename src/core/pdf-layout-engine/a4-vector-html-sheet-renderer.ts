@@ -29,6 +29,7 @@ export interface PrintableMathQuestionItem {
   readonly givenDataAr?: string;
   readonly requiredToFindAr?: string;
   readonly citationBadgeAr?: string;
+  readonly ideaIndex?: number;
   readonly geometryFigure?: CanonicalGeometryFigureIR;
   readonly graphSpec?: CartesianGraphSpec;
   readonly figureDiagnosticsAr?: readonly string[];

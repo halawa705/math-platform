@@ -724,4 +724,57 @@ describe("Flawless Ingestion of NotebookLM Responses Across All Branches (M5)", 
       item.solutionStepsAr?.forEach((s) => assertZeroMathLeakInText(s, item.id));
     });
   });
+
+  it("splits multiple drills under حاول بنفسك into separate cards and restarts homework numbering from 1 with ideaIndex", () => {
+    const s1 = `
+الفكرة الأولى: أنواع الزوايا | المستوى: تأسيسي | نوع المسألة: اختر | معرف الفكرة: idea-01
+مفهوم الفكرة: تصنيف الزوايا حسب قياساتها.
+القاعدة الرياضية: الزاوية الحادة بين 0 و 90 درجة.
+المثال 1 | معرف المثال: example-01-01
+نص المسألة: الزاوية التي قياسها 45 هي زاوية حادة.
+خطوات الحل: 1. بما أن 45 بين 0 و 90 إذن هي حادة.
+نهاية الفكرة الأولى
+`;
+
+    // Stage 2 with 2 drills without standard [1] / [2] and homework
+    const s2 = `
+الفكرة الأولى: أنواع الزوايا | معرف الفكرة: idea-01
+حاول بنفسك:
+:
+في الشكل المقابل، أ جـ ينتمي إلى ب وكان قياس أ ب د = 50 ، أوجد قيمة x.
+في الشكل المقابل، س ص ينتمي إلى د هـ وكان قياس س د هـ = 70 ، أوجد قيمة x.
+
+تمارين الواجب المنزلي:
+سؤال الواجب #1 [اختر] الزاوية التي قياسها 90 درجة هي زاوية: (أ) حادة (ب) قائمة (جـ) منفرجة (د) منعكسة | معرف السؤال: homework-01-01
+سؤال الواجب #2 [مقالي] زاويتان متتامتان قياس إحداهما 40 ، احسب قياس الأخرى. | معرف السؤال: homework-01-02
+`;
+
+    const items = mergeBookletThreeStagesRepliesToPrintableItems({
+      stage1Raw: s1,
+      stage2Raw: s2,
+      branchId: "plane_geometry",
+      branchNameAr: "الهندسة المستوية",
+      unitId: "u1",
+      lessonId: "l1",
+      lessonTitleArabic: "أنواع الزوايا",
+    });
+
+    // 1 example + 2 separate drills + 2 homework = 5 items total
+    expect(items.length).toBe(5);
+
+    // Verify drills are 2 separate items
+    const drills = items.filter((q) => q.id.includes("-drill-"));
+    expect(drills.length).toBe(2);
+    expect(drills[0].promptAr.startsWith(":")).toBe(false);
+    expect(drills[0].promptAr).toContain("أ ب د");
+    expect(drills[1].promptAr).toContain("س د هـ");
+
+    // Verify homework restarts from 1 and carries ideaIndex
+    const hwItems = items.filter((q) => q.id.includes("-hw-"));
+    expect(hwItems.length).toBe(2);
+    expect(hwItems[0].questionNumber).toBe(1);
+    expect(hwItems[1].questionNumber).toBe(2);
+    expect(hwItems[0].ideaIndex).toBe(1);
+    expect(hwItems[1].ideaIndex).toBe(1);
+  });
 });

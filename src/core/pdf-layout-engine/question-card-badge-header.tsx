@@ -18,6 +18,7 @@ export interface QuestionCardBadgeHeaderProps {
   readonly cardBorderColorHex: string;
   readonly palette: PrintThemePaletteTokens;
   readonly citationBadgeAr?: string;
+  readonly formattedIdeaIndex?: string;
 }
 
 export function QuestionCardBadgeHeader({
@@ -29,6 +30,7 @@ export function QuestionCardBadgeHeader({
   cardBorderColorHex,
   palette,
   citationBadgeAr,
+  formattedIdeaIndex,
 }: QuestionCardBadgeHeaderProps) {
   if (isBookletSolvedExample) {
     return (
@@ -101,9 +103,14 @@ export function QuestionCardBadgeHeader({
       </div>
       <span
         style={{ color: "#9D174D" }}
-        className="text-[0.78em] font-black bg-white px-2 py-0.2 rounded-md border border-slate-200 shrink-0 shadow-2xs"
+        className="text-[0.78em] font-black bg-white px-2 py-0.2 rounded-md border border-slate-200 shrink-0 shadow-2xs inline-flex items-center gap-1"
       >
-        مسألة واجب ({formattedQNum})
+        <span>مسألة واجب ({formattedQNum})</span>
+        {formattedIdeaIndex && (
+          <span className="text-[#9D174D] bg-pink-50 px-1 py-0.1 rounded border border-pink-200 font-extrabold text-[0.88em]">
+            (فكرة {formattedIdeaIndex})
+          </span>
+        )}
       </span>
     </div>
   );
