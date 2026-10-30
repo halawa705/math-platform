@@ -6,6 +6,11 @@
  */
 
 import { NextResponse } from "next/server";
+import {
+  createStudentSessionToken,
+  STUDENT_AUTH_COOKIE_MAX_AGE,
+  STUDENT_AUTH_COOKIE_NAME,
+} from "@/core/auth/student-auth-server-ssot";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -83,7 +88,7 @@ export async function POST(request: Request) {
     const studentRow = rows[0];
 
     // مطابقة الرقم السري إن وجد
-    if (studentRow.pin_code && pin && studentRow.pin_code !== pin) {
+    if (studentRow.pin_code && studentRow.pin_code !== pin) {
       return NextResponse.json(
         { success: false, error: "الرقم السري غير صحيح." },
         { status: 401 }
@@ -105,10 +110,27 @@ export async function POST(request: Request) {
       createdAtIso: studentRow.created_at || new Date().toISOString(),
     };
 
-    return NextResponse.json({
+    const token = await createStudentSessionToken(
+      safeStudent.studentCode,
+      safeStudent.gradeId
+    );
+
+    const response = NextResponse.json({
       success: true,
       student: safeStudent,
     });
+
+    response.cookies.set({
+      name: STUDENT_AUTH_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: STUDENT_AUTH_COOKIE_MAX_AGE,
+    });
+
+    return response;
   } catch {
     return NextResponse.json(
       { success: false, error: "حدث خطأ غير متوقع أثناء تسجيل دخول الطالب." },

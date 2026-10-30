@@ -6,6 +6,11 @@
 
 import { NextResponse } from "next/server";
 import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
+import {
+  createStudentSessionToken,
+  STUDENT_AUTH_COOKIE_MAX_AGE,
+  STUDENT_AUTH_COOKIE_NAME,
+} from "@/core/auth/student-auth-server-ssot";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -100,10 +105,27 @@ export async function POST(request: Request) {
       createdAtIso: nowIso,
     };
 
-    return NextResponse.json({
+    const token = await createStudentSessionToken(
+      createdStudent.studentCode,
+      createdStudent.gradeId
+    );
+
+    const response = NextResponse.json({
       success: true,
       student: createdStudent,
     });
+
+    response.cookies.set({
+      name: STUDENT_AUTH_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: STUDENT_AUTH_COOKIE_MAX_AGE,
+    });
+
+    return response;
   } catch {
     return NextResponse.json(
       { success: false, error: "حدث خطأ غير متوقع أثناء تسجيل الطالب." },

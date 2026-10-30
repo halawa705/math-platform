@@ -7,6 +7,14 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 190 سطراً).
  */
 
+import {
+  base64UrlEncode,
+  base64UrlDecode,
+  getHmacCryptoKey,
+} from "./hmac-token-crypto-primitives";
+
+export { base64UrlEncode, base64UrlDecode, getHmacCryptoKey };
+
 export const TEACHER_ADMIN_DEFAULT_USER = "halawa" as const;
 export const TEACHER_ADMIN_DEFAULT_PASS = "123451" as const;
 export const TEACHER_AUTH_COOKIE_NAME = "math_platform_teacher_session" as const;
@@ -61,40 +69,6 @@ export function verifyTeacherCredentials(
   }
 
   return true;
-}
-
-function base64UrlEncode(buffer: ArrayBuffer | Uint8Array): string {
-  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const base64 = btoa(binary);
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function base64UrlDecode(str: string): Uint8Array {
-  let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (base64.length % 4 !== 0) {
-    base64 += "=";
-  }
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
-async function getHmacCryptoKey(secret: string): Promise<CryptoKey> {
-  const enc = new TextEncoder();
-  return crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign", "verify"]
-  );
 }
 
 /**

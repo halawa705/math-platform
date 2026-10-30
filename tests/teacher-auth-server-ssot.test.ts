@@ -3,9 +3,11 @@ import {
   verifyTeacherCredentials,
   createTeacherSessionToken,
   verifyTeacherSessionToken,
-  TEACHER_ADMIN_DEFAULT_USER,
-  TEACHER_ADMIN_DEFAULT_PASS,
 } from "../src/core/auth/teacher-auth-server-ssot";
+import {
+  createStudentSessionToken,
+  verifyStudentSessionToken,
+} from "../src/core/auth/student-auth-server-ssot";
 
 describe("teacher-auth-server-ssot", () => {
   it("authenticates teacher with exact username and password", () => {
@@ -44,5 +46,22 @@ describe("teacher-auth-server-ssot", () => {
     expect(await verifyTeacherSessionToken("invalid.token")).toBe(false);
     expect(await verifyTeacherSessionToken("")).toBe(false);
     expect(await verifyTeacherSessionToken(null)).toBe(false);
+  });
+
+  it("creates and verifies a valid student HMAC session token and rejects tampered tokens", async () => {
+    const studentToken = await createStudentSessionToken("MATH-1001", "prep-3");
+    expect(studentToken).toContain(".");
+
+    const session = await verifyStudentSessionToken(studentToken);
+    expect(session).toEqual({ studentCode: "MATH-1001", gradeId: "prep-3" });
+
+    // تعديل حرف واحد في التوقيع يجب أن يرجع null
+    const lastChar = studentToken.slice(-1) === "A" ? "B" : "A";
+    const tampered = studentToken.slice(0, -1) + lastChar;
+    expect(await verifyStudentSessionToken(tampered)).toBeNull();
+
+    // توكن المعلم لا يُقبل كتوكن طالب
+    const teacherToken = await createTeacherSessionToken("teacher_halawa");
+    expect(await verifyStudentSessionToken(teacherToken)).toBeNull();
   });
 });

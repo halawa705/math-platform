@@ -163,7 +163,7 @@ export default function StudentCodeLoginForm({
       return;
     }
 
-    if (passwordPin.trim() && matched.passwordPin && matched.passwordPin !== passwordPin.trim()) {
+    if (matched.passwordPin && matched.passwordPin !== passwordPin.trim()) {
       setErrorMsg("الرقم السري غير صحيح");
       return;
     }
