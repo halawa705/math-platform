@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file geometry-clause-restructurer.ts
  * @description المرحلة 2 من استقبال وصف NotebookLM: يفكّك الجمل المركّبة («مثلث ABC فيه AB = 7 و BC = 9 والزاوية B = 40»)
  * إلى حقائق مفصولة بـ «؛» ويعيد ترتيب صيغ الإعلان («ABCD متوازي أضلاع» ← «متوازي أضلاع ABCD») ويحذف مقدمات الإنشاء.
@@ -9,7 +9,8 @@ export const MODULE_ID_GEOMETRY_CLAUSE_RESTRUCTURER = "geometry_clause_restructu
 
 const SEP = " ؛ ";
 /** جمل «المطلوب» ليست حقائق رسم فتُحذف. */
-const GOAL_CLAUSE = /^(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|استنتج|علل|بين\s*أن|ما\s*(?:هو|هي|قيمة)|المطلوب|هل|ثم\s*أوجد)/;
+const GOAL_CLAUSE =
+  /^(?:ثم\s+)?[فو]?\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|استنتج|علل|بين\s*أن|حدد|اذكر|ما\s*(?:هو|هي|قيمة|نوع)|المطلوب|هل\b)/;
 const SHAPE = "(?:مثلث|مستطيل|مربع|معين|متوازي\\s*أضلاع|شبه\\s*منحرف|رباعي|دائرة)";
 const AR = "[أ-ي]ـ?";
 const LABELS_ONE_SEG = "[A-Z]{2}";
@@ -33,7 +34,13 @@ function dimensionFacts(shapeHead: string, labelsRaw: string, tail: string): str
 }
 
 export function restructureGeometryClauses(plain: string): string {
-  let t = ` ${plain} `;
+  let t = ` ${plain} `
+    .replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:/gi, SEP)
+    .replace(/\]\s*(?:\|.*)?$/g, " ")
+    .replace(/\]/g, SEP)
+    .replace(/\|\s*(?:معرف|نوع)\s*[^؛;\n]*/g, " ")
+    .replace(/\|\s*$/g, " ")
+    .replace(/(?<!\d)\.(?!\d)/g, SEP);
   t = t
     .replace(/(وتر|قطر)\s+فيها/g, "$1")
     .replace(/(?:في\s*)?(?:ال)?(?:شكل|رسم)\s*(?:ال)?(?:مقابل|آتي|الآتي|التالي|تالي)\s*[:：،]?/g, SEP)

@@ -19,6 +19,11 @@ interface ExtraSeg { readonly a: string; readonly b: string; readonly dashed?: b
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
+  const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
+  if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
+    const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
+    if (fromTag.figure && fromTag.warnings.length === 0) return fromTag;
+  }
   const warnings: string[] = [];
   const facts: GeoFact[] = [];
   for (const line of splitDescriptionIntoFactStrings(description)) {

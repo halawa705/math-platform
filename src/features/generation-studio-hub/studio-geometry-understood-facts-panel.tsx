@@ -7,20 +7,20 @@
  */
 import { splitDescriptionIntoFactStrings } from "@/core/geometry-engine/fact-compositor/geo-fact-splitter";
 import { parseGeoFactString } from "@/core/geometry-engine/fact-compositor/geo-fact-parser";
-import { extractAngleFanSpecFromDescription } from "@/core/geometry-engine/angle-fan-family/angle-fan-fact-extractor";
-import { convertGeometryLatexToPlainText } from "@/core/geometry-engine/description-intake/geometry-latex-to-plain-normalizer";
+import {
+  extractAngleFanSpecFromDescription,
+  splitAngleFanClauses,
+} from "@/core/geometry-engine/angle-fan-family/angle-fan-fact-extractor";
 
 export const MODULE_ID_STUDIO_GEOMETRY_UNDERSTOOD_FACTS_PANEL = "studio_geometry_understood_facts_panel" as const;
 
 export default function StudioGeometryUnderstoodFactsPanel({ description }: { readonly description: string }) {
-  const isAngleFan = extractAngleFanSpecFromDescription(description) !== null;
+  const embeddedTag = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i)?.[1]?.trim();
+  const effectiveDesc = embeddedTag || description;
+  const isAngleFan = extractAngleFanSpecFromDescription(effectiveDesc) !== null;
   const facts = isAngleFan
-    ? convertGeometryLatexToPlainText(description)
-        .split(/\s*[;؛\n]+\s*/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((text) => ({ text, ok: true }))
-    : splitDescriptionIntoFactStrings(description).map((text) => ({
+    ? splitAngleFanClauses(effectiveDesc).map((text) => ({ text, ok: true }))
+    : splitDescriptionIntoFactStrings(effectiveDesc).map((text) => ({
         text,
         ok: parseGeoFactString(text) !== null,
       }));

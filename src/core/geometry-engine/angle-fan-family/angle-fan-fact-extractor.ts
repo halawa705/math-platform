@@ -1,9 +1,9 @@
 /**
  * @file angle-fan-fact-extractor.ts
  * @description مستخلص حقائق عائلة مراوح الأشعة والزوايا (Angle-Fan Fact Extractor):
- * يحول الوصف العربي/الرياضي للزوايا المتتامة، المتكاملة، المتقابلة بالرأس، المتجمعة حول نقطة،
- * ومنصفات الزوايا إلى مواصفة مهيكلة (`AngleFanSpec`).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 260 سطراً).
+ * يفهم كلاً من وسوم `[رسم هندسي: ...]` ونصوص المسائل الكاملة من NotebookLM (بما فيها LaTeX مثل `\cap`، `\vec`،
+ * `\overleftrightarrow`، وجمع الزوايا `ق(∠...) + ق(∠...) = 140°`) ويحولها إلى مواصفة مهيكلة (`AngleFanSpec`).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 295 سطراً).
  */
 
 import { convertGeometryLatexToPlainText } from "../description-intake/geometry-latex-to-plain-normalizer";
@@ -22,16 +22,52 @@ export const MODULE_ID_ANGLE_FAN_FACT_EXTRACTOR = "angle_fan_fact_extractor" as 
 const POLYGON_OR_OTHER_FAMILY_GUARD =
   /(?:^|[\s،؛;])(مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|متوازي\s*مستطيلات|شبه\s*منحرف|دائرة|سداسي|خماسي|هرم|مخروط|أسطوانة|مكعب|خط\s*الأعداد|مستوى\s*إحداثي|دالة\s*تربيعية)(?:$|[\s،؛;])|[△▱⊙]/i;
 
+const GOAL_CLAUSE_RE =
+  /^(?:ثم\s+)?[فو]?\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|استنتج|علل|بين\s*أن|حدد|اذكر|ما\s*(?:هو|هي|قيمة|نوع)|المطلوب|هل\b)/;
+
 function extractCleanKeys(rawSegmentText: string): string[] | null {
   const stripped = rawSegmentText
     .replace(/\(\s*\d+\s*°?\s*\)/g, " ")
     .replace(
-      /(?:الشعاعان|الشعاعين|الشعاع|الأشعة|المستقيمان|المستقيمين|للمستقيم|بالمستقيم|المستقيم|لمستقيم|القطعة|شعاعين|شعاع|مستقيم|النقطة|نقطة|الزاوية|زاوية|ق\s*\(|∠|\))/g,
+      /(?:الشعاعان|الشعاعين|الشعاع|الأشعة|المستقيمان|المستقيمين|للمستقيم|بالمستقيم|المستقيم|لمستقيم|القطعة|شعاعين|شعاع|مستقيم|النقطة|نقطة|الزاوية|زاوية|ق\s*\(|∠|\)|\{|\})/g,
       " "
     )
     .replace(/\s+/g, " ")
     .trim();
   return parseLabelList(stripped);
+}
+
+/**
+ * يقسم النص الخام (سواء كان وسم رسم هندسي أو نص مسألة كاملة مع LaTeX) إلى جمل حقائق نظيفة.
+ */
+export function splitAngleFanClauses(rawDescription: string): string[] {
+  let plain = convertGeometryLatexToPlainText(rawDescription)
+    .replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:/gi, " ؛ ")
+    .replace(/(?:^|[\s؛;])رسم\s*(?:هندسي|توضيحي|بياني)\s*:/gi, " ؛ ")
+    .replace(/\]\s*(?:\|.*)?$/g, " ")
+    .replace(/\]/g, " ؛ ")
+    .replace(/\|\s*(?:معرف|نوع)\s*[^؛;\n]*/g, " ")
+    .replace(/\|\s*$/g, " ")
+    .replace(/(?<!\d)\.(?!\d)/g, " ؛ ")
+    .replace(/(?:في\s+)?الشكل\s+المقابل\s*[،,:]?/g, " ؛ ")
+    .replace(/(?:^|[،؛;\s])(?:إذا\s+كان|اذا\s+كان|حيث|بحيث|وكان|علماً\s+بأن|علما\s+بأن)\s+/g, " ؛ ");
+
+  // تحويل الفاصلة العربية إلى فاصل جمل إلا إذا كانت داخل قائمة نقاط أو أشعة أو زوايا متتالية
+  plain = plain.replace(
+    /،(?=\s*(?:ق\s*\(|∠|الشعاع|المستقيم|تقاطع|الزوايا|نقطة|مجموع|[فو]?(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن)))/g,
+    "؛"
+  );
+
+  const rawParts = plain
+    .split(/\s*[;؛\n]+\s*/)
+    .flatMap((part) => {
+      if (/(?:متتالية|على\s+استقامة|حولها)/.test(part)) return [part];
+      return part.split(/\s*،\s*/);
+    })
+    .map((c) => c.replace(/^[و\s]+(?=(?:الشعاع|المستقيم|ق\s*\(|∠))/, "").trim())
+    .filter((c) => c.length > 1 && !GOAL_CLAUSE_RE.test(c));
+
+  return [...new Set(rawParts)];
 }
 
 /**
@@ -42,15 +78,7 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
     return null;
   }
 
-  const plain = convertGeometryLatexToPlainText(rawDescription).replace(
-    /،(?=\s*(?:ق\s*\(|∠|الشعاع|المستقيم|تقاطع|الزوايا|نقطة|مجموع))/g,
-    "؛"
-  );
-  const clauses = plain
-    .split(/\s*[;؛\n]+\s*/)
-    .map((c) => c.trim())
-    .filter(Boolean);
-
+  const clauses = splitAngleFanClauses(rawDescription);
   if (clauses.length === 0) return null;
 
   let vertex: string | null = null;
@@ -85,6 +113,16 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       perpPairs.push([a, b]);
     }
   };
+  const addAngleFact = (arm1: string, arm2: string, expr: AngleFanMeasureFact["expr"]) => {
+    addRay(arm1);
+    addRay(arm2);
+    const exists = angles.some(
+      (x) =>
+        ((x.arm1 === arm1 && x.arm2 === arm2) || (x.arm1 === arm2 && x.arm2 === arm1)) &&
+        x.expr.rawLabel === expr.rawLabel
+    );
+    if (!exists) angles.push({ arm1, arm2, expr });
+  };
 
   for (const clause of clauses) {
     // 1. نقطة م حولها أربعة أشعة تصنع زوايا 2س°، 3س°، 4س°، 6س°
@@ -104,13 +142,7 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       consecutiveFanOrder = fanRays;
       exprTokens.forEach((tok, idx) => {
         const expr = parseLinearAngleExpression(tok);
-        if (expr) {
-          angles.push({
-            arm1: fanRays[idx],
-            arm2: fanRays[(idx + 1) % fanRays.length],
-            expr,
-          });
-        }
+        if (expr) addAngleFact(fanRays[idx], fanRays[(idx + 1) % fanRays.length], expr);
       });
       continue;
     }
@@ -159,15 +191,17 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       }
       const e1 = parseLinearAngleExpression(mVertPair[1]);
       const e2 = parseLinearAngleExpression(mVertPair[2]);
-      if (e1) angles.push({ arm1: "A", arm2: "C", expr: e1 });
-      if (e2) angles.push({ arm1: "B", arm2: "D", expr: e2 });
+      if (e1) addAngleFact("A", "C", e1);
+      if (e2) addAngleFact("B", "D", e2);
       continue;
     }
 
-    // 5. تقاطع المستقيم أ ب والمستقيم جـ د في م
-    const mIntersect = clause.match(
-      /تقاطع\s+(?:المستقيم\s+|المستقيمان\s+)?(.+?)\s+و\s*(?:المستقيم\s+)?(.+?)\s+في\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/
-    );
+    // 5. تقاطع مستقيمين نصياً أو بالرمز ∩: تقاطع المستقيم أ ب والمستقيم جـ د في م أو أ ب ∩ جـ د = {م}
+    const mIntersect =
+      clause.match(
+        /تقاطع\s+(?:المستقيم\s+|المستقيمان\s+)?(.+?)\s+و\s*(?:المستقيم\s+)?(.+?)\s+في\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/
+      ) ??
+      clause.match(/^(.+?)\s*(?:∩|يتقاطعان\s+في)\s*(.+?)\s*(?:=\s*|\s+في\s+)\{?\s*([أ-ي]ـ?|[A-Z])\s*\}?$/);
     if (mIntersect) {
       const s1 = extractCleanKeys(mIntersect[1]);
       const s2 = extractCleanKeys(mIntersect[2]);
@@ -240,27 +274,36 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       continue;
     }
 
-    // 10. مجموع الزاويتين المتقابلتين بالرأس (∠أ م جـ و ∠ب م د) يساوي 140°
-    const mSum = clause.match(
-      /مجموع\s+الزاويتين.*?\(\s*∠?\s*(.+?)\s+و\s+∠?\s*(.+?)\s*\)\s*(?:يساوي|=)\s*(\d+(?:\.\d+)?)/
-    );
+    // 10. مجموع زاويتين نصياً أو بعلامة الجمع (+): ق(∠أ م جـ) + ق(∠ب م د) = 140°
+    const mSum =
+      clause.match(
+        /مجموع\s+الزاويتين.*?\(\s*∠?\s*(.+?)\s+و\s+∠?\s*(.+?)\s*\)\s*(?:يساوي|=)\s*(\d+(?:\.\d+)?)/
+      ) ??
+      clause.match(
+        /^(?:ق\s*\(\s*∠?\s*([^)]+)\)|∠\s*([^+]+))\s*\+\s*(?:ق\s*\(\s*∠?\s*([^)]+)\)|∠\s*([^=]+))\s*=\s*(\d+(?:\.\d+)?)/
+      );
     if (mSum) {
-      const a1 = extractCleanKeys(mSum[1]);
-      const a2 = extractCleanKeys(mSum[2]);
-      const sumDeg = Number(mSum[3]);
+      const rawA1 = mSum.length === 4 ? mSum[1] : (mSum[1] ?? mSum[2]);
+      const rawA2 = mSum.length === 4 ? mSum[2] : (mSum[3] ?? mSum[4]);
+      const rawNum = mSum.length === 4 ? mSum[3] : mSum[5];
+      const a1 = extractCleanKeys(rawA1);
+      const a2 = extractCleanKeys(rawA2);
+      const sumDeg = Number(rawNum);
       if (a1 && a1.length === 3 && a2 && a2.length === 3 && Number.isFinite(sumDeg)) {
         setVertex(a1[1]);
         addRay(a1[0]);
         addRay(a1[2]);
         addRay(a2[0]);
         addRay(a2[2]);
-        sumEquations.push({
-          angles: [
-            [a1[0], a1[2]],
-            [a2[0], a2[2]],
-          ],
-          sumDeg,
-        });
+        if (!sumEquations.some((eq) => eq.sumDeg === sumDeg)) {
+          sumEquations.push({
+            angles: [
+              [a1[0], a1[2]],
+              [a2[0], a2[2]],
+            ],
+            sumDeg,
+          });
+        }
         continue;
       }
     }
@@ -290,25 +333,23 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
     }
 
     // 12. قياس زاوية: ق(∠أ جـ د) = 50°
-    const mAngle = clause.match(/^(?:ق\s*\(\s*∠?\s*([^)]+)\)|∠\s*([^=]+))\s*=\s*(.+)$/);
+    const mAngle = clause.match(/^(?:ق\s*\(\s*∠?\s*([^)]+)\)|∠\s*([^=+]+))\s*=\s*(.+)$/);
     if (mAngle) {
       const pts = extractCleanKeys(mAngle[1] ?? mAngle[2]);
       const expr = parseLinearAngleExpression(mAngle[3]);
       if (pts && pts.length === 3 && expr) {
         setVertex(pts[1]);
-        addRay(pts[0]);
-        addRay(pts[2]);
-        angles.push({ arm1: pts[0], arm2: pts[2], expr });
+        addAngleFact(pts[0], pts[2], expr);
         continue;
       }
     }
 
-    // 13. منصف زاوية صريح: الشعاع جـ هـ ينصف ∠د جـ س
+    // 13. منصف زاوية صريح أو شعاع يقسم زاوية: الشعاع جـ هـ ينصف ∠د جـ س
     if (!/ينصف\s+المنطقة\s+بينهما/.test(clause)) {
-      const mBis = clause.match(/^(.+?)\s+ينصف\s+(?:الزاوية\s+|∠\s*)(.+)$/);
+      const mBis = clause.match(/^(.+?)\s+(ينصف|يقسم)\s+(?:الزاوية\s+|∠\s*)(.+)$/);
       if (mBis) {
         const rayKeys = extractCleanKeys(mBis[1]);
-        const angKeys = extractCleanKeys(mBis[2]);
+        const angKeys = extractCleanKeys(mBis[3]);
         if (rayKeys && rayKeys.length === 2 && angKeys && angKeys.length === 3) {
           const v = angKeys[1];
           setVertex(v);
@@ -316,7 +357,9 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
           addRay(bisRay);
           addRay(angKeys[0]);
           addRay(angKeys[2]);
-          bisectors.push({ bisectorRay: bisRay, arm1: angKeys[0], arm2: angKeys[2] });
+          if (mBis[2] === "ينصف" && !bisectors.some((b) => b.bisectorRay === bisRay)) {
+            bisectors.push({ bisectorRay: bisRay, arm1: angKeys[0], arm2: angKeys[2] });
+          }
           betweenness.push({ midRays: [bisRay], bound1: angKeys[0], bound2: angKeys[2] });
           continue;
         }

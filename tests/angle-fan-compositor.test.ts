@@ -134,4 +134,32 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
       expect(item.figureDiagnosticsAr, `item #${i} (${item.id}) diagnostics`).toBeUndefined();
     });
   });
+
+  it("يفهم نص المسألة الكامل المنسوخ من NotebookLM (بما فيه LaTeX ووسم الرسم المدمج أو بدونه) بصفر تحذيرات", () => {
+    const fullQuestionWithTag =
+      "في الشكل المقابل، $\\overleftrightarrow{أ ب} \\cap \\overleftrightarrow{جـ د} = \\{م\\}$، الشعاع $\\vec{م و}$ ينصف $\\angle جـ م ب$. إذا كان $ق(\\angle أ م جـ) + ق(\\angle ب م د) = 140^\\circ$، فأوجد بالبرهان المنظم والخطوات قياس $\\angle و م د$. [رسم هندسي: تقاطع المستقيم أ ب والمستقيم جـ د في م;الشعاع م و ينصف ∠جـ م ب;مجموع الزاويتين المتقابلتين بالرأس (∠أ م جـ و ∠ب م د) يساوي 140°] |";
+    const d1 = matchGeometryWithDiagnostics(fullQuestionWithTag, "q_with_tag", "arabic");
+    expect(d1.source).toBe("compositor");
+    expect(d1.warnings).toEqual([]);
+    expect(d1.figure).toBeDefined();
+    expect(verifyGeometryFigure(d1.figure!).passed).toBe(true);
+
+    // نفس السؤال بدون وسم [رسم هندسي: ...] بالاعتماد فقط على نص المسألة ورموز LaTeX
+    const fullQuestionWithoutTag =
+      "في الشكل المقابل، $\\overleftrightarrow{أ ب} \\cap \\overleftrightarrow{جـ د} = \\{م\\}$، الشعاع $\\vec{م و}$ ينصف $\\angle جـ م ب$. إذا كان $ق(\\angle أ م جـ) + ق(\\angle ب م د) = 140^\\circ$، فأوجد بالبرهان المنظم والخطوات قياس $\\angle و م د$.";
+    const d2 = matchGeometryWithDiagnostics(fullQuestionWithoutTag, "q_no_tag", "arabic");
+    expect(d2.source).toBe("compositor");
+    expect(d2.warnings).toEqual([]);
+    expect(d2.figure).toBeDefined();
+    expect(verifyGeometryFigure(d2.figure!).passed).toBe(true);
+
+    // سؤال متتامتين كامل برموز LaTeX فقط بدون وسم رسم هندسي
+    const compQuestionWithoutTag =
+      "في الشكل المقابل، $\\vec{أ ب} \\perp \\vec{أ جـ}$، والشعاع $\\vec{أ د}$ يقسم $\\angle ب أ جـ$ بحيث $ق(\\angle ب أ د) = 3 س^\\circ$ و $ق(\\angle د أ جـ) = 6 س^\\circ$. أوجد قيمة $س$ و $ق(\\angle د أ جـ)$.";
+    const d3 = matchGeometryWithDiagnostics(compQuestionWithoutTag, "q_comp_no_tag", "arabic");
+    expect(d3.source).toBe("compositor");
+    expect(d3.warnings).toEqual([]);
+    expect(d3.figure).toBeDefined();
+    expect(verifyGeometryFigure(d3.figure!).passed).toBe(true);
+  });
 });
