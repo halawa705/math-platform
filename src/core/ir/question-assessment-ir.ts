@@ -91,6 +91,10 @@ export interface QuestionAssessmentIR {
   readonly proofSteps?: readonly DeductiveProofStepIR[];
   readonly modelSolutionStepsArabic: readonly string[];
   readonly finalCanonicalAnswerArabic: string;
+  /** إجابات مقبولة مكافئة للأسئلة القصيرة في الاختبار الإلكتروني (مثل: 5 | ٥ | خمسة). */
+  readonly acceptedAnswersArabic?: readonly string[];
+  /** تنبيهات تشخيص الرسم للمعلم (لا تُعرض للطالب). */
+  readonly figureDiagnosticsAr?: readonly string[];
 
   /**
    * مرفق الشكل الهندسي المتجهي أو الرسم الإحصائي (إن كان السؤال يتطلب شكلاً).

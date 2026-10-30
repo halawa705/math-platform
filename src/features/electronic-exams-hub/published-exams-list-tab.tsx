@@ -24,12 +24,14 @@ import {
   type OnlineExamSubmissionRecord,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 import { subscribeToSupabaseRealtimeTables } from "@/core/supabase/supabase-realtime-submissions-channel";
+import ExamSubmissionsDetailDrawer from "./exam-submissions-detail-drawer";
 
 export const MODULE_ID_PUBLISHED_EXAMS_LIST_TAB = "published_exams_list_tab" as const;
 
 export default function PublishedExamsListTab() {
   const [exams, setExams] = useState<readonly PublishedOnlineExam[]>([]);
   const [subs, setSubs] = useState<readonly OnlineExamSubmissionRecord[]>([]);
+  const [openExamId, setOpenExamId] = useState<string | null>(null);
 
   useEffect(() => {
     const refresh = () => {
@@ -104,27 +106,42 @@ export default function PublishedExamsListTab() {
               <span>التسليمات: {examSubs.length}</span>
               <span className="text-slate-500">المتوسط: {avg === null ? "—" : `${avg}٪`}</span>
             </div>
-            {(pending > 0 || isActive) && (
-              <div className="flex flex-wrap gap-2">
-                {pending > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => markExamSubmissionsReviewedSSOT(exam.examId)}
-                    className="min-h-[44px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black cursor-pointer"
-                  >
-                    ✓ تمت مراجعة {pending} تسليم
-                  </button>
-                )}
-                {isActive && (
-                  <button
-                    type="button"
-                    onClick={() => archiveOnlineExamSSOT(exam.examId)}
-                    className="min-h-[44px] px-4 rounded-xl text-xs font-black text-rose-600 cursor-pointer"
-                  >
-                    أرشفة الاختبار
-                  </button>
-                )}
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenExamId((prev) =>
+                    prev === exam.examId ? null : exam.examId
+                  )
+                }
+                className="min-h-[44px] px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-black cursor-pointer"
+              >
+                📋 عرض التسليمات ({examSubs.length})
+              </button>
+              {pending > 0 && (
+                <button
+                  type="button"
+                  onClick={() => markExamSubmissionsReviewedSSOT(exam.examId)}
+                  className="min-h-[44px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black cursor-pointer"
+                >
+                  ✓ تمت مراجعة {pending} تسليم
+                </button>
+              )}
+              {isActive && (
+                <button
+                  type="button"
+                  onClick={() => archiveOnlineExamSSOT(exam.examId)}
+                  className="min-h-[44px] px-4 rounded-xl text-xs font-black text-rose-600 cursor-pointer"
+                >
+                  أرشفة الاختبار
+                </button>
+              )}
+            </div>
+            {openExamId === exam.examId && (
+              <ExamSubmissionsDetailDrawer
+                exam={exam}
+                submissions={examSubs}
+              />
             )}
           </article>
         );

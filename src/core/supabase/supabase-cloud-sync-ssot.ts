@@ -229,39 +229,14 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<
 }
 
 /**
- * ٤. مزامنة الاختبارات الإلكترونية المنشورة ومؤقت بقائها عبر جدول `public.electronic_exams`.
+ * ٤. النشر والتسليم يتم عبر نقاط الخادم الآمنة `/api/exams/*` فقط.
  */
 export async function syncPublishedExamToSupabaseCloud(
-  exam: PublishedOnlineExam
+  _exam: PublishedOnlineExam
 ): Promise<boolean> {
-  if (typeof window === "undefined") return false;
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/electronic_exams?on_conflict=exam_code`,
-      {
-        method: "POST",
-        headers: buildSupabaseHeaders(),
-        body: JSON.stringify({
-          exam_code: exam.examId,
-          title_ar: exam.titleAr,
-          grade_id: exam.gradeId,
-          grade_name_ar: exam.gradeNameArabic,
-          branch_id: "general",
-          duration_minutes: exam.durationMinutes,
-          availability_days: exam.availabilityDays,
-          expires_at: exam.expiresAtIso,
-          pass_percentage: 70,
-          questions_json: exam.questions,
-          status: exam.status,
-          is_published: exam.status === "active",
-          created_at: exam.publishedAtIso,
-        }),
-      }
-    );
-    return res.ok;
-  } catch {
-    return false;
-  }
+  // النشر والتسليم عبر /api/exams فقط
+  void _exam;
+  return false;
 }
 
 export async function pullPublishedExamsFromSupabaseCloud(): Promise<
@@ -327,38 +302,14 @@ export async function pullPublishedExamsFromSupabaseCloud(): Promise<
 }
 
 /**
- * ٥. مزامنة تسليمات الطلاب للاختبارات عبر جدول `public.exam_submissions` (صف مستقل لكل تسليم).
+ * ٥. النشر والتسليم يتم عبر نقاط الخادم الآمنة `/api/exams/submit` فقط.
  */
 export async function syncExamSubmissionToSupabaseCloud(
-  submission: OnlineExamSubmissionRecord
+  _submission: OnlineExamSubmissionRecord
 ): Promise<boolean> {
-  if (typeof window === "undefined") return false;
-  try {
-    const submissionCode = `${submission.examId}__${submission.studentCode}`;
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/exam_submissions?on_conflict=submission_code`,
-      {
-        method: "POST",
-        headers: buildSupabaseHeaders(),
-        body: JSON.stringify({
-          submission_code: submissionCode,
-          exam_code: submission.examId,
-          exam_title_ar: submission.examTitleAr,
-          grade_id: submission.gradeId,
-          student_code: submission.studentCode,
-          student_name: submission.studentNameAr,
-          percentage: submission.percentageScore,
-          score: submission.percentageScore,
-          total_marks: 100,
-          is_reviewed_by_teacher: submission.isReviewedByTeacher,
-          submitted_at: submission.submittedAtIso,
-        }),
-      }
-    );
-    return res.ok;
-  } catch {
-    return false;
-  }
+  // النشر والتسليم عبر /api/exams فقط
+  void _submission;
+  return false;
 }
 
 export async function pullExamSubmissionsFromSupabaseCloud(): Promise<
@@ -385,6 +336,9 @@ export async function pullExamSubmissionsFromSupabaseCloud(): Promise<
       percentage: number;
       is_reviewed_by_teacher?: boolean | null;
       submitted_at: string;
+      started_at?: string | null;
+      answers_json?: OnlineExamSubmissionRecord["answersJson"] | null;
+      result_json?: OnlineExamSubmissionRecord["resultJson"] | null;
     }>;
     if (!Array.isArray(rows)) return null;
     return rows
@@ -399,7 +353,10 @@ export async function pullExamSubmissionsFromSupabaseCloud(): Promise<
         studentNameAr: r.student_name,
         percentageScore: Math.round(Number(r.percentage) || 0),
         submittedAtIso: r.submitted_at || new Date().toISOString(),
+        startedAtIso: r.started_at || undefined,
         isReviewedByTeacher: Boolean(r.is_reviewed_by_teacher),
+        answersJson: r.answers_json || undefined,
+        resultJson: r.result_json || undefined,
       }));
   } catch {
     return null;

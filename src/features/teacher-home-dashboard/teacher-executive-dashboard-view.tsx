@@ -2,11 +2,12 @@
 
 /**
  * @file teacher-executive-dashboard-view.tsx
- * @description الصفحة الرئيسية الهادئة للمعلم (`/dashboard`) بتصميم مرتب في ٣ كتل فقط:
+ * @description الصفحة الرئيسية الهادئة للمعلم (`/dashboard`) بتصميم ذري مرتب:
  * ١. شريط مؤشرات واحد (المسجلون، المسلّمون، بانتظار المراجعة، متوسط الدرجات).
- * ٢. قاعة المتميزين (أول ٣ طلاب في كل صف) ظاهرة مباشرة تحت المؤشرات.
- * ٣. لوحة تحليلات برسم بياني واحد يتبدل بنقرة (مقارنة الصفوف / المشاركة / توزيع الدرجات).
- * كل الأرقام حقيقية من تسجيلات وتسليمات الطلاب الفعلية، وتظهر حالات فارغة نظيفة قبل وجود بيانات.
+ * ٢. قاعة المتميزين (أول ٣ طلاب في كل صف) مع محدد الصفوف.
+ * ٣. لوحة تشخيص نقاط القوة والضعف العميقة (لآخر اختبار ولجميع الاختبارات).
+ * ٤. لوحة التحليلات العامة (مقارنة الصفوف / المشاركة / توزيع الدرجات).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -36,25 +37,8 @@ import {
 } from "./grade-honor-roll-ssot";
 import { subscribeToSupabaseRealtimeTables } from "@/core/supabase/supabase-realtime-submissions-channel";
 import HonorRollPodium from "./honor-roll-podium";
-
-type ChartKind = "grades" | "participation" | "distribution";
-
-const CHART_TABS: readonly { id: ChartKind; label: string }[] = [
-  { id: "grades", label: "مقارنة الصفوف" },
-  { id: "participation", label: "المشاركة" },
-  { id: "distribution", label: "توزيع الدرجات" },
-];
-
-const BUCKET_LABELS = ["أقل من ٥٠", "٥٠ – ٦٩", "٧٠ – ٨٤", "٨٥ فأكثر"] as const;
-const BUCKET_COLORS = ["#F43F5E", "#F59E0B", "#14B8A6", "#4F46E5"] as const;
-
-function EmptyChartNote({ text }: { readonly text: string }) {
-  return (
-    <div className="h-48 flex items-center justify-center text-center text-xs font-bold text-slate-400 px-6">
-      {text}
-    </div>
-  );
-}
+import GradeDeepDiagnosticAnalyticsPanel from "./grade-deep-diagnostic-analytics-panel";
+import DashboardOverviewChartsPanel from "./dashboard-overview-charts-panel";
 
 export default function TeacherExecutiveDashboardView() {
   const [identity, setIdentity] = useState<OwnerTeacherIdentity>(
@@ -62,7 +46,6 @@ export default function TeacherExecutiveDashboardView() {
   );
   const [enabledGrades, setEnabledGrades] = useState<readonly CurriculumGradeNode[]>([]);
   const [selectedGradeId, setSelectedGradeId] = useState<string>("");
-  const [chartKind, setChartKind] = useState<ChartKind>("grades");
   const [refreshTick, setRefreshTick] = useState<number>(0);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState<boolean>(false);
 
@@ -131,7 +114,6 @@ export default function TeacherExecutiveDashboardView() {
       : 0;
 
   const activeMetric = metrics.find((m) => m.gradeId === selectedGradeId) || metrics[0];
-  const maxBar = Math.max(1, ...metrics.map((m) => Math.max(m.registeredCount, m.completedExamsCount)));
 
   const kpis: readonly { label: string; value: string; tone: string }[] = [
     { label: "الطلاب المسجلون", value: String(totalRegistered), tone: "text-slate-900 dark:text-white" },
@@ -148,7 +130,6 @@ export default function TeacherExecutiveDashboardView() {
       <TopFourCentersNavigationBar activeCenter="dashboard" />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
-        {/* ترحيب مضغوط وروابط سريعة */}
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-black">
@@ -189,7 +170,6 @@ export default function TeacherExecutiveDashboardView() {
           </div>
         </header>
 
-        {/* ١. شريط المؤشرات الواحد */}
         <section className="grid grid-cols-2 lg:grid-cols-4 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 divide-x divide-x-reverse divide-slate-100 dark:divide-slate-800 overflow-hidden">
           {kpis.map((k) => (
             <div key={k.label} className="p-5 space-y-1 text-center">
@@ -199,7 +179,6 @@ export default function TeacherExecutiveDashboardView() {
           ))}
         </section>
 
-        {/* ٢. قاعة المتميزين */}
         <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-black">👑 قاعة المتميزين</h2>
@@ -232,117 +211,21 @@ export default function TeacherExecutiveDashboardView() {
           )}
         </section>
 
-        {/* ٣. التحليلات: رسم بياني واحد يتبدل بنقرة */}
-        <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-base font-black">📊 التحليلات</h2>
-            <div className="grid grid-cols-3 p-1 rounded-xl bg-slate-100 dark:bg-slate-900">
-              {CHART_TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setChartKind(t.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black cursor-pointer transition ${
-                    chartKind === t.id
-                      ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-xs"
-                      : "text-slate-500"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {activeMetric && (
+          <GradeDeepDiagnosticAnalyticsPanel
+            gradeId={activeMetric.gradeId}
+            gradeNameAr={activeMetric.gradeNameAr}
+            refreshTick={refreshTick}
+          />
+        )}
 
-          {chartKind === "grades" &&
-            (totalRegistered === 0 && totalSubmitted === 0 ? (
-              <EmptyChartNote text="ستظهر مقارنة الصفوف بعد تسجيل الطلاب وأداء الاختبارات." />
-            ) : (
-              <div>
-                <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500 mb-3">
-                  <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm bg-slate-300 inline-block" /> مسجلون</span>
-                  <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm bg-teal-500 inline-block" /> سلّموا</span>
-                </div>
-                <div className="h-52 flex items-end justify-around gap-3 border-b border-slate-100 dark:border-slate-800">
-                  {metrics.map((m) => (
-                    <div key={m.gradeId} className="flex-1 max-w-[88px] h-full flex flex-col justify-end items-center gap-1.5">
-                      <div className="w-full flex items-end justify-center gap-1.5 h-[calc(100%-1.5rem)]">
-                        <div
-                          title={`مسجلون: ${m.registeredCount}`}
-                          style={{ height: `${(m.registeredCount / maxBar) * 100}%` }}
-                          className="w-1/2 rounded-t-lg bg-slate-300 dark:bg-slate-700 min-h-[2px]"
-                        />
-                        <div
-                          title={`سلّموا: ${m.completedExamsCount}`}
-                          style={{ height: `${(m.completedExamsCount / maxBar) * 100}%` }}
-                          className="w-1/2 rounded-t-lg bg-teal-500 min-h-[2px]"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-around gap-3 pt-2">
-                  {metrics.map((m) => (
-                    <div key={m.gradeId} className="flex-1 max-w-[88px] text-center text-[10px] font-bold text-slate-500 leading-tight">
-                      {m.gradeNameAr.replace("الصف ", "")}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-          {chartKind === "participation" &&
-            (totalRegistered === 0 ? (
-              <EmptyChartNote text="ستظهر نسبة المشاركة بعد تسجيل الطلاب." />
-            ) : (
-              <div className="flex items-center justify-center gap-8 py-2">
-                <svg viewBox="0 0 120 120" className="w-40 h-40 shrink-0">
-                  <circle cx="60" cy="60" r="48" fill="none" strokeWidth="12" stroke="currentColor" className="text-slate-100 dark:text-slate-800" />
-                  <circle
-                    cx="60" cy="60" r="48" fill="none" strokeWidth="12" strokeLinecap="round" stroke="#14B8A6"
-                    strokeDasharray={`${(participationRate / 100) * 301.6} 301.6`}
-                    transform="rotate(-90 60 60)"
-                  />
-                  <text x="60" y="67" textAnchor="middle" className="fill-slate-900 dark:fill-white font-black" fontSize="22">
-                    {participationRate}٪
-                  </text>
-                </svg>
-                <div className="space-y-3 text-xs font-bold">
-                  <div><span className="text-slate-400">سلّموا:</span> <span className="font-black text-teal-700 text-base font-mono">{totalSubmitted}</span></div>
-                  <div><span className="text-slate-400">لم يسلّموا:</span> <span className="font-black text-slate-700 dark:text-slate-300 text-base font-mono">{Math.max(0, totalRegistered - totalSubmitted)}</span></div>
-                </div>
-              </div>
-            ))}
-
-          {chartKind === "distribution" &&
-            activeMetric &&
-            (activeMetric.completedExamsCount === 0 ? (
-              <EmptyChartNote text={`لا توجد تسليمات بعد في ${activeMetric.gradeNameAr}. اختر صفاً آخر من قاعة المتميزين بالأعلى أو انتظر أول تسليم.`} />
-            ) : (
-              <div>
-                <p className="text-xs font-bold text-slate-500 mb-3">{activeMetric.gradeNameAr} — {activeMetric.activeExamTitleAr}</p>
-                <div className="h-44 flex items-end justify-around gap-4 border-b border-slate-100 dark:border-slate-800">
-                  {activeMetric.scoreBuckets.map((count, i) => {
-                    const top = Math.max(1, ...activeMetric.scoreBuckets);
-                    return (
-                      <div key={i} className="flex-1 max-w-[80px] h-full flex flex-col justify-end items-center gap-1">
-                        <span className="text-xs font-black font-mono">{count}</span>
-                        <div
-                          style={{ height: `${(count / top) * 80}%`, backgroundColor: BUCKET_COLORS[i] }}
-                          className="w-full rounded-t-lg min-h-[3px]"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-around gap-4 pt-2">
-                  {BUCKET_LABELS.map((l) => (
-                    <div key={l} className="flex-1 max-w-[80px] text-center text-[10px] font-bold text-slate-500">{l}</div>
-                  ))}
-                </div>
-              </div>
-            ))}
-        </section>
+        <DashboardOverviewChartsPanel
+          metrics={metrics}
+          activeMetric={activeMetric}
+          totalRegistered={totalRegistered}
+          totalSubmitted={totalSubmitted}
+          participationRate={participationRate}
+        />
       </main>
     </div>
   );

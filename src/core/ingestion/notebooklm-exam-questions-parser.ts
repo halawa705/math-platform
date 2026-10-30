@@ -96,7 +96,7 @@ export function resolveCorrectChoiceIndex(
 
 function extractFieldMultiline(block: string, fieldPattern: string): string {
   const regex = new RegExp(
-    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الإجابة_الصحيحة|الإجابة الصحيحة|خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج النهائي|المحافظة|المصدر)\\s*:|$)`,
+    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الإجابة_الصحيحة|الإجابة الصحيحة|الإجابات_المقبولة|الإجابات المقبولة|خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج النهائي|المحافظة|المصدر)\\s*:|$)`,
     "i"
   );
   return (block.match(regex)?.[1] ?? "").replace(/\s*---+\s*$/g, "").trim();
@@ -138,6 +138,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const rawCorrect = extractFieldMultiline(block, "الإجابة_الصحيحة|الإجابة الصحيحة");
     const rawSteps = extractFieldMultiline(block, "خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح");
     const rawFinalAnswer = extractFieldMultiline(block, "الإجابة_النهائية|الإجابة النهائية|الناتج النهائي");
+    const rawAccepted = extractFieldMultiline(block, "الإجابات_المقبولة|الإجابات المقبولة");
     const rawGov = extractFieldMultiline(block, "المحافظة|المصدر");
 
     const fallbackPrompt = block
@@ -160,11 +161,13 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const patternKind: MathQuestionPatternKind =
       rawKind.includes("mcq") || rawKind.includes("اختر") || mcqChoicesArabic !== undefined
         ? "mcq"
-        : rawKind.includes("proof") || rawKind.includes("برهان")
-          ? "proof_reasoning"
-          : rawKind.includes("comp") || rawKind.includes("أكمل")
-            ? "completion"
-            : "direct_answer";
+        : rawKind.includes("short")
+          ? "direct_answer"
+          : rawKind.includes("proof") || rawKind.includes("برهان")
+            ? "proof_reasoning"
+            : rawKind.includes("comp") || rawKind.includes("أكمل")
+              ? "completion"
+              : "direct_answer";
 
     const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect || rawFinalAnswer, mcqChoicesArabic);
     const modelSolutionStepsArabic = rawSteps ? mergeLogicalSolutionSteps(rawSteps) : rawCorrect ? [rawCorrect] : [];
@@ -189,6 +192,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       correctMcqChoiceIndex,
       modelSolutionStepsArabic,
       finalCanonicalAnswerArabic,
+      acceptedAnswersArabic: rawAccepted ? rawAccepted.split("|").map((s) => s.trim()).filter(Boolean) : undefined,
       attachedGeometryFigure,
       authenticCitation: rawGov && !rawGov.includes("غير مذكور") ? { governorateNameArabic: rawGov } : undefined,
     };

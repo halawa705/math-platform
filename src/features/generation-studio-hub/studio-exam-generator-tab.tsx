@@ -2,8 +2,7 @@
 
 /**
  * @file studio-exam-generator-tab.tsx
- * @description تبويب الاختبار التقييمي الرسمي بتصميم هادئ: أعداد الأسئلة داخل قسم قابل للطي، خطوتان واضحتان
- * (نسخ البرومبت ← لصق الرد)، زر تصيير لاصق، ونشر إلكتروني داخل قسم مستقل قابل للطي.
+ * @description تبويب الاختبار التقييمي الرسمي والاختبار الإلكتروني (تصحيح آلي بالخادم).
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 200 سطر).
  */
 
@@ -11,13 +10,17 @@ import { useEffect, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
+import { buildOnlineExamNotebookLMPrompt } from "@/core/prompts/online-exam-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import {
   convertQuestionAssessmentIRToPrintableItem,
   type PrintableMathQuestionItem,
 } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
-import { publishOnlineExamSSOT } from "@/features/electronic-exams-hub/published-online-exams-store";
+import {
+  publishOnlineExamSSOT,
+  refreshPublishedExamsFromSupabaseSSOT,
+} from "@/features/electronic-exams-hub/published-online-exams-store";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
@@ -52,6 +55,7 @@ export default function StudioExamGeneratorTab({
 }: StudioExamGeneratorTabProps) {
   const [mcqCount, setMcqCount] = useState(6);
   const [proofCount, setProofCount] = useState(3);
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
   const [difficulty, setDifficulty] = useState<"standard_balanced" | "olympiad_challenge">("standard_balanced");
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
@@ -60,20 +64,28 @@ export default function StudioExamGeneratorTab({
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    const baseCfg = {
+      gradeNameArabic: gradeNameAr,
+      termNumber: 1 as const,
+      branchId,
+      targetedLessonTitlesArabic: [lessonTitle],
+      mcqQuestionsCount: mcqCount,
+      totalMarks: mcqCount + proofCount * 3,
+      durationTextArabic: "ساعة ونصف",
+      difficultyProfile: difficulty,
+    };
     setPrompt(
-      buildOfficialExamNotebookLMPrompt({
-        gradeNameArabic: gradeNameAr,
-        termNumber: 1,
-        branchId,
-        targetedLessonTitlesArabic: [lessonTitle],
-        mcqQuestionsCount: mcqCount,
-        essayAndProofQuestionsCount: proofCount,
-        totalMarks: mcqCount + proofCount * 3,
-        durationTextArabic: "ساعة ونصف",
-        difficultyProfile: difficulty,
-      })
+      isOnlineMode
+        ? buildOnlineExamNotebookLMPrompt({
+            ...baseCfg,
+            shortAnswerQuestionsCount: proofCount,
+          })
+        : buildOfficialExamNotebookLMPrompt({
+            ...baseCfg,
+            essayAndProofQuestionsCount: proofCount,
+          })
     );
-  }, [gradeNameAr, branchId, lessonTitle, mcqCount, proofCount, difficulty]);
+  }, [gradeNameAr, branchId, lessonTitle, mcqCount, proofCount, difficulty, isOnlineMode]);
 
   const parseReply = () =>
     parseNotebookLMExamQuestionsToIR({
@@ -105,21 +117,62 @@ export default function StudioExamGeneratorTab({
     );
   };
 
-  const handlePublish = (p: { durationMinutes: number; availabilityDays: number }) => {
+  const handlePublish = async (p: {
+    durationMinutes: number;
+    availabilityDays: number;
+    revealAnswers: boolean;
+  }) => {
     const parsed = parseReply();
     if (parsed.length === 0) {
       setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة.");
       return;
     }
-    publishOnlineExamSSOT({
-      gradeId,
-      gradeNameArabic: gradeNameAr,
-      titleAr: `اختبار — ${lessonTitle}`,
-      durationMinutes: p.durationMinutes,
-      availabilityDays: p.availabilityDays,
-      questions: parsed,
-    });
-    setPublishMsg(`✓ تم نشر الاختبار (${parsed.length} أسئلة) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.`);
+    try {
+      const res = await fetch("/api/exams/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gradeId,
+          gradeNameArabic: gradeNameAr,
+          titleAr: `اختبار — ${lessonTitle}`,
+          durationMinutes: p.durationMinutes,
+          availabilityDays: p.availabilityDays,
+          revealAnswers: p.revealAnswers,
+          questions: parsed,
+        }),
+      });
+      const data = (await res.json()) as {
+        success: boolean;
+        examCode?: string;
+        publishedCount?: number;
+        excludedQuestionNumbers?: readonly number[];
+        error?: string;
+      };
+      if (!res.ok || !data.success) {
+        setPublishMsg(`⚠️ ${data.error || "تعذر نشر الاختبار عبر الخادم."}`);
+        return;
+      }
+      publishOnlineExamSSOT({
+        examId: data.examCode,
+        gradeId,
+        gradeNameArabic: gradeNameAr,
+        titleAr: `اختبار — ${lessonTitle}`,
+        durationMinutes: p.durationMinutes,
+        availabilityDays: p.availabilityDays,
+        questions: parsed,
+      });
+      void refreshPublishedExamsFromSupabaseSSOT();
+      const excl = data.excludedQuestionNumbers ?? [];
+      const exclNote =
+        excl.length > 0
+          ? ` ⚠️ استُبعدت الأسئلة رقم (${excl.join("، ")}) لأنها غير قابلة للتصحيح الآلي (برهان/مقالي).`
+          : "";
+      setPublishMsg(
+        `✓ تم نشر الاختبار (${data.publishedCount ?? parsed.length} أسئلة) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.${exclNote}`
+      );
+    } catch {
+      setPublishMsg("⚠️ تعذر الاتصال بالخادم لنشر الاختبار.");
+    }
   };
 
   return (
@@ -127,12 +180,26 @@ export default function StudioExamGeneratorTab({
       <StudioCollapsibleSectionCard
         icon="🔢"
         titleAr="أعداد الأسئلة ومستوى الصعوبة"
-        summaryAr={`${mcqCount} اختر • ${proofCount} مقالي • ${difficulty === "standard_balanced" ? "متوازن" : "متفوقين"}`}
+        summaryAr={`${mcqCount} اختر • ${proofCount} ${isOnlineMode ? "إجابة قصيرة" : "مقالي"} • ${difficulty === "standard_balanced" ? "متوازن" : "متفوقين"}`}
       >
         <div className="space-y-2.5 pt-2">
+          <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 dark:bg-slate-800/70 text-xs font-black text-indigo-950 dark:text-teal-300 cursor-pointer">
+            <span>⚡ اختبار إلكتروني (تصحيح آلي)</span>
+            <input
+              type="checkbox"
+              checked={isOnlineMode}
+              onChange={(e) => setIsOnlineMode(e.target.checked)}
+              className="w-4 h-4 accent-indigo-700"
+            />
+          </label>
           <div className="grid grid-cols-2 gap-2.5">
             <StudioNumberStepperField labelAr="أسئلة اختر" value={mcqCount} max={40} onChange={setMcqCount} />
-            <StudioNumberStepperField labelAr="مقالي وبرهان" value={proofCount} max={25} onChange={setProofCount} />
+            <StudioNumberStepperField
+              labelAr={isOnlineMode ? "أسئلة إجابة قصيرة" : "مقالي وبرهان"}
+              value={proofCount}
+              max={25}
+              onChange={setProofCount}
+            />
           </div>
           <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
             {(

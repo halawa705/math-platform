@@ -6,6 +6,10 @@
  * - قاعة المتميزين = أعلى ٣ طلاب في الاختبارات النشطة بشرط ≥ ٧٠٪، وتختفي تلقائياً فور انتهاء مؤقت الاختبار وأرشفته.
  */
 
+import type {
+  OnlineExamGradeResult,
+  StudentAnswerInput,
+} from "@/core/exam-grading/online-exam-grader";
 import { loadRegisteredStudentsSSOT } from "@/core/ssot/teacher-identity-ssot";
 import {
   pullExamSubmissionsFromSupabaseCloud,
@@ -39,7 +43,10 @@ export interface OnlineExamSubmissionRecord {
   readonly studentNameAr: string;
   readonly percentageScore: number;
   readonly submittedAtIso: string;
+  readonly startedAtIso?: string;
   readonly isReviewedByTeacher: boolean;
+  readonly answersJson?: Readonly<Record<string, StudentAnswerInput | undefined>>;
+  readonly resultJson?: OnlineExamGradeResult;
 }
 
 export interface GradeAnalyticsMetric {
@@ -118,12 +125,15 @@ export async function refreshExamSubmissionsFromSupabaseSSOT(): Promise<
   return merged;
 }
 
-/** تسجيل تسليم طالب (تسليم واحد لكل طالب في كل اختبار) ومزامنته مع سحابة Supabase وتحديث قاعة المتميزين فوراً. */
+/** تسجيل تسليم طالب محلياً بعد تصحيحه في الخادم (`/api/exams/submit`) لتحديث قاعة المتميزين والتحليلات فوراً. */
 export function recordStudentOnlineExamSubmissionSSOT(input: {
   readonly exam: PublishedOnlineExam;
   readonly studentCode: string;
   readonly studentNameAr: string;
   readonly percentageScore: number;
+  readonly startedAtIso?: string;
+  readonly answersJson?: Readonly<Record<string, StudentAnswerInput | undefined>>;
+  readonly resultJson?: OnlineExamGradeResult;
 }): OnlineExamSubmissionRecord {
   const record: OnlineExamSubmissionRecord = {
     submissionId: `${input.exam.examId}__${input.studentCode}`,
@@ -134,7 +144,10 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
     studentNameAr: input.studentNameAr,
     percentageScore: Math.round(input.percentageScore),
     submittedAtIso: new Date().toISOString(),
+    startedAtIso: input.startedAtIso,
     isReviewedByTeacher: false,
+    answersJson: input.answersJson,
+    resultJson: input.resultJson,
   };
   const others = loadAllExamSubmissionsSSOT().filter(
     (s) =>

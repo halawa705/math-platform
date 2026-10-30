@@ -1,17 +1,20 @@
 /**
  * @file published-online-exams-store.ts
- * @description مخزن الاختبارات الإلكترونية المنشورة فعلياً من المعلم مع مؤقت الأرشفة التلقائية ومزامنة Supabase:
- * - كل اختبار إلكتروني يُنشر بمؤقت بقاء يحدده المعلم (٣ أيام، ٧ أيام، أسبوعين ١٤ يوماً، أو عدد أيام مخصص).
- * - نشر اختبار جديد لا يؤرشف الاختبارات النشطة السابقة، بل يظل كل اختبار نشطاً حتى ينتهي مؤقته الخاص (`expiresAtIso`) أو يؤرشفه المعلم يدوياً.
- * - فور انتهاء المؤقت، يتحول الاختبار تلقائياً إلى `archived` مع الاحتفاظ بكافة تسليماته وبياناته في السجل المؤرشف.
+ * @description مخزن الاختبارات الإلكترونية المنشورة (يحتفظ بالأسئلة العامة فقط بدون مفاتيح الإجابة):
+ * النشر والأرشفة الفعليان يتمان عبر نقاط الخادم الآمنة `/api/exams/publish` و `/api/exams/archive`.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import {
-  pullPublishedExamsFromSupabaseCloud,
-  syncPublishedExamToSupabaseCloud,
-} from "@/core/supabase/supabase-cloud-sync-ssot";
+  splitExamIntoPublicAndKey,
+  type OnlinePublicQuestion,
+} from "@/core/exam-grading/online-exam-public-key-splitter";
+import { pullPublishedExamsFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
 import { notifyRealtimeTableUpdated } from "@/core/supabase/supabase-realtime-submissions-channel";
+
+export type PublishedExamQuestionItem = OnlinePublicQuestion &
+  Partial<Omit<QuestionAssessmentIR, "mcqChoicesArabic">>;
 
 export interface PublishedOnlineExam {
   readonly examId: string;
@@ -22,7 +25,7 @@ export interface PublishedOnlineExam {
   readonly availabilityDays: number;
   readonly publishedAtIso: string;
   readonly expiresAtIso: string;
-  readonly questions: readonly QuestionAssessmentIR[];
+  readonly questions: readonly PublishedExamQuestionItem[];
   readonly status: "active" | "archived";
 }
 
@@ -88,9 +91,6 @@ export function loadAllPublishedExamsSSOT(): readonly PublishedOnlineExam[] {
         PUBLISHED_EXAMS_STORAGE_KEY,
         JSON.stringify(exams)
       );
-      for (const expired of NewlyExpired) {
-        void syncPublishedExamToSupabaseCloud(expired);
-      }
     }
     return exams;
   } catch {
@@ -111,9 +111,6 @@ function persistExams(exams: readonly PublishedOnlineExam[]): void {
   }
 }
 
-/**
- * سحب الاختبارات المنشورة من سحابة Supabase ودمجها مع المتصفح المحلي ليرى الطلاب على هواتفهم أي اختبار ينشره المعلم فوراً.
- */
 export async function refreshPublishedExamsFromSupabaseSSOT(): Promise<
   readonly PublishedOnlineExam[]
 > {
@@ -127,7 +124,6 @@ export async function refreshPublishedExamsFromSupabaseSSOT(): Promise<
   }
   for (const c of cloud) {
     const existing = byId.get(c.examId);
-    // إذا أُرشف الاختبار محلياً أو سحابياً يظل مؤرشفاً
     const finalStatus =
       existing?.status === "archived" || c.status === "archived"
         ? "archived"
@@ -143,9 +139,6 @@ export async function refreshPublishedExamsFromSupabaseSSOT(): Promise<
   return exams;
 }
 
-/**
- * يرجع جميع الاختبارات النشطة حالياً (التي لم ينتهِ مؤقتها) لهذا الصف الدراسي.
- */
 export function loadActiveExamsForGradeSSOT(
   gradeId: string
 ): readonly PublishedOnlineExam[] {
@@ -154,16 +147,11 @@ export function loadActiveExamsForGradeSSOT(
   );
 }
 
-export function loadActiveExamForGradeSSOT(
-  gradeId: string
-): PublishedOnlineExam | null {
-  return loadActiveExamsForGradeSSOT(gradeId)[0] || null;
-}
-
 /**
- * ينشر اختباراً إلكترونياً جديداً بمؤقت بقاء (`availabilityDays`) دون أرشفة الاختبارات النشطة السابقة.
+ * يخزن النسخة العامة فقط من الاختبار محلياً (بدون أي إجابات صحيحة أو حلول).
  */
 export function publishOnlineExamSSOT(input: {
+  readonly examId?: string;
   readonly gradeId: string;
   readonly gradeNameArabic: string;
   readonly titleAr: string;
@@ -176,9 +164,10 @@ export function publishOnlineExamSSOT(input: {
   const nowMs = Date.now();
   const publishedAtIso = new Date(nowMs).toISOString();
   const expiresAtIso = new Date(nowMs + safeDays * 86_400_000).toISOString();
+  const { publicQuestions } = splitExamIntoPublicAndKey(input.questions);
 
   const created: PublishedOnlineExam = {
-    examId: `exam_${input.gradeId}_${nowMs}`,
+    examId: input.examId || `exam_${input.gradeId}_${nowMs}`,
     gradeId: input.gradeId,
     gradeNameArabic: input.gradeNameArabic,
     titleAr: input.titleAr,
@@ -186,13 +175,15 @@ export function publishOnlineExamSSOT(input: {
     availabilityDays: safeDays,
     publishedAtIso,
     expiresAtIso,
-    questions: input.questions,
+    questions: publicQuestions,
     status: "active",
   };
 
-  persistExams([created, ...existing]);
+  persistExams([
+    created,
+    ...existing.filter((e) => e.examId !== created.examId),
+  ]);
   notifyRealtimeTableUpdated("electronic_exams");
-  void syncPublishedExamToSupabaseCloud(created);
   return created;
 }
 
@@ -202,15 +193,15 @@ export function archiveOnlineExamSSOT(examId: string): void {
   );
   persistExams(updated);
   notifyRealtimeTableUpdated("electronic_exams");
-  const target = updated.find((e) => e.examId === examId);
-  if (target) {
-    void syncPublishedExamToSupabaseCloud(target);
+  if (typeof window !== "undefined") {
+    void fetch("/api/exams/archive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ examCode: examId }),
+    });
   }
 }
 
-/**
- * يحسب الوقت المتبقي قبل الأرشفة التلقائية للاختبار بصيغة عربية واضحة.
- */
 export function formatExamExpiryRemainingAr(expiresAtIso: string): {
   readonly isExpired: boolean;
   readonly labelAr: string;

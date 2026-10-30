@@ -7,7 +7,7 @@
 
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
-import { toWesternNumeralsSSOT } from "@/core/ssot/numeral-and-unit-ssot";
+import { isStudentShortAnswerCorrect } from "@/core/exam-grading/short-answer-matcher";
 
 export const MODULE_ID_HOMEWORK_AUTO_GRADING_ENGINE =
   "homework_auto_grading_engine" as const;
@@ -86,16 +86,12 @@ export function gradeStudentHomeworkAnswer(params: {
     };
   }
 
-  const cleanStudent = toWesternNumeralsSSOT(writtenStepsText || "").trim();
-  const cleanExpected = toWesternNumeralsSSOT(
-    question.finalCanonicalAnswerArabic
-  )
-    .replace(/[^\d.-]/g, "")
-    .trim();
+  const accepted =
+    question.acceptedAnswersArabic && question.acceptedAnswersArabic.length > 0
+      ? question.acceptedAnswersArabic
+      : [question.finalCanonicalAnswerArabic];
 
-  const ok =
-    cleanStudent.length > 0 &&
-    (cleanExpected ? cleanStudent.includes(cleanExpected) : true);
+  const ok = isStudentShortAnswerCorrect(writtenStepsText || "", accepted);
 
   return {
     isCorrect: ok,

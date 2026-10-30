@@ -2,9 +2,8 @@
 
 /**
  * @file studio-exam-online-publish-panel.tsx
- * @description لوحة نشر الاختبار كاختبار إلكتروني للطلاب (زمن الإجابة + مؤقت البقاء قبل الأرشفة التلقائية)
- * داخل قسم قابل للطي هادئ.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
+ * @description لوحة نشر الاختبار كاختبار إلكتروني للطلاب (زمن الإجابة + مؤقت البقاء + خيار إظهار الحل بعد التسليم).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 130 سطراً).
  */
 
 import { useState } from "react";
@@ -20,6 +19,7 @@ export interface StudioExamOnlinePublishPanelProps {
   readonly onPublish: (params: {
     readonly durationMinutes: number;
     readonly availabilityDays: number;
+    readonly revealAnswers: boolean;
   }) => void;
 }
 
@@ -38,6 +38,7 @@ export default function StudioExamOnlinePublishPanel({
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [preset, setPreset] = useState<"3" | "7" | "14" | "custom">("7");
   const [customDays, setCustomDays] = useState(5);
+  const [revealAnswers, setRevealAnswers] = useState(true);
   const days = preset === "custom" ? Math.max(1, customDays) : Number(preset);
 
   return (
@@ -84,15 +85,32 @@ export default function StudioExamOnlinePublishPanel({
             onChange={setCustomDays}
           />
         )}
+        <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/70 text-xs font-extrabold text-slate-700 dark:text-slate-200 cursor-pointer">
+          <span>إظهار الحل النموذجي للطالب بعد التسليم</span>
+          <input
+            type="checkbox"
+            checked={revealAnswers}
+            onChange={(e) => setRevealAnswers(e.target.checked)}
+            className="w-4 h-4 accent-teal-600"
+          />
+        </label>
         <button
           type="button"
-          onClick={() => onPublish({ durationMinutes, availabilityDays: days })}
+          onClick={() =>
+            onPublish({
+              durationMinutes,
+              availabilityDays: days,
+              revealAnswers,
+            })
+          }
           className="w-full min-h-[48px] rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black cursor-pointer"
         >
           🚀 نشر الاختبار للطلاب الآن
         </button>
         {statusMessageAr && (
-          <p className="text-xs font-black text-teal-900 dark:text-teal-200">{statusMessageAr}</p>
+          <p className="text-xs font-black text-teal-900 dark:text-teal-200">
+            {statusMessageAr}
+          </p>
         )}
       </div>
     </StudioCollapsibleSectionCard>

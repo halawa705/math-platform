@@ -2478,7 +2478,7 @@ export const SUPABASE_PUBLIC_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
 | المرحلة | المهام | الحالة |
 |---|---|---|
 | 0 | S-1 … S-4 | ✅ |
-| 1 | E-1 … E-13 | ⬜ |
+| 1 | E-1 … E-13 | ✅ |
 | 2 | P-1 … P-9 | ⬜ |
 | 3 | B-1 … B-4 | ⬜ |
 | 4 | X-1 … X-5 | ⬜ |
