@@ -63,7 +63,11 @@ export default function SideBySideDiagramDocker({
       palette,
     });
 
-  const mcqCols = resolveAdaptiveMCQColumnsCount(question.mcqChoicesAr, settings.columnsCount === 2);
+  const mcqCols = resolveAdaptiveMCQColumnsCount(
+    question.mcqChoicesAr,
+    settings.columnsCount === 2,
+    Boolean(settings.compactHeader)
+  );
   const mcqGridClass = resolveMCQGridTailwindClass(mcqCols);
 
   const stepsCount = question.solutionStepsAr?.length ?? 0;
@@ -104,7 +108,15 @@ export default function SideBySideDiagramDocker({
 
         {settings.answerVisibilityMode !== "answer_key_only" && (
           <div className="min-w-0" style={{ breakAfter: "avoid" }}>
-            <div className={question.geometryFigure ? "flex items-start justify-between gap-2.5 min-w-0" : "block min-w-0"}>
+            <div
+              className={
+                question.geometryFigure
+                  ? settings.columnsCount === 2 && question.promptAr.length > 220
+                    ? "flex flex-col items-start gap-2.5 min-w-0"
+                    : "flex items-start justify-between gap-2.5 min-w-0"
+                  : "block min-w-0"
+              }
+            >
               <div className="flex-1 min-w-0 space-y-1 text-[0.96em] font-extrabold text-slate-900 leading-relaxed break-words">
                 <div>
                   <SafeKaTeXBiDiMathRenderer
@@ -132,6 +144,8 @@ export default function SideBySideDiagramDocker({
                 primaryHex={palette.primaryHex}
                 accentHex={palette.accentHex}
                 numeralMode={settings.numeralMode}
+                figureScale={settings.figureScale ?? 1}
+                columnsCount={settings.columnsCount}
               />
             </div>
 
@@ -185,6 +199,7 @@ export default function SideBySideDiagramDocker({
             primaryHex={palette.primaryHex}
             answerSpaceStyle={settings.answerSpaceStyle}
             isMcq={Boolean(question.mcqChoicesAr && question.mcqChoicesAr.length > 0)}
+            lineCount={settings.answerSpaceLines}
           />
         )}
     </article>

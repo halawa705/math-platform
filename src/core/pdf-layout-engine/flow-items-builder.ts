@@ -37,8 +37,9 @@ export function buildFlowItems(params: {
   readonly questions: readonly PrintableMathQuestionItem[];
   readonly columnsCount: 1 | 2;
   readonly includeAnswerKey: boolean;
+  readonly includeAccreditation?: boolean;
 }): { readonly items: readonly FlowItem[]; readonly totalIdeasCount: number } {
-  const { questions, columnsCount, includeAnswerKey } = params;
+  const { questions, columnsCount, includeAnswerKey, includeAccreditation = true } = params;
   const questionSpan = columnsCount === 2 ? "column" : "full";
   const groups = groupQuestionsByIdea(questions);
   const items: FlowItem[] = [];
@@ -72,7 +73,9 @@ export function buildFlowItems(params: {
   if (includeAnswerKey && questions.some((q) => q.kind === "mcq" && q.correctMcqIndex !== undefined)) {
     items.push({ id: "flow-mcq-answer-key", kind: "mcq_answer_key", span: "full" });
   }
-  items.push({ id: "flow-accreditation-footer", kind: "accreditation_footer", span: "full" });
+  if (includeAccreditation) {
+    items.push({ id: "flow-accreditation-footer", kind: "accreditation_footer", span: "full" });
+  }
 
   return { items, totalIdeasCount: groups.length };
 }

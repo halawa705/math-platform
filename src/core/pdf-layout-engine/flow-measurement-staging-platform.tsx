@@ -64,6 +64,7 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
           identity={identity} palette={palette} documentTitle={settings.customDocumentTitle} subtitleAr={props.subtitleAr}
           isSolvedMode={props.isSolvedMode} totalIdeasCount={props.totalIdeasCount}
           totalQuestionsCount={props.totalQuestionsCount} totalMarks={props.totalMarks} numeralMode={numeralMode}
+          compact={settings.compactHeader}
         />
       </div>
       <div data-flow-chrome="running" style={WRAPPER_BASE_STYLE}>

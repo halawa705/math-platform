@@ -34,7 +34,8 @@ export function estimateVisualChoiceCharacterLength(choiceText: string): number 
  */
 export function resolveAdaptiveMCQColumnsCount(
   choices: readonly string[] | undefined,
-  isInsideNarrowHalfColumn = false
+  isInsideNarrowHalfColumn = false,
+  compactHeader = false
 ): MCQAdaptiveColumnsCount {
   if (!choices || choices.length === 0) return 4;
 
@@ -42,7 +43,11 @@ export function resolveAdaptiveMCQColumnsCount(
     ...choices.map((c) => estimateVisualChoiceCharacterLength(c))
   );
 
-  const hasArabicWords = choices.some((c) => /[\u0600-\u06FF]{3,}/.test(c));
+  if (compactHeader) {
+    if (maxVisualLen <= 12) return 4;
+    if (maxVisualLen <= 52) return 2;
+    return 1;
+  }
 
   if (isInsideNarrowHalfColumn) {
     // شبكة 2x2 متوازنة (أ في اليمين وب في اليسار / جـ تحت أ ود تحت ب) لمعظم البدائل

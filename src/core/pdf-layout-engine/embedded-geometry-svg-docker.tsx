@@ -10,6 +10,7 @@ import React from "react";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import { projectGeometryFigureToSVGMarkup } from "../geometry-engine/vector-svg-figure-projector";
 import type { NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import { computeFigureAspectFromVertices, computeFigureBoxSizePx } from "./question-figure-box-size";
 
 export interface EmbeddedGeometrySVGDockerProps {
   readonly geometryFigure?: CanonicalGeometryFigureIR;
@@ -18,6 +19,8 @@ export interface EmbeddedGeometrySVGDockerProps {
   readonly primaryHex: string;
   readonly accentHex: string;
   readonly numeralMode: NumeralDisplayMode;
+  readonly figureScale?: number;
+  readonly columnsCount?: 1 | 2;
 }
 
 export function EmbeddedGeometrySVGDocker({
@@ -27,22 +30,27 @@ export function EmbeddedGeometrySVGDocker({
   primaryHex,
   accentHex,
   numeralMode,
+  figureScale = 1,
+  columnsCount = 2,
 }: EmbeddedGeometrySVGDockerProps) {
   if (!geometryFigure) return null;
+
+  const aspect = computeFigureAspectFromVertices(geometryFigure.vertices);
+  const box = computeFigureBoxSizePx({ aspect, figureScale, columnsCount });
 
   return (
     <div
       style={{
-        width: "152px",
-        minWidth: "152px",
+        width: `${box.boxWidthPx}px`,
+        minWidth: `${box.boxWidthPx}px`,
         borderColor: borderHex,
         backgroundColor: softSurfaceHex,
       }}
       className="border rounded-lg p-1 flex items-center justify-center shrink-0 overflow-hidden"
       dangerouslySetInnerHTML={{
         __html: projectGeometryFigureToSVGMarkup(geometryFigure, {
-          widthPx: 146,
-          heightPx: 102,
+          widthPx: box.svgWidthPx,
+          heightPx: box.svgHeightPx,
           strokeColorHex: primaryHex,
           accentColorHex: accentHex,
           numeralMode,

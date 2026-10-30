@@ -15,9 +15,10 @@ export const MODULE_ID_USE_FLOW_STAGING_LIVE_MEASURER = "use_flow_staging_live_m
 export interface FlowMeasureSnapshot {
   readonly heights: ReadonlyMap<string, number>;
   readonly chrome: FlowChromeHeightsPx | undefined;
+  readonly stamp: string;
 }
 
-const EMPTY_SNAPSHOT: FlowMeasureSnapshot = { heights: new Map(), chrome: undefined };
+const EMPTY_SNAPSHOT: FlowMeasureSnapshot = { heights: new Map(), chrome: undefined, stamp: "" };
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function readNodeHeightPx(node: HTMLElement): number {
@@ -25,6 +26,7 @@ function readNodeHeightPx(node: HTMLElement): number {
 }
 
 function isSameSnapshot(a: FlowMeasureSnapshot, b: FlowMeasureSnapshot): boolean {
+  if (a.stamp !== b.stamp) return false;
   if (a.heights.size !== b.heights.size) return false;
   for (const [id, h] of b.heights) if (a.heights.get(id) !== h) return false;
   return (
@@ -34,7 +36,7 @@ function isSameSnapshot(a: FlowMeasureSnapshot, b: FlowMeasureSnapshot): boolean
   );
 }
 
-function readSnapshot(container: HTMLElement): FlowMeasureSnapshot {
+function readSnapshot(container: HTMLElement, stamp: string): FlowMeasureSnapshot {
   const heights = new Map<string, number>();
   container.querySelectorAll<HTMLElement>("[data-flow-item-id]").forEach((node) => {
     const id = node.getAttribute("data-flow-item-id");
@@ -47,13 +49,15 @@ function readSnapshot(container: HTMLElement): FlowMeasureSnapshot {
   return {
     heights,
     chrome: { firstHeaderPx: chromeOf("first"), runningHeaderPx: chromeOf("running"), footerPx: chromeOf("footer") },
+    stamp,
   };
 }
 
 /** @param observeKey يتغيّر كلما تغيّرت مجموعة العقد المقاسة (قائمة الكائنات) ليُعاد ربط المراقب. */
 export function useFlowStagingLiveMeasurer(
   stagingRef: RefObject<HTMLDivElement | null>,
-  observeKey: unknown
+  observeKey: unknown,
+  stamp = ""
 ): FlowMeasureSnapshot {
   const [snapshot, setSnapshot] = useState<FlowMeasureSnapshot>(EMPTY_SNAPSHOT);
   const frameRef = useRef<number>(0);
@@ -63,7 +67,7 @@ export function useFlowStagingLiveMeasurer(
     if (!container) return;
 
     const measure = () => {
-      const next = readSnapshot(container);
+      const next = readSnapshot(container, stamp);
       setSnapshot((prev) => (isSameSnapshot(prev, next) ? prev : next));
     };
     const schedule = () => {
@@ -82,7 +86,7 @@ export function useFlowStagingLiveMeasurer(
       container.removeEventListener("load", schedule, true);
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [stagingRef, observeKey]);
+  }, [stagingRef, observeKey, stamp]);
 
   return snapshot;
 }

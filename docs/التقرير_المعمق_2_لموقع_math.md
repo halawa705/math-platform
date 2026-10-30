@@ -2479,9 +2479,9 @@ export const SUPABASE_PUBLIC_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
 |---|---|---|
 | 0 | S-1 … S-4 | ✅ |
 | 1 | E-1 … E-13 | ✅ |
-| 2 | P-1 … P-9 | ⬜ |
-| 3 | B-1 … B-4 | ⬜ |
-| 4 | X-1 … X-5 | ⬜ |
+| 2 | P-1 … P-9 | ✅ |
+| 3 | B-1 … B-4 | ✅ |
+| 4 | X-1 … X-5 | ✅ |
 | 5 | G-1 … G-12 | ⬜ |
 | 6 | Q-1 … Q-3 | ⬜ |
 | 7 | C-0 … C-8 | ⬜ |

@@ -28,6 +28,7 @@ export function SovereignFirstPageHeader({
   totalQuestionsCount,
   totalMarks,
   numeralMode,
+  compact = false,
 }: {
   readonly identity: OwnerTeacherIdentity;
   readonly palette: PrintThemePaletteTokens;
@@ -38,6 +39,7 @@ export function SovereignFirstPageHeader({
   readonly totalQuestionsCount: number;
   readonly totalMarks: number;
   readonly numeralMode: NumeralDisplayMode;
+  readonly compact?: boolean;
 }) {
   return (
     <header
@@ -45,11 +47,11 @@ export function SovereignFirstPageHeader({
         borderColor: palette.primaryHex,
         boxShadow: "0 2px 8px rgba(30, 58, 138, 0.07)",
       }}
-      className="rounded-xl border-2 bg-white overflow-hidden mb-2 shrink-0"
+      className={`rounded-xl border-2 bg-white overflow-hidden ${compact ? "mb-1" : "mb-2"} shrink-0`}
     >
       <div
         style={{ backgroundColor: "#F8FAFC" }}
-        className="grid grid-cols-12 items-center p-2 gap-2 border-b border-slate-200"
+        className={`grid grid-cols-12 items-center ${compact ? "p-1" : "p-2"} gap-2 border-b border-slate-200`}
       >
         <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2 min-w-0">
           <div
@@ -91,7 +93,7 @@ export function SovereignFirstPageHeader({
           <div className="text-[10.8pt] font-black text-slate-950 leading-snug break-words">
             {documentTitle}
           </div>
-          {subtitleAr && (
+          {!compact && subtitleAr && (
             <span
               style={{ background: palette.headerGradientCss }}
               className="inline-block px-3 py-0.5 rounded-full text-white text-[7.8pt] font-black shadow-2xs"
@@ -114,10 +116,12 @@ export function SovereignFirstPageHeader({
               هاتف: {formatNumeralsByModeSSOT(identity.teacherPhone, numeralMode)}
             </div>
           )}
-          <div className="text-slate-500 font-extrabold text-[7.5pt]">
-            الأفكار: ({formatNumeralsByModeSSOT(totalIdeasCount, numeralMode)}) | المسائل: (
-            {formatNumeralsByModeSSOT(totalQuestionsCount, numeralMode)})
-          </div>
+          {!compact && (
+            <div className="text-slate-500 font-extrabold text-[7.5pt]">
+              الأفكار: ({formatNumeralsByModeSSOT(totalIdeasCount, numeralMode)}) | المسائل: (
+              {formatNumeralsByModeSSOT(totalQuestionsCount, numeralMode)})
+            </div>
+          )}
         </div>
       </div>
 

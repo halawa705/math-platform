@@ -20,6 +20,7 @@ const PRINT_THEMES: readonly {
   readonly swatchHex: string;
 }[] = [
   { id: "math_teal", label: "أزرق ملكي (الافتراضي)", swatchHex: "#1E40AF" },
+  { id: "navy_gold", label: "كحلي وذهبي (فاخر)", swatchHex: "#14213D" },
   { id: "emerald_moasser", label: "أرجواني المعاصر", swatchHex: "#7E22CE" },
   { id: "royal_indigo", label: "زمردي المعاصر", swatchHex: "#065F46" },
   { id: "amber_gold", label: "ذهبي المراجعات", swatchHex: "#92400E" },

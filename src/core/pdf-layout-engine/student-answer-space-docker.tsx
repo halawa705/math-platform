@@ -15,6 +15,7 @@ export interface StudentAnswerSpaceDockerProps {
   readonly primaryHex: string;
   readonly answerSpaceStyle: AnswerSpaceStyleMode;
   readonly isMcq?: boolean;
+  readonly lineCount?: 1 | 2 | 3;
 }
 
 export function StudentAnswerSpaceDocker({
@@ -23,6 +24,7 @@ export function StudentAnswerSpaceDocker({
   primaryHex,
   answerSpaceStyle,
   isMcq = false,
+  lineCount = 2,
 }: StudentAnswerSpaceDockerProps) {
   if (answerSpaceStyle === "hidden" || isMcq) return null;
 
@@ -45,7 +47,7 @@ export function StudentAnswerSpaceDocker({
       <div style={{ color: labelColor }} className="text-[0.8em] font-black text-left">
         {labelText}
       </div>
-      {[1, 2].map((lineIdx) => (
+      {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) => (
         <div key={lineIdx} className={`h-3.5 w-full ${lineStyleClass}`} />
       ))}
     </div>

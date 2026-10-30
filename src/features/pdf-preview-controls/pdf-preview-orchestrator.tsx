@@ -32,6 +32,22 @@ export interface PDFPreviewOrchestratorProps {
   readonly children?: React.ReactNode;
 }
 
+function resolveDocAutoFitDefaults(
+  customTitle: string | undefined,
+  customQuestions: readonly PrintableMathQuestionItem[] | undefined
+): {
+  readonly isBookletOrReview: boolean;
+  readonly isExamDoc: boolean;
+} {
+  const isBookletOrReview = Boolean(
+    customTitle?.includes("مذكرة") ||
+      customTitle?.includes("مراجعة") ||
+      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"))
+  );
+  const isExamDoc = Boolean(!isBookletOrReview && customTitle?.includes("اختبار"));
+  return { isBookletOrReview, isExamDoc };
+}
+
 export default function PDFPreviewOrchestrator({
   customTitle,
   customQuestions,
@@ -39,17 +55,22 @@ export default function PDFPreviewOrchestrator({
   branchNameAr = "",
   children,
 }: PDFPreviewOrchestratorProps) {
+  const userChangedAutoFitRef = useRef<boolean>(false);
+  const [pagesCount, setPagesCount] = useState<number>(1);
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => {
     const persisted = loadPersistedPDFPrintSettingsSSOT();
-    const isBookletOrReview =
-      customTitle?.includes("مذكرة") ||
-      customTitle?.includes("مراجعة") ||
-      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"));
+    const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
     return {
       ...persisted,
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
         : persisted.answerVisibilityMode,
+      autoFitMode: isExamDoc
+        ? "exam_max_pages"
+        : isBookletOrReview
+          ? "booklet_fill"
+          : (persisted.autoFitMode ?? "booklet_fill"),
+      targetMaxPages: isExamDoc ? 2 : isBookletOrReview ? undefined : persisted.targetMaxPages,
       customDocumentTitle:
         customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
     };
@@ -60,21 +81,38 @@ export default function PDFPreviewOrchestrator({
 
   useEffect(() => {
     const persisted = loadPersistedPDFPrintSettingsSSOT();
-    const isBookletOrReview =
-      customTitle?.includes("مذكرة") ||
-      customTitle?.includes("مراجعة") ||
-      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"));
+    const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
     setSettings((prev) => ({
       ...prev,
       ...persisted,
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
         : persisted.answerVisibilityMode,
+      autoFitMode: userChangedAutoFitRef.current
+        ? prev.autoFitMode
+        : isExamDoc
+          ? "exam_max_pages"
+          : isBookletOrReview
+            ? "booklet_fill"
+            : (persisted.autoFitMode ?? "booklet_fill"),
+      targetMaxPages: userChangedAutoFitRef.current
+        ? prev.targetMaxPages
+        : isExamDoc
+          ? 2
+          : isBookletOrReview
+            ? undefined
+            : persisted.targetMaxPages,
       customDocumentTitle: customTitle || prev.customDocumentTitle,
     }));
   }, [customTitle, customQuestions]);
 
   const handleUpdateSettings = (next: PDFPrintSettingsStateSSOT) => {
+    if (
+      next.autoFitMode !== settings.autoFitMode ||
+      next.targetMaxPages !== settings.targetMaxPages
+    ) {
+      userChangedAutoFitRef.current = true;
+    }
     setSettings(next);
     savePersistedPDFPrintSettingsSSOT(next);
   };
@@ -93,7 +131,7 @@ export default function PDFPreviewOrchestrator({
       docKind: title.includes("مراجعة") ? "final_review" : title.includes("اختبار") ? "exam" : "booklet",
       branchAr: branchNameAr || "الرياضيات",
       gradeAr: gradeNameAr || "غير محدد",
-      pagesCount: 1,
+      pagesCount: Math.max(1, pagesCount),
       fontUsed: `${activeFont.nameArabic.split("—")[0].trim()} ${settings.exactFontSizePt}pt`,
       htmlContent: sheetContainerRef.current?.innerHTML || "",
     });
@@ -143,6 +181,7 @@ export default function PDFPreviewOrchestrator({
         questions={questions}
         subtitleAr={gradeNameAr}
         sheetContainerRef={sheetContainerRef}
+        onPagesCountChange={setPagesCount}
       >
         {children}
       </TwoColumnNewspaperPacker>

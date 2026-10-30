@@ -23,6 +23,7 @@ import PDFAnswerSpaceStyleSelector from "./pdf-answer-space-style-selector";
 import PDFColorThemeSelector from "./pdf-color-theme-selector";
 import PDFNotationDirectionSwitch from "./pdf-notation-direction-switch";
 import PDFHeaderBrandingEditor from "./pdf-header-branding-editor";
+import PDFAutoFitModeSelector from "./pdf-autofit-mode-selector";
 
 export const MODULE_ID_PDF_CONTROLS_GROUPED_TOOL_PANEL =
   "pdf_controls_grouped_tool_panel" as const;
@@ -96,6 +97,12 @@ export default function PDFControlsGroupedToolPanel({
 
       {activeGroup === "content" && (
         <div className="space-y-3">
+          <ToolRow labelAr="الملاءمة التلقائية للصفحات">
+            <PDFAutoFitModeSelector
+              settings={settings}
+              onChange={(patch) => set(patch)}
+            />
+          </ToolRow>
           <ToolRow labelAr="إظهار الإجابات">
             <PDFAnswerVisibilityMode
               currentVisibility={settings.answerVisibilityMode}

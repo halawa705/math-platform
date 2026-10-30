@@ -79,6 +79,7 @@ export function SovereignDiscretePageView({
         fontFamily: activeFont.cssFontStack,
         fontSize: `${settings.exactFontSizePt}pt`,
         lineHeight: activeFont.optimalLineHeight,
+        boxShadow: `inset 0 0 0 1px ${palette.borderHex}33`,
       }}
       className="sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl px-[20px] py-[18px] flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none"
     >
@@ -94,6 +95,7 @@ export function SovereignDiscretePageView({
             totalQuestionsCount={totalQuestionsCount}
             totalMarks={totalMarks}
             numeralMode={settings.numeralMode}
+            compact={settings.compactHeader}
           />
         ) : (
           <SovereignRunningPageHeader

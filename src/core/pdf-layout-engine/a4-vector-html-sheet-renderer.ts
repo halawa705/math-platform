@@ -125,6 +125,16 @@ export function resolvePrintThemePalette(
       headerGradientCss: "linear-gradient(135deg, #000000 0%, #1E293B 100%)",
     };
   }
+  // ٤ب. كحلي وذهبي فاخر
+  if (themeId === "navy_gold") {
+    return {
+      primaryHex: "#14213D", secondaryHex: "#1F3A68", accentHex: "#B8892B",
+      badgeBgHex: "#FBF5E6", borderHex: "#B8892B", softSurfaceHex: "#FDFBF4",
+      ruleBgHex: "#FBF5E6", ruleBorderHex: "#D4AF5A",
+      solvedBgHex: "#F4F8F1", solvedBorderHex: "#9DBF8A", solvedTextHex: "#1F3D1A",
+      headerGradientCss: "linear-gradient(135deg, #0B1530 0%, #14213D 55%, #1F3A68 100%)",
+    };
+  }
   // ٥. زمردي المعاصر الأصيل (Royal Indigo slot -> Emerald Green)
   return {
     primaryHex: "#064E3B",

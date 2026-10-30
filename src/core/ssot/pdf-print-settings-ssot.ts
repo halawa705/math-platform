@@ -23,7 +23,7 @@ export type DocumentAnswerVisibilityMode =
   | "questions_with_answers"
   | "answer_key_only";
 
-export type ExactPrintFontSizePt = 12 | 12.5 | 13 | 13.5 | 14 | 15 | 16;
+export type ExactPrintFontSizePt = 10.5 | 11 | 11.5 | 12 | 12.5 | 13 | 13.5 | 14 | 15 | 16;
 
 export type PageDensityBudgetMode =
   | "ultra_compact"
@@ -39,6 +39,7 @@ export type PrintColorThemeId =
   | "emerald_moasser"
   | "math_teal"
   | "amber_gold"
+  | "navy_gold"
   | "photocopy_black";
 
 export interface PrintFontFamilySpecification {
@@ -99,6 +100,11 @@ export interface PDFPrintSettingsStateSSOT {
   readonly answerSpaceStyle: AnswerSpaceStyleMode;
   readonly colorThemeId: PrintColorThemeId;
   readonly targetMaxPages?: number;
+  readonly autoFitMode?: "off" | "booklet_fill" | "exam_max_pages";
+  readonly figureScale?: number;
+  readonly answerSpaceLines?: 1 | 2 | 3;
+  readonly compactHeader?: boolean;
+  readonly hideAccreditation?: boolean;
   readonly customDocumentTitle: string;
   readonly customDurationText: string;
 }
@@ -114,6 +120,7 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
   showColumnDivider: true,
   answerSpaceStyle: "dotted",
   colorThemeId: "math_teal",
+  autoFitMode: "booklet_fill",
   customDocumentTitle: "مستند رياضيات",
   customDurationText: "ساعة ونصف",
 };
