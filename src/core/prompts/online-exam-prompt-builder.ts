@@ -1,8 +1,7 @@
 /**
  * @file online-exam-prompt-builder.ts
- * @description مولد برومبت الاختبار الإلكتروني التفاعلي (تصحيح آلي بالخادم) الموجه لـ NotebookLM:
- * يقتصر على أسئلة الاختيار من متعدد (MCQ) والأسئلة ذات الإجابة القصيرة الحاسمة (SHORT) مع حقل الإجابات المقبولة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 120 سطراً).
+ * @description مولد برومبت الاختبار الإلكتروني التفاعلي (مكثف < 1850 حرفاً وحازم في الأعداد والنطاق وتنوع الأفكار وترتيب المصادر).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطر).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -34,48 +33,37 @@ export function buildOnlineExamNotebookLMPrompt(
   config: OnlineExamPromptBuilderConfig
 ): string {
   const branchSpec = MATH_BRANCHES_SSOT[config.branchId];
-  const termLabel =
-    config.termNumber === 1 ? "الفصل الدراسي الأول" : "الفصل الدراسي الثاني";
+  const termLabel = config.termNumber === 1 ? "ترم ١" : "ترم ٢";
+  const totalQ = config.mcqQuestionsCount + config.shortAnswerQuestionsCount;
 
-  const difficultyDescription =
+  const difficultyAr =
     config.difficultyProfile === "olympiad_challenge"
-      ? "مستويات تفكير عليا ومسائل مركبة للمتفوقين (٤٠٪ تطبيقي، ٦٠٪ مستويات عليا)"
+      ? "متفوقين ومستويات عليا (٤٠٪ تطبيقي، ٦٠٪ عليا)"
       : config.difficultyProfile === "comprehensive_rigorous"
-      ? "تقييم شامل ودقيق (٥٠٪ تطبيقي وتحليلي، ٣٠٪ ربط مفاهيم، ٢٠٪ مستويات عليا)"
-      : "توزيع قياسي متوازن (٣٠٪ مباشر، ٥٠٪ تطبيقي، ٢٠٪ تمييز)";
+        ? "شامل ودقيق (٥٠٪ تطبيقي، ٣٠٪ ربط، ٢٠٪ عليا)"
+        : "متوازن قياسي (٣٠٪ مباشر، ٥٠٪ تطبيقي، ٢٠٪ تمييز)";
 
-  const lessonsFormatted =
+  const lessonsText =
     config.targetedLessonTitlesArabic.length > 0
-      ? config.targetedLessonTitlesArabic.map((t, i) => `   ${i + 1}. ${t}`).join("\n")
-      : "   - جميع الدروس المقررة في هذا الفرع من المصادر المرفوعة";
+      ? config.targetedLessonTitlesArabic.join(" ، ")
+      : "دروس الفرع بالمصادر";
 
   return [
-    `المهمة: إعداد اختبار إلكتروني تفاعلي في مادة الرياضيات (${branchSpec.nameArabic}) بالاعتماد الحصري على المصادر المرفوعة.`,
-    `• الصف الدراسي: ${config.gradeNameArabic} (${termLabel})`,
-    `• الزمن المخصص: ${config.durationTextArabic} | الدرجة الكلية: ${config.totalMarks} درجة`,
-    `• مستوى العمق التربوي: ${difficultyDescription}`,
-    "",
-    "📚 الدروس المستهدفة في الاختبار:",
-    lessonsFormatted,
-    "",
-    "📊 هيكل وتوزيع أسئلة الاختبار الإلكتروني:",
-    `- القسم الأول (الاختيار من متعدد MCQ): عدد (${config.mcqQuestionsCount}) سؤالاً، لكل سؤال ٤ بدائل (أ، ب، جـ، د).`,
-    `- القسم الثاني (إجابة قصيرة SHORT): عدد (${config.shortAnswerQuestionsCount}) سؤالاً.`,
-    "",
+    `اختبار إلكتروني (تصحيح آلي): ${branchSpec.nameArabic} | ${config.gradeNameArabic} (${termLabel}) | الدرجة: ${config.totalMarks}.`,
+    `🎯 الدروس المستهدفة حصراً (ممنوع الخروج عنها): [${lessonsText}] | المستوى: ${difficultyAr}.`,
+    `📊 الأعداد الإلزامية الحرفية (إجمالي ${totalQ} أسئلة، ممنوع أسئلة البرهان والمقالي): (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.shortAnswerQuestionsCount}) إجابة قصيرة حاسمة [SHORT] (عدد/كسر/جذر/فترة وحيدة).`,
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
-      lessonTitleArabic: config.targetedLessonTitlesArabic.join(" ، "),
+      lessonTitleArabic: lessonsText,
     }),
-    "",
-    "هذا اختبار إلكتروني يُصحَّح آلياً. ممنوع أسئلة البرهان والمقالي. الأنواع المسموحة فقط: MCQ أو SHORT.",
-    "- أسئلة SHORT: إجابتها النهائية قيمة قصيرة واحدة (عدد، كسر، جذر، مجموعة {٢، ٣}، فترة، أو كلمة قصيرة) وليست جملة.",
-    "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو SHORT] | الدرس: [اسم_الدرس] | الدرجة: [عدد_الدرجات] ===",
-    "النص: [نص السؤال كاملاً مع المعادلات داخل $...$]",
-    "الرسم: [اتركه فارغاً أو اكتب سطور حقائق بين [رسم هندسي: ... ] كما في التعليمات]",
-    "البدائل: (أ) [...] | (ب) [...] | (جـ) [...] | (د) [...]   (في MCQ فقط)",
+    "📐 قالب الإخراج الإلزامي لكل سؤال (MCQ أو SHORT فقط):",
+    "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو SHORT] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",
+    "النص: [نص السؤال بالمعادلات داخل $...$]",
+    "الرسم: [[رسم هندسي: ...] إن لزم وإلا فارغ]",
+    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ فقط)",
     "الإجابة_الصحيحة: [حرف البديل في MCQ، أو القيمة النهائية في SHORT]",
-    "الإجابات_المقبولة: [في SHORT فقط: كل الصيغ المكافئة مفصولة بـ | مثل: 0.5 | 1/2 | \\frac{1}{2}]",
-    "البرهان_والخطوات: [خطوات الحل المختصرة]",
+    "الإجابات_المقبولة: [في SHORT فقط: الصيغ المكافئة مفصولة بـ | مثل: 0.5 | 1/2 | \\frac{1}{2}]",
+    "البرهان_والخطوات: [خطوات الحل مفصولة بـ |]",
   ].join("\n");
 }

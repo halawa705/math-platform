@@ -1,8 +1,7 @@
 /**
  * @file worksheet-drill-prompt-builder.ts
- * @description مولد برومبت ورقة العمل والتطبيق السريع في صفحة A4 واحدة (One-Page Worksheet Drill).
- * مصمم لتوليد حزمة أسئلة مركزة وعالية الكثافة تناسب التوزيع في الحصة أو التقويم السريع.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * @description مولد برومبت ورقة العمل والتطبيق السريع والواجب التفاعلي (مكثف < 1450 حرفاً وحازم في العدد والنطاق وتنوع الأفكار وترتيب المصادر).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 85 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -27,20 +26,23 @@ export function buildWorksheetDrillNotebookLMPrompt(
   config: WorksheetDrillPromptConfig
 ): string {
   const branchSpec = MATH_BRANCHES_SSOT[config.branchId];
+  const totalQ = config.quickMcqCount + config.quickEssayCount;
 
   return [
-    `المهمة: إعداد ورقة عمل تطبيقية سريعة (شيت صفحة A4 واحدة) لدرس (${config.lessonTitleArabic}) في فرع (${branchSpec.nameArabic}) - ${config.gradeNameArabic}.`,
-    `• زمن الحل المستهدف: ${config.durationMinutes} دقيقة`,
-    `• ميزانية المساحة: مصممة لتُطبع في صفحة A4 واحدة فقط بنظام العمودين المضغوط.`,
-    "",
-    "📊 توزيع الأسئلة المطلوب في ورقة العمل:",
-    `- عدد (${config.quickMcqCount}) أسئلة اختيار من متعدد سريعة ومركزة (بدائل قصيرة تناسب ٤ أعمدة في سطر واحد).`,
-    `- عدد (${config.quickEssayCount}) مسائل تطبيقية أو برهان قصير مباشر على الفكرة الأساسية للدرس.`,
-    "",
+    `ورقة عمل وواجب تطبيقي (${config.durationMinutes} د): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
+    `🎯 الدرس المستهدف حصراً (ممنوع الخروج عنه): [${config.lessonTitleArabic}].`,
+    `📊 الأعداد الحرفية الإلزامية (إجمالي ${totalQ} أسئلة متنوعة الأفكار بلا تكرار): (${config.quickMcqCount}) اختر [MCQ] + (${config.quickEssayCount}) مقالي/برهان قصير [ESSAY].`,
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
       lessonTitleArabic: config.lessonTitleArabic,
     }),
+    "📐 قالب الإخراج الإلزامي لكل سؤال:",
+    "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو ESSAY] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",
+    "النص: [نص السؤال كاملاً بالمعادلات داخل $...$]",
+    "الرسم: [[رسم هندسي: ...] إن لزم فقط وإلا فارغ]",
+    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ فقط)",
+    "الإجابة_الصحيحة: [البديل الصحيح أو الناتج النهائي]",
+    "البرهان_والخطوات: [خطوات الحل مفصولة بـ |]",
   ].join("\n");
 }
