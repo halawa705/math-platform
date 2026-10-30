@@ -8,7 +8,7 @@
 
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import {
-  ARABIC_CHOICE_LETTERS,
+  getChoiceLetterByNotationSSOT,
   formatNumeralsByModeSSOT,
   type MathNotationLanguage,
   type NumeralDisplayMode,
@@ -58,7 +58,7 @@ export function StructuredStepByStepSolutionBox({
             }}
             className="px-2 py-0.5 rounded-md border text-[0.82em] font-black shadow-2xs"
           >
-            الإجابة الصحيحة: ({ARABIC_CHOICE_LETTERS[item.correctMcqIndex]})
+            الإجابة الصحيحة: ({getChoiceLetterByNotationSSOT(item.correctMcqIndex, notationLanguage)})
           </span>
         )}
       </div>

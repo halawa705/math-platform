@@ -16,6 +16,7 @@ import {
 import { canonicalizeMathText } from "../../core/math-text/math-text-canonicalizer";
 import { parseCanonicalTextToNodes } from "../../core/math-text/math-canonical-text-node-parser";
 import { localizeCanonicalLatex } from "../../core/math-text/math-latex-notation-and-numeral-localizer";
+import { localizeGeometricEntitiesInPlainText } from "../../core/math-text/math-geometric-entity-localizer";
 import { renderKatexHtmlCached } from "./math-katex-cached-html-renderer";
 import MathFormulaFitBox from "./math-formula-fit-box";
 
@@ -64,7 +65,8 @@ export default function SafeKaTeXBiDiMathRenderer({
       {nodes.map((node, idx) => {
         if (node.kind === "newline") return <br key={idx} />;
         if (node.kind === "text") {
-          return <React.Fragment key={idx}>{formatNumeralsByModeSSOT(node.value, numeralMode)}</React.Fragment>;
+          const localized = localizeGeometricEntitiesInPlainText(node.value, notationLanguage);
+          return <React.Fragment key={idx}>{formatNumeralsByModeSSOT(localized, numeralMode)}</React.Fragment>;
         }
         if (node.kind === "math") return <React.Fragment key={idx}>{renderFormula(node.latex)}</React.Fragment>;
         return (

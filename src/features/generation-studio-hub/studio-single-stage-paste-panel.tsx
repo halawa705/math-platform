@@ -24,6 +24,7 @@ export interface StudioSingleStagePastePanelProps {
   readonly onChangeReply: (next: string) => void;
   readonly replyPlaceholderAr: string;
   readonly contextNoteAr?: string;
+  readonly opensNotebook?: boolean;
 }
 
 export default function StudioSingleStagePastePanel({
@@ -37,6 +38,7 @@ export default function StudioSingleStagePastePanel({
   onChangeReply,
   replyPlaceholderAr,
   contextNoteAr,
+  opensNotebook = true,
 }: StudioSingleStagePastePanelProps) {
   const [isPromptVisible, setIsPromptVisible] = useState<boolean>(false);
 
@@ -57,14 +59,22 @@ export default function StudioSingleStagePastePanel({
       {/* الخطوة ١: نسخ البرومبت */}
       <div className="space-y-2">
         <div className="text-xs font-black text-indigo-900 dark:text-indigo-300">
-          ١. انسخ البرومبت والصقه في NotebookLM
+          {opensNotebook
+            ? "١. انسخ البرومبت والصقه في NotebookLM"
+            : "١. انسخ برومبت هذه المرحلة والصقه في محادثة NotebookLM المفتوحة"}
         </div>
         <button
           type="button"
           onClick={onCopyPromptAndOpenNotebook}
-          className="w-full min-h-[48px] rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-sm font-black cursor-pointer"
+          className="w-full min-h-[48px] rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-sm font-black cursor-pointer shadow-sm transition-all"
         >
-          {isPromptCopied ? "✓ تم النسخ وفتح NotebookLM" : "📋 نسخ البرومبت وفتح NotebookLM ↗"}
+          {opensNotebook
+            ? isPromptCopied
+              ? "✓ تم النسخ وفتح NotebookLM"
+              : "📋 نسخ البرومبت وفتح NotebookLM ↗"
+            : isPromptCopied
+            ? "✓ تم نسخ البرومبت للحافظة"
+            : "📋 نسخ البرومبت فقط (الدفتر مفتوح بالفعل)"}
         </button>
         <button
           type="button"

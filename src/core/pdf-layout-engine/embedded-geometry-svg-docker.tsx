@@ -8,7 +8,7 @@
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
-import type { NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import type { MathNotationLanguage, NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { computeFigureAspectFromVertices, computeFigureBoxSizePx } from "./question-figure-box-size";
 import { renderQuestionFigureSvg } from "./question-figure-svg-renderer";
 
@@ -20,6 +20,7 @@ export interface EmbeddedGeometrySVGDockerProps {
   readonly primaryHex: string;
   readonly accentHex: string;
   readonly numeralMode: NumeralDisplayMode;
+  readonly notationLanguage?: MathNotationLanguage;
   readonly figureScale?: number;
   readonly columnsCount?: 1 | 2;
 }
@@ -32,6 +33,7 @@ export function EmbeddedGeometrySVGDocker({
   primaryHex,
   accentHex,
   numeralMode,
+  notationLanguage,
   figureScale = 1,
   columnsCount = 2,
 }: EmbeddedGeometrySVGDockerProps) {
@@ -47,6 +49,7 @@ export function EmbeddedGeometrySVGDocker({
       strokeColorHex: primaryHex,
       accentColorHex: accentHex,
       numeralMode,
+      notationLanguage,
     }
   );
   if (!svgMarkup) return null;

@@ -10,6 +10,7 @@ import {
   type MathNotationLanguage,
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
+import { localizeGeometricEntitiesInLatex } from "./math-geometric-entity-localizer";
 
 export const MODULE_ID_MATH_LATEX_NOTATION_AND_NUMERAL_LOCALIZER =
   "math_latex_notation_and_numeral_localizer" as const;
@@ -32,6 +33,7 @@ export function localizeCanonicalLatex(
   notation: MathNotationLanguage
 ): string {
   let out = localizeMathExpressionNotationSSOT(latex, notation);
+  out = localizeGeometricEntitiesInLatex(out, notation);
   if (notation === "english") {
     out = out.replace(/\\text\{\s*([سصعكح])\s*\}/g, (_m, ch: string) => ARABIC_VARIABLE_TO_LATIN[ch]);
   }

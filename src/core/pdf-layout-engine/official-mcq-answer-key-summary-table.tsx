@@ -8,7 +8,7 @@
 
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import {
-  ARABIC_CHOICE_LETTERS,
+  getChoiceLetterByNotationSSOT,
   formatNumeralsByModeSSOT,
   type MathNotationLanguage,
   type NumeralDisplayMode,
@@ -47,7 +47,7 @@ export function OfficialMcqAnswerKeySummaryTable({
       <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-r border-slate-300 bg-white text-[0.8em]">
         {mcqItems.map((q) => {
           const idx = q.correctMcqIndex ?? 0;
-          const letter = ARABIC_CHOICE_LETTERS[idx] || "أ";
+          const letter = getChoiceLetterByNotationSSOT(idx, notationLanguage);
           const choiceVal = q.mcqChoicesAr?.[idx] || q.modelAnswerAr;
           return (
             <div key={q.id} className="px-2 py-1 border-l border-b border-slate-300 flex items-center justify-between gap-1 min-w-0">

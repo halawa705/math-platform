@@ -4,7 +4,7 @@
  */
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
-import type { NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import type { MathNotationLanguage, NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { projectGeometryFigureToSVGMarkup } from "../geometry-engine/vector-svg-figure-projector";
 import { projectCartesianGraphToSVGMarkup } from "../geometry-engine/graph-compositor/graph-svg-projector";
 
@@ -16,6 +16,7 @@ export interface RenderQuestionFigureSvgOptions {
   readonly strokeColorHex?: string;
   readonly accentColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
+  readonly notationLanguage?: MathNotationLanguage;
 }
 
 export function renderQuestionFigureSvg(

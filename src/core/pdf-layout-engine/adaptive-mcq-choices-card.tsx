@@ -7,7 +7,10 @@
  */
 
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
-import { ARABIC_CHOICE_LETTERS, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import {
+  getChoiceLetterByNotationSSOT,
+  type NumeralDisplayMode,
+} from "../ssot/numeral-and-unit-ssot";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 
 export interface AdaptiveMCQChoicesCardProps {
@@ -57,7 +60,7 @@ export function AdaptiveMCQChoicesCard({
               }}
               className="w-5 h-5 rounded-md flex items-center justify-center text-[0.8em] font-black shrink-0 shadow-2xs"
             >
-              {ARABIC_CHOICE_LETTERS[cIdx]}
+              {getChoiceLetterByNotationSSOT(cIdx, notationLanguage)}
             </span>
             <div className="flex-1 min-w-0 text-center font-extrabold text-slate-900 break-normal leading-tight">
               <SafeKaTeXBiDiMathRenderer

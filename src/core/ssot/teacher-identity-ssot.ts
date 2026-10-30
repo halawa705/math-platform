@@ -156,7 +156,8 @@ export function isStealthTeacherTriggerCodeSSOT(rawInput: string): boolean {
 
 export async function copyPromptAndOpenGradeNotebookLmSSOT(
   arg1: string,
-  arg2: string
+  arg2: string,
+  options?: { openNotebook?: boolean }
 ): Promise<{ copied: boolean; openedUrl: string }> {
   const isArg1Grade = /^(?:prim|prep|sec)-\d$/.test(arg1.trim());
   const gradeId = isArg1Grade ? arg1.trim() : arg2.trim();
@@ -173,8 +174,9 @@ export async function copyPromptAndOpenGradeNotebookLmSSOT(
       copied = false;
     }
   }
-  if (typeof window !== "undefined") window.open(targetUrl, "_blank", "noopener,noreferrer");
-  return { copied, openedUrl: targetUrl };
+  const shouldOpen = options?.openNotebook !== false;
+  if (shouldOpen && typeof window !== "undefined") window.open(targetUrl, "_blank", "noopener,noreferrer");
+  return { copied, openedUrl: shouldOpen ? targetUrl : "" };
 }
 
 export {

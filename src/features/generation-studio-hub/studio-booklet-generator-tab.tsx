@@ -154,7 +154,8 @@ export default function StudioBookletGeneratorTab({
 
       <StudioSingleStagePastePanel
         stageTitleAr={stage.title} stageHintAr={stage.hint} promptText={prompt} onChangePrompt={setPrompt}
-        onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
+        opensNotebook={activeStage === 1}
+        onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId, { openNotebook: activeStage === 1 }); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
         isPromptCopied={copied} replyValue={replies[activeStage]}
         onChangeReply={(v) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: v })); }}
         replyPlaceholderAr={stage.placeholder}

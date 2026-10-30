@@ -9,6 +9,8 @@
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import {
   formatNumeralsByModeSSOT,
+  localizeGeometricVertexLabelSSOT,
+  type MathNotationLanguage,
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
 import { projectGeometryAnglesSVGMarkup } from "./vector-svg-angle-projector";
@@ -23,6 +25,7 @@ export interface SVGProjectorOptions {
   readonly strokeColorHex?: string;
   readonly accentColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
+  readonly notationLanguage?: MathNotationLanguage;
 }
 
 export function projectGeometryFigureToSVGMarkup(
@@ -34,6 +37,7 @@ export function projectGeometryFigureToSVGMarkup(
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#0D9488";
   const numeralMode = options.numeralMode ?? "eastern";
+  const notation = options.notationLanguage || "arabic";
   const padding = Math.max(16, Math.min(22, Math.round(Math.min(width, height) * 0.14)));
 
   if (figure.vertices.length === 0) {
@@ -184,9 +188,7 @@ export function projectGeometryFigureToSVGMarkup(
       const labelX = v.screen.sx + (vx / vLen) * 9;
       const labelY = v.screen.sy + (vy / vLen) * 9 + 3;
 
-      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" />
-      <circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" />
-      <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${v.label}</text>`;
+      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" /><circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" /><text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${localizeGeometricVertexLabelSSOT(v.label, notation)}</text>`;
     })
     .join("");
 

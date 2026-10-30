@@ -142,9 +142,10 @@ export default function StudioFinalReviewGeneratorTab({
 
       <StudioSingleStagePastePanel
         stageTitleAr={stage.title} stageHintAr={stage.hint} promptText={prompt} onChangePrompt={setPrompt}
-        onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
+        opensNotebook={activeStage === 1}
+        onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId, { openNotebook: activeStage === 1 }); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
         isPromptCopied={copied} replyValue={replies[activeStage]}
-        onChangeReply={(v) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: v })); }}
+        onChangeReply={(val) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: val })); }}
         replyPlaceholderAr={stage.placeholder}
         contextNoteAr={activeStage === 3 && essays.length > 0 ? `تمت قراءة ${essays.length} مسألة مقالية من المرحلة ٢` : undefined}
       />

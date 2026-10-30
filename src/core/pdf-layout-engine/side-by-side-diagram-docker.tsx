@@ -134,6 +134,7 @@ export default function SideBySideDiagramDocker({
                 primaryHex={palette.primaryHex}
                 accentHex={palette.accentHex}
                 numeralMode={settings.numeralMode}
+                notationLanguage={settings.notationLanguage}
                 figureScale={settings.figureScale ?? 1}
                 columnsCount={settings.columnsCount}
               />

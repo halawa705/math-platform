@@ -159,3 +159,14 @@ export function localizeGeometricVertexLabelSSOT(
 }
 
 export const ARABIC_CHOICE_LETTERS = ["أ", "ب", "جـ", "د"] as const;
+export const ENGLISH_CHOICE_LETTERS = ["A", "B", "C", "D"] as const;
+
+export function getChoiceLetterByNotationSSOT(
+  index: number,
+  notation?: MathNotationLanguage
+): string {
+  if (notation === "english") {
+    return ENGLISH_CHOICE_LETTERS[index] || String(index + 1);
+  }
+  return ARABIC_CHOICE_LETTERS[index] || String(index + 1);
+}
