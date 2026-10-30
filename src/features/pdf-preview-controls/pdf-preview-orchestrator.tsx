@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   DEFAULT_PDF_PRINT_SETTINGS_SSOT,
   loadPersistedPDFPrintSettingsSSOT,
@@ -150,12 +151,12 @@ export default function PDFPreviewOrchestrator({
           <span>🖨️</span>
           <span>طباعة / تصدير A4 PDF</span>
         </button>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => setIsToolsOpen((v) => !v)}
             aria-expanded={isToolsOpen}
-            className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-black cursor-pointer"
+            className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-black cursor-pointer px-2 truncate"
           >
             🎛️ {isToolsOpen ? "إخفاء التخصيص" : "تخصيص الورقة"}
           </button>
@@ -164,8 +165,15 @@ export default function PDFPreviewOrchestrator({
             onClick={handleSaveToDrive}
             className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-black cursor-pointer truncate px-2"
           >
-            ☁️ {driveFeedback || "حفظ في Google Drive"}
+            ☁️ {driveFeedback || "حفظ في Drive"}
           </button>
+          <Link
+            href="/library?tab=archive"
+            className="min-h-[44px] rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 text-teal-900 dark:text-teal-300 text-xs font-black flex items-center justify-center gap-1 px-2 truncate"
+          >
+            <span>🗂️</span>
+            <span>عرض المحفوظات</span>
+          </Link>
         </div>
       </div>
 

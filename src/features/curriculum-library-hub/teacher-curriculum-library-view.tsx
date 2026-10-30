@@ -7,7 +7,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import CalmPageTitleHeader from "@/components/global-ui/calm-page-title-header";
 import SegmentedWorkspaceTabsBar, {
@@ -20,12 +20,20 @@ export const MODULE_ID_TEACHER_CURRICULUM_LIBRARY_VIEW =
   "teacher_curriculum_library_view" as const;
 
 const LIBRARY_TABS: readonly SegmentedTabItem[] = [
+  { id: "archive", labelAr: "خزينة المذكرات والاختبارات (Drive)", icon: "☁️" },
   { id: "splitter", labelAr: "تقسيم المنهج", icon: "🧭" },
-  { id: "archive", labelAr: "الأرشيف", icon: "☁️" },
 ];
 
 export default function TeacherCurriculumLibraryView() {
-  const [activeTabId, setActiveTabId] = useState<string>("splitter");
+  const [activeTabId, setActiveTabId] = useState<string>("archive");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab === "splitter" || tab === "archive") {
+      setActiveTabId(tab);
+    }
+  }, []);
 
   return (
     <div
@@ -36,8 +44,8 @@ export default function TeacherCurriculumLibraryView() {
 
       <main className="max-w-3xl mx-auto px-3 sm:px-5 pt-4 space-y-3">
         <CalmPageTitleHeader
-          titleAr="مستكشف المنهج"
-          hintAr="قسّم المنهج ← اعتمد الوحدات والدروس ← راجع الأرشيف"
+          titleAr="خزينة المذكرات ومستكشف المنهج"
+          hintAr="استعرض المذكرات والاختبارات المحفوظة حسب الصف الدراسي أو قسّم وحدات المنهج"
         />
         <SegmentedWorkspaceTabsBar
           tabs={LIBRARY_TABS}
@@ -45,8 +53,8 @@ export default function TeacherCurriculumLibraryView() {
           onSelectTab={setActiveTabId}
         />
 
-        {activeTabId === "splitter" && <CurriculumNotebooklmSplitterTab />}
         {activeTabId === "archive" && <SavedBookletsReviewsArchiveTab />}
+        {activeTabId === "splitter" && <CurriculumNotebooklmSplitterTab />}
       </main>
     </div>
   );
