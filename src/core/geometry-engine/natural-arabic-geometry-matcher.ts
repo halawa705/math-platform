@@ -15,6 +15,7 @@ import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/
 import { matchPrepGrade2TriangleCongruenceFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-congruence-catalog";
 import { matchPrepGrade2PythagorasConverseFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-pythagoras-converse-catalog";
 import { matchPrepGrade2ParallelApplicationsFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-parallel-applications-catalog";
+import { matchPrepGrade2TriangleMediansFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-medians-catalog";
 import { matchPrepSimilarityGeometryFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
 import { matchPrepGrade3TriangleSimilarityFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { matchPrepGrade3LineEquationFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-line-equation-catalog";
@@ -70,6 +71,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (prep2Pythagoras) return prep2Pythagoras;
   const prep2Parallel = matchPrepGrade2ParallelApplicationsFigure(desc, figureId, notationLanguage);
   if (prep2Parallel) return prep2Parallel;
+  const prep2Medians = matchPrepGrade2TriangleMediansFigure(desc, figureId, notationLanguage);
+  if (prep2Medians) return prep2Medians;
   const prep2Match = matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage);
   if (prep2Match) return prep2Match;
   const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
