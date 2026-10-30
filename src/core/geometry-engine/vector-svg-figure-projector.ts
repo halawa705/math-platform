@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file vector-svg-figure-projector.ts
  * @description المصير المتجهي النقي (Pure Vector SVG Projector) الذي يحول CanonicalGeometryFigureIR
  * المنبثقة من أصول العائلات الهندسية (`triangle-root-core.ts` وغيرها) إلى رسم SVG متجهي فائق الدقة
@@ -14,6 +14,7 @@ import {
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
 import { projectGeometryAnglesSVGMarkup } from "./vector-svg-angle-projector";
+import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
 import { projectGeometrySurfaceShadingSVGMarkup } from "./vector-svg-surface-shading-projector";
 
 export const MODULE_ID_VECTOR_SVG_FIGURE_PROJECTOR =
@@ -153,10 +154,7 @@ export function projectGeometryFigureToSVGMarkup(
       // تسمية طول الضلع داخل كبسولة عائمة بيضاء أنيقة تمنع التداخل (Floating Pill Badge)
       if (seg.lengthLabel) {
         const rawVal = seg.lengthLabel.value;
-        const formattedVal =
-          typeof rawVal === "number"
-            ? formatNumeralsByModeSSOT(rawVal, numeralMode)
-            : formatNumeralsByModeSSOT(String(rawVal), numeralMode);
+        const formattedVal = localizeFigureLabelText(String(rawVal), notation, numeralMode);
         const unitText = seg.lengthLabel.unit ? ` ${seg.lengthLabel.unit}` : "";
         const textStr = `${formattedVal}${unitText}`;
         const pillW = Math.max(textStr.length * 5.2 + 6, 16);
@@ -178,6 +176,7 @@ export function projectGeometryFigureToSVGMarkup(
     strokeColor,
     accentColor,
     numeralMode,
+    notation,
   });
 
   const verticesSvg = Array.from(vertexMap.values())
@@ -194,3 +193,4 @@ export function projectGeometryFigureToSVGMarkup(
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${surfaceTintsSvg}${segmentsSvg}${anglesSvg}${verticesSvg}</svg>`;
 }
+

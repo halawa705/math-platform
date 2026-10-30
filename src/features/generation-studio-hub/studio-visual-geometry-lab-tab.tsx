@@ -89,6 +89,7 @@ export default function StudioVisualGeometryLabTab() {
     strokeColorHex: "#1E1B4B",
     accentColorHex: "#0D9488",
     numeralMode: notation === "arabic" ? "eastern" : "western",
+    notationLanguage: notation,
   }) : "";
 
   const readyTag = `[رسم هندسي: ${desc.trim()}]`;
@@ -191,4 +192,5 @@ export default function StudioVisualGeometryLabTab() {
     </div>
   );
 }
+
 

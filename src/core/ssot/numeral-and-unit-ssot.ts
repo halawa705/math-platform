@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file numeral-and-unit-ssot.ts
  * @description المصدر الوحيد للحقيقة (SSOT) لتحويل الأرقام (0-9 <-> ٠-٩)، والرموز الرياضية (x,y <-> س,ص)،
  * ووحدات القياس العربية القياسية. يُمنع كتابة أي Regex لتحويل الأرقام في أي ملف آخر.
@@ -128,6 +128,12 @@ const ARABIC_TO_ENGLISH_VERTEX_MAP: Record<string, string> = {
   "س": "X",
   "ص": "Y",
   "ع": "Z",
+  "ز": "G",
+  "ح": "H",
+  "ي": "J",
+  "ك": "K",
+  "ل": "L",
+  "ط": "T",
 };
 
 const ENGLISH_TO_ARABIC_VERTEX_MAP: Record<string, string> = {
@@ -142,6 +148,12 @@ const ENGLISH_TO_ARABIC_VERTEX_MAP: Record<string, string> = {
   X: "س",
   Y: "ص",
   Z: "ع",
+  G: "ز",
+  H: "ح",
+  J: "ي",
+  K: "ك",
+  L: "ل",
+  T: "ط",
 };
 
 /**
@@ -170,3 +182,4 @@ export function getChoiceLetterByNotationSSOT(
   }
   return ARABIC_CHOICE_LETTERS[index] || String(index + 1);
 }
+

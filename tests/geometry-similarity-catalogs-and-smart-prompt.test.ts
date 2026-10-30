@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file geometry-similarity-catalogs-and-smart-prompt.test.ts
  * @description اختبارات شاملة لتغذية معمل الأشكال لدرس تشابه المضلعات والموجه الذكي للبرومبت.
  */
@@ -61,9 +61,13 @@ describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
     expect(figure).toBeDefined();
     expect(figure?.branchId).toBe("quad_trapezoid_with_altitudes");
 
-    const svg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western" });
+    const svg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western", notationLanguage: "english" });
     expect(svg).toContain("(X - 3)");
     expect(svg).toContain("(Y + 1)");
+
+    const arabicSvg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western", notationLanguage: "arabic" });
+    expect(arabicSvg).toContain("(س - 3)");
+    expect(arabicSvg).toContain("(ص + 1)");
   });
 
   it("matches House-shaped Pentagons ABCDE ~ KFGHJ (Try-by-yourself 3)", () => {
@@ -148,3 +152,4 @@ describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
     expect(figure?.angles.some((a) => a.degrees === 120)).toBe(true);
   });
 });
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file math-latex-notation-and-numeral-localizer.ts
  * @description المرحلة الوحيدة وقت العرض: تطبيق إعدادات المستند على LaTeX قانونية (لا تطبيع ولا إصلاح هنا):
  * لغة الترميز (س ← x، ح ← ℝ، جا ← sin أو العكس) ثم نظام الأرقام (٠-٩ أو 0-9).
@@ -11,6 +11,7 @@ import {
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
 import { localizeGeometricEntitiesInLatex } from "./math-geometric-entity-localizer";
+import { localizeLatinSymbolsInLatexToArabic } from "./math-latex-latin-symbols-arabic-localizer";
 
 export const MODULE_ID_MATH_LATEX_NOTATION_AND_NUMERAL_LOCALIZER =
   "math_latex_notation_and_numeral_localizer" as const;
@@ -34,6 +35,7 @@ export function localizeCanonicalLatex(
 ): string {
   let out = localizeMathExpressionNotationSSOT(latex, notation);
   out = localizeGeometricEntitiesInLatex(out, notation);
+  if (notation === "arabic") out = localizeLatinSymbolsInLatexToArabic(out);
   if (notation === "english") {
     out = out.replace(/\\text\{\s*([سصعكح])\s*\}/g, (_m, ch: string) => ARABIC_VARIABLE_TO_LATIN[ch]);
   }
@@ -41,3 +43,4 @@ export function localizeCanonicalLatex(
   if (/\\frac|\\sqrt/.test(out) && !out.includes("\\displaystyle")) out = `\\displaystyle ${out}`;
   return formatNumeralsByModeSSOT(out, numeralMode);
 }
+

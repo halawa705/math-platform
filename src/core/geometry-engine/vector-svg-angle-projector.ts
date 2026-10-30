@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file vector-svg-angle-projector.ts
  * @description مصير الزوايا المتجهي (Vector SVG Angle Projector):
  * - يرسم علامة الزاوية القائمة (مربع زاوية قائمة دقيق).
@@ -8,7 +8,8 @@
  */
 
 import type { CanonicalAngleNode } from "../ssot/geometry-archetype-ssot";
-import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import { formatNumeralsByModeSSOT, type MathNotationLanguage, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
 
 export const MODULE_ID_VECTOR_SVG_ANGLE_PROJECTOR =
   "vector_svg_angle_projector" as const;
@@ -24,6 +25,7 @@ export interface AngleProjectorOptions {
   readonly strokeColor: string;
   readonly accentColor: string;
   readonly numeralMode: NumeralDisplayMode;
+  readonly notation?: MathNotationLanguage;
 }
 
 export function projectGeometryAnglesSVGMarkup(
@@ -105,7 +107,7 @@ export function projectGeometryAnglesSVGMarkup(
 
     // 3. كتابة قياس الزاوية (نص أو درجات)
     const labelText =
-      ang.degreesLabel ||
+      (ang.degreesLabel ? localizeFigureLabelText(ang.degreesLabel, opts.notation ?? "arabic", opts.numeralMode) : undefined) ||
       (ang.degrees !== undefined
         ? `${formatNumeralsByModeSSOT(ang.degrees, opts.numeralMode)}°`
         : undefined);
@@ -135,3 +137,4 @@ export function projectGeometryAnglesSVGMarkup(
 
   return `<g class="geometry-figure-angles">${elements.join("")}</g>`;
 }
+
