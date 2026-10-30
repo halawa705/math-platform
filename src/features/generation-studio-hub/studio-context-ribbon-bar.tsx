@@ -3,8 +3,8 @@
 /**
  * @file studio-context-ribbon-bar.tsx
  * @description شريط السياق الهادئ لاختيار (الصف الدراسي النشط -> الوحدة الحقيقية -> الدرس الحقيقي)
- * مربوط حصرياً بمستكشف المنهج (`loadActiveCurriculumUnitsSSOT`) وبالصفوف المفعلة (`loadEnabledGradesSSOT`).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
+ * مربوط حصرياً بمستكشف المنهج (`loadActiveCurriculumUnitsSSOT`) وبالصفوف المفعلة مع الحفاظ على التحديد المحفوظ.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
  */
 
 import Link from "next/link";
@@ -49,11 +49,23 @@ export default function StudioContextRibbonBar({
     setEnabledGrades(loadEnabledGradesSSOT());
     const loaded = loadActiveCurriculumUnitsSSOT(selectedGradeId);
     setUnits(loaded);
-    const firstUnit = loaded[0];
-    if (firstUnit) {
-      onChangeUnitTitle?.(firstUnit.titleArabic);
-      onChangeBranch(firstUnit.branchId);
-      if (firstUnit.lessons[0]) onChangeLessonTitle(firstUnit.lessons[0].titleArabic);
+    if (loaded.length === 0) return;
+
+    const matchedUnit = loaded.find((u) => u.titleArabic === selectedUnitTitle);
+    if (!matchedUnit) {
+      const fallbackUnit = loaded[0];
+      onChangeUnitTitle?.(fallbackUnit.titleArabic);
+      onChangeBranch(fallbackUnit.branchId);
+      if (fallbackUnit.lessons[0]) {
+        onChangeLessonTitle(fallbackUnit.lessons[0].titleArabic);
+        onChangeLessonOrder?.(fallbackUnit.lessons[0].orderIndex);
+      }
+    } else {
+      const matchedLesson = matchedUnit.lessons.find((l) => l.titleArabic === selectedLessonTitle);
+      if (!matchedLesson && matchedUnit.lessons[0]) {
+        onChangeLessonTitle(matchedUnit.lessons[0].titleArabic);
+        onChangeLessonOrder?.(matchedUnit.lessons[0].orderIndex);
+      }
     }
   }, [selectedGradeId]);
 

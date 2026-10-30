@@ -2,9 +2,8 @@
 
 /**
  * @file studio-worksheet-generator-tab.tsx
- * @description تبويب ورقة العمل والتطبيق السريع (صفحة A4 واحدة) بتصميم هادئ:
- * أعداد الأسئلة وزمن الحل داخل قسم قابل للطي، خطوتان واضحتان (نسخ البرومبت ← لصق الرد)، وزر تصيير لاصق.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md).
+ * @description تبويب ورقة العمل والتطبيق السريع مع استرجاع وحفظ الحالة وتخصيص نوع وعدد الأسئلة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
  */
 
 import { useEffect, useState } from "react";
@@ -17,6 +16,10 @@ import {
   type PrintableMathQuestionItem,
 } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
+import {
+  loadStudioWorksheetSettingsSSOT,
+  saveStudioWorksheetSettingsSSOT,
+} from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
@@ -48,13 +51,23 @@ export default function StudioWorksheetGeneratorTab({
   onApplyWorksheetTitleToSheet,
   onApplyParsedQuestionsToSheet,
 }: StudioWorksheetGeneratorTabProps) {
-  const [mcqCount, setMcqCount] = useState(5);
-  const [essayCount, setEssayCount] = useState(2);
-  const [durationMinutes, setDurationMinutes] = useState(20);
+  const [initial] = useState(() => loadStudioWorksheetSettingsSSOT());
+  const [mcqCount, setMcqCount] = useState(initial.mcqCount);
+  const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled);
+  const [essayCount, setEssayCount] = useState(initial.essayCount);
+  const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled);
+  const [durationMinutes, setDurationMinutes] = useState(initial.durationMinutes);
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const persist = (partial: Partial<ReturnType<typeof loadStudioWorksheetSettingsSSOT>>) => {
+    saveStudioWorksheetSettingsSSOT(partial);
+  };
+
+  const effectiveMcq = mcqEnabled ? mcqCount : 0;
+  const effectiveEssay = essayEnabled ? essayCount : 0;
 
   useEffect(() => {
     setPrompt(
@@ -62,12 +75,12 @@ export default function StudioWorksheetGeneratorTab({
         gradeNameArabic: gradeNameAr,
         branchId,
         lessonTitleArabic: lessonTitle,
-        quickMcqCount: mcqCount,
-        quickEssayCount: essayCount,
+        quickMcqCount: effectiveMcq,
+        quickEssayCount: effectiveEssay,
         durationMinutes,
       })
     );
-  }, [gradeNameAr, branchId, lessonTitle, mcqCount, essayCount, durationMinutes]);
+  }, [gradeNameAr, branchId, lessonTitle, effectiveMcq, effectiveEssay, durationMinutes]);
 
   const handleRender = () => {
     const parsed = parseNotebookLMExamQuestionsToIR({
@@ -96,17 +109,41 @@ export default function StudioWorksheetGeneratorTab({
     );
   };
 
+  const summaryAr = `${effectiveMcq} اختر • ${effectiveEssay} مقالي • ${durationMinutes} دقيقة`;
+
   return (
     <div className="space-y-3">
       <StudioCollapsibleSectionCard
         icon="🔢"
         titleAr="أعداد الأسئلة وزمن الحل"
-        summaryAr={`${mcqCount} اختر • ${essayCount} مقالي • ${durationMinutes} دقيقة`}
+        summaryAr={summaryAr}
       >
         <div className="grid grid-cols-3 gap-2 pt-2">
-          <StudioNumberStepperField labelAr="اختر" value={mcqCount} max={25} onChange={setMcqCount} />
-          <StudioNumberStepperField labelAr="مقالي" value={essayCount} max={15} onChange={setEssayCount} />
-          <StudioNumberStepperField labelAr="الزمن (د)" value={durationMinutes} min={5} max={60} onChange={setDurationMinutes} />
+          <StudioNumberStepperField
+            labelAr="اختر"
+            value={mcqCount}
+            min={0}
+            max={25}
+            enabled={mcqEnabled}
+            onToggleEnabled={(v) => { setMcqEnabled(v); persist({ mcqEnabled: v }); }}
+            onChange={(v) => { setMcqCount(v); persist({ mcqCount: v }); }}
+          />
+          <StudioNumberStepperField
+            labelAr="مقالي"
+            value={essayCount}
+            min={0}
+            max={15}
+            enabled={essayEnabled}
+            onToggleEnabled={(v) => { setEssayEnabled(v); persist({ essayEnabled: v }); }}
+            onChange={(v) => { setEssayCount(v); persist({ essayCount: v }); }}
+          />
+          <StudioNumberStepperField
+            labelAr="الزمن (د)"
+            value={durationMinutes}
+            min={5}
+            max={60}
+            onChange={(v) => { setDurationMinutes(v); persist({ durationMinutes: v }); }}
+          />
         </div>
       </StudioCollapsibleSectionCard>
 

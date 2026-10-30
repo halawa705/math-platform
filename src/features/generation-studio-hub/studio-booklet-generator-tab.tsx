@@ -2,8 +2,8 @@
 
 /**
  * @file studio-booklet-generator-tab.tsx
- * @description تبويب مذكرة شرح الدرس بتصميم هادئ: شريط مراحل (١ ← ٢ ← ٣) يعرض مرحلة واحدة فقط في كل مرة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 200 سطر).
+ * @description تبويب مذكرة الدرس مع استرجاع وحفظ الحالة وتخصيص نوع وعدد الأسئلة مع تشيك بوكس التضمين والكتابة المباشرة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -18,6 +18,7 @@ import {
 import { mergeBookletThreeStagesRepliesToPrintableItems } from "@/core/ingestion/notebooklm-booklet-stages-merger";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
+import { loadStudioBookletSettingsSSOT, saveStudioBookletSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
@@ -46,21 +47,20 @@ const STAGE_COPY = {
 } as const;
 
 export default function StudioBookletGeneratorTab({
-  gradeId = "prep-3",
-  gradeNameAr = "الصف الثالث الإعدادي",
-  branchId = "plane_geometry",
-  unitTitleAr = "الوحدة الثالثة",
-  lessonTitle,
-  lessonOrder = 15,
-  branchNameAr,
-  onApplyBookletTitleToSheet,
-  onApplyParsedQuestionsToSheet,
+  gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
+  unitTitleAr = "الوحدة الثالثة", lessonTitle, lessonOrder = 15, branchNameAr,
+  onApplyBookletTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioBookletGeneratorTabProps) {
-  const [activeStage, setActiveStage] = useState<BookletPromptStageNumber>(1);
-  const [examplesPerIdea, setExamplesPerIdea] = useState(2);
-  const [drillsPerIdea, setDrillsPerIdea] = useState(2);
-  const [hwMcq, setHwMcq] = useState(4);
-  const [hwEssay, setHwEssay] = useState(2);
+  const [initial] = useState(() => loadStudioBookletSettingsSSOT());
+  const [activeStage, setActiveStage] = useState<BookletPromptStageNumber>(initial.activeStage);
+  const [examplesPerIdea, setExamplesPerIdea] = useState(initial.examplesPerIdea);
+  const [examplesEnabled, setExamplesEnabled] = useState(initial.examplesEnabled);
+  const [drillsPerIdea, setDrillsPerIdea] = useState(initial.drillsPerIdea);
+  const [drillsEnabled, setDrillsEnabled] = useState(initial.drillsEnabled);
+  const [hwMcq, setHwMcq] = useState(initial.hwMcq);
+  const [hwMcqEnabled, setHwMcqEnabled] = useState(initial.hwMcqEnabled);
+  const [hwEssay, setHwEssay] = useState(initial.hwEssay);
+  const [hwEssayEnabled, setHwEssayEnabled] = useState(initial.hwEssayEnabled);
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<BookletPromptStageNumber, string>>({ 1: "", 2: "", 3: "" });
   const [copied, setCopied] = useState(false);
@@ -70,32 +70,33 @@ export default function StudioBookletGeneratorTab({
   const ideas = useMemo(() => extractIdeasFromBookletStage1Reply(replies[1]), [replies]);
   const questions = useMemo(() => extractQuestionsSummaryFromBookletStage2Reply(replies[2]), [replies]);
 
+  const effectiveExamples = examplesEnabled ? examplesPerIdea : 1;
+  const effectiveDrills = drillsEnabled ? drillsPerIdea : 0;
+  const effectiveHwMcq = hwMcqEnabled ? hwMcq : 0;
+  const effectiveHwEssay = hwEssayEnabled ? hwEssay : 0;
+
   useEffect(() => {
     setPrompt(
       buildBookletStageNotebookLMPrompt({
         stageNumber: activeStage, gradeNameArabic: gradeNameAr, termNumber: 1, branchId,
         unitTitleArabic: unitTitleAr, lessonTitleArabic: lessonTitle,
-        solvedExamplesPerIdea: examplesPerIdea, drillsPerIdea, homeworkMcqCount: hwMcq, homeworkEssayCount: hwEssay,
+        solvedExamplesPerIdea: effectiveExamples, drillsPerIdea: effectiveDrills,
+        homeworkMcqCount: effectiveHwMcq, homeworkEssayCount: effectiveHwEssay,
         extractedStage1Ideas: ideas, extractedStage2Questions: questions,
       })
     );
-  }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, examplesPerIdea, drillsPerIdea, hwMcq, hwEssay, ideas, questions]);
+  }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, effectiveExamples, effectiveDrills, effectiveHwMcq, effectiveHwEssay, ideas, questions]);
+
+  const persist = (p: Partial<ReturnType<typeof loadStudioBookletSettingsSSOT>>) => saveStudioBookletSettingsSSOT(p);
 
   const buildPdf = (withStage3: boolean) => {
     const items = mergeBookletThreeStagesRepliesToPrintableItems({
       stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "",
       branchId, branchNameAr, unitId: "booklet-unit", lessonId: "booklet-lesson", lessonTitleArabic: lessonTitle,
     });
-    if (items.length === 0) {
-      setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء.");
-      return;
-    }
+    if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);
-    setDiagRows(
-      items
-        .filter((q) => q.figureDiagnosticsAr && q.figureDiagnosticsAr.length > 0)
-        .map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! }))
-    );
+    setDiagRows(items.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! })));
     onApplyParsedQuestionsToSheet?.(items);
     onApplyBookletTitleToSheet(
       buildStandardDocumentTitleSSOT({
@@ -106,6 +107,7 @@ export default function StudioBookletGeneratorTab({
   };
 
   const stage = STAGE_COPY[activeStage];
+  const summaryAr = `${examplesEnabled ? `${examplesPerIdea} أمثلة` : "بلا أمثلة"} • ${drillsEnabled ? `${drillsPerIdea} تدريبات` : "بلا تدريبات"} • واجب ${effectiveHwMcq + effectiveHwEssay} أسئلة`;
 
   return (
     <div className="space-y-3">
@@ -114,53 +116,47 @@ export default function StudioBookletGeneratorTab({
           stageNum: n, shortTitleAr: STAGE_COPY[n].short, isFilled: replies[n].trim().length > 5, isOptional: n === 3,
         }))}
         activeStageNum={activeStage}
-        onSelectStage={(n) => setActiveStage(n as BookletPromptStageNumber)}
+        onSelectStage={(n) => { const next = n as BookletPromptStageNumber; setActiveStage(next); persist({ activeStage: next }); }}
       />
 
-      <StudioCollapsibleSectionCard
-        icon="🔢"
-        titleAr="أعداد الأمثلة والتدريبات والواجب"
-        summaryAr={`${examplesPerIdea} أمثلة • ${drillsPerIdea} تدريبات • واجب ${hwMcq + hwEssay} أسئلة`}
-      >
+      <StudioCollapsibleSectionCard icon="🔢" titleAr="أعداد الأمثلة والتدريبات والواجب" summaryAr={summaryAr}>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
-          <StudioNumberStepperField labelAr="أمثلة لكل فكرة" value={examplesPerIdea} min={1} max={10} onChange={setExamplesPerIdea} />
-          <StudioNumberStepperField labelAr="تدريبات لكل فكرة" value={drillsPerIdea} min={0} max={15} onChange={setDrillsPerIdea} />
-          <StudioNumberStepperField labelAr="واجب: اختر" value={hwMcq} max={30} onChange={setHwMcq} />
-          <StudioNumberStepperField labelAr="واجب: مقالي" value={hwEssay} max={20} onChange={setHwEssay} />
+          <StudioNumberStepperField
+            labelAr="أمثلة لكل فكرة" value={examplesPerIdea} min={1} max={10} enabled={examplesEnabled}
+            onToggleEnabled={(v) => { setExamplesEnabled(v); persist({ examplesEnabled: v }); }}
+            onChange={(v) => { setExamplesPerIdea(v); persist({ examplesPerIdea: v }); }}
+          />
+          <StudioNumberStepperField
+            labelAr="تدريبات لكل فكرة" value={drillsPerIdea} min={0} max={15} enabled={drillsEnabled}
+            onToggleEnabled={(v) => { setDrillsEnabled(v); persist({ drillsEnabled: v }); }}
+            onChange={(v) => { setDrillsPerIdea(v); persist({ drillsPerIdea: v }); }}
+          />
+          <StudioNumberStepperField
+            labelAr="واجب: اختر" value={hwMcq} min={0} max={30} enabled={hwMcqEnabled}
+            onToggleEnabled={(v) => { setHwMcqEnabled(v); persist({ hwMcqEnabled: v }); }}
+            onChange={(v) => { setHwMcq(v); persist({ hwMcq: v }); }}
+          />
+          <StudioNumberStepperField
+            labelAr="واجب: مقالي" value={hwEssay} min={0} max={20} enabled={hwEssayEnabled}
+            onToggleEnabled={(v) => { setHwEssayEnabled(v); persist({ hwEssayEnabled: v }); }}
+            onChange={(v) => { setHwEssay(v); persist({ hwEssay: v }); }}
+          />
         </div>
       </StudioCollapsibleSectionCard>
 
       <StudioSingleStagePastePanel
-        stageTitleAr={stage.title}
-        stageHintAr={stage.hint}
-        promptText={prompt}
-        onChangePrompt={setPrompt}
-        onCopyPromptAndOpenNotebook={() => {
-          copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 3000);
-        }}
-        isPromptCopied={copied}
-        replyValue={replies[activeStage]}
+        stageTitleAr={stage.title} stageHintAr={stage.hint} promptText={prompt} onChangePrompt={setPrompt}
+        onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
+        isPromptCopied={copied} replyValue={replies[activeStage]}
         onChangeReply={(v) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: v })); }}
         replyPlaceholderAr={stage.placeholder}
-        contextNoteAr={
-          activeStage === 2 && ideas.length > 0
-            ? `تمت قراءة ${ideas.length} أفكار من المرحلة ١ وإدراجها في البرومبت`
-            : activeStage === 3 && questions.length > 0
-              ? `تمت قراءة ${questions.length} سؤالاً من المرحلة ٢ وإدراجها في البرومبت`
-              : undefined
-        }
+        contextNoteAr={activeStage === 2 && ideas.length > 0 ? `تمت قراءة ${ideas.length} أفكار من المرحلة ١` : activeStage === 3 && questions.length > 0 ? `تمت قراءة ${questions.length} سؤالاً من المرحلة ٢` : undefined}
       />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />
-
       <StudioStickyPrimaryActionBar
-        primaryLabelAr="📄 إنشاء المذكرة ومعاينتها"
-        onPrimary={() => buildPdf(replies[3].trim().length > 5)}
-        secondaryLabelAr="بدون إجابات المرحلة ٣"
-        onSecondary={() => buildPdf(false)}
-        noticeAr={notice}
+        primaryLabelAr="📄 إنشاء المذكرة ومعاينتها" onPrimary={() => buildPdf(replies[3].trim().length > 5)}
+        secondaryLabelAr="بدون إجابات المرحلة ٣" onSecondary={() => buildPdf(false)} noticeAr={notice}
       />
     </div>
   );
