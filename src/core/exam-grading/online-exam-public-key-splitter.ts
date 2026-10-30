@@ -6,6 +6,7 @@
  */
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-ssot";
+import type { CartesianGraphSpec } from "@/core/ssot/cartesian-graph-spec-ssot";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { auditMCQQuestionIntegrity } from "@/core/validation/question-options-integrity-auditor";
 
@@ -21,6 +22,7 @@ export interface OnlinePublicQuestion {
   readonly answerMode: OnlineAnswerMode;
   readonly mcqChoicesArabic?: readonly string[];
   readonly attachedGeometryFigure?: CanonicalGeometryFigureIR;
+  readonly graphSpec?: CartesianGraphSpec;
   readonly lessonTitleArabic?: string;
   readonly branchId?: MathBranchId;
 }
@@ -57,6 +59,7 @@ export function splitExamIntoPublicAndKey(questions: readonly QuestionAssessment
       allocatedMarks: q.allocatedMarks,
       promptArabic: q.promptArabic,
       attachedGeometryFigure: q.attachedGeometryFigure,
+      graphSpec: q.graphSpec,
       lessonTitleArabic: q.lessonTitleArabic,
       branchId: q.branchId,
     };

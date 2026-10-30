@@ -25,6 +25,7 @@ import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
+import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
 export const MODULE_ID_STUDIO_BOOKLET_GENERATOR_TAB =
   "studio_booklet_generator_tab" as const;
@@ -84,6 +85,7 @@ export default function StudioBookletGeneratorTab({
   const [replies, setReplies] = useState<Record<BookletPromptStageNumber, string>>({ 1: "", 2: "", 3: "" });
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
   const ideas = useMemo(() => extractIdeasFromBookletStage1Reply(replies[1]), [replies]);
   const questions = useMemo(() => extractQuestionsSummaryFromBookletStage2Reply(replies[2]), [replies]);
@@ -123,6 +125,11 @@ export default function StudioBookletGeneratorTab({
       return;
     }
     setNotice(null);
+    setDiagRows(
+      items
+        .filter((q) => q.figureDiagnosticsAr && q.figureDiagnosticsAr.length > 0)
+        .map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! }))
+    );
     onApplyParsedQuestionsToSheet?.(items);
     const ideasCount = ideas.length > 0 ? ideas.length : undefined;
     onApplyBookletTitleToSheet(
@@ -191,6 +198,8 @@ export default function StudioBookletGeneratorTab({
               : undefined
         }
       />
+
+      <StudioFigureDiagnosticsBanner rows={diagRows} />
 
       <StudioStickyPrimaryActionBar
         primaryLabelAr="📄 إنشاء المذكرة ومعاينتها"

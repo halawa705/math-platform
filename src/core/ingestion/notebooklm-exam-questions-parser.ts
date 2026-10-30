@@ -12,8 +12,10 @@ import type {
   MathQuestionPatternKind,
 } from "../ir/question-assessment-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
-import { matchOptionalGeometryFigureFromArabicDescription } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
+import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER =
   "notebooklm_exam_questions_parser" as const;
@@ -149,10 +151,21 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .trim();
 
     const basePrompt = explicitPrompt || fallbackPrompt || block;
-    const geoMatch = block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-    const attachedGeometryFigure = geoMatch?.[1]
-      ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `geom_${params.lessonId}_${orderNumber}`)
-      : undefined;
+    const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
+    const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
+    const geoMatch = !graphMatch ? block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
+    const diagramAllowed = isDiagramJustifiedForQuestion({
+      promptArabic: basePrompt,
+      rawDiagramTagText: geoMatch?.[1],
+      branchId: params.branchId,
+    });
+    const geoDiag =
+      diagramAllowed && geoMatch?.[1]
+        ? matchGeometryWithDiagnostics(geoMatch[1], `geom_${params.lessonId}_${orderNumber}`)
+        : undefined;
+    const attachedGeometryFigure = geoDiag?.figure;
+    const figureDiagnosticsAr =
+      geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
     const mcqChoicesArabic = parseChoicesTupleFromBlock(block);
     const rawCleanPrompt = basePrompt.replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
@@ -193,7 +206,9 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       modelSolutionStepsArabic,
       finalCanonicalAnswerArabic,
       acceptedAnswersArabic: rawAccepted ? rawAccepted.split("|").map((s) => s.trim()).filter(Boolean) : undefined,
+      figureDiagnosticsAr,
       attachedGeometryFigure,
+      graphSpec,
       authenticCitation: rawGov && !rawGov.includes("غير مذكور") ? { governorateNameArabic: rawGov } : undefined,
     };
   });

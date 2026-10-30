@@ -96,4 +96,6 @@ export interface CanonicalGeometryFigureIR {
   readonly vertices: readonly CanonicalVertexNode[];
   readonly segments: readonly CanonicalSegmentNode[];
   readonly angles: readonly CanonicalAngleNode[];
+  /** مضلعات صريحة للتظليل (قوائم معرّفات رؤوس). إن غابت يُستعمل التخمين القديم حسب عدد الرؤوس. */
+  readonly polygons?: readonly (readonly string[])[];
 }

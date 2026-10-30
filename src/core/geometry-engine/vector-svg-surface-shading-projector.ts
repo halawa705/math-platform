@@ -40,8 +40,9 @@ export function projectGeometrySurfaceShadingSVGMarkup(
 
   const polygonGroups: string[][] = [];
 
-  // 1. مضلعان متناظران (مثلثان 3+3، أو رباعيان 4+4، أو خماسيان 5+5)
-  if (vertices.length === 6) {
+  if (figure.polygons && figure.polygons.length > 0) {
+    figure.polygons.forEach((ids) => polygonGroups.push([...ids]));
+  } else if (vertices.length === 6) {
     polygonGroups.push(vertices.slice(0, 3).map((v) => v.id));
     polygonGroups.push(vertices.slice(3, 6).map((v) => v.id));
   } else if (vertices.length === 8) {

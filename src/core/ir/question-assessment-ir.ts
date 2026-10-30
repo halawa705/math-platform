@@ -8,6 +8,7 @@
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { CanonicalStatisticsDatasetIR } from "../ssot/statistics-archetype-ssot";
+import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
 import type { ArabicMathUnit } from "../ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_QUESTION_ASSESSMENT_IR = "question_assessment_ir" as const;
@@ -97,10 +98,11 @@ export interface QuestionAssessmentIR {
   readonly figureDiagnosticsAr?: readonly string[];
 
   /**
-   * مرفق الشكل الهندسي المتجهي أو الرسم الإحصائي (إن كان السؤال يتطلب شكلاً).
+   * مرفق الشكل الهندسي المتجهي أو الرسم الإحصائي أو البياني (إن كان السؤال يتطلب شكلاً).
    */
   readonly attachedGeometryFigure?: CanonicalGeometryFigureIR;
   readonly attachedStatisticsDataset?: CanonicalStatisticsDatasetIR;
+  readonly graphSpec?: CartesianGraphSpec;
 
   /**
    * التوثيق الصارم للمصدر (يُمنع اختلاق محافظة غير واردة في المصدر الأصلي).

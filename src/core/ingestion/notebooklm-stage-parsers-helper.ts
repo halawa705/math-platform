@@ -4,7 +4,8 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 195 سطراً).
  */
 
-import { matchOptionalGeometryFigureFromArabicDescription } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
 import {
@@ -174,13 +175,17 @@ export function buildStage2PrintableItem(params: {
   const isMcq = (params.block.rawText || "").includes("اختر") || (params.block.kindTag || "").includes("اختر") || mcqChoices !== undefined;
   const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) ||
     params.solutionsMap.byIndex.get(params.questionNumber);
-  const geoMatch = params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-  const geometryFigure = geoMatch?.[1] ? matchOptionalGeometryFigureFromArabicDescription(geoMatch[1], `${params.id}_geo`) : undefined;
+  const graphMatch = params.block.rawText.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
+  const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
+  const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
+  const geoDiag = geoMatch?.[1] ? matchGeometryWithDiagnostics(geoMatch[1], `${params.id}_geo`) : undefined;
+  const geometryFigure = geoDiag?.figure;
+  const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
   return {
     id: params.id,
     questionNumber: params.questionNumber,
-    kind: isMcq ? "mcq" : geometryFigure ? "essay_geometry" : "essay_algebra",
+    kind: isMcq ? "mcq" : geometryFigure || graphSpec ? "essay_geometry" : "essay_algebra",
     branchBadgeAr: params.branchNameAr,
     marks: isMcq ? 1 : 2,
     promptAr: cleanStudentFacingMathPromptSSOT(rawPrompt) || params.defaultPrompt,
@@ -189,6 +194,8 @@ export function buildStage2PrintableItem(params: {
     modelAnswerAr: matchedSteps ? matchedSteps.join(" ⇐ ") : params.defaultAnswer,
     solutionStepsAr: matchedSteps,
     geometryFigure,
+    graphSpec,
+    figureDiagnosticsAr,
     ideaBannerTitleAr: params.bannerTitleAr,
   };
 }

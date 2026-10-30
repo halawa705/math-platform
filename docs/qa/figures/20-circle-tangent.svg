@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" class="w-full h-auto select-none"><circle cx="65.8" cy="95" r="73.0" fill="none" stroke="#1E293B" stroke-width="1.8" /><line x1="65.8" y1="22" x2="65.8" y2="168" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"  /><line x1="65.8" y1="95" x2="65.8" y2="22" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4,3" /><line x1="65.8" y1="22" x2="22" y2="22" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"  /><g class="geometry-figure-angles"><path d="M 65.8 22.0 L 65.8 30.5 L 57.3 30.5 L 57.3 22.0 Z" fill="#0D9488" fill-opacity="0.15" stroke="#1E293B" stroke-width="1.3" /></g><circle cx="65.8" cy="95" r="4" fill="#6366F1" fill-opacity="0.16" />
+      <circle cx="65.8" cy="95" r="2" fill="#1E293B" />
+      <text x="70.4" y="105.7" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="#1E293B">م</text><circle cx="65.8" cy="22" r="4" fill="#6366F1" fill-opacity="0.16" />
+      <circle cx="65.8" cy="22" r="2" fill="#1E293B" />
+      <text x="67.6" y="16.2" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="#1E293B">أ</text><circle cx="65.8" cy="168" r="4" fill="#6366F1" fill-opacity="0.16" />
+      <circle cx="65.8" cy="168" r="2" fill="#1E293B" />
+      <text x="66.9" y="179.9" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="#1E293B">ب</text><circle cx="22" cy="22" r="4" fill="#6366F1" fill-opacity="0.16" />
+      <circle cx="22" cy="22" r="2" fill="#1E293B" />
+      <text x="17.4" y="17.3" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="#1E293B">جـ</text></svg>

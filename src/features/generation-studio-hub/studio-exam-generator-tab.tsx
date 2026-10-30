@@ -26,6 +26,7 @@ import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioExamOnlinePublishPanel from "./studio-exam-online-publish-panel";
+import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
 export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB =
   "studio_exam_generator_tab" as const;
@@ -62,6 +63,7 @@ export default function StudioExamGeneratorTab({
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
   useEffect(() => {
     const baseCfg = {
@@ -103,6 +105,11 @@ export default function StudioExamGeneratorTab({
       return;
     }
     setNotice(null);
+    setDiagRows(
+      parsed
+        .filter((q) => q.figureDiagnosticsAr && q.figureDiagnosticsAr.length > 0)
+        .map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! }))
+    );
     onApplyParsedQuestionsToSheet?.(
       parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
     );
@@ -243,6 +250,8 @@ export default function StudioExamGeneratorTab({
         }}
         replyPlaceholderAr="الصق رد أسئلة الاختبار هنا..."
       />
+
+      <StudioFigureDiagnosticsBanner rows={diagRows} />
 
       <StudioExamOnlinePublishPanel
         gradeNameAr={gradeNameAr}

@@ -8,6 +8,7 @@
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
+import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
 import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog";
 import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog";
@@ -178,4 +179,30 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
       notationLanguage
     ) ?? buildTriangleMidsegmentFigure({ figureId, notationLanguage })
   );
+}
+
+export function matchGeometryWithDiagnostics(
+  desc: string,
+  figureId: string,
+  notation: MathNotationLanguage = "english"
+): {
+  readonly figure?: CanonicalGeometryFigureIR;
+  readonly warnings: readonly string[];
+  readonly source: "compositor" | "catalog" | "none";
+} {
+  const composed = composeFigureFromGeometryDescription(desc, figureId, notation);
+  if (composed.figure && composed.warnings.length === 0) {
+    return { figure: composed.figure, warnings: [], source: "compositor" };
+  }
+  const legacy = matchOptionalGeometryFigureFromArabicDescription(desc, figureId, notation);
+  if (legacy) {
+    return { figure: legacy, warnings: composed.warnings, source: "catalog" };
+  }
+  if (composed.figure) {
+    return { figure: composed.figure, warnings: composed.warnings, source: "compositor" };
+  }
+  return {
+    warnings: composed.warnings.length ? composed.warnings : ["لم يُتعرَّف على الشكل من الوصف."],
+    source: "none",
+  };
 }

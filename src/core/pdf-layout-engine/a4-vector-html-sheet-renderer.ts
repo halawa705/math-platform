@@ -9,6 +9,7 @@
 
 import type { QuestionAssessmentIR } from "../ir/question-assessment-ir";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
+import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
 import type { PrintColorThemeId } from "../ssot/pdf-print-settings-ssot";
 
 export const MODULE_ID_A4_VECTOR_HTML_SHEET_RENDERER =
@@ -29,6 +30,8 @@ export interface PrintableMathQuestionItem {
   readonly requiredToFindAr?: string;
   readonly citationBadgeAr?: string;
   readonly geometryFigure?: CanonicalGeometryFigureIR;
+  readonly graphSpec?: CartesianGraphSpec;
+  readonly figureDiagnosticsAr?: readonly string[];
   /** حقول إضافية اختيارية خاصة بالمذكرات التعليمية والمراجعات النهائية */
   readonly ideaBannerTitleAr?: string;
   readonly conceptExplanationAr?: string;
@@ -185,5 +188,7 @@ export function convertQuestionAssessmentIRToPrintableItem(
     requiredToFindAr: q.requiredToProveOrFindArabic,
     citationBadgeAr: q.authenticCitation?.governorateNameArabic,
     geometryFigure: q.attachedGeometryFigure,
+    graphSpec: q.graphSpec,
+    figureDiagnosticsAr: q.figureDiagnosticsAr,
   };
 }

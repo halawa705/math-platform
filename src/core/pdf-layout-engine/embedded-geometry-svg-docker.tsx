@@ -2,18 +2,20 @@
 
 /**
  * @file embedded-geometry-svg-docker.tsx
- * @description مصير وتضمين الشكل الهندسي المتجهي (Vector SVG) داخل بطاقة السؤال الرياضي.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 60 سطراً).
+ * @description مصير وتضمين الشكل الهندسي المتجهي أو الرسم البياني (Vector SVG) داخل بطاقة السؤال الرياضي.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 70 سطراً).
  */
 
 import React from "react";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
-import { projectGeometryFigureToSVGMarkup } from "../geometry-engine/vector-svg-figure-projector";
+import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
 import type { NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { computeFigureAspectFromVertices, computeFigureBoxSizePx } from "./question-figure-box-size";
+import { renderQuestionFigureSvg } from "./question-figure-svg-renderer";
 
 export interface EmbeddedGeometrySVGDockerProps {
   readonly geometryFigure?: CanonicalGeometryFigureIR;
+  readonly graphSpec?: CartesianGraphSpec;
   readonly borderHex: string;
   readonly softSurfaceHex: string;
   readonly primaryHex: string;
@@ -25,6 +27,7 @@ export interface EmbeddedGeometrySVGDockerProps {
 
 export function EmbeddedGeometrySVGDocker({
   geometryFigure,
+  graphSpec,
   borderHex,
   softSurfaceHex,
   primaryHex,
@@ -33,10 +36,21 @@ export function EmbeddedGeometrySVGDocker({
   figureScale = 1,
   columnsCount = 2,
 }: EmbeddedGeometrySVGDockerProps) {
-  if (!geometryFigure) return null;
+  if (!geometryFigure && !graphSpec) return null;
 
-  const aspect = computeFigureAspectFromVertices(geometryFigure.vertices);
+  const aspect = geometryFigure ? computeFigureAspectFromVertices(geometryFigure.vertices) : 1.3;
   const box = computeFigureBoxSizePx({ aspect, figureScale, columnsCount });
+  const svgMarkup = renderQuestionFigureSvg(
+    { geometryFigure, graphSpec },
+    {
+      widthPx: box.svgWidthPx,
+      heightPx: box.svgHeightPx,
+      strokeColorHex: primaryHex,
+      accentColorHex: accentHex,
+      numeralMode,
+    }
+  );
+  if (!svgMarkup) return null;
 
   return (
     <div
@@ -47,15 +61,7 @@ export function EmbeddedGeometrySVGDocker({
         backgroundColor: softSurfaceHex,
       }}
       className="border rounded-lg p-1 flex items-center justify-center shrink-0 overflow-hidden"
-      dangerouslySetInnerHTML={{
-        __html: projectGeometryFigureToSVGMarkup(geometryFigure, {
-          widthPx: box.svgWidthPx,
-          heightPx: box.svgHeightPx,
-          strokeColorHex: primaryHex,
-          accentColorHex: accentHex,
-          numeralMode,
-        }),
-      }}
+      dangerouslySetInnerHTML={{ __html: svgMarkup }}
     />
   );
 }

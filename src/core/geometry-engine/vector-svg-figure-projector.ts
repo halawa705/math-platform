@@ -34,7 +34,7 @@ export function projectGeometryFigureToSVGMarkup(
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#0D9488";
   const numeralMode = options.numeralMode ?? "eastern";
-  const padding = Math.max(9, Math.min(13, Math.round(Math.min(width, height) * 0.1)));
+  const padding = Math.max(16, Math.min(22, Math.round(Math.min(width, height) * 0.14)));
 
   if (figure.vertices.length === 0) {
     return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="100%"></svg>`;

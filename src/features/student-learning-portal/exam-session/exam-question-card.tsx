@@ -8,7 +8,7 @@
 
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudentVirtualMathKeypad from "@/features/electronic-exams-hub/student-virtual-math-keypad";
-import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
+import { renderQuestionFigureSvg } from "@/core/pdf-layout-engine/question-figure-svg-renderer";
 import type { PublishedExamQuestionItem } from "@/features/electronic-exams-hub/published-online-exams-store";
 import type {
   OnlineQuestionResult,
@@ -98,7 +98,7 @@ export default function ExamQuestionCard({
 
       <div
         className={
-          question.attachedGeometryFigure
+          question.attachedGeometryFigure || question.graphSpec
             ? "grid grid-cols-1 sm:grid-cols-12 gap-3 items-center"
             : "block"
         }
@@ -106,18 +106,16 @@ export default function ExamQuestionCard({
         <div className="sm:col-span-7 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100">
           <SafeKaTeXBiDiMathRenderer text={question.promptArabic} />
         </div>
-        {question.attachedGeometryFigure && (
+        {(question.attachedGeometryFigure || question.graphSpec) && (
           <div
             className="sm:col-span-5 max-w-full overflow-hidden p-2 rounded-xl bg-white border border-slate-200 flex justify-center"
             dangerouslySetInnerHTML={{
-              __html: projectGeometryFigureToSVGMarkup(
-                question.attachedGeometryFigure,
-                {
+              __html:
+                renderQuestionFigureSvg(question, {
                   widthPx: 230,
                   heightPx: 155,
                   numeralMode: "eastern",
-                }
-              ),
+                }) || "",
             }}
           />
         )}

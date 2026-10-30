@@ -110,7 +110,7 @@ export default function SideBySideDiagramDocker({
           <div className="min-w-0" style={{ breakAfter: "avoid" }}>
             <div
               className={
-                question.geometryFigure
+                question.geometryFigure || question.graphSpec
                   ? settings.columnsCount === 2 && question.promptAr.length > 220
                     ? "flex flex-col items-start gap-2.5 min-w-0"
                     : "flex items-start justify-between gap-2.5 min-w-0"
@@ -139,6 +139,7 @@ export default function SideBySideDiagramDocker({
 
               <EmbeddedGeometrySVGDocker
                 geometryFigure={question.geometryFigure}
+                graphSpec={question.graphSpec}
                 borderHex={palette.borderHex}
                 softSurfaceHex={palette.softSurfaceHex}
                 primaryHex={palette.primaryHex}

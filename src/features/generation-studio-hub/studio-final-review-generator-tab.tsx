@@ -24,6 +24,7 @@ import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
+import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
 export const MODULE_ID_STUDIO_FINAL_REVIEW_GENERATOR_TAB =
   "studio_final_review_generator_tab" as const;
@@ -78,6 +79,7 @@ export default function StudioFinalReviewGeneratorTab({
   const [replies, setReplies] = useState<Record<FinalReviewStageNumber, string>>({ 1: "", 2: "", 3: "" });
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
   const essays = useMemo(() => extractEssayQuestionsFromReviewStage2Reply(replies[2]), [replies]);
 
@@ -112,6 +114,11 @@ export default function StudioFinalReviewGeneratorTab({
       return;
     }
     setNotice(null);
+    setDiagRows(
+      items
+        .filter((q) => q.figureDiagnosticsAr && q.figureDiagnosticsAr.length > 0)
+        .map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! }))
+    );
     onApplyParsedQuestionsToSheet?.(items);
     onApplyReviewTitleToSheet(
       buildStandardDocumentTitleSSOT({
@@ -198,6 +205,8 @@ export default function StudioFinalReviewGeneratorTab({
             : undefined
         }
       />
+
+      <StudioFigureDiagnosticsBanner rows={diagRows} />
 
       <StudioStickyPrimaryActionBar
         primaryLabelAr="📄 إنشاء المراجعة ومعاينتها"

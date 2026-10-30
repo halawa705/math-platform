@@ -6,7 +6,8 @@
 
 import type { BookletLessonContentIR, IdeaPedagogicalNode } from "../ir/booklet-lesson-content-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
-import { matchOptionalGeometryFigureFromArabicDescription } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
 import { parseNotebookLMExamQuestionsToIR, resolveCorrectChoiceIndex } from "./notebooklm-exam-questions-parser";
@@ -95,13 +96,18 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
       if (!concept && !rule && examples.every((e) => e.promptAr === fullTitle || e.steps.length === 0)) return;
 
       examples.forEach((ex, exIdx) => {
-        const geoMatch = ex.geometryRaw
-          ? matchOptionalGeometryFigureFromArabicDescription(ex.geometryRaw, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
-          : undefined;
+        const graphSpec = ex.geometryRaw ? parseCartesianGraphDescription(ex.geometryRaw) ?? undefined : undefined;
+        const geoDiag =
+          ex.geometryRaw && !graphSpec
+            ? matchGeometryWithDiagnostics(ex.geometryRaw, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
+            : undefined;
+        const geoMatch = geoDiag?.figure;
+        const figureDiagnosticsAr =
+          geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
         resultItems.push({
           id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
           questionNumber: resultItems.length + 1,
-          kind: ex.mcqChoicesAr ? "mcq" : geoMatch ? "essay_geometry" : "essay_algebra",
+          kind: ex.mcqChoicesAr ? "mcq" : geoMatch || graphSpec ? "essay_geometry" : "essay_algebra",
           branchBadgeAr: params.branchNameAr,
           marks: 2,
           promptAr: ex.promptAr,
@@ -110,6 +116,8 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
           modelAnswerAr: ex.steps.join(" ⇐ ") || ex.rawFinal || "تطبيق مباشر",
           solutionStepsAr: ex.steps.length > 0 ? ex.steps : undefined,
           geometryFigure: geoMatch,
+          graphSpec,
+          figureDiagnosticsAr,
           ideaBannerTitleAr: exIdx === 0 ? fullTitle : undefined,
           conceptExplanationAr: exIdx === 0 ? concept : undefined,
           framedRuleAr: exIdx === 0 ? rule : undefined,
