@@ -7,11 +7,23 @@
  */
 import { splitDescriptionIntoFactStrings } from "@/core/geometry-engine/fact-compositor/geo-fact-splitter";
 import { parseGeoFactString } from "@/core/geometry-engine/fact-compositor/geo-fact-parser";
+import { extractAngleFanSpecFromDescription } from "@/core/geometry-engine/angle-fan-family/angle-fan-fact-extractor";
+import { convertGeometryLatexToPlainText } from "@/core/geometry-engine/description-intake/geometry-latex-to-plain-normalizer";
 
 export const MODULE_ID_STUDIO_GEOMETRY_UNDERSTOOD_FACTS_PANEL = "studio_geometry_understood_facts_panel" as const;
 
 export default function StudioGeometryUnderstoodFactsPanel({ description }: { readonly description: string }) {
-  const facts = splitDescriptionIntoFactStrings(description).map((text) => ({ text, ok: parseGeoFactString(text) !== null }));
+  const isAngleFan = extractAngleFanSpecFromDescription(description) !== null;
+  const facts = isAngleFan
+    ? convertGeometryLatexToPlainText(description)
+        .split(/\s*[;؛\n]+\s*/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((text) => ({ text, ok: true }))
+    : splitDescriptionIntoFactStrings(description).map((text) => ({
+        text,
+        ok: parseGeoFactString(text) !== null,
+      }));
   if (facts.length === 0) return null;
   return (
     <div className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 p-3 space-y-1.5">

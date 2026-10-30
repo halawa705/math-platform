@@ -9,6 +9,7 @@ import { parseGeoFactString } from "./geo-fact-parser";
 import { pairKey, toDisplayLabel } from "./geo-label-utils";
 import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
+import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
@@ -32,7 +33,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
 
   const points = new Map<string, Vec2>();
   const polygons = placeDeclaredShapes(facts, lengths, points);
-  if (polygons.length === 0) return { figure: null, warnings: [...warnings, "لا يوجد مثلث أو رباعي أو دائرة معلنة في الوصف."] };
+  if (polygons.length === 0) {
+    const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation);
+    if (angleFanFig) return { figure: angleFanFig, warnings: [] };
+    return { figure: null, warnings: [...warnings, "لا يوجد مثلث أو رباعي أو دائرة معلنة في الوصف."] };
+  }
 
   const host = new Map<string, Seg>();
   const extras: ExtraSeg[] = [];

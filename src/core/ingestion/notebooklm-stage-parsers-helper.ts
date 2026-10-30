@@ -100,9 +100,19 @@ export function parseStage2ByIdeas(s2Raw: string): {
         .filter((s) => s.length > 10);
 
       if (isDrill && chunks.length <= 1) {
-        const alt = body.split(/\n\s*(?:[-•*]\s*)?(?=(?:في الشكل المقابل|إذا كان\b))/i)
-          .map((s) => s.trim()).filter((s) => s.length > 10);
-        if (alt.length > 1) chunks = alt;
+        const byCodeEnd = body
+          .split(/(?<=\|\s*معرف\s*السؤال\s*:\s*[a-zA-Z]+-\d+-\d+[^\n]*)\n+/i)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 10);
+        if (byCodeEnd.length > 1 && byCodeEnd.every((c) => /معرف\s*السؤال/i.test(c))) {
+          chunks = byCodeEnd;
+        } else {
+          const alt = body
+            .split(/\n\s*(?:[-•*]\s*)?(?=(?:في الشكل المقابل|إذا كان\b))/i)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 10);
+          if (alt.length > 1) chunks = alt;
+        }
       }
 
       return chunks.map((s) => ({

@@ -34,7 +34,9 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   let rawS1 = params.stage1Raw || "";
   let rawS2 = params.stage2Raw || "";
   if (!rawS2) {
-    const s2MarkerMatch = rawS1.match(/(?:^|\n)\s*(?:##?\s*)?(?:مذكرة\s*الطالب|تمارين\s*وواجبات\s*بدون\s*حلول)/i);
+    const s2MarkerMatch =
+      rawS1.match(/(?:^|\n)\s*(?:##?\s*)?(?:مذكرة\s*الطالب|تمارين\s*وواجبات\s*بدون\s*حلول)/i) ??
+      rawS1.match(/(?:^|\n)\s*(?=(?:###?\s*)?الفكرة\s+(?:الأولى|الاولى|1|١)[^\n]*\n\s*(?:أولاً\s*:\s*)?(?:تمارين\s*)?\(?حاول\s*بنفسك\)?)/i);
     if (s2MarkerMatch?.index !== undefined) {
       rawS2 = rawS1.slice(s2MarkerMatch.index);
       rawS1 = rawS1.slice(0, s2MarkerMatch.index);

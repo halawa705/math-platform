@@ -40,7 +40,7 @@ export function projectGeometrySurfaceShadingSVGMarkup(
 
   const polygonGroups: string[][] = [];
 
-  if (figure.polygons && figure.polygons.length > 0) {
+  if (figure.polygons !== undefined) {
     figure.polygons.forEach((ids) => polygonGroups.push([...ids]));
   } else if (vertices.length === 6) {
     polygonGroups.push(vertices.slice(0, 3).map((v) => v.id));
