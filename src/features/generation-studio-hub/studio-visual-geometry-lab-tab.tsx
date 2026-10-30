@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file studio-visual-geometry-lab-tab.tsx
@@ -10,10 +10,7 @@
  */
 
 import { useState } from "react";
-import {
-  matchArabicDescriptionToCanonicalGeometryFigure,
-  matchOptionalGeometryFigureFromArabicDescription,
-} from "@/core/geometry-engine/natural-arabic-geometry-matcher";
+import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 
@@ -84,16 +81,15 @@ export default function StudioVisualGeometryLabTab() {
   const [notation, setNotation] = useState<MathNotationLanguage>("english");
   const [copied, setCopied] = useState(false);
 
-  const matchedFigure = matchOptionalGeometryFigureFromArabicDescription(desc, "lab_geom_live", notation);
-  const figureToRender = matchedFigure ?? matchArabicDescriptionToCanonicalGeometryFigure(desc, "lab_geom_fallback", notation);
-
-  const svgMarkup = projectGeometryFigureToSVGMarkup(figureToRender, {
+  const diag = matchGeometryWithDiagnostics(desc, "lab_geom_live", notation);
+  const matchedFigure = diag.figure;
+  const svgMarkup = matchedFigure ? projectGeometryFigureToSVGMarkup(matchedFigure, {
     widthPx: 380,
     heightPx: 220,
     strokeColorHex: "#1E1B4B",
     accentColorHex: "#0D9488",
     numeralMode: notation === "arabic" ? "eastern" : "western",
-  });
+  }) : "";
 
   const readyTag = `[رسم هندسي: ${desc.trim()}]`;
 
@@ -104,7 +100,7 @@ export default function StudioVisualGeometryLabTab() {
           المعاينة الهندسية اللحظية من النظام (SVG Vector حتمي)
         </span>
         <span className="text-[10.5pt] font-black text-indigo-700 dark:text-indigo-400">
-          {matchedFigure ? "✓ شكل مطابق مسجل بالنظام" : "ℹ شكل افتراضي تقريبي"}
+          {!matchedFigure ? "⚠ لم يُتعرَّف على الشكل" : diag.warnings.length ? "⚠ شكل بحاجة إلى مراجعة" : "✓ شكل مطابق ومُتحقَّق منه"}
         </span>
       </div>
 
@@ -112,6 +108,11 @@ export default function StudioVisualGeometryLabTab() {
         className="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-xs [&_svg]:max-w-full [&_svg]:h-auto min-h-[220px]"
         dangerouslySetInnerHTML={{ __html: svgMarkup }}
       />
+      {diag.warnings.length > 0 && (
+        <ul className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-[10.5px] font-bold text-amber-900 list-disc pr-6">
+          {diag.warnings.map((w) => <li key={w}>{w}</li>)}
+        </ul>
+      )}
 
       {/* شريط نماذج سريعة من المنهج المدرسي للاختبار */}
       <div className="space-y-1">
@@ -190,3 +191,4 @@ export default function StudioVisualGeometryLabTab() {
     </div>
   );
 }
+

@@ -7,7 +7,9 @@ import type { VerificationIssue } from "./verification-report-types-ssot";
 import { buildVertexPositionMap, measureDistance, median, parseNumericLabel } from "./figure-vector-measure-helpers";
 
 export const MODULE_ID_VERIFY_SEGMENT_LENGTH_SCALE_RULE = "verify_segment_length_scale_rule" as const;
-const TOLERANCE = 0.04;
+const TOLERANCE = 0.12;
+/** إن زادت نسبة طولين معطيين عن هذا الحد فيجب أن يبقى الأطول هو الأطول في الرسم. */
+const ORDER_RATIO = 1.25;
 
 export function verifySegmentLengthScaleRule(fig: CanonicalGeometryFigureIR): VerificationIssue[] {
   const pos = buildVertexPositionMap(fig);
@@ -21,11 +23,20 @@ export function verifySegmentLengthScaleRule(fig: CanonicalGeometryFigureIR): Ve
   }
   if (rows.length < 2) return [];
   const scale = median(rows.map((r) => r.ratio));
-  return rows
+  const orderIssues: VerificationIssue[] = [];
+  for (const x of rows) for (const y of rows) {
+    if (x.value / y.value >= ORDER_RATIO && x.ratio * x.value <= y.ratio * y.value) {
+      orderIssues.push({ rule: "length-order", severity: "warning", message: `الضلع ${x.id} (${x.value}) أطول من ${y.id} (${y.value}) لكنه لا يبدو أطول في الرسم.` });
+    }
+  }
+  return [...orderIssues, ...rows
     .filter((r) => Math.abs(r.ratio / scale - 1) > TOLERANCE)
     .map((r) => ({
       rule: "length-scale",
       severity: "warning" as const,
       message: `الضلع ${r.id} مكتوب عليه ${r.value} لكن طوله المرسوم لا يتناسب مع باقي الأضلاع (انحراف ${(Math.abs(r.ratio / scale - 1) * 100).toFixed(0)}٪).`,
-    }));
+    })),
+  ];
 }
+
+

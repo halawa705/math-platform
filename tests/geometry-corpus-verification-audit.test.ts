@@ -30,10 +30,11 @@ describe("Geometry corpus verification audit", () => {
       if (!fig) return;
       matched++;
       const rep = refineFigureToMatchGivens(fig).report; void verifyGeometryFigure;
-      if (!rep.passed || rep.issues.length) bad.push(`#${i} ${fig.branchId} :: ${rep.issues.map((x) => `[${x.severity}] ${x.message}`).join(" | ")}`);
+      if (!rep.passed || rep.issues.length) bad.push(`#${i} ${fig.branchId} «${d}» :: ${rep.issues.map((x) => `[${x.severity}] ${x.message}`).join(" | ")}`);
     });
     fs.writeFileSync(path.resolve("docs/qa/geometry-audit-report.txt"), `descs=${descs.length} matched=${matched} issues=${bad.length}\n${bad.join("\n")}`, "utf8");
     expect(matched).toBeGreaterThan(0);
   });
 });
+
 
