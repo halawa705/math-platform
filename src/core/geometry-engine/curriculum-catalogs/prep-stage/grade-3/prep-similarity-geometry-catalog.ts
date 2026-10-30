@@ -74,7 +74,7 @@ export function matchPrepSimilarityGeometryFigure(
   }
 
   // 7. مضلعان بزوايا 120° و 45° وجذور 10√3 و 10√2 (حاول بنفسك 2)
-  if (/120°|10√3|10√2|45°/i.test(d) && /تشابه|متشابه|رباعي|ABCD.*EFGH/i.test(d)) {
+  if ((/120°|45°/i.test(d) && /10√3|10√2/i.test(d)) || ((/120°|10√3|10√2|45°/i.test(d)) && (/تشابه|متشابه|EFGH/i.test(d)))) {
     return buildSimilarQuadsWithObtuseAngleFigure({ figureId, notationLanguage });
   }
 
