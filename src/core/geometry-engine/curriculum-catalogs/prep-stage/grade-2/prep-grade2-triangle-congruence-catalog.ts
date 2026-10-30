@@ -93,7 +93,7 @@ export function matchPrepGrade2TriangleCongruenceFigure(
   }
 
   // 7. مثلثان قائمان متعامدان ACB ≅ BDE مع 55° و x = 35° (مسألة 16)
-  if (/ACB.*BDE|BC\s*=\s*DE.*AB\s*=\s*EB|55°.*X/i.test(d)) {
+  if (/ACB\s*≅?\s*BDE|BC\s*=\s*DE.*AB\s*=\s*EB|(?:\bقائمان\b.*55°.*X)/i.test(d)) {
     return buildCongruencePerpendicularRightPairFigure({ figureId, notationLanguage });
   }
 

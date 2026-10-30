@@ -18,6 +18,7 @@ import { matchPrepGrade2ParallelApplicationsFigure } from "./curriculum-catalogs
 import { matchPrepGrade2TriangleMediansFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-medians-catalog";
 import { matchPrepGrade2IsoscelesTriangleFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-isosceles-triangle-catalog";
 import { matchPrepGrade2IsoscelesFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-isosceles-followup-catalog";
+import { matchPrepGrade2PolygonAnglesFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-polygon-angles-catalog";
 import { matchPrepSimilarityGeometryFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
 import { matchPrepGrade3TriangleSimilarityFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { matchPrepGrade3LineEquationFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-line-equation-catalog";
@@ -79,6 +80,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (prep2Isosceles) return prep2Isosceles;
   const prep2IsoFollowup = matchPrepGrade2IsoscelesFollowupFigure(desc, figureId, notationLanguage);
   if (prep2IsoFollowup) return prep2IsoFollowup;
+  const prep2PolyAngles = matchPrepGrade2PolygonAnglesFigure(desc, figureId, notationLanguage);
+  if (prep2PolyAngles) return prep2PolyAngles;
   const prep2Match = matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage);
   if (prep2Match) return prep2Match;
   const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
