@@ -12,6 +12,7 @@ import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-
 import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog";
 import { matchPrepGrade1GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-congruence-catalog";
 import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
+import { matchPrepGrade2TriangleCongruenceFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-congruence-catalog";
 import { matchPrepSimilarityGeometryFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
 import { matchPrepGrade3TriangleSimilarityFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { matchPrepGrade3LineEquationFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-line-equation-catalog";
@@ -48,12 +49,21 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
 
+  if (/≅|تطابق|متطابق|صورة.*بالانعكاس/i.test(desc)) {
+    const prep2Congruence = matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage);
+    if (prep2Congruence) return prep2Congruence;
+    const prep1Congruence = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
+    if (prep1Congruence) return prep1Congruence;
+  }
+
   const prepTriSim = matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage);
   if (prepTriSim) return prepTriSim;
   const prep3LineEq = matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage);
   if (prep3LineEq) return prep3LineEq;
   const prepSimMatch = matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage);
   if (prepSimMatch) return prepSimMatch;
+  const prep2Congruence = matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage);
+  if (prep2Congruence) return prep2Congruence;
   const prep2Match = matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage);
   if (prep2Match) return prep2Match;
   const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
