@@ -1,7 +1,7 @@
 /**
  * @file booklet-three-stages-prompt-builder.ts
- * @description مولد برومبتات المذكرة الدراسية الشاملة بالمراحل الثلاث المترابطة مع التفكيك الإلزامي الشامل لكل أفكار الدرس والتمارين.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 165 سطراً).
+ * @description مولد برومبتات المذكرة الدراسية الشاملة بالمراحل الثلاث المترابطة (حصر ذكي شامل لأفكار الدرس أولاً ثم توليد الأمثلة والتدريبات والواجب لكل فكرة).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 175 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -32,18 +32,33 @@ export interface BookletStagePromptConfig {
 
 export function extractIdeasFromBookletStage1Reply(stage1Raw: string): readonly string[] {
   if (!stage1Raw || !stage1Raw.trim()) return [];
-  const found: string[] = [];
+  const byId = new Map<string, string>();
+  const unnumbered: string[] = [];
+
   for (const line of stage1Raw.split(/\r?\n/)) {
     const clean = line.replace(/\*\*/g, "").trim();
-    const ideaMatch =
-      clean.match(/^(?:الفكرة\s+[^:]+|عنوان_الفكرة)\s*:\s*(.+)$/i) ||
-      clean.match(/^[-•*]?\s*(idea-\d+\s*:\s*.+)$/i);
-    if (ideaMatch?.[1]) {
-      const val = ideaMatch[1].split("|")[0].trim().slice(0, 42);
-      if (val && !found.includes(val)) found.push(val);
+    const indexMatch = clean.match(/^[-•*]?\s*idea-(\d+)\s*:\s*(.+)$/i);
+    if (indexMatch?.[1] && indexMatch[2]) {
+      const key = `idea-${indexMatch[1].padStart(2, "0")}`;
+      const title = indexMatch[2].replace(/\[[^\]]*\]\s*-?\s*/g, "").replace(/^\[|\]$/g, "").trim().slice(0, 48);
+      if (title && !byId.has(key)) byId.set(key, title);
+      continue;
+    }
+    const headerMatch = clean.match(/^(?:###?\s*)?(?:الفكرة\s+[^:|]+|عنوان_الفكرة)\s*[:|]\s*(.+)$/i);
+    if (headerMatch?.[1]) {
+      const idInLine = clean.match(/idea-(\d+)/i)?.[1];
+      const title = headerMatch[1].split("|")[0].replace(/^\[|\]$/g, "").trim().slice(0, 48);
+      if (!title) continue;
+      if (idInLine) {
+        const key = `idea-${idInLine.padStart(2, "0")}`;
+        if (!byId.has(key)) byId.set(key, title);
+      } else if (!unnumbered.includes(title)) {
+        unnumbered.push(title);
+      }
     }
   }
-  return found.slice(0, 20);
+  const combined = [...byId.values(), ...unnumbered];
+  return combined.slice(0, 24);
 }
 
 export function extractQuestionsSummaryFromBookletStage2Reply(
@@ -85,35 +100,38 @@ export function buildBookletStageNotebookLMPrompt(
 
   if (config.stageNumber === 1) {
     return [
-      `مذكرة الدرس (المرحلة ١: تفكيك أفكار الدرس والقوانين والأمثلة المحلولة): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | ${config.unitTitleArabic} — درس (${config.lessonTitleArabic}).`,
-      `🎯 لكل فكرة فرعية (idea-01, idea-02, ... بلا حد أقصى حتى استيعاب كل أفكار الدرس والتمارين): اشرح المفهوم والقاعدة ثم (${examplesCount}) أمثلة محلولة بالخطوات (بلا حاول بنفسك أو واجب هنا):`,
+      `مذكرة الدرس (المرحلة ١: حصر الأفكار والشرح والأمثلة المحلولة): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | ${config.unitTitleArabic} — درس (${config.lessonTitleArabic}).`,
+      `🎯 خطة العمل: (أولاً) ابدأ بـ «فهرس أفكار الدرس:» لحصر أفكار الدرس الحقيقية من المصادر. (ثانياً) خذ كل فكرة من الفهرس بالترتيب واشرح مفهومها وقاعدتها وأورد (${examplesCount}) أمثلة محلولة عليها من المصادر (بلا حاول بنفسك أو واجب هنا):`,
       sharedRules,
-      "📐 قالب الإخراج الإلزامي (كرره لكل فكرة دون توقف):",
-      "الفكرة الأولى: [عنوان الفكرة ومستواها: تأسيسي/متوسط/صعب/متفوقين] | نوع المسألة: [اختر/أكمل/مقالي] | معرف الفكرة: idea-01",
+      "📐 قالب الإخراج الإلزامي للمرحلة ١:",
+      "فهرس أفكار الدرس:",
+      "- idea-01: [نوع المسألة] - [عنوان الفكرة - المستوى: تأسيسي/متوسط/متقدم/للمتفوقين]",
+      "---",
+      "الفكرة الأولى: [عنوان الفكرة] | المستوى: [المستوى] | نوع المسألة: [اختر/أكمل/مقالي] | معرف الفكرة: idea-01",
       "مفهوم الفكرة: [شرح موجز]",
       "القاعدة الرياضية: [القانون داخل $...$]",
       "المثال 1 | معرف المثال: example-01-01",
-      "نص المسألة: [النص كاملاً، ومعه [رسم هندسي: ...] إن لزم]",
+      "نص المسألة: [النص، ومعه [رسم هندسي: ...] إن لزم]",
       "خطوات الحل:",
       "1. [الخطوة ١]",
       "2. [الخطوة ٢]",
-      "الناتج النهائي: [الناتج داخل $...$ بالوحدة]",
+      "الناتج النهائي: [الناتج بـ $...$ بالوحدة]",
       "نهاية الفكرة الأولى",
     ].join("\n");
   }
 
   const ideasLine =
     config.extractedStage1Ideas && config.extractedStage1Ideas.length > 0
-      ? `📌 الأفكار المستهدفة (غطِّها جميعاً بالترتيب بلا إسقاط): ${config.extractedStage1Ideas
+      ? `📌 الأفكار المحصورة المطلوب توليد تدريباتها بالترتيب دون إسقاط: ${config.extractedStage1Ideas
           .map((t, i) => `idea-${String(i + 1).padStart(2, "0")}(${t})`)
           .join(" ، ")}.`
-      : "📌 التزم بجميع أفكار المرحلة ١ كاملة بالترتيب (idea-01, idea-02, ...) من البسيط حتى المتفوقين بلا إسقاط.";
+      : "📌 التزم بجميع أفكار الفهرس التي حصرتها في المرحلة ١ بالترتيب (idea-01, idea-02, ...) دون إسقاط أي فكرة.";
 
   if (config.stageNumber === 2) {
     return [
-      `مذكرة الدرس (المرحلة ٢: حاول بنفسك + الواجب الشامل بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
+      `مذكرة الدرس (المرحلة ٢: حاول بنفسك + الواجب لكل فكرة بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
       ideasLine,
-      `📊 الأعداد الإلزامية الحرفية (بلا حلول هنا): (${drillsCount}) تمارين «حاول بنفسك» لكل فكرة + إجمالي (${totalHw}) أسئلة واجب شاملة لأفكار التدريبات والاختبارات الشهرية والنهائية = (${hwMcq}) [اختر] + (${hwEssay}) [مقالي].`,
+      `📊 المطلوب من المصادر (بلا حلول هنا): لكل فكرة من الأفكار المحصورة أنشئ (${drillsCount}) تمارين «حاول بنفسك» تطبق نفس الفكرة + إجمالي (${totalHw}) أسئلة واجب شاملة لأفكار الدرس = (${hwMcq}) [اختر] + (${hwEssay}) [مقالي].`,
       sharedRules,
       "📐 قالب الإخراج الإلزامي للمرحلة ٢ (كرره لكل فكرة):",
       "الفكرة الأولى: [العنوان] | معرف الفكرة: idea-01",

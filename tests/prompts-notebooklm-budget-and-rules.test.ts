@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { buildBookletStageNotebookLMPrompt } from "@/core/prompts/booklet-three-stages-prompt-builder";
+import {
+  buildBookletStageNotebookLMPrompt,
+  extractIdeasFromBookletStage1Reply,
+} from "@/core/prompts/booklet-three-stages-prompt-builder";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { buildOnlineExamNotebookLMPrompt } from "@/core/prompts/online-exam-prompt-builder";
 import { buildFinalReviewNotebookLMPrompt } from "@/core/prompts/final-review-prompt-builder";
@@ -111,7 +114,7 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
     }),
   };
 
-  it("keeps every single prompt strictly within NotebookLM's character budget (<= 2,450 chars)", () => {
+  it("keeps every single prompt strictly within NotebookLM's character budget (<= 2,400 chars)", () => {
     for (const [name, text] of Object.entries(promptsMap)) {
       expect(text.length, `${name} length (${text.length}) exceeded budget`).toBeLessThanOrEqual(
         NOTEBOOKLM_MAX_CHARS_BUDGET
@@ -135,7 +138,7 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
     }
   });
 
-  it("enforces exhaustive idea decomposition from basic to gifted across exercises and monthly/final exams without summarizing into 4-5 ideas", () => {
+  it("enforces intelligent exhaustive idea mapping without artificial min/max caps and without padding or omission", () => {
     for (const [name, text] of Object.entries(promptsMap)) {
       if (name === "curriculum") continue;
       expect(text, `${name} missing exhaustive spectrum rule`).toContain(
@@ -144,10 +147,24 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
       expect(text, `${name} missing progression from basic to gifted`).toContain(
         "البسيط التأسيسي"
       );
-      expect(text, `${name} missing gifted tier`).toContain("المتفوقين");
+      expect(text, `${name} missing no-omission/no-padding rule`).toContain(
+        "بدون إهمال أي فكرة في المصادر، وبدون حشو"
+      );
     }
-    expect(promptsMap.bookletStage1).toContain("يُمنع منعاً باتاً اختصار الدرس في ٤ أو ٥ أفكار");
-    expect(promptsMap.bookletStage1).toContain("٨ إلى ١٥+ فكرة");
+    expect(promptsMap.bookletStage1).toContain("فهرس أفكار الدرس:");
+  });
+
+  it("deduplicates ideas by ID when Stage 1 contains both فهرس أفكار الدرس and الفكرة الأولى headers", () => {
+    const sampleStage1 = [
+      "فهرس أفكار الدرس:",
+      "- idea-01: [اختر] - [مفهوم التشابه ومعامل التشابه - مستوى تأسيسي]",
+      "- idea-02: [مقالي] - [إيجاد أطوال الأضلاع المجهولة - مستوى متوسط]",
+      "---",
+      "الفكرة الأولى: مفهوم التشابه ومعامل التشابه | المستوى: تأسيسي | نوع المسألة: اختر | معرف الفكرة: idea-01",
+      "الفكرة الثانية: إيجاد أطوال الأضلاع المجهولة | المستوى: متوسط | نوع المسألة: مقالي | معرف الفكرة: idea-02",
+    ].join("\n");
+    const ideas = extractIdeasFromBookletStage1Reply(sampleStage1);
+    expect(ideas).toHaveLength(2);
   });
 
   it("enforces anti-repetition of ideas and mathematically unique MCQ answers with reasonable distractors", () => {
