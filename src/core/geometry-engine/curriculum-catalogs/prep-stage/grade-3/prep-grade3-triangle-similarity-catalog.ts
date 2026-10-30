@@ -62,7 +62,7 @@ export function matchPrepGrade3TriangleSimilarityFigure(
   }
 
   // 5. توازي متبادل على شكل حرف Z (حاول 7 ومسألة 14)
-  if (/توازي\s*متبادل|حرف\s*Z|ABC\s*~\s*CDE|CDE|DE\s*=\s*X/i.test(d)) {
+  if (/توازي\s*متبادل|حرف\s*Z|ABC\s*~\s*CDE|DE\s*=\s*X/i.test(d)) {
     return buildTriangleZShapeParallelFigure({ figureId, notationLanguage });
   }
 

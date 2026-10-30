@@ -41,7 +41,7 @@ export function matchPrepSimilarityGeometryFigure(
   if (!d) return undefined;
 
   // 1. الأشكال المركبة (قاعدة مشتركة تتقاطع في O، أو مثلث مقطوع بقاطع)
-  if (/قاعدة\s*مشتركة|يتقاطعان\s*في\s*O|HEAD|OAE|OA\s*=\s*OE/i.test(d)) {
+  if ((/قاعدة\s*مشتركة/i.test(d) && (/O|HEAD|OAE|تشابه/i.test(d))) || /يتقاطعان\s*في\s*O|HEAD|OAE|OA\s*=\s*OE/i.test(d)) {
     return buildCollinearBaseQuadsIntersectingAtOFigure({ figureId, notationLanguage });
   }
   if (/ABCD\s*~\s*EBGF|مثلث.*مقطوع|EBGF/i.test(d)) {
@@ -79,7 +79,7 @@ export function matchPrepSimilarityGeometryFigure(
   }
 
   // 8. مضلعان بهما جذور وزوايا خاصة (60° و 150° وجذور 1.5√3 و √3 - مثال 2)
-  if (/1\.5√3|150°|y\s*-\s*1\/3|(?:^|[^\d])√3|مثال\s*2/i.test(d)) {
+  if (/1\.5√3|150°|y\s*-\s*1\/3/i.test(d) || (/(?:^|[^\d])√3/i.test(d) && (/تشابه|متشابه|EFGH|مثال\s*2/i.test(d)))) {
     return buildSimilarQuadsWithRadicalsAndAnglesFigure({ figureId, notationLanguage });
   }
 
