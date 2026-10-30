@@ -66,6 +66,16 @@ const CURRICULUM_QUICK_SAMPLES = [
     label: "تشابه مضلعات: خماسيان شكل منزل",
     sampleText: "مضلعان خماسيان متشابهان ABCDE ~ KFGHJ على شكل منزل قاعدة الأول 6 سم وقواعد الثاني 18 سم و 15 سم و 12 سم و 9 سم",
   },
+  {
+    id: "line_eq_intercepts",
+    label: "هندسة 3ع: مستقيم يقطع جزأين متساويين",
+    sampleText: "الشكل المقابل يمثل AB الذي معادلته y = k X + c ويقطع من محوري الإحداثيات جزأين متساويين في الطول ويمر بالنقطة (2 , 3)",
+  },
+  {
+    id: "line_eq_rhombus",
+    label: "هندسة 3ع: معين OADB ومعادلة OD",
+    sampleText: "النقط O(0,0) ، A(2,6) ، B(6,2) ، D رؤوس معين أوجد معادلة OD و m(∠ DOH)",
+  },
 ] as const;
 
 export default function StudioVisualGeometryLabTab() {

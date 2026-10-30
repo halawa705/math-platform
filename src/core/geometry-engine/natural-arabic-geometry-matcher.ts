@@ -14,6 +14,7 @@ import { matchPrepGrade1GeometryFigure } from "./curriculum-catalogs/prep-stage/
 import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
 import { matchPrepSimilarityGeometryFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
 import { matchPrepGrade3TriangleSimilarityFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
+import { matchPrepGrade3LineEquationFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-line-equation-catalog";
 import { buildTriangleMidsegmentFigure } from "./triangle-family/triangle-midsegment-branch";
 import { buildTriangleThalesParallelFigure } from "./triangle-family/triangle-thales-parallel-branch";
 import { buildTriangleMediansCentroidFigure } from "./triangle-family/triangle-medians-centroid-branch";
@@ -49,6 +50,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
 
   const prepTriSim = matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage);
   if (prepTriSim) return prepTriSim;
+  const prep3LineEq = matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage);
+  if (prep3LineEq) return prep3LineEq;
   const prepSimMatch = matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage);
   if (prepSimMatch) return prepSimMatch;
   const prep2Match = matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage);
