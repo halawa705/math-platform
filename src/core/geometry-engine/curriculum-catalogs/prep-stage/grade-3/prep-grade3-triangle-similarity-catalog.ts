@@ -47,7 +47,7 @@ export function matchPrepGrade3TriangleSimilarityFigure(
   }
 
   // 2. تشابه المثلثات القائمة وإسقاط عمود من رأس القائمة (إقليدس)
-  if (/قائم.*عمود|BD\s*⊥\s*AC|AD\s*⊥\s*BC|ADB\s*~\s*BDC|إقليدس.*تشابه/i.test(d)) {
+  if ((/قائم.*عمود|BD\s*⊥\s*AC|AD\s*⊥\s*BC/i.test(d) && /تشابه|~/i.test(d)) || /ADB\s*~\s*BDC|إقليدس.*تشابه/i.test(d)) {
     return buildTriangleEuclidSimilarityAltitudeFigure({ figureId, notationLanguage });
   }
 

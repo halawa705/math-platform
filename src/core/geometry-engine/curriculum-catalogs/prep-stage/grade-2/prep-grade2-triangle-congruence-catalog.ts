@@ -88,7 +88,7 @@ export function matchPrepGrade2TriangleCongruenceFigure(
   }
 
   // 6. طائرة ورقية مع منصف الرأس AC ومحيط 12 سم (مسألة 13)
-  if (/3\.6.*2\.4|AC\s*ينصف.*BAD|محيط\s*المضلع\s*ABCD|ACB.*ACD.*3\.6/i.test(d)) {
+  if (/3\.6.*2\.4|AC\s*ينصف.*BAD|محيط\s*المضلع\s*ABCD.*(?:3\.6|2\.4|ينصف)|ACB.*ACD/i.test(d)) {
     return buildCongruenceKiteBisectorACFigure({ figureId, notationLanguage });
   }
 
