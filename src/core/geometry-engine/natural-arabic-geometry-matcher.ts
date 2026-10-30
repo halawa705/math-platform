@@ -13,6 +13,7 @@ import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-
 import { matchPrepGrade1GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-congruence-catalog";
 import { matchPrepGrade1AnglesRelationshipsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-angles-relationships-catalog";
 import { matchPrepGrade1AnglesFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-angles-followup-catalog";
+import { matchPrepGrade1ParallelismFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
 import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
 import { matchPrepGrade2TriangleCongruenceFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-congruence-catalog";
 import { matchPrepGrade2PythagorasConverseFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-pythagoras-converse-catalog";
@@ -90,6 +91,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (prep1AnglesFollowup) return prep1AnglesFollowup;
   const prep1Angles = matchPrepGrade1AnglesRelationshipsFigure(desc, figureId, notationLanguage);
   if (prep1Angles) return prep1Angles;
+  const prep1Parallel = matchPrepGrade1ParallelismFigure(desc, figureId, notationLanguage);
+  if (prep1Parallel) return prep1Parallel;
   const prep1Match = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
   if (prep1Match) return prep1Match;
   const primary6Match = matchPrimaryGrade6GeometryFigure(desc, figureId, notationLanguage);
