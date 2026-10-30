@@ -4,10 +4,17 @@
  */
 export const MODULE_ID_GEO_LABEL_UTILS = "geo_label_utils" as const;
 
-const ARABIC_TO_LATIN: Record<string, string> = { أ: "A", ب: "B", ج: "C", د: "D", ه: "E", و: "F", ز: "G", ح: "H", ط: "I", ي: "J", ك: "K", ل: "L", م: "M", ن: "N" };
-const LATIN_TO_ARABIC: Record<string, string> = Object.fromEntries(Object.entries(ARABIC_TO_LATIN).map(([ar, la]) => [la, ar]));
+const ARABIC_TO_LATIN: Record<string, string> = {
+  أ: "A", ب: "B", ج: "C", د: "D", ه: "E", و: "F", ز: "G", ح: "H",
+  خ: "I", ي: "J", ك: "K", ل: "L", م: "M", ن: "N", ف: "P", ق: "Q",
+  ر: "R", ش: "S", ط: "T", ت: "U", ث: "V", غ: "W", س: "X", ص: "Y", ع: "Z",
+};
+const LATIN_TO_ARABIC: Record<string, string> = {
+  ...Object.fromEntries(Object.entries(ARABIC_TO_LATIN).map(([ar, la]) => [la, ar])),
+  O: "و",
+};
 const ARABIC_DISPLAY: Record<string, string> = { ج: "جـ", ه: "هـ" };
-const POINT_LETTERS = "أبجدهوزحطيكلمنسعفصقر";
+const POINT_LETTERS = "أبجدهوزحخيكلمنفقرشطتثغسصع";
 const STOP_WORDS = new Set(["في", "من", "هو", "هي", "مع", "ثم", "أو", "لا", "ما", "عن", "إذا", "كل", "أي", "به", "له"]);
 
 /** مفتاح داخلي موحّد: حرف لاتيني كبير دائماً إن وُجد له مقابل، وإلا الحرف العربي نفسه. */

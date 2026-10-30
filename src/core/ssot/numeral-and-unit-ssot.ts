@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file numeral-and-unit-ssot.ts
  * @description المصدر الوحيد للحقيقة (SSOT) لتحويل الأرقام (0-9 <-> ٠-٩)، والرموز الرياضية (x,y <-> س,ص)،
  * ووحدات القياس العربية القياسية. يُمنع كتابة أي Regex لتحويل الأرقام في أي ملف آخر.
@@ -116,6 +116,7 @@ export function localizeMathExpressionNotationSSOT(
 const ARABIC_TO_ENGLISH_VERTEX_MAP: Record<string, string> = {
   "أ": "A",
   "ا": "A",
+  "إ": "A",
   "ب": "B",
   "جـ": "C",
   "ج": "C",
@@ -123,17 +124,25 @@ const ARABIC_TO_ENGLISH_VERTEX_MAP: Record<string, string> = {
   "هـ": "E",
   "ه": "E",
   "و": "F",
-  "م": "M",
-  "ن": "N",
-  "س": "X",
-  "ص": "Y",
-  "ع": "Z",
   "ز": "G",
   "ح": "H",
+  "خ": "I",
   "ي": "J",
   "ك": "K",
   "ل": "L",
+  "م": "M",
+  "ن": "N",
+  "ف": "P",
+  "ق": "Q",
+  "ر": "R",
+  "ش": "S",
   "ط": "T",
+  "ت": "U",
+  "ث": "V",
+  "غ": "W",
+  "س": "X",
+  "ص": "Y",
+  "ع": "Z",
 };
 
 const ENGLISH_TO_ARABIC_VERTEX_MAP: Record<string, string> = {
@@ -143,17 +152,26 @@ const ENGLISH_TO_ARABIC_VERTEX_MAP: Record<string, string> = {
   D: "د",
   E: "هـ",
   F: "و",
-  M: "م",
-  N: "ن",
-  X: "س",
-  Y: "ص",
-  Z: "ع",
   G: "ز",
   H: "ح",
+  I: "خ",
   J: "ي",
   K: "ك",
   L: "ل",
+  M: "م",
+  N: "ن",
+  O: "و",
+  P: "ف",
+  Q: "ق",
+  R: "ر",
+  S: "ش",
   T: "ط",
+  U: "ت",
+  V: "ث",
+  W: "غ",
+  X: "س",
+  Y: "ص",
+  Z: "ع",
 };
 
 /**

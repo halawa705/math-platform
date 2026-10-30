@@ -3,7 +3,12 @@
  * @description مصيّر الرسوم البيانية للدوال (Cartesian Graph SVG Projector) بدون أي مكتبات خارجية.
  */
 import type { CartesianGraphSpec, GraphFunctionSpec } from "@/core/ssot/cartesian-graph-spec-ssot";
-import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "@/core/ssot/numeral-and-unit-ssot";
+import {
+  formatNumeralsByModeSSOT,
+  localizeGeometricVertexLabelSSOT,
+  type MathNotationLanguage,
+  type NumeralDisplayMode,
+} from "@/core/ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_GRAPH_SVG_PROJECTOR = "graph_svg_projector" as const;
 
@@ -13,6 +18,7 @@ export interface GraphSVGProjectorOptions {
   readonly strokeColorHex?: string;
   readonly accentColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
+  readonly notationLanguage?: MathNotationLanguage;
 }
 
 function evalGraphFn(fn: GraphFunctionSpec, x: number): number {
@@ -31,6 +37,7 @@ export function projectCartesianGraphToSVGMarkup(
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#2563EB";
   const numeralMode = options.numeralMode ?? "western";
+  const notation = options.notationLanguage ?? "arabic";
   const pad = 16;
 
   const { xMin, xMax, yMin, yMax } = spec;
@@ -61,11 +68,13 @@ export function projectCartesianGraphToSVGMarkup(
     }
   }
 
+  const xAxisLabel = notation === "english" ? "X" : "س";
+  const yAxisLabel = notation === "english" ? "Y" : "ص";
   const axesSvg = `
     <line x1="${pad}" y1="${originY.toFixed(1)}" x2="${width - pad}" y2="${originY.toFixed(1)}" stroke="${strokeColor}" stroke-width="1.2" />
     <line x1="${originX.toFixed(1)}" y1="${pad}" x2="${originX.toFixed(1)}" y2="${height - pad}" stroke="${strokeColor}" stroke-width="1.2" />
-    <text x="${(width - pad + 4).toFixed(1)}" y="${(originY + 3).toFixed(1)}" font-size="8" font-weight="900" fill="${strokeColor}">س</text>
-    <text x="${(originX + 4).toFixed(1)}" y="${(pad - 3).toFixed(1)}" font-size="8" font-weight="900" fill="${strokeColor}">ص</text>
+    <text x="${(width - pad + 4).toFixed(1)}" y="${(originY + 3).toFixed(1)}" font-size="8" font-weight="900" fill="${strokeColor}">${xAxisLabel}</text>
+    <text x="${(originX + 4).toFixed(1)}" y="${(pad - 3).toFixed(1)}" font-size="8" font-weight="900" fill="${strokeColor}">${yAxisLabel}</text>
   `;
 
   const curvesSvg = spec.functions
@@ -95,7 +104,8 @@ export function projectCartesianGraphToSVGMarkup(
     .map((pt) => {
       const px = sx(pt.x);
       const py = sy(pt.y);
-      const lbl = pt.label ? `${pt.label}(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})` : `(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})`;
+      const locPtLabel = pt.label ? localizeGeometricVertexLabelSSOT(pt.label, notation) : "";
+      const lbl = locPtLabel ? `${locPtLabel}(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})` : `(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})`;
       return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.6" fill="${accentColor}" stroke="#FFFFFF" stroke-width="0.9" />
       <text x="${(px + 4).toFixed(1)}" y="${(py - 4).toFixed(1)}" font-size="7" font-weight="800" fill="${strokeColor}">${lbl}</text>`;
     })

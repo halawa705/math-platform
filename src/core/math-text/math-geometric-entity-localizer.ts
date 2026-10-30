@@ -12,23 +12,27 @@ export const MODULE_ID_MATH_GEOMETRIC_ENTITY_LOCALIZER =
 
 export const ARABIC_TO_LATIN_VERTEX: Readonly<Record<string, string>> = {
   "أ": "A", "ا": "A", "إ": "A", "ب": "B", "ج": "C", "جـ": "C",
-  "د": "D", "ه": "E", "هـ": "E", "و": "F", "ز": "Z", "ح": "H",
-  "ط": "T", "ك": "K", "ل": "L", "م": "M", "ن": "N", "س": "X",
-  "ص": "Y", "ع": "Z",
+  "د": "D", "ه": "E", "هـ": "E", "و": "F", "ز": "G", "ح": "H",
+  "خ": "I", "ي": "J", "ك": "K", "ل": "L", "م": "M", "ن": "N",
+  "ف": "P", "ق": "Q", "ر": "R", "ش": "S", "ط": "T", "ت": "U",
+  "ث": "V", "غ": "W", "س": "X", "ص": "Y", "ع": "Z",
 };
 
 export const LATIN_TO_ARABIC_VERTEX: Readonly<Record<string, string>> = {
-  A: "أ", B: "ب", C: "جـ", D: "د", E: "هـ", F: "و", Z: "ع",
-  H: "ح", T: "ط", K: "ك", L: "ل", M: "م", N: "ن", X: "س", Y: "ص",
+  A: "أ", B: "ب", C: "جـ", D: "د", E: "هـ", F: "و", G: "ز",
+  H: "ح", I: "خ", J: "ي", K: "ك", L: "ل", M: "م", N: "ن",
+  O: "و", P: "ف", Q: "ق", R: "ر", S: "ش", T: "ط", U: "ت",
+  V: "ث", W: "غ", X: "س", Y: "ص", Z: "ع",
 };
 
-const GEOMETRIC_VERTEX_CHAR_REGEX = "[أإابجدهوزحطكلمنسصع](?:ـ)?";
+const GEOMETRIC_VERTEX_CHAR_REGEX = "[أإابجدهوزحخيكلمنفقرشطتثغسصع](?:ـ)?";
+const LATIN_VERTEX_SEQ_REGEX = "[A-Z](?:\\s*[A-Z]){0,4}";
 const ARABIC_WORD_END_LOOKAHEAD = "(?=[\\s،,.;:!?()\\[\\]{}]|$)";
 
 /** يحول تسلسلاً من الحروف الهندسية (مثل "أ ب جـ" أو "أب") إلى نظيرتها اللاتينية (مثل "ABC" أو "AB") */
 export function convertArabicVerticesToLatin(raw: string): string {
   const cleaned = raw.replace(/\u0640/g, "").trim();
-  const chars = cleaned.match(/[أإابجدهوزحطكلمنسصع]/g);
+  const chars = cleaned.match(/[أإابجدهوزحخيكلمنفقرشطتثغسصع]/g);
   if (!chars || chars.length === 0) return raw.trim();
   return chars.map((ch) => ARABIC_TO_LATIN_VERTEX[ch] || ch).join("");
 }
@@ -40,6 +44,35 @@ export function convertLatinVerticesToArabic(raw: string): string {
   return chars.map((ch) => LATIN_TO_ARABIC_VERTEX[ch] || ch).join(" ");
 }
 
+function localizeLatinEntitiesInPlainTextToArabic(text: string): string {
+  let out = text;
+  // 1. m(∠ ABC) أو m(ABC) ← ق(∠ أ ب جـ)
+  out = out.replace(
+    /\bm\s*\(\s*([∠\u2220])?\s*([A-Z]{1,3})(?:\s+(المنعكسة))?\s*\)/g,
+    (_m, sym: string | undefined, verts: string, reflex: string | undefined) =>
+      `ق(${sym || "∠"} ${convertLatinVerticesToArabic(verts)}${reflex ? " المنعكسة" : ""})`
+  );
+  // 2. ق(∠ ABC) أو ق(ABC)
+  out = out.replace(
+    /ق\s*\(\s*([∠\u2220])?\s*([A-Z]{1,3})(?:\s+(المنعكسة))?\s*\)/g,
+    (_m, sym: string | undefined, verts: string, reflex: string | undefined) =>
+      `ق(${sym || "∠"} ${convertLatinVerticesToArabic(verts)}${reflex ? " المنعكسة" : ""})`
+  );
+  // 3. ∠ ABC أو Δ ABC
+  out = out.replace(
+    new RegExp(`([∠\\u2220Δ△])\\s*(${LATIN_VERTEX_SEQ_REGEX})${ARABIC_WORD_END_LOOKAHEAD}`, "g"),
+    (_m, sym: string, verts: string) => `${sym} ${convertLatinVerticesToArabic(verts)}`
+  );
+  // 4. أي متتالية حروف لاتينية كبيرة منفردة (رؤوس/أضلاع/مضلعات مثل ABC, AB, M, X)
+  out = out.replace(/(?<![A-Za-z\\])([A-Z]{1,5})(?![A-Za-z])/g, (_m, verts: string) =>
+    convertLatinVerticesToArabic(verts)
+  );
+  // 5. المتغيرات الصغيرة المنفردة (x, y, z, k, n, m)
+  const lowerMap: Record<string, string> = { x: "س", y: "ص", z: "ع", k: "ك", n: "ن", m: "م" };
+  out = out.replace(/(?<![A-Za-z\\])([xyzkmn])(?![A-Za-z])/g, (_m, ch: string) => lowerMap[ch] || ch);
+  return out;
+}
+
 /**
  * يوطن أسماء المضلعات والزوايا والأضلاع في النص العربي العادي (خارج كتل LaTeX).
  */
@@ -48,7 +81,7 @@ export function localizeGeometricEntitiesInPlainText(
   notation: MathNotationLanguage
 ): string {
   if (!text) return "";
-  if (notation === "arabic") return text;
+  if (notation === "arabic") return localizeLatinEntitiesInPlainTextToArabic(text);
 
   let out = text;
 
@@ -115,6 +148,7 @@ export function localizeGeometricEntitiesInLatex(
   if (!latex) return "";
   if (notation === "arabic") {
     return latex
+      .replace(/\bm\s*\(/g, "\\text{ق}(")
       .replace(/\\triangle\s*([A-Z]{3})/g, (_m, v: string) => `\\triangle \\text{${convertLatinVerticesToArabic(v)}}`)
       .replace(/\\angle\s*([A-Z]{1,3})/g, (_m, v: string) => `\\angle \\text{${convertLatinVerticesToArabic(v)}}`);
   }

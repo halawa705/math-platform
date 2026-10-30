@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file figure-label-symbol-localizer.ts
  * @description توطين نصوص تسميات الأشكال (أطوال/زوايا جبرية مثل X سم و (3X-18)°) وفق ترميز المستند:
  * عربي: X ← س، Y ← ص ...؛ إنجليزي: س ← X ... ، ثم تنسيق الأرقام. مستقل عن LaTeX لأن الـ SVG نص عادي.
@@ -12,8 +12,8 @@ import {
 
 export const MODULE_ID_FIGURE_LABEL_SYMBOL_LOCALIZER = "figure_label_symbol_localizer" as const;
 
-const LATIN_RUN = /(?<![A-Za-z])([A-Za-z]{1,3})(?![A-Za-z])/g;
-const ARABIC_LETTER_RUN = /(?<![\u0621-\u064A])([سصعزحيكلط])(?![\u0621-\u064A])/g;
+const LATIN_RUN = /(?<![A-Za-z])([A-Za-z]{1,4})(?![A-Za-z])/g;
+const ARABIC_LETTER_RUN = /(?<![\u0621-\u064A])([أإابجدهوزحخيكلمنفقرشطتثغسصع])(?![\u0621-\u064A])/g;
 
 export function localizeFigureLabelText(text: string, notation: MathNotationLanguage, numeralMode: NumeralDisplayMode): string {
   const symbols =

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file math-latex-latin-symbols-arabic-localizer.ts
  * @description عند اختيار الترميز العربي: يحوّل الأحرف اللاتينية الباقية في LaTeX (رؤوس الأشكال A B C ← أ ب جـ، والمتغيرات x y z ← س ص ع)
  * مع تجاوز أوامر LaTeX (`\sin`, `\overline`…) ومحتوى `\text{}`.
@@ -7,9 +7,26 @@ import { localizeGeometricVertexLabelSSOT } from "../ssot/numeral-and-unit-ssot"
 
 export const MODULE_ID_MATH_LATEX_LATIN_SYMBOLS_ARABIC_LOCALIZER = "math_latex_latin_symbols_arabic_localizer" as const;
 
-const LOWERCASE_VARIABLES: Readonly<Record<string, string>> = { x: "س", y: "ص", z: "ع" };
+const LOWERCASE_VARIABLES: Readonly<Record<string, string>> = {
+  x: "س",
+  y: "ص",
+  z: "ع",
+  k: "ك",
+  n: "ن",
+  m: "م",
+  a: "أ",
+  b: "ب",
+  c: "جـ",
+  d: "د",
+  r: "نق",
+  f: "د",
+  g: "ر",
+  h: "هـ",
+  l: "ل",
+};
 
-const TOKEN = /\\text\{[^{}]*\}|\\[A-Za-z]+|\\.|(?<![A-Za-z])([A-Z]{1,6})(?![A-Za-z])|(?<![A-Za-z])([xyz])(?![A-Za-z])/g;
+const TOKEN =
+  /\\text\{[^{}]*\}|\\[A-Za-z]+|\\.|(?<![A-Za-z])([A-Z]{1,6})(?![A-Za-z])|(?<![A-Za-z])([xyzkmnabcdrghfl])(?![A-Za-z])/g;
 
 /** يحوّل متتالية حروف كبيرة؛ الحرف غير المسجل في SSOT يبقى كما هو. */
 function convertCapitalRun(run: string): string {
