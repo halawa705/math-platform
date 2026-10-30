@@ -2,8 +2,8 @@
 
 /**
  * @file studio-final-review-generator-tab.tsx
- * @description تبويب المراجعة النهائية والشهرية مع استرجاع وحفظ الحالة وتخصيص نوع وعدد الأسئلة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * @description تبويب المراجعة النهائية والشهرية مع استرجاع وحفظ الحالة وتوجيهات المعلم الخاصة وتخصيص نوع وعدد الأسئلة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 190 سطراً).
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -18,12 +18,10 @@ import {
 import { mergeFinalReviewThreeStagesToPrintableItems } from "@/core/ingestion/notebooklm-final-review-parser";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
-import {
-  loadStudioReviewSettingsSSOT,
-  saveStudioReviewSettingsSSOT,
-} from "@/core/ssot/studio-state-persistence-ssot";
+import { loadStudioReviewSettingsSSOT, saveStudioReviewSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
+import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
@@ -48,13 +46,8 @@ const STAGE_COPY = {
 } as const;
 
 export default function StudioFinalReviewGeneratorTab({
-  gradeId = "prep-3",
-  gradeNameAr = "الصف الثالث الإعدادي",
-  branchId = "plane_geometry",
-  unitTitleAr = "جميع وحدات المنهج",
-  branchNameAr,
-  onApplyReviewTitleToSheet,
-  onApplyParsedQuestionsToSheet,
+  gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
+  unitTitleAr = "جميع وحدات المنهج", branchNameAr, onApplyReviewTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioFinalReviewGeneratorTabProps) {
   const [initial] = useState(() => loadStudioReviewSettingsSSOT());
   const [scope, setScope] = useState<FinalReviewScopeKind>(initial.scope);
@@ -63,6 +56,7 @@ export default function StudioFinalReviewGeneratorTab({
   const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled);
   const [essayCount, setEssayCount] = useState(initial.essayCount);
   const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled);
+  const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<FinalReviewStageNumber, string>>({ 1: "", 2: "", 3: "" });
   const [copied, setCopied] = useState(false);
@@ -70,10 +64,7 @@ export default function StudioFinalReviewGeneratorTab({
   const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
   const essays = useMemo(() => extractEssayQuestionsFromReviewStage2Reply(replies[2]), [replies]);
-
-  const persist = (partial: Partial<ReturnType<typeof loadStudioReviewSettingsSSOT>>) => {
-    saveStudioReviewSettingsSSOT(partial);
-  };
+  const persist = (p: Partial<ReturnType<typeof loadStudioReviewSettingsSSOT>>) => saveStudioReviewSettingsSSOT(p);
 
   const effectiveMcq = mcqEnabled ? mcqCount : 0;
   const effectiveEssay = essayEnabled ? essayCount : 0;
@@ -85,34 +76,24 @@ export default function StudioFinalReviewGeneratorTab({
         coveredUnitsTitlesArabic: unitTitleAr ? [unitTitleAr] : [],
         totalReviewQuestionsCount: Math.max(1, effectiveMcq + effectiveEssay),
         mcqCount: effectiveMcq, essayCount: effectiveEssay, extractedStage2EssayQuestions: essays,
+        customDirectivesArabic: customDirectives,
       })
     );
-  }, [scope, activeStage, gradeNameAr, branchId, unitTitleAr, effectiveMcq, effectiveEssay, essays]);
+  }, [scope, activeStage, gradeNameAr, branchId, unitTitleAr, effectiveMcq, effectiveEssay, essays, customDirectives]);
 
   const buildPdf = (withStage3: boolean) => {
     const items = mergeFinalReviewThreeStagesToPrintableItems({
-      stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "",
-      branchId, branchNameAr,
+      stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "", branchId, branchNameAr,
       titleArabic: scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر",
     });
-    if (items.length === 0) {
-      setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء.");
-      return;
-    }
+    if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);
-    setDiagRows(
-      items
-        .filter((q) => q.figureDiagnosticsAr && q.figureDiagnosticsAr.length > 0)
-        .map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! }))
-    );
+    setDiagRows(items.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! })));
     onApplyParsedQuestionsToSheet?.(items);
-    onApplyReviewTitleToSheet(
-      buildStandardDocumentTitleSSOT({
-        gradeId, unitTitleInput: unitTitleAr,
-        lessonTitleInput: scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر",
-        promptText: prompt, rawReplyText: replies[1] || replies[2],
-      })
-    );
+    onApplyReviewTitleToSheet(buildStandardDocumentTitleSSOT({
+      gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر",
+      promptText: prompt, rawReplyText: replies[1] || replies[2],
+    }));
   };
 
   const stage = STAGE_COPY[activeStage];
@@ -121,16 +102,10 @@ export default function StudioFinalReviewGeneratorTab({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
-        {([
-          { id: "final_exam_night_capsule", label: "🌟 ليلة الامتحان" },
-          { id: "monthly_revision", label: "📅 مراجعة الشهر" },
-        ] as const).map((opt) => (
+        {([{ id: "final_exam_night_capsule", label: "🌟 ليلة الامتحان" }, { id: "monthly_revision", label: "📅 مراجعة الشهر" }] as const).map((opt) => (
           <button
-            key={opt.id} type="button"
-            onClick={() => { setScope(opt.id); persist({ scope: opt.id }); }}
-            className={`min-h-[44px] rounded-xl text-xs font-black cursor-pointer ${
-              scope === opt.id ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-sm" : "text-slate-600 dark:text-slate-400"
-            }`}
+            key={opt.id} type="button" onClick={() => { setScope(opt.id); persist({ scope: opt.id }); }}
+            className={`min-h-[44px] rounded-xl text-xs font-black cursor-pointer ${scope === opt.id ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-sm" : "text-slate-600 dark:text-slate-400"}`}
           >
             {opt.label}
           </button>
@@ -142,45 +117,42 @@ export default function StudioFinalReviewGeneratorTab({
           stageNum: n, shortTitleAr: STAGE_COPY[n].short, isFilled: replies[n].trim().length > 5, isOptional: n === 3,
         }))}
         activeStageNum={activeStage}
-        onSelectStage={(n) => {
-          const next = n as FinalReviewStageNumber;
-          setActiveStage(next);
-          persist({ activeStage: next });
-        }}
+        onSelectStage={(n) => { const next = n as FinalReviewStageNumber; setActiveStage(next); persist({ activeStage: next }); }}
       />
 
       <StudioCollapsibleSectionCard icon="🔢" titleAr="أعداد الأسئلة" summaryAr={summaryAr}>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
           <StudioNumberStepperField
-            labelAr="أسئلة اختر" value={mcqCount} min={0} max={60}
-            enabled={mcqEnabled} onToggleEnabled={(v) => { setMcqEnabled(v); persist({ mcqEnabled: v }); }}
+            labelAr="أسئلة اختر" value={mcqCount} min={0} max={60} enabled={mcqEnabled}
+            onToggleEnabled={(v) => { setMcqEnabled(v); persist({ mcqEnabled: v }); }}
             onChange={(v) => { setMcqCount(v); persist({ mcqCount: v }); }}
           />
           <StudioNumberStepperField
-            labelAr="أسئلة مقالية" value={essayCount} min={0} max={40}
-            enabled={essayEnabled} onToggleEnabled={(v) => { setEssayEnabled(v); persist({ essayEnabled: v }); }}
+            labelAr="أسئلة مقالية" value={essayCount} min={0} max={40} enabled={essayEnabled}
+            onToggleEnabled={(v) => { setEssayEnabled(v); persist({ essayEnabled: v }); }}
             onChange={(v) => { setEssayCount(v); persist({ essayCount: v }); }}
           />
         </div>
       </StudioCollapsibleSectionCard>
 
+      <StudioCustomDirectivesCard
+        customDirectives={customDirectives}
+        onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }}
+      />
+
       <StudioSingleStagePastePanel
-        stageTitleAr={stage.title} stageHintAr={stage.hint}
-        promptText={prompt} onChangePrompt={setPrompt}
+        stageTitleAr={stage.title} stageHintAr={stage.hint} promptText={prompt} onChangePrompt={setPrompt}
         onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
         isPromptCopied={copied} replyValue={replies[activeStage]}
         onChangeReply={(v) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: v })); }}
         replyPlaceholderAr={stage.placeholder}
-        contextNoteAr={activeStage === 3 && essays.length > 0 ? `تمت قراءة ${essays.length} مسألة مقالية من المرحلة ٢ وإدراجها في البرومبت` : undefined}
+        contextNoteAr={activeStage === 3 && essays.length > 0 ? `تمت قراءة ${essays.length} مسألة مقالية من المرحلة ٢` : undefined}
       />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />
       <StudioStickyPrimaryActionBar
-        primaryLabelAr="📄 إنشاء المراجعة ومعاينتها"
-        onPrimary={() => buildPdf(replies[3].trim().length > 5)}
-        secondaryLabelAr="بدون إجابات المرحلة ٣"
-        onSecondary={() => buildPdf(false)}
-        noticeAr={notice}
+        primaryLabelAr="📄 إنشاء المراجعة ومعاينتها" onPrimary={() => buildPdf(replies[3].trim().length > 5)}
+        secondaryLabelAr="بدون إجابات المرحلة ٣" onSecondary={() => buildPdf(false)} noticeAr={notice}
       />
     </div>
   );

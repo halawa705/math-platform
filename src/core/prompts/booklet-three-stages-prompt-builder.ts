@@ -28,6 +28,7 @@ export interface BookletStagePromptConfig {
   readonly notationLanguage?: MathNotationLanguage;
   readonly extractedStage1Ideas?: readonly string[];
   readonly extractedStage2Questions?: readonly string[];
+  readonly customDirectivesArabic?: string;
 }
 
 export function extractIdeasFromBookletStage1Reply(stage1Raw: string): readonly string[] {
@@ -98,10 +99,15 @@ export function buildBookletStageNotebookLMPrompt(
     unitTitleArabic: config.unitTitleArabic,
   });
 
+  const customRule = config.customDirectivesArabic?.trim()
+    ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
+    : undefined;
+
   if (config.stageNumber === 1) {
     return [
       `مذكرة الدرس (المرحلة ١: حصر الأفكار والشرح والأمثلة المحلولة): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | ${config.unitTitleArabic} — درس (${config.lessonTitleArabic}).`,
       `🎯 خطة العمل: (أولاً) ابدأ بـ «فهرس أفكار الدرس:» لحصر أفكار الدرس الحقيقية من المصادر. (ثانياً) خذ كل فكرة من الفهرس بالترتيب واشرح مفهومها وقاعدتها وأورد (${examplesCount}) أمثلة محلولة عليها من المصادر (بلا حاول بنفسك أو واجب هنا):`,
+      ...(customRule ? [customRule] : []),
       sharedRules,
       "📐 قالب الإخراج الإلزامي للمرحلة ١:",
       "فهرس أفكار الدرس:",
@@ -132,6 +138,7 @@ export function buildBookletStageNotebookLMPrompt(
       `مذكرة الدرس (المرحلة ٢: حاول بنفسك + الواجب لكل فكرة بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
       ideasLine,
       `📊 المطلوب من المصادر (بلا حلول هنا): لكل فكرة من الأفكار المحصورة أنشئ (${drillsCount}) تمارين «حاول بنفسك» تطبق نفس الفكرة + إجمالي (${totalHw}) أسئلة واجب شاملة لأفكار الدرس = (${hwMcq}) [اختر] + (${hwEssay}) [مقالي].`,
+      ...(customRule ? [customRule] : []),
       sharedRules,
       "📐 قالب الإخراج الإلزامي للمرحلة ٢ (كرره لكل فكرة):",
       "الفكرة الأولى: [العنوان] | معرف الفكرة: idea-01",

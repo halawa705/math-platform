@@ -2,8 +2,8 @@
 
 /**
  * @file studio-exam-generator-tab.tsx
- * @description تبويب الاختبار التقييمي الرسمي والإلكتروني مع استرجاع وحفظ الحالة وتخصيص نوع وعدد الأسئلة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * @description تبويب الاختبار التقييمي الرسمي والإلكتروني مع استرجاع وحفظ الحالة وتوجيهات المعلم الخاصة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
 import { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ import { publishOnlineExamSSOT, refreshPublishedExamsFromSupabaseSSOT } from "@/
 import { loadStudioExamSettingsSSOT, saveStudioExamSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
+import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioExamOnlinePublishPanel from "./studio-exam-online-publish-panel";
@@ -47,6 +48,7 @@ export default function StudioExamGeneratorTab({
   const [proofEnabled, setProofEnabled] = useState(initial.proofEnabled);
   const [isOnlineMode, setIsOnlineMode] = useState(initial.isOnlineMode);
   const [difficulty, setDifficulty] = useState(initial.difficulty);
+  const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
   const [copied, setCopied] = useState(false);
@@ -64,13 +66,14 @@ export default function StudioExamGeneratorTab({
       gradeNameArabic: gradeNameAr, termNumber: 1 as const, branchId,
       targetedLessonTitlesArabic: [lessonTitle], mcqQuestionsCount: effectiveMcq,
       totalMarks: Math.max(1, effectiveMcq + effectiveProof * 3), durationTextArabic: "ساعة ونصف", difficultyProfile: difficulty,
+      customDirectivesArabic: customDirectives,
     };
     setPrompt(
       isOnlineMode
         ? buildOnlineExamNotebookLMPrompt({ ...baseCfg, shortAnswerQuestionsCount: effectiveProof })
         : buildOfficialExamNotebookLMPrompt({ ...baseCfg, essayAndProofQuestionsCount: effectiveProof })
     );
-  }, [gradeNameAr, branchId, lessonTitle, effectiveMcq, effectiveProof, difficulty, isOnlineMode]);
+  }, [gradeNameAr, branchId, lessonTitle, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
 
   const parseReply = () =>
     parseNotebookLMExamQuestionsToIR({ rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle });
@@ -136,6 +139,11 @@ export default function StudioExamGeneratorTab({
           </div>
         </div>
       </StudioCollapsibleSectionCard>
+
+      <StudioCustomDirectivesCard
+        customDirectives={customDirectives}
+        onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }}
+      />
 
       <StudioSingleStagePastePanel
         stageTitleAr={`اختبار تقييمي — ${lessonTitle}`} stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لتحويله إلى ورقة اختبار."

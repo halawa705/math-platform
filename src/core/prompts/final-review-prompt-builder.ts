@@ -27,6 +27,7 @@ export interface FinalReviewPromptConfig {
   readonly essayCount?: number;
   readonly notationLanguage?: MathNotationLanguage;
   readonly extractedStage2EssayQuestions?: readonly string[];
+  readonly customDirectivesArabic?: string;
 }
 
 export function extractEssayQuestionsFromReviewStage2Reply(
@@ -57,6 +58,10 @@ export function buildFinalReviewNotebookLMPrompt(
       ? config.coveredUnitsTitlesArabic.join(" ، ")
       : "جميع وحدات المنهج المقررة";
 
+  const customRule = config.customDirectivesArabic?.trim()
+    ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
+    : undefined;
+
   const sharedRules = buildSharedMathInvariantsPromptBlock({
     branchId: config.branchId,
     notationLanguage: config.notationLanguage,
@@ -67,6 +72,7 @@ export function buildFinalReviewNotebookLMPrompt(
     return [
       `${scopeLabel} (المرحلة ١: أسئلة اختر وإجابتها): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
       `🎯 النطاق الحصري: [${unitsList}] | العدد الإلزامي الحرفي: (${mcqCount}) سؤال اختيار من متعدد [اختر] تغطي جميع أفكار الوحدات بلا أي تكرار.`,
+      ...(customRule ? [customRule] : []),
       sharedRules,
       `📐 قالب الإخراج الإلزامي للمرحلة ١ (من [1] حتى [${mcqCount}]):`,
       "[1] [نص السؤال كاملاً، ومعه [رسم هندسي: ...] إن لزم]",
@@ -82,6 +88,7 @@ export function buildFinalReviewNotebookLMPrompt(
     return [
       `${scopeLabel} (المرحلة ٢: الأسئلة المقالية والبرهان بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
       `🎯 النطاق الحصري: [${unitsList}] | العدد الإلزامي الحرفي: (${essayCount}) مسائل مقالية وبراهين متنوعة الأفكار (بدون كتابة الحلول هنا؛ الحلول في المرحلة ٣).`,
+      ...(customRule ? [customRule] : []),
       sharedRules,
       `📐 قالب الإخراج الإلزامي للمرحلة ٢ (من [1] حتى [${essayCount}]):`,
       "[1] [نص المسألة المقالية الأولى بالمعطيات والمطلوب، ومعه [رسم هندسي: ...] إن لزم]",

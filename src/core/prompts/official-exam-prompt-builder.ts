@@ -24,6 +24,7 @@ export interface OfficialExamPromptBuilderConfig {
   readonly durationTextArabic: string;
   readonly difficultyProfile: "standard_balanced" | "comprehensive_rigorous" | "olympiad_challenge";
   readonly notationLanguage?: MathNotationLanguage;
+  readonly customDirectivesArabic?: string;
 }
 
 export function buildOfficialExamNotebookLMPrompt(
@@ -46,10 +47,15 @@ export function buildOfficialExamNotebookLMPrompt(
       ? config.targetedLessonTitlesArabic.join(" ، ")
       : "دروس الفرع بالمصادر";
 
+  const customRule = config.customDirectivesArabic?.trim()
+    ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
+    : undefined;
+
   return [
     `اختبار رسمي: ${branchSpec.nameArabic} | ${config.gradeNameArabic} (${termLabel}) | الدرجة: ${config.totalMarks}.`,
     `🎯 الدروس المستهدفة حصراً (ممنوع الخروج عنها): [${lessonsText}] | المستوى: ${difficultyAr}.`,
     `📊 الأعداد الإلزامية الحرفية (إجمالي ${totalQ} أسئلة بلا زيادة أو نقصان): (${config.mcqQuestionsCount}) اختر [MCQ]${completionCount > 0 ? ` + (${completionCount}) أكمل` : ""} + (${config.essayAndProofQuestionsCount}) مقالي وبرهان [PROOF/ESSAY].`,
+    ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,

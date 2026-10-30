@@ -20,6 +20,7 @@ export interface WorksheetDrillPromptConfig {
   readonly quickEssayCount: number;
   readonly durationMinutes: number;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly customDirectivesArabic?: string;
 }
 
 export function buildWorksheetDrillNotebookLMPrompt(
@@ -28,10 +29,15 @@ export function buildWorksheetDrillNotebookLMPrompt(
   const branchSpec = MATH_BRANCHES_SSOT[config.branchId];
   const totalQ = config.quickMcqCount + config.quickEssayCount;
 
+  const customRule = config.customDirectivesArabic?.trim()
+    ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
+    : undefined;
+
   return [
     `ورقة عمل وواجب تطبيقي (${config.durationMinutes} د): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
     `🎯 الدرس المستهدف حصراً (ممنوع الخروج عنه): [${config.lessonTitleArabic}].`,
     `📊 الأعداد الحرفية الإلزامية (إجمالي ${totalQ} أسئلة متنوعة الأفكار بلا تكرار): (${config.quickMcqCount}) اختر [MCQ] + (${config.quickEssayCount}) مقالي/برهان قصير [ESSAY].`,
+    ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,

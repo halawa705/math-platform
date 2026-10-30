@@ -179,4 +179,35 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
       );
     }
   });
+
+  it("injects teacher custom directives into prompts when provided", () => {
+    const directive = "اشرح كل شكل هندسي بالتفصيل وبشكل دقيق جدا";
+    const promptWithDirective = buildBookletStageNotebookLMPrompt({
+      stageNumber: 1,
+      gradeNameArabic: "الصف الأول الإعدادي",
+      termNumber: 1,
+      branchId: "plane_geometry",
+      unitTitleArabic: "الهندسة والقياس",
+      lessonTitleArabic: "أنواع الزوايا",
+      solvedExamplesPerIdea: 2,
+      customDirectivesArabic: directive,
+    });
+    expect(promptWithDirective).toContain("💡 توجيهات المعلم الخاصة:");
+    expect(promptWithDirective).toContain(directive);
+
+    const examWithDirective = buildOfficialExamNotebookLMPrompt({
+      gradeNameArabic: "الصف الأول الإعدادي",
+      termNumber: 1,
+      branchId: "plane_geometry",
+      targetedLessonTitlesArabic: ["أنواع الزوايا"],
+      mcqQuestionsCount: 4,
+      essayAndProofQuestionsCount: 2,
+      totalMarks: 10,
+      durationTextArabic: "ساعة",
+      difficultyProfile: "standard_balanced",
+      customDirectivesArabic: directive,
+    });
+    expect(examWithDirective).toContain("💡 توجيهات المعلم الخاصة:");
+    expect(examWithDirective).toContain(directive);
+  });
 });

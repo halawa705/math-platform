@@ -105,4 +105,34 @@ describe("Studio State Persistence SSOT — Browser State Memory", () => {
     expect(loadStudioWorksheetSettingsSSOT().durationMinutes).toBe(30);
     expect(loadStudioWorksheetSettingsSSOT().mcqCount).toBe(8);
   });
+
+  it("persists custom directives across booklet, exam, review, and worksheet", () => {
+    saveStudioBookletSettingsSSOT({
+      customDirectives: "اشرح كل شكل هندسي بالتفصيل وبشكل دقيق",
+    });
+    expect(loadStudioBookletSettingsSSOT().customDirectives).toBe(
+      "اشرح كل شكل هندسي بالتفصيل وبشكل دقيق"
+    );
+
+    saveStudioExamSettingsSSOT({
+      customDirectives: "التركيز على نظريات المثلث القائم وتطبيقات فيثاغورس",
+    });
+    expect(loadStudioExamSettingsSSOT().customDirectives).toBe(
+      "التركيز على نظريات المثلث القائم وتطبيقات فيثاغورس"
+    );
+
+    saveStudioReviewSettingsSSOT({
+      customDirectives: "تضمين أسئلة المتفوقين من امتحانات المحافظات",
+    });
+    expect(loadStudioReviewSettingsSSOT().customDirectives).toBe(
+      "تضمين أسئلة المتفوقين من امتحانات المحافظات"
+    );
+
+    saveStudioWorksheetSettingsSSOT({
+      customDirectives: "ورقة تدريب سريعة تركز على التوازي والتعامد",
+    });
+    expect(loadStudioWorksheetSettingsSSOT().customDirectives).toBe(
+      "ورقة تدريب سريعة تركز على التوازي والتعامد"
+    );
+  });
 });

@@ -2,8 +2,8 @@
 
 /**
  * @file studio-booklet-generator-tab.tsx
- * @description تبويب مذكرة الدرس مع استرجاع وحفظ الحالة وتخصيص نوع وعدد الأسئلة مع تشيك بوكس التضمين والكتابة المباشرة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * @description تبويب مذكرة الدرس مع استرجاع وحفظ الحالة وتوجيهات المعلم الخاصة وتخصيص نوع وعدد الأسئلة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -21,6 +21,7 @@ import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identi
 import { loadStudioBookletSettingsSSOT, saveStudioBookletSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
+import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
@@ -61,6 +62,7 @@ export default function StudioBookletGeneratorTab({
   const [hwMcqEnabled, setHwMcqEnabled] = useState(initial.hwMcqEnabled);
   const [hwEssay, setHwEssay] = useState(initial.hwEssay);
   const [hwEssayEnabled, setHwEssayEnabled] = useState(initial.hwEssayEnabled);
+  const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<BookletPromptStageNumber, string>>({ 1: "", 2: "", 3: "" });
   const [copied, setCopied] = useState(false);
@@ -83,9 +85,10 @@ export default function StudioBookletGeneratorTab({
         solvedExamplesPerIdea: effectiveExamples, drillsPerIdea: effectiveDrills,
         homeworkMcqCount: effectiveHwMcq, homeworkEssayCount: effectiveHwEssay,
         extractedStage1Ideas: ideas, extractedStage2Questions: questions,
+        customDirectivesArabic: customDirectives,
       })
     );
-  }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, effectiveExamples, effectiveDrills, effectiveHwMcq, effectiveHwEssay, ideas, questions]);
+  }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, effectiveExamples, effectiveDrills, effectiveHwMcq, effectiveHwEssay, ideas, questions, customDirectives]);
 
   const persist = (p: Partial<ReturnType<typeof loadStudioBookletSettingsSSOT>>) => saveStudioBookletSettingsSSOT(p);
 
@@ -143,6 +146,11 @@ export default function StudioBookletGeneratorTab({
           />
         </div>
       </StudioCollapsibleSectionCard>
+
+      <StudioCustomDirectivesCard
+        customDirectives={customDirectives}
+        onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }}
+      />
 
       <StudioSingleStagePastePanel
         stageTitleAr={stage.title} stageHintAr={stage.hint} promptText={prompt} onChangePrompt={setPrompt}
