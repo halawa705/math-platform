@@ -67,7 +67,7 @@ export function matchPrepGrade3TriangleSimilarityFigure(
   }
 
   // 6. توازي طاليس داخل المثلث (XY || BC أو DE || BC)
-  if ((/يوازي|توازي|طاليس/i.test(d) && /مثلث/i.test(d)) || /XY\s*\/\/\s*BC|AXY\s*~\s*ABC/i.test(d)) {
+  if ((/(?:يوازي|\bتوازي\b|طاليس)/i.test(d) && !/متوازي\s*أضلاع/i.test(d) && /مثلث/i.test(d)) || /XY\s*\/\/\s*BC|AXY\s*~\s*ABC/i.test(d)) {
     return buildTriangleThalesParallelSimilarityFigure({ figureId, notationLanguage });
   }
 

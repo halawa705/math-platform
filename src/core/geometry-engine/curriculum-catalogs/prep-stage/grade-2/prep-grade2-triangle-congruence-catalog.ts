@@ -83,7 +83,7 @@ export function matchPrepGrade2TriangleCongruenceFigure(
   }
 
   // 5. مركز O منتصف BD مع زاوية 34° وقياس AOC = 112° (مسألة 12)
-  if (/OAB.*OCD|O\s*منتصف\s*BD|AOC.*112°|34°/i.test(d) && /OAB|OCD|BD/i.test(d)) {
+  if (/OAB.*OCD|O\s*منتصف\s*BD|AOC.*112°|(?:\b34°\b.*(?:AOC|OAB|OCD|112°))/i.test(d) && /OAB|OCD|BD/i.test(d)) {
     return buildCongruenceCenterOMidpointBDFigure({ figureId, notationLanguage });
   }
 
@@ -103,7 +103,7 @@ export function matchPrepGrade2TriangleCongruenceFigure(
   }
 
   // 9. متتاليان على استقامة واحدة بتوازيات متناظرة (مسألة 15)
-  if (/BC.*CE.*AB\s*\/\/\s*DC|ABC.*DCE/i.test(d)) {
+  if (/BC.*CE.*AB\s*\/\/\s*DC|ABC\s*≅\s*DCE|(?:\bABC\b.*DCE.*(?:تطابق|≅))/i.test(d)) {
     return buildCongruenceCollinearParallelTransversalFigure({ figureId, notationLanguage });
   }
 

@@ -58,8 +58,8 @@ export function matchPrepSimilarityGeometryFigure(
     return buildSimilarRightTrapezoidsWithVariablesFigure({ figureId, notationLanguage });
   }
 
-  // 4. متوازي أضلاع متشابه (110° أو 120°)
-  if (/متوازي\s*أضلاع|متوازيا\s*أضلاع/i.test(d) && (/110/i.test(d) || /120/i.test(d) || /تشابه/i.test(d))) {
+  // 4. متوازيا أضلاع متشابهان (110° أو 120°)
+  if ((/متوازيا\s*أضلاع/i.test(d) && (/110/i.test(d) || /120/i.test(d) || /تشابه/i.test(d))) || (/متوازي\s*أضلاع/i.test(d) && /تشابه|متشابه|~/i.test(d))) {
     return buildSimilarParallelogramsFigure({ figureId, notationLanguage });
   }
 
