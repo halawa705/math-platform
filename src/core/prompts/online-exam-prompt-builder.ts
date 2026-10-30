@@ -1,7 +1,7 @@
 /**
  * @file online-exam-prompt-builder.ts
- * @description مولد برومبت الاختبار الإلكتروني التفاعلي (مكثف < 1850 حرفاً وحازم في الأعداد والنطاق وتنوع الأفكار وترتيب المصادر).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطر).
+ * @description مولد برومبت الاختبار الإلكتروني التفاعلي (مكثف وحازم في الأعداد والنطاق وتنوع الأفكار وترتيب المصادر).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -50,20 +50,20 @@ export function buildOnlineExamNotebookLMPrompt(
 
   return [
     `اختبار إلكتروني (تصحيح آلي): ${branchSpec.nameArabic} | ${config.gradeNameArabic} (${termLabel}) | الدرجة: ${config.totalMarks}.`,
-    `🎯 الدروس المستهدفة حصراً (ممنوع الخروج عنها): [${lessonsText}] | المستوى: ${difficultyAr}.`,
-    `📊 الأعداد الإلزامية الحرفية (إجمالي ${totalQ} أسئلة، ممنوع أسئلة البرهان والمقالي): (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.shortAnswerQuestionsCount}) إجابة قصيرة حاسمة [SHORT] (عدد/كسر/جذر/فترة وحيدة).`,
+    `🎯 النطاق الحصري: [${lessonsText}] | المستوى: ${difficultyAr}.`,
+    `📊 الأعداد الحرفية (${totalQ} أسئلة، ممنوع أسئلة البرهان والمقالي): (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.shortAnswerQuestionsCount}) إجابة قصيرة حاسمة [SHORT] (عدد/كسر/جذر/فترة وحيدة).`,
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
       lessonTitleArabic: lessonsText,
     }),
-    "📐 قالب الإخراج الإلزامي لكل سؤال (MCQ أو SHORT فقط):",
+    "📐 قالب الإخراج الإلزامي لكل سؤال:",
     "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو SHORT] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",
-    "النص: [نص السؤال بالمعادلات داخل $...$]",
+    "النص: [نص السؤال بالمعادلات بـ $...$]",
     "الرسم: [[رسم هندسي: ...] إن لزم وإلا فارغ]",
-    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ فقط)",
-    "الإجابة_الصحيحة: [حرف البديل في MCQ، أو القيمة النهائية في SHORT]",
-    "الإجابات_المقبولة: [في SHORT فقط: الصيغ المكافئة مفصولة بـ | مثل: 0.5 | 1/2 | \\frac{1}{2}]",
-    "البرهان_والخطوات: [خطوات الحل مفصولة بـ |]",
+    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ)",
+    "الإجابة_الصحيحة: [حرف البديل في MCQ، أو القيمة في SHORT]",
+    "الإجابات_المقبولة: [في SHORT: الصيغ المكافئة بـ | مثل: 0.5 | 1/2 | \\frac{1}{2}]",
+    "البرهان_والخطوات: [خطوات الحل بـ |]",
   ].join("\n");
 }

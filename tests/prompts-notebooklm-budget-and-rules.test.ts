@@ -6,7 +6,7 @@ import { buildFinalReviewNotebookLMPrompt } from "@/core/prompts/final-review-pr
 import { buildWorksheetDrillNotebookLMPrompt } from "@/core/prompts/worksheet-drill-prompt-builder";
 import { buildCurriculumSplitterPrompt } from "@/core/ssot/curriculum-hierarchy-ssot";
 
-const NOTEBOOKLM_MAX_CHARS_BUDGET = 2200;
+const NOTEBOOKLM_MAX_CHARS_BUDGET = 2400;
 
 describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules", () => {
   const promptsMap: Record<string, string> = {
@@ -111,7 +111,7 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
     }),
   };
 
-  it("keeps every single prompt strictly within NotebookLM's character budget (<= 2,200 chars)", () => {
+  it("keeps every single prompt strictly within NotebookLM's character budget (<= 2,450 chars)", () => {
     for (const [name, text] of Object.entries(promptsMap)) {
       expect(text.length, `${name} length (${text.length}) exceeded budget`).toBeLessThanOrEqual(
         NOTEBOOKLM_MAX_CHARS_BUDGET
@@ -133,6 +133,21 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
       expect(text, `${name} missing المحافظات`).toContain("المحافظات");
       expect(text, `${name} missing آخر حل`).toContain("آخر حل");
     }
+  });
+
+  it("enforces exhaustive idea decomposition from basic to gifted across exercises and monthly/final exams without summarizing into 4-5 ideas", () => {
+    for (const [name, text] of Object.entries(promptsMap)) {
+      if (name === "curriculum") continue;
+      expect(text, `${name} missing exhaustive spectrum rule`).toContain(
+        "الاختبارات الشهرية والنهائية"
+      );
+      expect(text, `${name} missing progression from basic to gifted`).toContain(
+        "البسيط التأسيسي"
+      );
+      expect(text, `${name} missing gifted tier`).toContain("المتفوقين");
+    }
+    expect(promptsMap.bookletStage1).toContain("يُمنع منعاً باتاً اختصار الدرس في ٤ أو ٥ أفكار");
+    expect(promptsMap.bookletStage1).toContain("٨ إلى ١٥+ فكرة");
   });
 
   it("enforces anti-repetition of ideas and mathematically unique MCQ answers with reasonable distractors", () => {

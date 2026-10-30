@@ -1,7 +1,7 @@
 /**
  * @file booklet-three-stages-prompt-builder.ts
- * @description مولد برومبتات المذكرة الدراسية الشاملة بالمراحل الثلاث المترابطة (مكثف < 1650 حرفاً تحت سقف NotebookLM).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
+ * @description مولد برومبتات المذكرة الدراسية الشاملة بالمراحل الثلاث المترابطة مع التفكيك الإلزامي الشامل لكل أفكار الدرس والتمارين.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 165 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -39,11 +39,11 @@ export function extractIdeasFromBookletStage1Reply(stage1Raw: string): readonly 
       clean.match(/^(?:الفكرة\s+[^:]+|عنوان_الفكرة)\s*:\s*(.+)$/i) ||
       clean.match(/^[-•*]?\s*(idea-\d+\s*:\s*.+)$/i);
     if (ideaMatch?.[1]) {
-      const val = ideaMatch[1].split("|")[0].trim().slice(0, 45);
+      const val = ideaMatch[1].split("|")[0].trim().slice(0, 42);
       if (val && !found.includes(val)) found.push(val);
     }
   }
-  return found.slice(0, 10);
+  return found.slice(0, 20);
 }
 
 export function extractQuestionsSummaryFromBookletStage2Reply(
@@ -60,10 +60,10 @@ export function extractQuestionsSummaryFromBookletStage2Reply(
     }
     const bracketMatch = clean.match(/^(\[\d+\]|#\d+)\s*(.+)?$/i);
     if (bracketMatch?.[1]) {
-      results.push(`${bracketMatch[1]} ${(bracketMatch[2] || "").slice(0, 24).trim()}`);
+      results.push(`${bracketMatch[1]} ${(bracketMatch[2] || "").slice(0, 20).trim()}`);
     }
   }
-  return results.slice(0, 20);
+  return results.slice(0, 40);
 }
 
 export function buildBookletStageNotebookLMPrompt(
@@ -85,11 +85,11 @@ export function buildBookletStageNotebookLMPrompt(
 
   if (config.stageNumber === 1) {
     return [
-      `مذكرة الدرس (المرحلة ١: الأفكار والقوانين والأمثلة المحلولة فقط): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | ${config.unitTitleArabic} — درس (${config.lessonTitleArabic}).`,
-      `🎯 استخلص كل أفكار الدرس الممكنة دون إغفال أي فكرة متدرجة (تأسيسي ← متوسط ← متقدم ← متفوقين)، ولكل فكرة اشرح المفهوم والقاعدة ثم اكتب (${examplesCount}) أمثلة محلولة متنوعة (ممنوع كتابة حاول بنفسك أو الواجب هنا).`,
+      `مذكرة الدرس (المرحلة ١: تفكيك أفكار الدرس والقوانين والأمثلة المحلولة): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | ${config.unitTitleArabic} — درس (${config.lessonTitleArabic}).`,
+      `🎯 لكل فكرة فرعية (idea-01, idea-02, ... بلا حد أقصى حتى استيعاب كل أفكار الدرس والتمارين): اشرح المفهوم والقاعدة ثم (${examplesCount}) أمثلة محلولة بالخطوات (بلا حاول بنفسك أو واجب هنا):`,
       sharedRules,
-      "📐 قالب الإخراج الإلزامي لكل فكرة:",
-      "الفكرة الأولى: [عنوان الفكرة ومستواها] | نوع المسألة: [اختر/أكمل/مقالي] | معرف الفكرة: idea-01",
+      "📐 قالب الإخراج الإلزامي (كرره لكل فكرة دون توقف):",
+      "الفكرة الأولى: [عنوان الفكرة ومستواها: تأسيسي/متوسط/صعب/متفوقين] | نوع المسألة: [اختر/أكمل/مقالي] | معرف الفكرة: idea-01",
       "مفهوم الفكرة: [شرح موجز]",
       "القاعدة الرياضية: [القانون داخل $...$]",
       "المثال 1 | معرف المثال: example-01-01",
@@ -104,16 +104,18 @@ export function buildBookletStageNotebookLMPrompt(
 
   const ideasLine =
     config.extractedStage1Ideas && config.extractedStage1Ideas.length > 0
-      ? `📌 الأفكار المستهدفة بالترتيب: ${config.extractedStage1Ideas.map((t, i) => `idea-0${i + 1}(${t})`).join(" ، ")}.`
-      : "📌 التزم بجميع أفكار المرحلة ١ بالترتيب (idea-01, idea-02, ...).";
+      ? `📌 الأفكار المستهدفة (غطِّها جميعاً بالترتيب بلا إسقاط): ${config.extractedStage1Ideas
+          .map((t, i) => `idea-${String(i + 1).padStart(2, "0")}(${t})`)
+          .join(" ، ")}.`
+      : "📌 التزم بجميع أفكار المرحلة ١ كاملة بالترتيب (idea-01, idea-02, ...) من البسيط حتى المتفوقين بلا إسقاط.";
 
   if (config.stageNumber === 2) {
     return [
-      `مذكرة الدرس (المرحلة ٢: حاول بنفسك + الواجب بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
+      `مذكرة الدرس (المرحلة ٢: حاول بنفسك + الواجب الشامل بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
       ideasLine,
-      `📊 الأعداد الحرفية الإلزامية (بلا حلول هنا): (${drillsCount}) تمارين «حاول بنفسك» لكل فكرة + إجمالي (${totalHw}) أسئلة واجب = (${hwMcq}) [اختر] + (${hwEssay}) [مقالي].`,
+      `📊 الأعداد الإلزامية الحرفية (بلا حلول هنا): (${drillsCount}) تمارين «حاول بنفسك» لكل فكرة + إجمالي (${totalHw}) أسئلة واجب شاملة لأفكار التدريبات والاختبارات الشهرية والنهائية = (${hwMcq}) [اختر] + (${hwEssay}) [مقالي].`,
       sharedRules,
-      "📐 قالب الإخراج الإلزامي للمرحلة ٢:",
+      "📐 قالب الإخراج الإلزامي للمرحلة ٢ (كرره لكل فكرة):",
       "الفكرة الأولى: [العنوان] | معرف الفكرة: idea-01",
       "حاول بنفسك:",
       "[1] [نص التمرين] | معرف السؤال: practice-01-01",
@@ -126,8 +128,8 @@ export function buildBookletStageNotebookLMPrompt(
 
   const qListLine =
     config.extractedStage2Questions && config.extractedStage2Questions.length > 0
-      ? `📌 الأسئلة المطلوب حلها: ${config.extractedStage2Questions.join(" ، ")}.`
-      : "📌 اكتب الحل النموذجي لجميع أسئلة المرحلة ٢ (حاول بنفسك والواجب) بالترتيب.";
+      ? `📌 الأسئلة المطلوب حلها بالترتيب: ${config.extractedStage2Questions.join(" ، ")}.`
+      : "📌 اكتب الحل النموذجي لجميع أسئلة المرحلة ٢ (حاول بنفسك والواجب لجميع الأفكار) بالترتيب.";
 
   return [
     `مذكرة الدرس (المرحلة ٣: نموذج إجابة أسئلة المرحلة ٢): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
