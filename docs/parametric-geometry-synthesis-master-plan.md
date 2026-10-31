@@ -81,7 +81,7 @@ flowchart TD
 
 ### المهمات الفرعية الدقيقة (Sub-tasks):
 
-- [ ] **المهمة 3.1 — بناء مصنّف الهيئات (`src/core/geometry-engine/similarity-family/curriculum-topology-classifier.ts`):**
+- [x] **المهمة 3.1 — بناء مصنّف الهيئات (`src/core/geometry-engine/similarity-family/curriculum-topology-classifier.ts`):**
   يصنّف أي مسألة مثلثات/تشابه/تطابق حتمياً إلى إحدى الهيئات القياسية الثماني:
   1. **`disjoint_two_triangles`**: مثلثان لا يشتركان في أي رأس ($\{A,B,C\} \cap \{D,E,F\} = \emptyset$ أو $\Delta ABC \sim \Delta XYZ$).
   2. **`thales_parallel_in_triangle`**: مثلث $ABC$ ونقطتان على ضلعيه ($D \in AB, E \in AC$ أو $X \in AB, Y \in AC$) مع توازي $\overline{DE} \parallel \overline{BC}$ أو تشابه بنفس الترتيب $\Delta ADE \sim \Delta ABC$.
