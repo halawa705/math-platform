@@ -2,10 +2,10 @@
 
 /**
  * @file drive-archive-grade-group-card.tsx
- * @description بطاقة مجموعة الصف الدراسي داخل خزينة Google Drive:
+ * @description بطاقة مجموعة الصف الدراسي داخل خزينة المنصة السحابية:
  * تعرض الوثائق المحفوظة الخاصة بصف دراسي واحد بتصميم هادئ قابل للطي لمنع التكدس والزحمة،
- * مع إتاحة فتح المعاينة الفورية للطباعة أو فتح الملف من Google Drive مباشرة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 145 سطراً).
+ * مع إتاحة فتح المعاينة الفورية للطباعة داخل الموقع أو نسخ رابط المذكرة الداخلي.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
  */
 
 import { useState } from "react";
@@ -51,6 +51,15 @@ export default function DriveArchiveGradeGroupCard({
   onDeleteRecord,
 }: DriveArchiveGradeGroupCardProps) {
   const [isOpen, setIsOpen] = useState<boolean>(defaultOpen);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyDocLink = (docId: string) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/library?tab=archive&doc=${encodeURIComponent(docId)}`;
+    navigator.clipboard?.writeText(url);
+    setCopiedId(docId);
+    setTimeout(() => setCopiedId((prev) => (prev === docId ? null : prev)), 2500);
+  };
 
   return (
     <section className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
@@ -125,15 +134,14 @@ export default function DriveArchiveGradeGroupCard({
                     <span>👁️</span>
                     <span>معاينة وطباعة</span>
                   </button>
-                  <a
-                    href={doc.driveViewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[42px] flex-1 sm:flex-initial px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-black flex items-center justify-center gap-1 transition-colors"
+                  <button
+                    type="button"
+                    onClick={() => handleCopyDocLink(doc.id)}
+                    className="min-h-[42px] flex-1 sm:flex-initial px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-black flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   >
-                    <span>☁️</span>
-                    <span>Drive ↗</span>
-                  </a>
+                    <span>🔗</span>
+                    <span>{copiedId === doc.id ? "✓ تم النسخ" : "رابط المذكرة"}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => onDeleteRecord(doc.id)}

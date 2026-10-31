@@ -2,11 +2,11 @@
 
 /**
  * @file saved-booklets-reviews-archive-tab.tsx
- * @description خزينة وعارض المذكرات والاختبارات والمراجعات المحفوظة في Google Drive (overmath.math@gmail.com):
+ * @description خزينة وعارض المذكرات والاختبارات والمراجعات المحفوظة سحابياً داخل الموقع:
  * - مقسمة إلى تبويبات واضحة (المذكرات، الاختبارات، المراجعات، الكل) بنفس تصميم الموقع.
  * - كل تبويب مقسم حسب الصفوف الدراسية في بطاقات هادئة قابلة للطي مع شريط فلترة سريع للصفوف بدون زحمة.
- * - تتيح فتح المعاينة الحية للورقة (A4) وطباعتها مباشرة أو فتحها في Google Drive.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * - تتيح فتح المعاينة الحية للورقة (A4) وطباعتها مباشرة داخل الموقع أو مشاركة رابطها الداخلي (`/library?tab=archive&doc=...`).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 215 سطراً).
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -18,9 +18,9 @@ import SegmentedWorkspaceTabsBar, {
 import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import {
   OVERMATH_DRIVE_UPDATED_EVENT,
-  OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL,
   deleteDocumentFromOvermathDriveVault,
   loadOvermathDriveArchive,
+  pullVaultArchiveFromSupabaseCloud,
   type OvermathDriveArchivedRecord,
 } from "./overmath-google-drive-vault";
 import DriveArchiveGradeGroupCard from "./drive-archive-grade-group-card";
@@ -45,20 +45,31 @@ export default function SavedBookletsReviewsArchiveTab() {
   const [previewRecord, setPreviewRecord] = useState<OvermathDriveArchivedRecord | null>(null);
 
   useEffect(() => {
-    const sync = () => {
-      const loaded = loadOvermathDriveArchive();
+    const applyLoaded = (loaded: readonly OvermathDriveArchivedRecord[]) => {
       setRecords(loaded);
-      // إذا لم يكن هناك مذكرات بعد ولكن توجد اختبارات أو مراجعات، نعرض الكل تلقائياً
       if (loaded.length > 0 && !loaded.some((r) => r.docKind === "booklet")) {
         setActiveKind("all");
       }
+      if (typeof window !== "undefined") {
+        const docId = new URLSearchParams(window.location.search).get("doc");
+        if (docId) {
+          const found = loaded.find((r) => r.id === docId);
+          if (found) setPreviewRecord(found);
+        }
+      }
     };
-    sync();
-    window.addEventListener(OVERMATH_DRIVE_UPDATED_EVENT, sync);
-    window.addEventListener("storage", sync);
+
+    const syncLocal = () => {
+      applyLoaded(loadOvermathDriveArchive());
+    };
+    syncLocal();
+    void pullVaultArchiveFromSupabaseCloud().then(applyLoaded);
+
+    window.addEventListener(OVERMATH_DRIVE_UPDATED_EVENT, syncLocal);
+    window.addEventListener("storage", syncLocal);
     return () => {
-      window.removeEventListener(OVERMATH_DRIVE_UPDATED_EVENT, sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener(OVERMATH_DRIVE_UPDATED_EVENT, syncLocal);
+      window.removeEventListener("storage", syncLocal);
     };
   }, []);
 
@@ -95,7 +106,7 @@ export default function SavedBookletsReviewsArchiveTab() {
 
   return (
     <div className="space-y-3">
-      {/* شريط خزينة Google Drive العلوي */}
+      {/* شريط خزينة المذكرات والاختبارات السحابية العلوي */}
       <div className="p-3.5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 flex items-center justify-center text-lg shrink-0">
@@ -103,32 +114,21 @@ export default function SavedBookletsReviewsArchiveTab() {
           </div>
           <div className="min-w-0">
             <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-              خزينة Google Drive للمذكرات والاختبارات
+              خزينة المذكرات والاختبارات السحابية بالموقع
             </div>
-            <p
-              dir="ltr"
-              className="text-[11px] font-bold text-teal-700 dark:text-teal-400 truncate text-right"
-            >
-              {OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL} • {records.length} ملف محفوظ
+            <p className="text-[11px] font-bold text-teal-700 dark:text-teal-400 truncate">
+              محفوظة سحابياً بصفحات A4 كاملة مع رابط مباشر داخل الموقع • {records.length} ملف محفوظ
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <Link
             href="/studio"
-            className="min-h-[40px] px-3 rounded-xl bg-indigo-900 text-white text-xs font-black flex items-center gap-1"
+            className="min-h-[40px] px-3.5 rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black flex items-center gap-1.5"
           >
             <span>⚡</span>
-            <span className="hidden sm:inline">توليد جديد</span>
+            <span>توليد جديد</span>
           </Link>
-          <a
-            href="https://drive.google.com/drive/u/0/my-drive"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="min-h-[40px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
-            <span>فتح Drive ↗</span>
-          </a>
         </div>
       </div>
 
@@ -182,7 +182,7 @@ export default function SavedBookletsReviewsArchiveTab() {
         <CalmEmptyStateCard
           icon="🗂️"
           titleAr="لا توجد ملفات محفوظة في هذا التبويب بعد"
-          hintAr="من استوديو التوليد والطباعة، افتح معاينة الورقة واضغط «☁️ حفظ في Drive» لتظهر هنا مقسمة حسب الصف الدراسي."
+          hintAr="من استوديو التوليد والطباعة، افتح معاينة الورقة واضغط «💾 حفظ في خزينة الموقع» لتظهر هنا مقسمة حسب الصف الدراسي مع معاينة فورية ورابط مباشر."
         />
       ) : (
         <div className="space-y-3">

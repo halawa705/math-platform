@@ -21,7 +21,6 @@ import TwoColumnNewspaperPacker from "@/core/pdf-layout-engine/two-column-newspa
 import PDFControlsGroupedToolPanel from "./pdf-controls-grouped-tool-panel";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
 import {
-  OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL,
   saveDocumentToOvermathDriveVault,
 } from "@/features/curriculum-library-hub/overmath-google-drive-vault";
 
@@ -134,9 +133,11 @@ export default function PDFPreviewOrchestrator({
       gradeAr: gradeNameAr || "غير محدد",
       pagesCount: Math.max(1, pagesCount),
       fontUsed: `${activeFont.nameArabic.split("—")[0].trim()} ${settings.exactFontSizePt}pt`,
+      questions: customQuestions,
+      settings,
       htmlContent: sheetContainerRef.current?.innerHTML || "",
     });
-    setDriveFeedback(`✓ تم الحفظ (${OVERMATH_GOOGLE_DRIVE_ACCOUNT_EMAIL})`);
+    setDriveFeedback("✓ تم الحفظ في خزينة الموقع");
     setTimeout(() => setDriveFeedback(null), 4000);
   };
 
@@ -165,7 +166,7 @@ export default function PDFPreviewOrchestrator({
             onClick={handleSaveToDrive}
             className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-black cursor-pointer truncate px-2"
           >
-            ☁️ {driveFeedback || "حفظ في Drive"}
+            💾 {driveFeedback || "حفظ في الخزينة"}
           </button>
           <Link
             href="/library?tab=archive"
