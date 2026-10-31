@@ -31,8 +31,8 @@ export interface TopologyClassificationResult {
   readonly topology: CurriculumGeometryTopology;
   readonly confidence: number;
   readonly sharedVertices: readonly string[];
-  readonly primaryTri?: readonly [string, string, string];
-  readonly secondaryTri?: readonly [string, string, string];
+  readonly primaryTri?: readonly string[];
+  readonly secondaryTri?: readonly string[];
   readonly intersectionPoint?: string;
   readonly altitudePoint?: string;
   readonly notes: readonly string[];
@@ -53,21 +53,18 @@ const HOURGLASS_KEYWORDS_RE =
 export function classifyCurriculumGeometryTopology(
   rawInput: string | readonly GeoFact[]
 ): TopologyClassificationResult {
-  const notes: string[] = [];
-
   // تحويل المدخل إلى نص وحقائق
-  let text = "";
-  let facts: GeoFact[] = [];
-
-  if (typeof rawInput === "string") {
-    text = convertGeometryLatexToPlainText(rawInput);
-    const structured = restructureGeometryClauses(text);
-    const clauses = structured.split(/\s*[;؛\n]+\s*/).map((c) => c.trim()).filter(Boolean);
-    facts = clauses.map(parseGeoFactString).filter((f): f is GeoFact => f !== null);
-  } else {
-    facts = [...rawInput];
-    text = facts.map((f) => JSON.stringify(f)).join(" ");
-  }
+  const text =
+    typeof rawInput === "string"
+      ? convertGeometryLatexToPlainText(rawInput)
+      : rawInput.map((f) => JSON.stringify(f)).join(" ");
+  const facts =
+    typeof rawInput === "string"
+      ? restructureGeometryClauses(text)
+          .split(/\s*[;؛\n،,]+\s*/)
+          .map((c) => parseGeoFactString(c.trim()))
+          .filter((f): f is GeoFact => f !== null)
+      : [...rawInput];
 
   // 1. فحص مسائل الظل والارتفاع الحياتية
   if (APPLIED_SHADOW_RE.test(text)) {
@@ -96,11 +93,9 @@ export function classifyCurriculumGeometryTopology(
 
   if (HOURGLASS_KEYWORDS_RE.test(text)) {
     const mP =
-      text.match(/[A-Za-z]{2}\s*∩\s*[A-Za-z]{2}\s*=\s*\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?/i) ||
-      text.match(/∩\s*[A-Za-z]{2}\s*=\s*\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?/i) ||
-      text.match(/\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?\s*=\s*.*∩/i) ||
-      text.match(/يتقاطعان\s*(?:في|عند)\s*(?:النقطة\s+)?\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?/i) ||
-      text.match(/متقابل(?:ان|تان|ين|ة)?\s*بالرأس\s*(?:في|عند)\s*(?:النقطة\s+)?\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?/i);
+      text.match(
+        /(?:[A-Za-z]{2}\s*∩\s*[A-Za-z]{2}\s*=|يتقاطعان\s*(?:في|عند)|متقابل(?:ان|تان|ين|ة)?\s*بالرأس)\s*(?:في|عند)?\s*(?:النقطة\s+)?\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?/i
+      ) || text.match(/∩\s*[A-Za-z]{2}\s*=\s*\{?\s*([A-Za-z]|[أ-ي]ـ?)\s*\}?/i);
     const p = mP ? normalizeLabelKey(mP[1]) : "M";
     return {
       topology: "hourglass_intersecting_chords",
@@ -119,36 +114,59 @@ export function classifyCurriculumGeometryTopology(
   );
 
   if (hasEuclidKeyword || (perpFacts.length > 0 && /قائم/i.test(text) && altitudeFoot)) {
-    const altitudeMatch =
+    const altM =
       text.match(/(?:العمود|عمود)?\s*([A-Za-z]{2}|(?:[أ-ي]ـ?\s*){2})\s*⊥/i) ||
       text.match(/العمود\s*([A-Za-z]{2})/i);
-    let altPt = altitudeFoot?.foot || altitudeFoot?.a[1];
-    if (!altPt && altitudeMatch) {
-      const rawSeg = altitudeMatch[1].replace(/\s+/g, "");
-      altPt = rawSeg.length >= 2 ? normalizeLabelKey(rawSeg[1]) : normalizeLabelKey(rawSeg);
-    }
-    if (!altPt && hasEuclidKeyword) altPt = "D";
+    const altPt =
+      altitudeFoot?.foot ||
+      altitudeFoot?.a[1] ||
+      (altM ? normalizeLabelKey(altM[1].replace(/\s+/g, "").slice(-1)) : hasEuclidKeyword ? "D" : undefined);
+    const rightApexM = text.match(/قائم(?:الزاوية)?\s*(?:في|عند)\s*([A-Za-z]|[أ-ي]ـ?)/i);
+    const apex = rightApexM ? normalizeLabelKey(rightApexM[1]) : "A";
+    const mainTriM = text.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})/i);
+    const o = mainTriM ? [mainTriM[1][0], mainTriM[1][1], mainTriM[1][2]].filter((l) => l !== apex) : [];
+    const primaryTri: readonly [string, string, string] = o.length === 2 ? [apex, o[0], o[1]] : [apex, "B", "C"];
 
     return {
       topology: "euclid_right_triangle_altitude",
       confidence: 0.92,
       sharedVertices: altitudeFoot ? [altitudeFoot.a[0], altitudeFoot.a[1]] : altPt ? [altPt] : [],
       altitudePoint: altPt,
+      primaryTri,
       notes: ["تشابه المثلث القائم الزاوية وتطبيقات نظرية إقليدس."],
     };
   }
 
+  // 3.5 فحص المثلث المتداخل لطاليس أو القاطع العكسي (حتى دون إعلان تشابه صريح)
+  const cuts = Array.from(text.matchAll(/([A-Za-z])\s*(?:∈|ينتمي|منتصف|على)\s*([A-Za-z]{2})/gi)).map((m) => m[1]);
+  const isNestedCut = cuts.length >= 2 && !/متوسط|متوسطات/i.test(text);
+  const hasParallel = facts.some((f) => f.k === "parallel") || /\/\/|يوازي|توازي/.test(text);
+  const hasAntiparallelAngle =
+    /∠\s*([A-Za-z]{3})\s*=\s*(?:∠\s*)?([A-Za-z]{1,3})|m\s*\(\s*∠\s*([A-Za-z]{3})\s*\)\s*=\s*m\s*\(\s*∠\s*([A-Za-z]{1,3})\s*\)|ق\s*\(\s*∠\s*([A-Za-z]{3})\s*\)\s*=\s*ق\s*\(\s*∠\s*([A-Za-z]{1,3})\s*\)/i.test(text);
+
+  if (isNestedCut && (hasParallel || hasAntiparallelAngle)) {
+    const mainTriM = text.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})/i);
+    const mainTri: readonly [string, string, string] = mainTriM
+      ? [mainTriM[1][0], mainTriM[1][1], mainTriM[1][2]]
+      : ["A", "B", "C"];
+    return {
+      topology: hasAntiparallelAngle ? "antiparallel_in_triangle" : "thales_parallel_in_triangle",
+      confidence: 0.95,
+      sharedVertices: [mainTri[0]],
+      primaryTri: mainTri,
+      secondaryTri: [mainTri[0], cuts[0] || "D", cuts[1] || "E"] as const,
+      notes: [hasAntiparallelAngle ? "قاطع عكسي داخل المثلث." : "توازٍ داخل المثلث بنظرية طاليس."],
+    };
+  }
+
   // 4. فحص علاقة تشابه أو تطابق صريحة مع ترتيب الرؤوس
+  const simFact = facts.find(
+    (f): f is Extract<GeoFact, { k: "similarity" | "congruence" }> =>
+      f.k === "similarity" || f.k === "congruence"
+  );
   const sim =
     extractOrderedSimilarityTriangles(text) ||
-    facts
-      .filter((f): f is Extract<GeoFact, { k: "similarity" | "congruence" }> => f.k === "similarity" || f.k === "congruence")
-      .map((f) => ({
-        tri1: f.tri1,
-        tri2: f.tri2,
-        isCongruence: f.k === "congruence",
-        ratio: f.k === "similarity" ? f.ratio : undefined,
-      }))[0];
+    (simFact ? { tri1: simFact.tri1, tri2: simFact.tri2, isCongruence: simFact.k === "congruence" } : null);
 
   if (sim) {
     const t1Set = new Set(sim.tri1);
@@ -162,9 +180,7 @@ export function classifyCurriculumGeometryTopology(
         sharedVertices: [],
         primaryTri: sim.tri1,
         secondaryTri: sim.tri2,
-        notes: [
-          `مثلثان منفصلان تماماً لا يشتركان في أي رأس: Δ${sim.tri1.join("")} و Δ${sim.tri2.join("")}.`,
-        ],
+        notes: [`مثلثان منفصلان لا يشتركان في أي رأس: Δ${sim.tri1.join("")} و Δ${sim.tri2.join("")}.`],
       };
     }
 
@@ -186,11 +202,6 @@ export function classifyCurriculumGeometryTopology(
       }
 
       // فحص ترتيب التناظر: هل هو طاليس (مباشر) أم قاطع عكسي (antiparallel)؟
-      const t1Other = sim.tri1.filter((v) => v !== commonApex);
-      const t2Other = sim.tri2.filter((v) => v !== commonApex);
-
-      // إذا كان ترتيب الرؤوس في المثلثين متطابقاً في الترتيب (مثل ADE ~ ABC)
-      // والرأس المشترك هو الأول في الاثنين: sim.tri1[0] === sim.tri2[0] === commonApex
       const isApexFirstInBoth = sim.tri1[0] === commonApex && sim.tri2[0] === commonApex;
       const isApexLastInBoth =
         sim.tri1[sim.tri1.length - 1] === commonApex &&
@@ -247,35 +258,34 @@ export function classifyCurriculumGeometryTopology(
     }
   }
 
-  // 5. فحص التوازي داخل مثلث بدون نص تشابه صريح (DE // BC)
-  const parallelFact = facts.find((f): f is Extract<GeoFact, { k: "parallel" }> => f.k === "parallel");
-  if (parallelFact || /\/\/|يوازي|توازي/.test(text)) {
+  // 5. فحص التوازي لطاليس عند وجود نص صريح
+  if ((facts.some((f) => f.k === "parallel") || /\/\/|يوازي/.test(text)) && /طاليس/i.test(text)) {
     return {
       topology: "thales_parallel_in_triangle",
       confidence: 0.88,
       sharedVertices: [],
-      notes: ["توازي مستقيم لضلع في مثلث يستنتج هيئة طاليس."],
+      notes: ["توازي مستقيم لضلع في مثلث بنظرية طاليس."],
     };
   }
 
   // 6. فحص منصف زاوية يربط بين مثلثين متجاورين
   const bisectorFact = facts.find((f): f is Extract<GeoFact, { k: "bisector" }> => f.k === "bisector");
-  if (bisectorFact || /ينصف|منصف\s*الزاوية/.test(text)) {
+  if (bisectorFact && /ينصف|منصف\s*الزاوية/.test(text)) {
     return {
       topology: "adjacent_ray_bisector_triangles",
       confidence: 0.85,
-      sharedVertices: bisectorFact ? [bisectorFact.vertex] : [],
-      notes: ["منصف زاوية أو شعاع قاطع لمثلثين متجاورين."],
+      sharedVertices: [bisectorFact.vertex],
+      notes: ["منصف زاوية يربط مثلثين متجاورين."],
     };
   }
 
-  // 7. هيئة عامة افتراضية للمثلثات المنفصلة
-  if (/مثلث|مثلثان|مثلثين/i.test(text)) {
+  // 7. مثلثان متشابهان بدون علاقة ترتيبية صريحة
+  if (/مثلثان\s*متشابهان|مثلثين\s*متشابهين|تشابه\s*مثلثين/i.test(text)) {
     return {
       topology: "disjoint_two_triangles",
-      confidence: 0.75,
+      confidence: 0.85,
       sharedVertices: [],
-      notes: ["مثلثات عامة بتناسب بصري."],
+      notes: ["مثلثان متشابهان منفصلان."],
     };
   }
 

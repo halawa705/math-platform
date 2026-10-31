@@ -18,7 +18,7 @@ export function convertGeometryLatexToPlainText(raw: string): string {
   for (let i = 0; i < 3; i++) t = t.replace(WRAPPER_COMMANDS, "$1");
   t = t
     .replace(/\\(?:widehat|hat)\s*\{([^{}]*)\}/g, "∠$1")
-    .replace(/\\(?:bigtriangleup|triangle)\b/g, " مثلث ")
+    .replace(/\\(?:bigtriangleup|triangle|Delta)\b/g, " مثلث ")
     .replace(/\\(?:measuredangle|angle)\b/g, " ∠ ")
     .replace(/\^\s*\{?\s*\\circ\s*\}?|\\circ|°/g, "°")
     .replace(/\\(?:parallel|mid)\b/g, " // ")

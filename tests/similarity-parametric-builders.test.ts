@@ -20,7 +20,7 @@ describe("المرحلة المحورية الرابعة: المركّبات ا�
       const diag = matchGeometryWithDiagnostics(prompt, "nb_sim_ex1", "english");
 
       expect(diag.figure).toBeDefined();
-      expect(diag.source).toBe("catalog"); // أو parametric
+      expect(["catalog", "compositor"]).toContain(diag.source);
 
       const fig = diag.figure!;
       const labels = fig.vertices.map((v) => v.label);

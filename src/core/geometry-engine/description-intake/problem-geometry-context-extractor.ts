@@ -32,7 +32,7 @@ export function extractOrderedSimilarityTriangles(
 
   // 1. صيغة التشابه: ΔABC ~ ΔDEF أو مثلث ABC يشابه مثلث DEF
   const mSim = clean.match(
-    /(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s*){3})\s*(?:~|∼|يشابه|تشابه)\s*(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s*){3})/i
+    /(?<![A-Za-zء-ي])(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)\s*(?:~|∼|\\sim|(?<![أ-ي])(?:يشابه|تشابه)(?![أ-ي]))\s*(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)(?![A-Za-zء-ي])/i
   );
   if (mSim) {
     const t1 = parseLabelList(mSim[1]);
@@ -51,7 +51,7 @@ export function extractOrderedSimilarityTriangles(
 
   // 2. صيغة التطابق: ΔABC ≅ ΔDEF أو مثلث ABC يطابق مثلث DEF
   const mCong = clean.match(
-    /(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s*){3})\s*(?:≅|يطابق|تطابق)\s*(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s*){3})/i
+    /(?<![A-Za-zء-ي])(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)\s*(?:≅|\\cong|(?<![أ-ي])(?:يطابق|تطابق)(?![أ-ي]))\s*(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)(?![A-Za-zء-ي])/i
   );
   if (mCong) {
     const t1 = parseLabelList(mCong[1]);
@@ -115,7 +115,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   // إزالة وسم [رسم هندسي: ...] إن وُجد داخل النص لمنع التكرار
   const rawClean = promptText
     .replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, " ")
-    .replace(/\([أ-دABCD]\)[^()]*(?=\([أ-دABCD]\)|$)/g, " ") // إزالة خيارات MCQ
+    .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ") // إزالة خيارات MCQ دون المساس بالزوايا
     .replace(/\|\s*معرف\s*[^|\n]*/g, " ");
 
   const clean = convertGeometryLatexToPlainText(rawClean);
@@ -160,18 +160,29 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 5. التوازي والتعامد والنقاط: DE // BC أو AD ⊥ BC أو D ∈ AB
+  // 5. التوازي والتعامد والنقاط: DE // BC أو AD ⊥ BC أو D ∈ AB أو AD عمودي على BC
   const relMatches = clean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2})\s*(\/\/|⊥|∈|منتصف)\s*([A-Za-z]{2}|[A-Za-z])(?=[\s،,;؛|)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[A-Za-z])\s*(\/\/|⊥|∈|منتصف|عمودي\s*على|يوازي|ينتمي\s*إلى)\s*([A-Za-z]{2}|[A-Za-z])(?=[\s،,;؛|)]|$)/gi
   );
   for (const rm of relMatches) {
     const left = rm[1];
-    const op = rm[2];
+    let op = rm[2];
+    if (op.includes("عمودي")) op = "⊥";
+    else if (op.includes("يوازي")) op = "//";
+    else if (op.includes("ينتمي")) op = "∈";
     const right = rm[3];
     const relStr = `${left} ${op} ${right}`;
     if (!facts.includes(relStr)) {
       facts.push(relStr);
     }
+  }
+
+  // 6. المثلث القائم في رأس: مثلث ABC قائم في A
+  const rightTriMatch = clean.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})\s*قائم(?:الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
+  if (rightTriMatch) {
+    const tri = rightTriMatch[1];
+    const apex = rightTriMatch[2];
+    facts.push(`مثلث ${tri} قائم في ${apex}`);
   }
 
   return facts;
@@ -184,27 +195,43 @@ export function combineProblemAndTagGeometryContext(
   tagDescription?: string,
   promptText?: string
 ): string {
+  let effectiveTag = tagDescription?.trim();
+  let effectivePrompt = promptText?.trim();
+
+  // إذا لم يُمرر وسم رسم مستقل وكان نص المسألة يحتوي على وسم [رسم هندسي: ...]
+  if (!effectiveTag && effectivePrompt) {
+    const embeddedMatch = effectivePrompt.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
+    if (embeddedMatch) {
+      effectiveTag = embeddedMatch[1].trim();
+    }
+  }
+
   const parts: string[] = [];
 
   // إذا وُجد نص المسألة، نستخرج منه كل الحقائق الحية
-  if (promptText) {
-    const promptFacts = extractGeometryFactsFromPrompt(promptText);
+  if (effectivePrompt) {
+    const promptFacts = extractGeometryFactsFromPrompt(effectivePrompt);
     parts.push(...promptFacts);
   }
 
   // إذا وُجد وسم رسم، ندمج فقراته غير المكررة
-  if (tagDescription && tagDescription.trim()) {
-    const cleanTag = convertGeometryLatexToPlainText(tagDescription.trim());
-    const tagClauses = cleanTag.split(/\s*[;؛\n]+\s*/).map((c) => c.trim()).filter(Boolean);
+  if (effectiveTag) {
+    const cleanTag = convertGeometryLatexToPlainText(effectiveTag);
+    const tagClauses = cleanTag.split(/\s*[;؛\n،,]+\s*/).map((c) => c.trim()).filter(Boolean);
     for (const clause of tagClauses) {
-      if (!parts.some((p) => p.includes(clause) || clause.includes(p))) {
+      const normClause = clause.replace(/\s+/g, "");
+      const isDuplicate = parts.some((p) => {
+        const normP = p.replace(/\s+/g, "");
+        return normP === normClause || (normP.length === normClause.length && normP.includes(normClause));
+      });
+      if (!isDuplicate) {
         parts.push(clause);
       }
     }
   }
 
   if (parts.length === 0) {
-    return tagDescription?.trim() || "";
+    return effectiveTag || effectivePrompt || "";
   }
 
   // ترتيب الحقائق: التشابه/التطابق أولاً، ثم النقاط والخطوط، ثم الأطوال، ثم الزوايا

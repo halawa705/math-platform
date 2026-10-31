@@ -17,6 +17,7 @@ import { buildNestedThalesAntiparallelFigure } from "./nested-thales-antiparalle
 import { buildHourglassIntersectionFigure } from "./hourglass-intersection-parametric-builder";
 import { buildSharedAngleSecantFigure } from "./shared-angle-and-bisector-builder";
 import { buildEuclidAltitudeParametricFigure } from "./euclid-altitude-parametric-builder";
+import { buildAppliedShadowHeightFigure } from "./applied-shadow-height-builder";
 import {
   convertGeometryLatexToPlainText,
 } from "../description-intake/geometry-latex-to-plain-normalizer";
@@ -83,13 +84,18 @@ export function buildParametricSimilarityFigure(
   if (topologyRes.topology === "unknown_topology") return undefined;
 
   // استخراج الحقائق
-  const clauses = clean.split(/\s*[;؛\n]+\s*/).map((c) => c.trim()).filter(Boolean);
+  const clauses = clean.split(/\s*[;؛\n،,]+\s*/).map((c) => c.trim()).filter(Boolean);
   const facts = clauses.map(parseGeoFactString).filter((f): f is GeoFact => f !== null);
   const { lengths, angles } = extractGivenMaps(clean, facts);
 
   const simInfo = extractOrderedSimilarityTriangles(clean);
-  const tri1 = topologyRes.primaryTri || simInfo?.tri1 || ["A", "B", "C"];
-  const tri2 = topologyRes.secondaryTri || simInfo?.tri2 || ["D", "E", "F"];
+  const toTri3 = (arr?: readonly string[], fallback: readonly [string, string, string] = ["A", "B", "C"]): readonly [string, string, string] => [
+    arr?.[0] || fallback[0],
+    arr?.[1] || fallback[1],
+    arr?.[2] || fallback[2],
+  ];
+  const tri1 = toTri3(topologyRes.primaryTri || simInfo?.tri1, ["A", "B", "C"]);
+  const tri2 = toTri3(topologyRes.secondaryTri || simInfo?.tri2, ["D", "E", "F"]);
 
   switch (topologyRes.topology) {
     case "disjoint_two_triangles":
@@ -145,14 +151,32 @@ export function buildParametricSimilarityFigure(
 
     case "hourglass_intersecting_chords": {
       const mid = topologyRes.intersectionPoint || topologyRes.sharedVertices[0] || "E";
-      const topEnds = tri1.filter((v) => v !== mid) as [string, string];
-      const botEnds = tri2.filter((v) => v !== mid) as [string, string];
+      let topEnds: [string, string] = ["A", "B"];
+      let botEnds: [string, string] = ["C", "D"];
+
+      const chordMatch = clean.match(
+        /([A-Z]{2}|(?:[أ-ي]ـ?\s*){2})\s*(?:∩|×)\s*([A-Z]{2}|(?:[أ-ي]ـ?\s*){2})\s*=\s*\{?\s*([A-Z]|[أ-ي]ـ?)\s*\}?/i
+      );
+      if (chordMatch) {
+        const s1 = chordMatch[1].replace(/\s+/g, "");
+        const s2 = chordMatch[2].replace(/\s+/g, "");
+        if (s1.length >= 2 && s2.length >= 2) {
+          topEnds = [s1[0], s2[0]];
+          botEnds = [s1[1], s2[1]];
+        }
+      } else {
+        const t1 = tri1.filter((v) => v !== mid);
+        const t2 = tri2.filter((v) => v !== mid);
+        if (t1.length === 2) topEnds = [t1[0], t1[1]];
+        if (t2.length === 2) botEnds = [t2[0], t2[1]];
+      }
+
       return buildHourglassIntersectionFigure({
         figureId,
         notationLanguage,
         intersectionVertex: mid,
-        tri1Endpoints: topEnds.length === 2 ? topEnds : ["A", "B"],
-        tri2Endpoints: botEnds.length === 2 ? botEnds : ["C", "D"],
+        tri1Endpoints: topEnds,
+        tri2Endpoints: botEnds,
         hasParallel: facts.some((f) => f.k === "parallel") || /\/\/|يوازي/.test(clean),
         givenLengths: lengths,
         givenAngles: angles,
@@ -188,7 +212,15 @@ export function buildParametricSimilarityFigure(
       });
     }
 
-    case "applied_shadow_height_triangles":
+    case "applied_shadow_height_triangles": {
+      return buildAppliedShadowHeightFigure({
+        figureId,
+        notationLanguage,
+        problemText: clean,
+        givenLengths: lengths,
+      });
+    }
+
     default:
       // Fallback للمثلثين المنفصلين
       return buildDisjointSimilarTrianglesFigure({

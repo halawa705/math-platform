@@ -7,6 +7,7 @@
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
 import { buildParametricSimilarityFigure } from "./similarity-family/similarity-parametric-builder-orchestrator";
+import { convertGeometryLatexToPlainText } from "./description-intake/geometry-latex-to-plain-normalizer";
 import {
   isFigureFaithfulToPrompt,
   isPurelyTheoreticalNoDiagramProblem,
@@ -68,11 +69,17 @@ export function matchOptionalGeometryFigureFromArabicDescription(
 ): CanonicalGeometryFigureIR | undefined {
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
+  if (isPurelyTheoreticalNoDiagramProblem(desc)) return undefined;
 
+  const cleanDesc = convertGeometryLatexToPlainText(desc);
   const isSimilarity =
-    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|زوايا\s*متطابقة|نسبة\s*التشابه|معامل\s*التشابه/i.test(
-      desc
-    );
+    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|زوايا\s*متطابقة|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|رجل\s*طوله|إقليدس/i.test(
+      cleanDesc
+    ) ||
+    /AED.*=.*B|ADE.*=.*C/i.test(cleanDesc) ||
+    (cleanDesc.includes("قائم") && cleanDesc.includes("⊥") && !cleanDesc.includes("مربع") && !cleanDesc.includes("مستطيل")) ||
+    (cleanDesc.includes("∩") && (cleanDesc.includes("//") || cleanDesc.includes("يوازي") || cleanDesc.includes("تشابه"))) ||
+    (cleanDesc.includes("∈") && cleanDesc.includes("//") && (cleanDesc.includes("مثلث") || cleanDesc.includes("Δ")) && !cleanDesc.includes("متوسط"));
 
   if (isSimilarity) {
     const parametricSim = buildParametricSimilarityFigure(desc, figureId, notationLanguage);

@@ -10,6 +10,8 @@ import { pairKey, toDisplayLabel } from "./geo-label-utils";
 import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
+import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
+import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
@@ -22,8 +24,25 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
   if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
     const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
-    if (fromTag.figure && fromTag.warnings.length === 0) return fromTag;
+    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description)) {
+      return fromTag;
+    }
   }
+
+  // فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية عند وجود سياق تشابه صريح
+  const isSimilarityContext =
+    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|AED.*B|ADE.*C/i.test(
+      description
+    ) ||
+    (/∈|ينتمي/.test(description) && /\/\/|يوازي/.test(description) && /مثلث|Δ/.test(description) && !/متوسط/.test(description));
+
+  if (isSimilarityContext) {
+    const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
+    if (parametricFig) {
+      return { figure: parametricFig, warnings: [] };
+    }
+  }
+
   const warnings: string[] = [];
   const facts: GeoFact[] = [];
   for (const line of splitDescriptionIntoFactStrings(description)) {

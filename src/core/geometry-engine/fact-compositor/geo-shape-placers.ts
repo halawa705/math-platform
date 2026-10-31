@@ -24,7 +24,18 @@ export function placeDeclaredShapes(
   const polygons: PlacedPolygon[] = [];
   let cursorX = 0;
 
-  for (const f of facts) {
+  // دعم تشابه المضلعات الرباعية والمستطيلات المعلنة عبر حقيقة التشابه
+  const effectiveFacts: GeoFact[] = [...facts];
+  const hasShape = facts.some((f) => f.k === "triangle" || f.k === "quad");
+  if (!hasShape) {
+    const simQuad = facts.find((f) => f.k === "similarity" && f.tri1.length === 4 && f.tri2.length === 4);
+    if (simQuad && simQuad.k === "similarity") {
+      effectiveFacts.push({ k: "quad", kind: "rectangle", labels: [simQuad.tri1[0], simQuad.tri1[1], simQuad.tri1[2], simQuad.tri1[3]] });
+      effectiveFacts.push({ k: "quad", kind: "rectangle", labels: [simQuad.tri2[0], simQuad.tri2[1], simQuad.tri2[2], simQuad.tri2[3]] });
+    }
+  }
+
+  for (const f of effectiveFacts) {
     if (f.k !== "triangle" && f.k !== "quad") continue;
     const labels = f.labels;
     let local: Vec2[];
