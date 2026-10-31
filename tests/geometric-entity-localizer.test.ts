@@ -79,6 +79,28 @@ describe("Geometric Entity Localizer — Arabic <-> Latin Synchronization", () =
     expect(localizeCanonicalLatex(latex4, "western", "english")).toContain(
       "\\overline{AB}"
     );
+
+    const latex5 = "\\overleftrightarrow{\\text{أ ب}} \\cap \\overleftrightarrow{\\text{جـ د}} = \\{\\text{م}\\}";
+    expect(localizeCanonicalLatex(latex5, "western", "english")).toContain(
+      "\\overleftrightarrow{AB} \\cap \\overleftrightarrow{CD} = \\{M\\}"
+    );
+
+    const latex6 = "m(\\angle \\text{أ م جـ}) = 65^\\circ";
+    expect(localizeCanonicalLatex(latex6, "western", "english")).toContain(
+      "m(\\angle AMC) = 65^\\circ"
+    );
+
+    const latex7 = "\\vec{\\text{م و}}";
+    expect(localizeCanonicalLatex(latex7, "western", "english")).toContain(
+      "\\overrightarrow{MF}"
+    );
+  });
+
+  it("localizes points and ray lists in plain text when notation is English", () => {
+    const plain = "في الشكل المقابل، النقطة م متجمع حولها الأشعة م أ، م ب، م جـ، م د عند نقطة ن";
+    expect(localizeGeometricEntitiesInPlainText(plain, "english")).toBe(
+      "في الشكل المقابل، النقطة M متجمع حولها الأشعة MA، MB، MC، MD عند نقطة N"
+    );
   });
 
   it("switches MCQ choice letters between Arabic and English based on notation", () => {

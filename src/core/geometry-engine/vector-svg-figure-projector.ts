@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file vector-svg-figure-projector.ts
  * @description المصير المتجهي النقي (Pure Vector SVG Projector) الذي يحول CanonicalGeometryFigureIR
  * المنبثقة من أصول العائلات الهندسية (`triangle-root-core.ts` وغيرها) إلى رسم SVG متجهي فائق الدقة
@@ -37,8 +37,8 @@ export function projectGeometryFigureToSVGMarkup(
   const height = options.heightPx ?? 165;
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#0D9488";
-  const numeralMode = options.numeralMode ?? "eastern";
-  const notation = options.notationLanguage || "arabic";
+  const numeralMode = options.numeralMode ?? "western";
+  const notation = options.notationLanguage || "english";
   const padding = Math.max(16, Math.min(22, Math.round(Math.min(width, height) * 0.14)));
 
   if (figure.vertices.length === 0) {

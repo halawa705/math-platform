@@ -13,12 +13,12 @@ import {
 export const MODULE_ID_FIGURE_LABEL_SYMBOL_LOCALIZER = "figure_label_symbol_localizer" as const;
 
 const LATIN_RUN = /(?<![A-Za-z])([A-Za-z]{1,4})(?![A-Za-z])/g;
-const ARABIC_LETTER_RUN = /(?<![\u0621-\u064A])([أإابجدهوزحخيكلمنفقرشطتثغسصع])(?![\u0621-\u064A])/g;
+const ARABIC_LETTER_RUN = /(?<![\u0621-\u064A])([أإابجدهوزحخيكلمنفقرشطتثغسصع]ـ?)(?![\u0621-\u064A])/g;
 
 export function localizeFigureLabelText(text: string, notation: MathNotationLanguage, numeralMode: NumeralDisplayMode): string {
   const symbols =
     notation === "arabic"
       ? text.replace(LATIN_RUN, (run) => [...run.toUpperCase()].map((ch) => localizeGeometricVertexLabelSSOT(ch, "arabic")).join(""))
-      : text.replace(ARABIC_LETTER_RUN, (ch) => localizeGeometricVertexLabelSSOT(ch, "english"));
+      : text.replace(ARABIC_LETTER_RUN, (ch) => localizeGeometricVertexLabelSSOT(ch.replace(/\u0640/g, ""), "english"));
   return formatNumeralsByModeSSOT(symbols, numeralMode);
 }

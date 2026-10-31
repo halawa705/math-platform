@@ -145,6 +145,26 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         });
       });
     }
+  } else if (drillsByIdea.size > 0) {
+    let seenIdx = 0;
+    for (const [key, drills] of drillsByIdea.entries()) {
+      if (!key.startsWith("idea-")) continue;
+      seenIdx += 1;
+      drills.forEach((drill, dIdx) => {
+        resultItems.push(
+          buildStage2PrintableItem({
+            id: `booklet-s2-only-drill-${seenIdx}-${dIdx + 1}`,
+            questionNumber: resultItems.length + 1,
+            block: { ...drill, ideaIndex: seenIdx },
+            branchNameAr: params.branchNameAr,
+            defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
+            defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
+            bannerTitleAr: dIdx === 0 ? `الفكرة (${seenIdx}) — تمارين حاول بنفسك` : undefined,
+            solutionsMap,
+          })
+        );
+      });
+    }
   }
 
   allHomework.forEach((hw, hIdx) => {

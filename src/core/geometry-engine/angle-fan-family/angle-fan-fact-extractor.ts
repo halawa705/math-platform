@@ -127,7 +127,7 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
   for (const clause of clauses) {
     // 1. نقطة م حولها أربعة أشعة تصنع زوايا 2س°، 3س°، 4س°، 6س°
     const mAnonFan = clause.match(
-      /(?:ال)?نقطة\s+([أ-ي]ـ?|[A-Z])\s+حولها\s+(?:أربعة|اربعة|4|٤|عدة)?\s*أشعة\s+تصنع\s+زوايا\s+(.+)/
+      /(?:ال)?نقطة\s+([أ-ي]ـ?|[A-Z])\s+حولها\s+(?:ثلاثة|ثلاث|أربعة|اربعة|خمسة|خمس|3|٣|4|٤|5|٥|عدة)?\s*أشعة\s+تصنع\s+زوايا\s+(.+)/
     );
     if (mAnonFan) {
       setVertex(normalizeLabelKey(mAnonFan[1]));
@@ -344,9 +344,9 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       }
     }
 
-    // 13. منصف زاوية صريح أو شعاع يقسم زاوية: الشعاع جـ هـ ينصف ∠د جـ س
+    // 13. منصف زاوية صريح أو شعاع يقسم زاوية: الشعاع جـ هـ ينصف ∠د جـ س أو الشعاع م هـ داخل ∠أ م د
     if (!/ينصف\s+المنطقة\s+بينهما/.test(clause)) {
-      const mBis = clause.match(/^(.+?)\s+(ينصف|يقسم)\s+(?:الزاوية\s+|∠\s*)(.+)$/);
+      const mBis = clause.match(/^(.+?)\s+(ينصف|يقسم|داخل|يقع\s+داخل)\s+(?:الزاوية\s+|∠\s*)(.+)$/);
       if (mBis) {
         const rayKeys = extractCleanKeys(mBis[1]);
         const angKeys = extractCleanKeys(mBis[3]);

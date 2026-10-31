@@ -47,8 +47,8 @@ function canonicalizeCached(text: string): string {
 
 export default function SafeKaTeXBiDiMathRenderer({
   text,
-  numeralMode = "eastern",
-  notationLanguage = "arabic",
+  numeralMode = "western",
+  notationLanguage = "english",
   className = "",
 }: SafeKaTeXBiDiMathRendererProps) {
   const nodes = useMemo(() => parseCanonicalTextToNodes(canonicalizeCached(text ?? "")), [text]);

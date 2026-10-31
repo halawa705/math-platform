@@ -23,13 +23,19 @@ const TEXT_COMMAND_OPEN = /^\\(?:text|mathrm|textbf|mathbf)\{/;
 const ARABIC_PUNCTUATION_TO_ASCII: Readonly<Record<string, string>> = { "،": ",", "؛": ";", "؟": "?" };
 
 const SHORT_ARABIC_MATH_SYMBOLS: ReadonlySet<string> = new Set([
-  "س", "ص", "ع", "ح", "ط", "ن", "ك", "م", "ل", "ف", "د", "ر", "نق", "أ", "ا", "ب", "ج", "جـ",
-  "ه", "هـ", "ي", "جا", "جتا", "ظا", "ظتا", "قا", "قتا", "لو", "نها", "أب", "بج", "جد", "أج", "دهـ",
+  "س", "ص", "ع", "ح", "ط", "ن", "ك", "م", "ل", "ف", "د", "ر", "نق", "أ", "ا", "إ", "ب", "ج", "جـ",
+  "ه", "هـ", "و", "ز", "خ", "ي", "ق", "ش", "ت", "ث", "غ", "جا", "جتا", "ظا", "ظتا", "قا", "قتا",
+  "لو", "نها", "أب", "بج", "جد", "أج", "دهـ",
 ]);
+
+const SINGLE_VERTEX_TOKEN_RE = /^[أإابجدهوزحخيكلمنفقرشطتثغسصع]ـ?$/;
 
 function isProsePhrase(phrase: string): boolean {
   const words = phrase.trim().split(/\s+/).filter(Boolean);
-  return words.length >= 2 || (words.length === 1 && !SHORT_ARABIC_MATH_SYMBOLS.has(words[0]));
+  if (words.length === 0) return false;
+  if (words.length === 1) return !SHORT_ARABIC_MATH_SYMBOLS.has(words[0]);
+  if (words.length <= 5 && words.every((w) => SINGLE_VERTEX_TOKEN_RE.test(w))) return false;
+  return true;
 }
 
 type ScanPiece =

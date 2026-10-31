@@ -210,4 +210,17 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
     expect(examWithDirective).toContain("💡 توجيهات المعلم الخاصة:");
     expect(examWithDirective).toContain(directive);
   });
+
+  it("defaults all prompts to new curriculum English notation (0-9, x, y, z, A, B, C, D, M) and forbids Arabic translation", () => {
+    for (const [name, text] of Object.entries(promptsMap)) {
+      if (name === "curriculum") continue;
+      expect(text, `${name} should enforce English symbols by default`).toContain(
+        "إنجليزية مطابقة للمنهج الجديد بالمصادر"
+      );
+      expect(text, `${name} should forbid translating vertices to Arabic`).toContain(
+        "يُمنع تعريبها إلى أ، ب، جـ، م، س، ص"
+      );
+      expect(text, `${name} should use English geometry examples`).toContain("مثلث ABC");
+    }
+  });
 });
