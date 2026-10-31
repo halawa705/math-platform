@@ -5,6 +5,7 @@
  */
 
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
@@ -188,7 +189,10 @@ export function buildStage2PrintableItem(params: {
   const graphMatch = params.block.rawText.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
   const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
   const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
-  const geoDiag = geoMatch?.[1] ? matchGeometryWithDiagnostics(geoMatch[1], `${params.id}_geo`) : undefined;
+  const combinedGeo = !graphSpec
+    ? combineProblemAndTagGeometryContext(geoMatch?.[1], params.block.rawText || params.block.promptText)
+    : "";
+  const geoDiag = combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `${params.id}_geo`) : undefined;
   const geometryFigure = geoDiag?.figure;
   const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 

@@ -6,6 +6,7 @@
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
@@ -83,9 +84,12 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
 
       examples.forEach((ex, exIdx) => {
         const graphSpec = ex.geometryRaw ? parseCartesianGraphDescription(ex.geometryRaw) ?? undefined : undefined;
+        const combinedGeo = !graphSpec
+          ? combineProblemAndTagGeometryContext(ex.geometryRaw, ex.promptAr)
+          : "";
         const geoDiag =
-          ex.geometryRaw && !graphSpec
-            ? matchGeometryWithDiagnostics(ex.geometryRaw, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
+          combinedGeo
+            ? matchGeometryWithDiagnostics(combinedGeo, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
             : undefined;
         const geoMatch = geoDiag?.figure;
         const figureDiagnosticsAr =

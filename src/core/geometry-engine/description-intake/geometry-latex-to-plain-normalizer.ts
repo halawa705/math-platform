@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file geometry-latex-to-plain-normalizer.ts
  * @description المرحلة 1 من استقبال وصف NotebookLM: يحوّل لغة LaTeX المختلطة بالعربية (`$\triangle ABC$`, `m(\angle B)=90^\circ`,
  * `\overline{AB}`, `\parallel`...) إلى نص رمزي بسيط يفهمه محلل الحقائق (مثلث ABC، ق(∠ B) = 90°، AB، //).
@@ -26,7 +26,7 @@ export function convertGeometryLatexToPlainText(raw: string): string {
     .replace(/\\in\b/g, " ∈ ")
     .replace(/\\cap\b/g, " ∩ ")
     .replace(/\\(?:sim)\b/g, " ~ ")
-    .replace(/\\cong\b|≅/g, " ~ ")
+    .replace(/\\cong\b/g, " ≅ ")
     .replace(/\\(?:cdot|times)\b/g, " × ")
     .replace(/\\sqrt\s*\{([^{}]*)\}/g, "√$1")
     .replace(/\\sqrt\s*(\d+)/g, "√$1")

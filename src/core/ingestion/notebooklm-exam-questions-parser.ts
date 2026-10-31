@@ -7,6 +7,7 @@
 import type { QuestionAssessmentIR, MathQuestionPatternKind } from "../ir/question-assessment-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
+import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
 import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
@@ -144,8 +145,11 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
     const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
     const geoMatch = !graphMatch ? block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
-    const diagramAllowed = isDiagramJustifiedForQuestion({ promptArabic: basePrompt, rawDiagramTagText: geoMatch?.[1], branchId: params.branchId });
-    const geoDiag = diagramAllowed && geoMatch?.[1] ? matchGeometryWithDiagnostics(geoMatch[1], `geom_${params.lessonId}_${orderNumber}`) : undefined;
+    const combinedGeo = !graphSpec
+      ? combineProblemAndTagGeometryContext(geoMatch?.[1], basePrompt)
+      : "";
+    const diagramAllowed = isDiagramJustifiedForQuestion({ promptArabic: basePrompt, rawDiagramTagText: combinedGeo, branchId: params.branchId });
+    const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `geom_${params.lessonId}_${orderNumber}`) : undefined;
     const attachedGeometryFigure = geoDiag?.figure;
     const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 

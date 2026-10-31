@@ -28,4 +28,7 @@ export type GeoFact =
   | { readonly k: "intersect"; readonly a: Seg; readonly b: Seg; readonly p: string }
   | { readonly k: "diagonalsMeet"; readonly p: string }
   | { readonly k: "draw"; readonly seg: Seg }
-  | { readonly k: "extend"; readonly from: string; readonly through: string; readonly to: string };
+  | { readonly k: "extend"; readonly from: string; readonly through: string; readonly to: string }
+  | { readonly k: "similarity"; readonly tri1: readonly [string, string, string]; readonly tri2: readonly [string, string, string]; readonly ratio?: number }
+  | { readonly k: "congruence"; readonly tri1: readonly [string, string, string]; readonly tri2: readonly [string, string, string] }
+  | { readonly k: "ratio"; readonly a: Seg; readonly b: Seg; readonly num: number; readonly den: number };
