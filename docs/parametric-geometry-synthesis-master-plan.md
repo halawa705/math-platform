@@ -100,26 +100,26 @@ flowchart TD
 
 ### المهمات الفرعية الدقيقة (Sub-tasks):
 
-- [ ] **المهمة 4.1 — مركّب المثلثين المنفصلين المتشابهين/المتطابقين (`src/core/geometry-engine/similarity-family/disjoint-triangles-parametric-builder.ts`):**
+- [x] **المهمة 4.1 — مركّب المثلثين المنفصلين المتشابهين/المتطابقين (`src/core/geometry-engine/similarity-family/disjoint-triangles-parametric-builder.ts`):**
   - يرسم المثلث الأول (مثلاً $ABC$) والمثلث الثاني (مثلاً $DEF$ أو $XYZ$ أو $LMN$) متجاورين بتناسب بصري واضح (معامل تكبير/تصغير مستنتج من النسبة المعطاة أو $1 : 0.75$).
   - يضع الزوايا المعطاة فقط (مثلاً $40^\circ, 65^\circ$ في المثال 1-1، أو علامة الزاوية القائمة في $A$ في المثال 8-1، أو $120^\circ$ في المثال 9-1).
   - يضع الأطوال المعطاة فقط (سواء رقمية مثل `6 سم، 8 سم، 10 سم` أو جبرية مثل `x + 2 سم، 2x - 1 سم`).
 
-- [ ] **المهمة 4.2 — مركّب المثلث المتداخل لطاليس والقاطع العكسي (`src/core/geometry-engine/similarity-family/nested-thales-antiparallel-builder.ts`):**
+- [x] **المهمة 4.2 — مركّب المثلث المتداخل لطاليس والقاطع العكسي (`src/core/geometry-engine/similarity-family/nested-thales-antiparallel-builder.ts`):**
   - يرسم $\Delta ABC$ ويحدد موقع $D \in AB$ و $E \in AC$ بدقة بناءً على نسبة $AD : DB$ و $AE : EC$.
   - في حالة التوازي ($\overline{DE} \parallel \overline{BC}$): يضع سهمَي التوازي على $DE$ و $BC$.
   - في حالة القاطع العكسي ($m(\angle AED) = m(\angle B)$): يميل القاطع $DE$ ويضع قوسَي تساوي الزاويتين عند $E$ و $B$، ويضع الأطوال المعطاة ($AD, DB, AE, EC, DE, BC$) في أماكنها الصحيحة دون تداخل.
 
-- [ ] **المهمة 4.3 — مركّب الساعة الرملية وتقاطع القطرين (`src/core/geometry-engine/similarity-family/hourglass-intersection-parametric-builder.ts`):**
+- [x] **المهمة 4.3 — مركّب الساعة الرملية وتقاطع القطرين (`src/core/geometry-engine/similarity-family/hourglass-intersection-parametric-builder.ts`):**
   - يتعرف على نقطة التقاطع ($E$ أو $M$ أو $O$) والقطعتين المتقاطعتين ($AC \cap BD$ أو $AB \cap CD$).
   - يرسم المثلثين المتقابلين بالرأس (مثل $\Delta ABE$ و $\Delta CDE$ أو $\Delta AEC$ و $\Delta DEB$) بنسبة أطوال حقيقية.
   - يضع أسهم التوازي فقط إذا ذكر السؤال $\overline{AB} \parallel \overline{CD}$، أو قوسَي تساوي الزاويتين إذا ذكر $m(\angle A) = m(\angle D)$، ويكتب الأطوال المعطاة ($AB, CD, AE, EC, BE, ED$).
 
-- [ ] **المهمة 4.4 — مركّب المثلث المشترك في زاوية والمجاور بمنصف (`src/core/geometry-engine/similarity-family/shared-angle-and-bisector-builder.ts`):**
+- [x] **المهمة 4.4 — مركّب المثلث المشترك في زاوية والمجاور بمنصف (`src/core/geometry-engine/similarity-family/shared-angle-and-bisector-builder.ts`):**
   - لحالة $\Delta ABC \sim \Delta DBA$ أو $\Delta DAC$: يرسم $\Delta ABC$ ويصل القاطع الداخلي $AD$ إلى النقطة $D \in BC$ ويضع الأطوال الفعلية للمسألة (مثل $18, 9, 36, 12$ في المثال 9-2، أو $12, 6, 24, 8$ في تمرين 9-2، أو $8, 12, 18, 27$ في المثال 13-2).
   - لحالة $\Delta ABC \sim \Delta EBD$ مع تنصيف $\vec{BC}$ لزاوية $\angle ABE$: يرسم المثلثين متجاورين حول الضلع المشترك $BC$ مع علامتي تنصيف الزاوية عند $B$ والأطوال الفعلية.
 
-- [ ] **المهمة 4.5 — مركّب إقليدس البارامتري بجميع أوضاعه (`src/core/geometry-engine/similarity-family/euclid-altitude-parametric-builder.ts`):**
+- [x] **المهمة 4.5 — مركّب إقليدس البارامتري بجميع أوضاعه (`src/core/geometry-engine/similarity-family/euclid-altitude-parametric-builder.ts`):**
   - يدعم كون الزاوية القائمة في **$A$** ($\overline{AD} \perp \overline{BC}$) أو في **$B$** ($\overline{BD} \perp \overline{AC}$) أو في **$C$** ($\overline{CD} \perp \overline{AB}$).
   - يضع مربع الزاوية القائمة في رأس المثلث وعند مسقط العمود على الوتر.
   - يكتب **فقط** الأطوال المذكورة في المسألة (مثل $BD = 9, CD = 16$ أو $AD = 3.6, BD = 6.4$ أو $BD = 2, CD = 8$) دون إضافة أي رقم غير معطى.

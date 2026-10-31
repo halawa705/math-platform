@@ -6,6 +6,7 @@
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
+import { buildParametricSimilarityFigure } from "./similarity-family/similarity-parametric-builder-orchestrator";
 import {
   isFigureFaithfulToPrompt,
   isPurelyTheoreticalNoDiagramProblem,
@@ -72,6 +73,14 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|زوايا\s*متطابقة|نسبة\s*التشابه|معامل\s*التشابه/i.test(
       desc
     );
+
+  if (isSimilarity) {
+    const parametricSim = buildParametricSimilarityFigure(desc, figureId, notationLanguage);
+    if (parametricSim && isFigureFaithfulToPrompt(parametricSim, desc)) {
+      return parametricSim;
+    }
+  }
+
   if (!isSimilarity && /≅|\\cong|تطابق|متطابق|صورة.*بالانعكاس/i.test(desc)) {
     const prep2Congruence = matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage);
     if (prep2Congruence) return prep2Congruence;

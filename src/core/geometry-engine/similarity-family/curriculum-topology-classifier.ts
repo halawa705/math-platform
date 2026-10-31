@@ -197,15 +197,19 @@ export function classifyCurriculumGeometryTopology(
         sim.tri2[sim.tri2.length - 1] === commonApex;
 
       const hasParallelFact = facts.some((f) => f.k === "parallel") || /\/\/|يوازي|توازي/.test(text);
-      const hasAntiparallelClue =
+      const isAntiparallelOrder =
+        /ADE\s*~\s*ACB|ACB\s*~\s*ADE/i.test(text) ||
         /غير\s*مواز|معكوس|عكسي/i.test(text) ||
-        // زاوية تساوي زاوية معكوسة الترتيب
-        /m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)\s*=\s*m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)/.test(text);
+        (sim.tri1[0] === commonApex &&
+          sim.tri2[0] === commonApex &&
+          ((sim.tri1[1] === "D" && sim.tri2[1] === "C") ||
+            (sim.tri1[1] === "E" && sim.tri2[1] === "B") ||
+            (sim.tri1[1] === "X" && sim.tri2[1] === "C")));
 
-      if (hasAntiparallelClue || (!hasParallelFact && t1Other[0] === t2Other[1])) {
+      if (isAntiparallelOrder) {
         return {
           topology: "antiparallel_in_triangle",
-          confidence: 0.92,
+          confidence: 0.95,
           sharedVertices: [commonApex],
           primaryTri: sim.tri1,
           secondaryTri: sim.tri2,
