@@ -25,8 +25,24 @@ export function bindLatinNamesAndSimilarity(line: string): string {
 
   out = replaceOutsideMath(
     out,
-    new RegExp(`m\\s*\\(\\s*(?:∠|\\\\angle|<)\\s*([A-Z]'*)\\s*\\)\\s*=\\s*(${NUMBER})\\s*(?:°|درجة)?`, "g"),
-    (_m, vertex: string, value: string) => ` $m(\\angle ${vertex}) = ${value}^\\circ$ `
+    new RegExp(
+      `(?:ق|m)\\s*\\(\\s*(?:∠|\\\\angle|<)\\s*([A-Z]{1,3}'*|(?:[أإابجدهوزحخيكلمنفقرشطتثغسصع]\\u0640?\\s*){1,3})(?:\\s+(المنعكسة))?\\s*\\)(?:\\s+(المنعكسة))?\\s*=\\s*(${NUMBER})\\s*(?:°|درجة)?(?![A-Za-z\\u0621-\\u064A0-9٠-٩])`,
+      "g"
+    ),
+    (_m, vertex: string, r1: string | undefined, r2: string | undefined, value: string) => {
+      const v = /[A-Z]/.test(vertex) ? vertex.trim() : `\\text{${vertex.trim()}}`;
+      const ref = r1 || r2 ? " \\text{المنعكسة}" : "";
+      return ` $m(\\angle ${v}${ref}) = ${value}^\\circ$ `;
+    }
+  );
+  out = replaceOutsideMath(
+    out,
+    /(?:ق|m)\s*\(\s*(?:∠|\\angle|<)\s*([A-Z]{1,3}'*|(?:[أإابجدهوزحخيكلمنفقرشطتثغسصع]\u0640?\s*){1,3})(?:\s+(المنعكسة))?\s*\)(?:\s+(المنعكسة))?/g,
+    (_m, vertex: string, r1: string | undefined, r2: string | undefined) => {
+      const v = /[A-Z]/.test(vertex) ? vertex.trim() : `\\text{${vertex.trim()}}`;
+      const ref = r1 || r2 ? " \\text{المنعكسة}" : "";
+      return ` $m(\\angle ${v}${ref})$ `;
+    }
   );
   out = replaceOutsideMath(
     out,
@@ -61,6 +77,11 @@ export function bindLatinNamesAndSimilarity(line: string): string {
     out,
     /(?<![A-Za-z0-9\\_^'-])([a-z])(?![A-Za-z0-9_'-])/g,
     (_m, name: string) => `$${name}$`
+  );
+
+  out = out.replace(
+    /([\u0621-\u064A]{2,}\s+)\$(\s*(?!\\(?:because|therefore)|[∵∴])[^$\n]+?)\s+(\\therefore\b[^$\n]*)\$/g,
+    (_m, p1: string, p2: string, p3: string) => `${p1}$${p2.trim()}$ $${p3.trim()}$`
   );
   return out;
 }

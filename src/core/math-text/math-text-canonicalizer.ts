@@ -6,7 +6,7 @@
  */
 
 import { balanceDollarsInLine, mapMathSegments, mapTextSegments, splitDollarSegments, wrapMath } from "./math-dollar-segment-utils";
-import { unifyMathDelimiters } from "./math-delimiter-unifier";
+import { healShatteredAnglesAndEquations, unifyMathDelimiters } from "./math-delimiter-unifier";
 import { convertEgyptianIntervals } from "./math-interval-egyptian-converter";
 import { repairMathLatex } from "./math-latex-balanced-repair";
 import { isolateArabicInMath } from "./math-arabic-script-isolator";
@@ -31,7 +31,15 @@ function tidyLine(line: string, indentation: string): string {
 }
 
 function canonicalizeMathLine(line: string): string {
-  let l = convertEnglishUnitsToArabic(line);
+  const diagramTags: string[] = [];
+  const protectedLine = line.replace(
+    /\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:[^\]]*\]/gi,
+    (m) => {
+      diagramTags.push(m);
+      return `@@DIAGRAM_TAG_${diagramTags.length - 1}@@`;
+    }
+  );
+  let l = convertEnglishUnitsToArabic(protectedLine);
   l = balanceDollarsInLine(l);
   l = convertEgyptianIntervals(l);
   l = mapMathSegments(l, (inner) => wrapMath(repairMathLatex(inner)));
@@ -39,8 +47,10 @@ function canonicalizeMathLine(line: string): string {
   l = mapTextSegments(l, wrapNakedLatexInText);
   l = bindLatinNamesAndSimilarity(l);
   l = bindMeasurementUnits(l);
+  l = healShatteredAnglesAndEquations(l);
   l = finalizeMathLine(l);
-  return tidyLine(l, line.match(/^[ \t]*/)?.[0] ?? "");
+  const tidied = tidyLine(l, line.match(/^[ \t]*/)?.[0] ?? "");
+  return tidied.replace(/@@DIAGRAM_TAG_(\d+)@@/g, (_m, idx: string) => diagramTags[Number(idx)] ?? "");
 }
 
 export function canonicalizeMathText(raw: string): string {

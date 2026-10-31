@@ -53,7 +53,47 @@ const OPERATOR_TO_TEXT: Readonly<Record<string, string>> = {
   "\\times": "×", "\\div": "÷", "\\cdot": "·", "+": "+", "-": "−",
 };
 
-/** يفصل العمليات الحدّية الزائدة على طرفي التعبير (مثل `k \times`) لتكتب نصاً بجوار العربي. */
+/** يقسم مقطعاً رياضياً قبل `\therefore` أو `\because` في المستوى الأعلى لفصل جواب الشرط عن فعل الجملة العربية السابق له. */
+export function splitAtTopLevelThereforeBecause(latex: string): string[] {
+  const parts: string[] = [];
+  let buffer = "";
+  let depth = 0;
+  let i = 0;
+  while (i < latex.length) {
+    const ch = latex[i];
+    if ((ch === "{" || ch === "}" || ch === "(" || ch === ")") && !isEscapedAt(latex, i)) {
+      depth += ch === "{" || ch === "(" ? 1 : -1;
+    }
+    if (depth === 0 && buffer.trim().length > 0) {
+      const rest = latex.slice(i);
+      const hit = rest.match(/^(\\therefore|\\because|∴|∵)(?![A-Za-z])/);
+      if (hit) {
+        parts.push(buffer.trim());
+        buffer = hit[0];
+        i += hit[0].length;
+        continue;
+      }
+    }
+    buffer += ch;
+    i++;
+  }
+  if (buffer.trim()) parts.push(buffer.trim());
+  return parts.length > 0 ? parts : [latex];
+}
+
+function matchLeadingRelation(s: string): readonly [string, string] | undefined {
+  return RELATION_LATEX_TO_UNICODE.find(
+    ([token]) =>
+      s.startsWith(token) &&
+      !(token.startsWith("\\") && /[A-Za-z]/.test(s[token.length] ?? ""))
+  );
+}
+
+function matchTrailingRelation(s: string): readonly [string, string] | undefined {
+  return RELATION_LATEX_TO_UNICODE.find(([token]) => s.endsWith(token));
+}
+
+/** يفصل العلاقات والعمليات الحدّية الزائدة على طرفي التعبير فقط (دون كسر المعادلة الداخلية) لتكتب نصاً بجوار العربي. */
 export function peelDanglingEdgeOperators(expr: string): {
   readonly leading: readonly string[];
   readonly core: string;
@@ -66,20 +106,34 @@ export function peelDanglingEdgeOperators(expr: string): {
   while (changed) {
     changed = false;
     const noise = core.match(/^(?:\\qquad|\\quad|\\,|,)\s*/);
-    if (noise) { core = core.slice(noise[0].length); changed = true; continue; }
+    if (noise) { core = core.slice(noise[0].length).trim(); changed = true; continue; }
+    const leadRel = matchLeadingRelation(core);
+    if (leadRel) {
+      leading.push(leadRel[1]);
+      core = core.slice(leadRel[0].length).trim();
+      changed = true;
+      continue;
+    }
     const lead = core.match(/^(\\times|\\div|\\cdot)(?![A-Za-z])\s*|^([+-])\s+/);
     if (lead) {
       leading.push(OPERATOR_TO_TEXT[lead[1] ?? lead[2]]);
-      core = core.slice(lead[0].length);
+      core = core.slice(lead[0].length).trim();
       changed = true;
       continue;
     }
     const tailNoise = core.match(/\s*(?:\\qquad|\\quad|,)\s*$/);
-    if (tailNoise) { core = core.slice(0, core.length - tailNoise[0].length); changed = true; continue; }
+    if (tailNoise) { core = core.slice(0, core.length - tailNoise[0].length).trim(); changed = true; continue; }
+    const tailRel = matchTrailingRelation(core);
+    if (tailRel) {
+      trailing.unshift(tailRel[1]);
+      core = core.slice(0, core.length - tailRel[0].length).trim();
+      changed = true;
+      continue;
+    }
     const tail = core.match(/\s*(\\times|\\div|\\cdot|[+-])\s*$/);
     if (tail) {
       trailing.unshift(OPERATOR_TO_TEXT[tail[1]]);
-      core = core.slice(0, core.length - tail[0].length);
+      core = core.slice(0, core.length - tail[0].length).trim();
       changed = true;
     }
   }

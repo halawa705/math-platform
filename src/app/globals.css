@@ -54,6 +54,7 @@ body {
 }
 
 /* صندوق ملاءمة المعادلة: عند عدم كفاية التصغير يُسمح بالكسر عند علامات العلاقة */
+.math-fit-wrap,
 .math-fit-wrap .katex,
 .math-fit-wrap .katex-html {
   white-space: normal !important;

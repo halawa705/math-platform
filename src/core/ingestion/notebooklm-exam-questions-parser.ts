@@ -23,6 +23,7 @@ export function parseChoicesTupleFromBlock(rawBlock: string): readonly [string, 
       .replace(/^(?:(?:أ|ا|ب|جـ?|د|[ABCD1-4])[)\].:-]\s*|\((?:أ|ا|ب|جـ?|د|[ABCD1-4])\)\s*)/i, "")
       .replace(/\|\s*معرف\s*السؤال.*$/i, "")
       .replace(/\s*---+\s*$/g, "")
+      .replace(/[،,.;]+$/g, "")
       .trim();
 
   const explicitChoicesLine = rawBlock.match(/(?:^|\n)\s*(?:البدائل|الاختيارات)\s*:\s*([^\n]+)/i)?.[1];

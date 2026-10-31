@@ -23,7 +23,9 @@ export function renderKatexHtmlCached(latex: string): string {
 
   let html: string;
   try {
-    html = katex.renderToString(latex, { throwOnError: true, strict: "ignore", output: "html" });
+    html = katex
+      .renderToString(latex, { throwOnError: true, strict: "ignore", output: "html" })
+      .replace(/<\/span><span class="base">/g, '</span><wbr><span class="base">');
   } catch {
     html = `<span dir="ltr">${escapeHtml(degradeLatexToPlainUnicode(latex))}</span>`;
   }

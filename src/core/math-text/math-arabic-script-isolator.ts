@@ -12,7 +12,7 @@ import { wrapMath } from "./math-dollar-segment-utils";
 import {
   RELATION_LATEX_TO_UNICODE,
   peelDanglingEdgeOperators,
-  splitAtTopLevelRelations,
+  splitAtTopLevelThereforeBecause,
 } from "./math-relation-operator-splitter";
 
 export const MODULE_ID_MATH_ARABIC_SCRIPT_ISOLATOR =
@@ -24,17 +24,34 @@ const ARABIC_PUNCTUATION_TO_ASCII: Readonly<Record<string, string>> = { "،": ",
 
 const SHORT_ARABIC_MATH_SYMBOLS: ReadonlySet<string> = new Set([
   "س", "ص", "ع", "ح", "ط", "ن", "ك", "م", "ل", "ف", "د", "ر", "نق", "أ", "ا", "إ", "ب", "ج", "جـ",
-  "ه", "هـ", "و", "ز", "خ", "ي", "ق", "ش", "ت", "ث", "غ", "جا", "جتا", "ظا", "ظتا", "قا", "قتا",
+  "ه", "هـ", "ز", "خ", "ي", "ق", "ش", "ت", "ث", "غ", "جا", "جتا", "ظا", "ظتا", "قا", "قتا",
   "لو", "نها", "أب", "بج", "جد", "أج", "دهـ",
+]);
+
+const ANGLE_MODIFIER_WORDS: ReadonlySet<string> = new Set([
+  "المنعكسة", "المتممة", "المكملة", "الصغرى", "الكبرى", "الداخلة", "الخارجة",
 ]);
 
 const SINGLE_VERTEX_TOKEN_RE = /^[أإابجدهوزحخيكلمنفقرشطتثغسصع]ـ?$/;
 
-function isProsePhrase(phrase: string): boolean {
-  const words = phrase.trim().split(/\s+/).filter(Boolean);
+function isProsePhrase(phrase: string, insideMathParens = false, afterAngleOrTriangle = false): boolean {
+  const clean = phrase.replace(/^[()\s]+|[()\s]+$/g, "").trim();
+  const words = clean.split(/\s+/).filter(Boolean);
   if (words.length === 0) return false;
-  if (words.length === 1) return !SHORT_ARABIC_MATH_SYMBOLS.has(words[0]);
+  if (clean === "حول نقطة" || clean === "حول نقطة واحدة") return false;
+  if (words.length === 1) {
+    if (words[0] === "و" && (insideMathParens || afterAngleOrTriangle)) return false;
+    if (ANGLE_MODIFIER_WORDS.has(words[0])) return false;
+    return !SHORT_ARABIC_MATH_SYMBOLS.has(words[0]);
+  }
   if (words.length <= 5 && words.every((w) => SINGLE_VERTEX_TOKEN_RE.test(w))) return false;
+  if (
+    words.length <= 4 &&
+    ANGLE_MODIFIER_WORDS.has(words[words.length - 1]) &&
+    words.slice(0, -1).every((w) => SINGLE_VERTEX_TOKEN_RE.test(w))
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -53,15 +70,27 @@ function readArabicPhrase(src: string, start: number): { phrase: string; end: nu
   return { phrase, end: j };
 }
 
-function scanTopLevelPieces(inner: string): ScanPiece[] {
+function normalizeStandaloneProseParentheticals(inner: string): string {
+  return inner
+    .replace(/(?:\\text\{\s*ق\s*\}|(?<![\u0621-\u064A])ق)\s*\(/g, "m(")
+    .replace(
+      /(?<![A-Za-z0-9\\∠mق])\s*\(\s*(?:\\text\{\s*)?([\u0621-\u0652\s]{4,})(?:\s*\})?\s*\)/g,
+      (m, p: string) => (isProsePhrase(p) ? ` \\text{(${p.trim()})} ` : m)
+    );
+}
+
+function scanTopLevelPieces(rawInner: string): ScanPiece[] {
+  const inner = normalizeStandaloneProseParentheticals(rawInner);
   const pieces: ScanPiece[] = [];
   let buffer = "";
   let depth = 0;
+  let parenDepth = 0;
   const flush = () => { if (buffer.trim()) pieces.push({ kind: "math", latex: buffer }); buffer = ""; };
   const handlePhrase = (phrase: string) => {
-    if (depth > 0) buffer += `\\text{${phrase}}`;
+    const afterGeoSym = /(?:\\angle|∠|\\triangle|△|\\overline)\s*$/.test(buffer);
+    if (depth > 0 || parenDepth > 0) buffer += `\\text{${phrase}}`;
     else if (isArabicMeasurementUnit(phrase)) buffer += `\\text{ ${phrase}}`;
-    else if (isProsePhrase(phrase)) { flush(); pieces.push({ kind: "prose", text: phrase }); }
+    else if (isProsePhrase(phrase, parenDepth > 0, afterGeoSym)) { flush(); pieces.push({ kind: "prose", text: phrase }); }
     else buffer += `\\text{${phrase}}`;
   };
 
@@ -79,6 +108,7 @@ function scanTopLevelPieces(inner: string): ScanPiece[] {
       continue;
     }
     if ((ch === "{" || ch === "}") && !isEscapedAt(inner, i)) depth = Math.max(0, depth + (ch === "{" ? 1 : -1));
+    if ((ch === "(" || ch === ")") && !isEscapedAt(inner, i)) parenDepth = Math.max(0, parenDepth + (ch === "(" ? 1 : -1));
     if (ARABIC_LETTER.test(ch)) {
       const { phrase, end } = readArabicPhrase(inner, i);
       handlePhrase(phrase);
@@ -118,9 +148,8 @@ export function isolateArabicInMath(inner: string): string {
   const atoms: string[] = [];
   for (const piece of pieces) {
     if (piece.kind === "prose") { atoms.push(piece.text); continue; }
-    for (const part of splitAtTopLevelRelations(piece.latex)) {
-      if (part.kind === "relation") { atoms.push(part.symbol); continue; }
-      const { leading, core, trailing } = peelDanglingEdgeOperators(part.latex);
+    for (const sub of splitAtTopLevelThereforeBecause(piece.latex)) {
+      const { leading, core, trailing } = peelDanglingEdgeOperators(sub);
       atoms.push(...leading);
       if (core) atoms.push(wrapMath(core));
       atoms.push(...trailing);

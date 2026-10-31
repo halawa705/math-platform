@@ -8,6 +8,9 @@ import {
 import {
   localizeCanonicalLatex,
 } from "@/core/math-text/math-latex-notation-and-numeral-localizer";
+import { canonicalizeMathText } from "@/core/math-text/math-text-canonicalizer";
+import { renderKatexHtmlCached } from "@/components/global-ui/math-katex-cached-html-renderer";
+import { parseChoicesTupleFromBlock } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import {
   getChoiceLetterByNotationSSOT,
   localizeGeometricVertexLabelSSOT,
@@ -149,5 +152,76 @@ describe("Geometric Entity Localizer — Arabic <-> Latin Synchronization", () =
       { openNotebook: false }
     );
     expect(res.openedUrl).toBe("");
+  });
+
+  it("handles all Prep 1 Angles PDF edge cases: conjunction و, المنعكسة, multi-letter vertices, choice labels, and coefficient m(", () => {
+    // Conjunction و after single-vertex angle must not become F
+    expect(
+      localizeGeometricEntitiesInPlainText("إذا كانت زاوية أ و زاوية ب متتامتين", "english")
+    ).toBe("إذا كانت زاوية A و زاوية B متتامتين");
+
+    // ق( after زاوية must not become Q
+    expect(
+      localizeGeometricEntitiesInPlainText("زاوية ق(∠ أ) = 50°", "english")
+    ).toBe("زاوية m(∠ A) = 50°");
+
+    // Choice label localization in both directions
+    expect(
+      localizeGeometricEntitiesInPlainText("الناتج النهائي: 290° (الاختيار جـ)", "english")
+    ).toBe("الناتج النهائي: 290° (الاختيار C)");
+    expect(
+      localizeGeometricEntitiesInPlainText("الناتج النهائي: 290° (الاختيار C)", "arabic")
+    ).toBe("الناتج النهائي: 290° (الاختيار جـ)");
+
+    // Collinear point lists and variable names
+    expect(
+      localizeGeometricEntitiesInPlainText("النقاط أ، ب، جـ على استقامة واحدة، أوجد قيمة س", "english")
+    ).toBe("النقاط A، B، C على استقامة واحدة، أوجد قيمة X");
+
+    // 3-letter vertices including س د هـ, د ب و, و م د
+    expect(
+      localizeCanonicalLatex("m(\\angle \\text{س د هـ}) + m(\\angle \\text{د ب و}) + m(\\angle \\text{و م د})", "western", "english")
+    ).toContain("m(\\angle XDE) + m(\\angle DBF) + m(\\angle FMD)");
+
+    // Arabic mode with coefficient before m(\angle ...)
+    expect(
+      localizeCanonicalLatex("2m(\\angle A) = 5m(\\angle Y)", "eastern", "arabic")
+    ).toContain("٢\\text{ق}(\\angle \\text{أ}) = ٥\\text{ق}(\\angle \\text{ص})");
+  });
+
+  it("heals shattered angles, reflex angles, parenthetical prose, and \\therefore after Arabic prose", () => {
+    // Shattered 3-vertex angle in localStorage or raw NotebookLM text
+    const shattered = "$m(\\angle$ أ جـ د $) + ($د جـ ب $) = 90^\\circ$";
+    const healed = canonicalizeMathText(shattered);
+    expect(healed).toBe("$m(\\angle \\text{أ جـ د}) + m(\\angle \\text{د جـ ب}) = 90^\\circ$");
+
+    // Shattered reflex angle
+    const shatteredReflex = "$m(\\angle B)$ المنعكسة $) = 240^\\circ$";
+    expect(canonicalizeMathText(shatteredReflex)).toBe(
+      "$m(\\angle B \\text{المنعكسة}) = 240^\\circ$"
+    );
+    expect(
+      localizeCanonicalLatex("m(\\angle B \\text{المنعكسة}) = 240^\\circ", "eastern", "arabic")
+    ).toContain("\\text{ق}(\\angle \\text{ب المنعكسة}) = ٢٤٠^\\circ");
+
+    // \therefore glued after Arabic prose + math token
+    const gluedTherefore = "بما أن $\\angle A$ تتمم $\\angle B \\therefore m(\\angle A) + m(\\angle B) = 90^\\circ$";
+    expect(canonicalizeMathText(gluedTherefore)).toBe(
+      "بما أن $\\angle A$ تتمم $\\angle B$ $\\therefore m(\\angle A) + m(\\angle B) = 90^\\circ$"
+    );
+
+    // Parenthetical Arabic justification inside math keeps balanced parentheses in RTL prose
+    const parentheticalProse = "$m(\\angle A) = m(\\angle B) \\text{ (بالتقابل بالرأس)}$";
+    expect(canonicalizeMathText(parentheticalProse)).toBe(
+      "$m(\\angle A) = m(\\angle B)$ (بالتقابل بالرأس)"
+    );
+
+    // KaTeX HTML renderer inserts <wbr> between .base spans so long step equations can wrap cleanly
+    const html = renderKatexHtmlCached("m(\\angle A) + m(\\angle B) = 90^\\circ");
+    expect(html).toContain("</span><wbr><span class=\"base\">");
+
+    // MCQ parser strips trailing commas from choices
+    const choices = parseChoicesTupleFromBlock("(أ) 70°، (ب) 110°، (جـ) 290°، (د) 20°،");
+    expect(choices).toEqual(["70°", "110°", "290°", "20°"]);
   });
 });

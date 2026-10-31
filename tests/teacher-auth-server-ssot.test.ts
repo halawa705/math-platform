@@ -56,8 +56,9 @@ describe("teacher-auth-server-ssot", () => {
     expect(session).toEqual({ studentCode: "MATH-1001", gradeId: "prep-3" });
 
     // تعديل حرف واحد في التوقيع يجب أن يرجع null
-    const lastChar = studentToken.slice(-1) === "A" ? "B" : "A";
-    const tampered = studentToken.slice(0, -1) + lastChar;
+    const [sPayload, sSig] = studentToken.split(".");
+    const flippedFirst = sSig[0] === "A" ? "B" : "A";
+    const tampered = `${sPayload}.${flippedFirst}${sSig.slice(1)}`;
     expect(await verifyStudentSessionToken(tampered)).toBeNull();
 
     // توكن المعلم لا يُقبل كتوكن طالب

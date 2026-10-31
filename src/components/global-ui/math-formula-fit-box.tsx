@@ -11,7 +11,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 export const MODULE_ID_MATH_FORMULA_FIT_BOX = "math_formula_fit_box" as const;
 
-const FIT_SCALE_STEPS_DESCENDING: readonly number[] = [1, 0.92, 0.85, 0.78];
+const FIT_SCALE_STEPS_DESCENDING: readonly number[] = [1, 0.92, 0.85, 0.78, 0.72, 0.66];
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export interface MathFormulaFitBoxProps {
@@ -21,10 +21,17 @@ export interface MathFormulaFitBoxProps {
 
 function fitFormulaIntoContainer(box: HTMLElement): void {
   box.classList.remove("math-fit-wrap");
+  const containerEl =
+    (box.closest("div, p, li, td, th") as HTMLElement | null) || box.parentElement;
+  const availableWidth =
+    containerEl && containerEl.clientWidth > 10 ? containerEl.clientWidth - 4 : box.clientWidth;
+  if (availableWidth <= 0) return;
+
   for (const scale of FIT_SCALE_STEPS_DESCENDING) {
     box.style.fontSize = scale === 1 ? "" : `${scale}em`;
-    if (box.scrollWidth <= box.clientWidth + 1) return;
+    if (box.scrollWidth <= availableWidth + 1) return;
   }
+  box.style.fontSize = "0.82em";
   box.classList.add("math-fit-wrap");
 }
 
@@ -36,10 +43,12 @@ export default function MathFormulaFitBox({ html, isBlock = false }: MathFormula
     if (!box) return;
     const refit = () => fitFormulaIntoContainer(box);
     refit();
-    const observer = typeof ResizeObserver !== "undefined" && box.parentElement
+    const targetEl =
+      (box.closest("div, p, li, td, th") as HTMLElement | null) || box.parentElement;
+    const observer = typeof ResizeObserver !== "undefined" && targetEl
       ? new ResizeObserver(refit)
       : null;
-    if (observer && box.parentElement) observer.observe(box.parentElement);
+    if (observer && targetEl) observer.observe(targetEl);
     document.fonts?.ready.then(refit).catch(() => {});
     return () => observer?.disconnect();
   }, [html]);
@@ -52,7 +61,7 @@ export default function MathFormulaFitBox({ html, isBlock = false }: MathFormula
     >
       <span
         ref={boxRef}
-        className="math-fit-box inline-block max-w-full overflow-hidden align-middle font-bold"
+        className="math-fit-box inline-block max-w-full align-middle font-bold"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </bdi>

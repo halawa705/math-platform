@@ -48,14 +48,15 @@ export function OfficialMcqAnswerKeySummaryTable({
         {mcqItems.map((q) => {
           const idx = q.correctMcqIndex ?? 0;
           const letter = getChoiceLetterByNotationSSOT(idx, notationLanguage);
-          const choiceVal = q.mcqChoicesAr?.[idx] || q.modelAnswerAr;
+          const rawChoiceVal = q.mcqChoicesAr?.[idx] || q.modelAnswerAr || "";
+          const choiceVal = rawChoiceVal.replace(/[،,.;]+$/g, "").trim();
           return (
             <div key={q.id} className="px-2 py-1 border-l border-b border-slate-300 flex items-center justify-between gap-1 min-w-0">
               <span style={{ backgroundColor: palette.primaryHex }} className="text-white font-black px-1.5 py-0.2 rounded text-[0.85em] shrink-0">
                 س{formatNumeralsByModeSSOT(q.questionNumber, numeralMode)}
               </span>
-              <span style={{ color: palette.primaryHex }} className="font-black truncate">
-                ({letter}){" "}
+              <span style={{ color: palette.primaryHex }} className="font-black truncate inline-flex items-center gap-1">
+                <bdi dir="ltr">({letter})</bdi>
                 <SafeKaTeXBiDiMathRenderer text={choiceVal} numeralMode={numeralMode} notationLanguage={notationLanguage} />
               </span>
             </div>

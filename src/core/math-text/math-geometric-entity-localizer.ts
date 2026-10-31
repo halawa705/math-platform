@@ -26,8 +26,18 @@ export const LATIN_TO_ARABIC_VERTEX: Readonly<Record<string, string>> = {
 };
 
 const GEOMETRIC_VERTEX_CHAR_REGEX = "[أإابجدهوزحخيكلمنفقرشطتثغسصع](?:ـ)?";
+const SPACED_ARABIC_VERTICES_SRC =
+  "(?:[أإابجدهوزحخيكلمنفقرشطتثغسصع]\\u0640?(?:\\s+[أإابجدهوزحخيكلمنفقرشطتثغسصع]\\u0640?){1,4}|أب|بج|جد|أج|دهـ|سص|صع)";
+const ANGLE_VERTICES_3_OR_1_SRC = `(?:${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}|(?!ق\\s*[\\(∠\\u2220])${GEOMETRIC_VERTEX_CHAR_REGEX})`;
 const LATIN_VERTEX_SEQ_REGEX = "[A-Z](?:\\s*[A-Z]){0,4}";
 const ARABIC_WORD_END_LOOKAHEAD = "(?=[\\s،,.;:!?()\\[\\]{}]|$)";
+
+const CHOICE_AR_TO_EN: Readonly<Record<string, string>> = {
+  "أ": "A", "ا": "A", "ب": "B", "ج": "C", "جـ": "C", "د": "D",
+};
+const CHOICE_EN_TO_AR: Readonly<Record<string, string>> = {
+  A: "أ", B: "ب", C: "جـ", D: "د",
+};
 
 /** يحول تسلسلاً من الحروف الهندسية (مثل "أ ب جـ" أو "أب") إلى نظيرتها اللاتينية (مثل "ABC" أو "AB") */
 export function convertArabicVerticesToLatin(raw: string): string {
@@ -46,9 +56,15 @@ export function convertLatinVerticesToArabic(raw: string): string {
 
 function localizeLatinEntitiesInPlainTextToArabic(text: string): string {
   let out = text;
+  // 0. (الاختيار C) ← (الاختيار جـ)
+  out = out.replace(
+    /(الاختيار|الإجابة)\s*(\(\s*)?([ABCD])(\s*\))?/g,
+    (_m, w: string, o: string | undefined, ch: string, c: string | undefined) =>
+      `${w} ${o ?? ""}${CHOICE_EN_TO_AR[ch] || ch}${c ?? ""}`
+  );
   // 1. m(∠ ABC) أو m(ABC) ← ق(∠ أ ب جـ)
   out = out.replace(
-    /\bm\s*\(\s*([∠\u2220])?\s*([A-Z]{1,3})(?:\s+(المنعكسة))?\s*\)/g,
+    /(?<![A-Za-z])m\s*\(\s*([∠\u2220])?\s*([A-Z]{1,3})(?:\s+(المنعكسة))?\s*\)/g,
     (_m, sym: string | undefined, verts: string, reflex: string | undefined) =>
       `ق(${sym || "∠"} ${convertLatinVerticesToArabic(verts)}${reflex ? " المنعكسة" : ""})`
   );
@@ -85,16 +101,29 @@ export function localizeGeometricEntitiesInPlainText(
 
   let out = text;
 
-  // 1. المضلعات والمثلثات والأشكال (مثل "المثلث أ ب جـ"، "المضلع أ ب جـ د")
+  // 0. (الاختيار جـ) ← (الاختيار C)
+  out = out.replace(
+    new RegExp(`(الاختيار|الإجابة)\\s*(\\(\\s*)?(أ|ا|ب|جـ|ج|د)(\\s*\\))?${ARABIC_WORD_END_LOOKAHEAD}`, "g"),
+    (_m, w: string, o: string | undefined, ch: string, c: string | undefined) =>
+      `${w} ${o ?? ""}${CHOICE_AR_TO_EN[ch] || ch}${c ?? ""}`
+  );
+
+  // 1. المثلثات (3 رؤوس) والرباعيات والمضلعات (3-5 رؤوس مع عدم ابتلاع حرف العطف "و")
+  const triRegex = new RegExp(
+    `(المثلثان|المثلثين|المثلث|مثلث)\\s+(${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX})${ARABIC_WORD_END_LOOKAHEAD}`,
+    "g"
+  );
+  out = out.replace(triRegex, (_m, prefix: string, verts: string) => `${prefix} ${convertArabicVerticesToLatin(verts)}`);
+
   const polyRegex = new RegExp(
-    `(المثلث|مثلث|المضلع|مضلع|متوازي الأضلاع|المستطيل|المربع|المعين|شبه المنحرف|الشكل الرباعي|الشكل)\\s+(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}){1,4})${ARABIC_WORD_END_LOOKAHEAD}`,
+    `(المضلعان|المضلعين|المضلع|مضلع|متوازي الأضلاع|المستطيل|المربع|المعين|شبه المنحرف|الشكل الرباعي|الشكل)\\s+(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s+(?!و\\s+(?:المثلث|المضلع|الشكل|الضلع|الشعاع))${GEOMETRIC_VERTEX_CHAR_REGEX}){1,4})${ARABIC_WORD_END_LOOKAHEAD}`,
     "g"
   );
   out = out.replace(polyRegex, (_m, prefix: string, verts: string) => `${prefix} ${convertArabicVerticesToLatin(verts)}`);
 
-  // 2. قوائم الأشعة أو المستقيمات المتعددة (مثل "الأشعة م أ، م ب، م جـ، م د" أو "الشعاعين م و و م هـ")
+  // 2. قوائم الأشعة أو المستقيمات المتعددة (مثل "الأشعة م أ، م ب" أو "الشعاعين ب أ و ب جـ")
   const rayListRegex = new RegExp(
-    `(الأشعة|الشعاعان|الشعاعين|المستقيمان|المستقيمين|القطعتان|القطعتين|الأضلاع)\\s+((?:${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX})(?:\\s*(?:،|,|\\s+و\\s*)\\s*${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX})+)`,
+    `(الأشعة|الشعاعان|الشعاعين|المستقيمان|المستقيمين|القطعتان|القطعتين|الأضلاع|الضلعان|الضلعين)\\s+((?:${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX})(?:\\s*(?:،|,|\\s+و\\s*)\\s*${GEOMETRIC_VERTEX_CHAR_REGEX}\\s+${GEOMETRIC_VERTEX_CHAR_REGEX})+)`,
     "g"
   );
   out = out.replace(rayListRegex, (_m, prefix: string, list: string) => {
@@ -112,43 +141,62 @@ export function localizeGeometricEntitiesInPlainText(
   );
   out = out.replace(segRegex, (_m, prefix: string, verts: string) => `${prefix} ${convertArabicVerticesToLatin(verts)}`);
 
-  // 4. النقاط والمراكز والرؤوس المنفردة (مثل "النقطة م"، "نقطة م"، "المركز م"، "في م")
+  // 4. قوائم النقاط (مثل "النقاط أ، ب، جـ") والنقاط المنفردة (مثل "النقطة م"، "نقطة م")
+  const pointListRegex = new RegExp(
+    `(النقاط|النقط|نقاط|نقط|الرؤوس|رؤوس)\\s+(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s*(?:،|,|\\s+و\\s*)\\s*${GEOMETRIC_VERTEX_CHAR_REGEX})+)${ARABIC_WORD_END_LOOKAHEAD}`,
+    "g"
+  );
+  out = out.replace(pointListRegex, (_m, prefix: string, list: string) => {
+    const converted = list.replace(
+      new RegExp(GEOMETRIC_VERTEX_CHAR_REGEX, "g"),
+      (v) => convertArabicVerticesToLatin(v)
+    );
+    return `${prefix} ${converted}`;
+  });
+
   const pointRegex = new RegExp(
     `(النقطة|نقطة|المركز|مركز|الرأس|رأس|الدائرة|دائرة)\\s+(${GEOMETRIC_VERTEX_CHAR_REGEX})${ARABIC_WORD_END_LOOKAHEAD}`,
     "g"
   );
   out = out.replace(pointRegex, (_m, prefix: string, v: string) => `${prefix} ${convertArabicVerticesToLatin(v)}`);
 
-  // 5. قياس الزوايا مع ق(∠ أ) أو m(∠ أ م جـ)
+  // 5. المتغيرات الجبرية في النص (مثل "قيمة س"، "المجهول ص")
+  const varWordRegex = new RegExp(
+    `(قيمة|المتغير|المجهول)\\s+([سصعكنم])${ARABIC_WORD_END_LOOKAHEAD}`,
+    "g"
+  );
+  out = out.replace(varWordRegex, (_m, prefix: string, v: string) => `${prefix} ${ARABIC_TO_LATIN_VERTEX[v] || v}`);
+
+  // 6. قياس الزوايا مع ق(∠ أ) أو m(∠ أ م جـ)
   const qAngleRegex = new RegExp(
-    `(?:ق|m)\\s*\\(\\s*([∠\\u2220])\\s*(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}){0,2})(?:\\s+(المنعكسة))?\\s*\\)`,
+    `(?:ق|m)\\s*\\(\\s*([∠\\u2220])\\s*(${ANGLE_VERTICES_3_OR_1_SRC})(?:\\s+(المنعكسة))?\\s*\\)`,
     "g"
   );
   out = out.replace(qAngleRegex, (_m, sym: string, verts: string, reflex: string | undefined) =>
     `m(${sym} ${convertArabicVerticesToLatin(verts)}${reflex ? " المنعكسة" : ""})`
   );
 
-  // 4. ق(أ) أو ق(أ المنعكسة)
+  // 7. ق(أ) أو ق(أ المنعكسة)
   const qBareRegex = new RegExp(
-    `ق\\s*\\(\\s*(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}){0,2})(?:\\s+(المنعكسة))?\\s*\\)`,
+    `ق\\s*\\(\\s*(${ANGLE_VERTICES_3_OR_1_SRC})(?:\\s+(المنعكسة))?\\s*\\)`,
     "g"
   );
   out = out.replace(qBareRegex, (_m, verts: string, reflex: string | undefined) =>
     `m(∠ ${convertArabicVerticesToLatin(verts)}${reflex ? " المنعكسة" : ""})`
   );
 
-  // 5. رمز الزاوية المنفرد أو الثلاثي: ∠ أ أو ∠ أ المنعكسة أو ∠ أ ب جـ
+  // 8. رمز الزاوية المنفرد أو الثلاثي: ∠ أ أو ∠ أ المنعكسة أو ∠ أ ب جـ
   const angleSymRegex = new RegExp(
-    `([∠\\u2220])\\s*(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}){0,2})(?:\\s+(المنعكسة))?${ARABIC_WORD_END_LOOKAHEAD}`,
+    `([∠\\u2220])\\s*(${ANGLE_VERTICES_3_OR_1_SRC})(?:\\s+(المنعكسة))?${ARABIC_WORD_END_LOOKAHEAD}`,
     "g"
   );
   out = out.replace(angleSymRegex, (_m, sym: string, verts: string, reflex: string | undefined) =>
     `${sym} ${convertArabicVerticesToLatin(verts)}${reflex ? " المنعكسة" : ""}`
   );
 
-  // 6. كلمة زاوية أو الزاوية بالاسم: زاوية أ أو زاوية أ ب جـ
+  // 9. كلمة زاوية أو الزاوية بالاسم: زاوية أ أو زاوية أ ب جـ (3 رؤوس أو رأس واحد، دون تحويل "زاوية ق(" إلى "Q")
   const wordAngleRegex = new RegExp(
-    `(قياس\\s+)?(زاوية|الزاوية)\\s+(${GEOMETRIC_VERTEX_CHAR_REGEX}(?:\\s+${GEOMETRIC_VERTEX_CHAR_REGEX}){0,2})(?:\\s+(المنعكسة))?${ARABIC_WORD_END_LOOKAHEAD}`,
+    `(قياس\\s+)?(زاوية|الزاوية)\\s+(${ANGLE_VERTICES_3_OR_1_SRC})(?:\\s+(المنعكسة))?${ARABIC_WORD_END_LOOKAHEAD}`,
     "g"
   );
   out = out.replace(wordAngleRegex, (_m, q: string | undefined, w: string, verts: string, reflex: string | undefined) =>
@@ -168,57 +216,67 @@ export function localizeGeometricEntitiesInLatex(
   if (!latex) return "";
   if (notation === "arabic") {
     return latex
-      .replace(/\bm\s*\(/g, "\\text{ق}(")
+      .replace(/(?<![A-Za-z\\])m\s*\(/g, "\\text{ق}(")
       .replace(/\\triangle\s*([A-Z]{3})/g, (_m, v: string) => `\\triangle \\text{${convertLatinVerticesToArabic(v)}}`)
+      .replace(
+        /\\angle\s*([A-Z]{1,3})\s*\\text\{\s*المنعكسة\s*\}/g,
+        (_m, v: string) => `\\angle \\text{${convertLatinVerticesToArabic(v)} المنعكسة}`
+      )
       .replace(/\\angle\s*([A-Z]{1,3})/g, (_m, v: string) => `\\angle \\text{${convertLatinVerticesToArabic(v)}}`);
   }
 
   let out = latex;
 
   // 1. تحويل ق(...) إلى m(...) في LaTeX
-  out = out.replace(/\\text\{ق\}\s*\(/g, "m(").replace(/\bق\s*\(/g, "m(");
+  out = out.replace(/\\text\{\s*ق\s*\}\s*\(/g, "m(").replace(/(?<![\u0621-\u064A])ق\s*\(/g, "m(");
 
   // 2. الزوايا مع المنعكسة: \angle \text{أ المنعكسة} أو m(\angle \text{أ ب جـ المنعكسة})
   out = out.replace(
-    /\\angle\s*\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع\s\u0640]+?)\s*المنعكسة\s*\}/g,
+    new RegExp(`\\\\angle\\s*\\\\text\\{\\s*(${SPACED_ARABIC_VERTICES_SRC}|${GEOMETRIC_VERTEX_CHAR_REGEX})\\s+المنعكسة\\s*\\}`, "g"),
     (_m, v: string) => `\\angle ${convertArabicVerticesToLatin(v)}\\text{ المنعكسة}`
   );
 
-  // 3. الزوايا العادية: \angle \text{أ} أو \angle \text{أ ب جـ}
+  // 3. الزوايا العادية: \angle \text{أ} أو \angle \text{أ ب جـ} (دون المساس بـ \angle \text{المنعكسة})
   out = out.replace(
-    /\\angle\s*\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع\s\u0640]+?)\s*\}/g,
+    new RegExp(`\\\\angle\\s*\\\\text\\{\\s*(${SPACED_ARABIC_VERTICES_SRC}|${GEOMETRIC_VERTEX_CHAR_REGEX})\\s*\\}`, "g"),
     (_m, verts: string) => `\\angle ${convertArabicVerticesToLatin(verts)}`
+  );
+
+  // 3b. قياس زاوية بدون \angle: m(\text{هـ ب جـ}) ← m(\angle EBC)
+  out = out.replace(
+    new RegExp(`m\\(\\s*\\\\text\\{\\s*(${SPACED_ARABIC_VERTICES_SRC})\\s*\\}\\s*\\)`, "g"),
+    (_m, verts: string) => `m(\\angle ${convertArabicVerticesToLatin(verts)})`
   );
 
   // 4. رمز \angle متبوعاً بحرف أو ثلاثية عربية مباشرة: \angle أ م جـ
   out = out.replace(
-    /\\angle\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع][\u0640]?(?:\s+[أإابجدهوزحخيكلمنفقرشطتثغسصع][\u0640]?){0,2})/g,
+    new RegExp(`\\\\angle\\s*(${SPACED_ARABIC_VERTICES_SRC}|${GEOMETRIC_VERTEX_CHAR_REGEX})(?![\\u0621-\\u064A])`, "g"),
     (_m, v: string) => `\\angle ${convertArabicVerticesToLatin(v)}`
   );
 
   // 5. المثلثات: \triangle \text{أ ب جـ} أو \triangle أ ب جـ
   out = out.replace(
-    /\\triangle\s*\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع\s\u0640]+?)\s*\}/g,
+    new RegExp(`\\\\triangle\\s*\\\\text\\{\\s*(${SPACED_ARABIC_VERTICES_SRC})\\s*\\}`, "g"),
     (_m, verts: string) => `\\triangle ${convertArabicVerticesToLatin(verts)}`
   );
   out = out.replace(
-    /\\triangle\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع][\u0640]?(?:\s+[أإابجدهوزحخيكلمنفقرشطتثغسصع][\u0640]?){1,2})/g,
+    new RegExp(`\\\\triangle\\s*(${SPACED_ARABIC_VERTICES_SRC})(?![\\u0621-\\u064A])`, "g"),
     (_m, verts: string) => `\\triangle ${convertArabicVerticesToLatin(verts)}`
   );
 
   // 6. القطع والأشعة والمستقيمات: \overline / \overleftrightarrow / \overrightarrow / \vec / \widehat
   out = out.replace(
-    /\\(overline|overleftrightarrow|overrightarrow|vec|widehat)\{\s*\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع\s\u0640]+?)\s*\}\s*\}/g,
+    new RegExp(`\\\\(overline|overleftrightarrow|overrightarrow|vec|widehat)\\{\\s*\\\\text\\{\\s*(${SPACED_ARABIC_VERTICES_SRC})\\s*\\}\\s*\\}`, "g"),
     (_m, cmd: string, verts: string) => `\\${cmd === "vec" ? "overrightarrow" : cmd}{${convertArabicVerticesToLatin(verts)}}`
   );
   out = out.replace(
-    /\\(overline|overleftrightarrow|overrightarrow|vec|widehat)\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع\s\u0640]{1,10})\s*\}/g,
+    new RegExp(`\\\\(overline|overleftrightarrow|overrightarrow|vec|widehat)\\{\\s*(${SPACED_ARABIC_VERTICES_SRC})\\s*\\}`, "g"),
     (_m, cmd: string, verts: string) => `\\${cmd === "vec" ? "overrightarrow" : cmd}{${convertArabicVerticesToLatin(verts)}}`
   );
 
-  // 7. أسماء القطع والمضلعات المباشرة: \text{أ ب} أو \text{أ ب جـ}
+  // 7. أسماء القطع والمضلعات المباشرة المفصولة بمسافات: \text{أ ب} أو \text{أ ب جـ}
   out = out.replace(
-    /\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع](?:[\u0640]?\s*[أإابجدهوزحخيكلمنفقرشطتثغسصع]){1,4}[\u0640]?)\s*\}/g,
+    new RegExp(`\\\\text\\{\\s*(${SPACED_ARABIC_VERTICES_SRC})\\s*\\}`, "g"),
     (_m, verts: string) => convertArabicVerticesToLatin(verts)
   );
 
