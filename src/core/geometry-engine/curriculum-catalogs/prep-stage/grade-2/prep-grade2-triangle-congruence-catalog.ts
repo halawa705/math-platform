@@ -147,10 +147,5 @@ export function matchPrepGrade2TriangleCongruenceFigure(
     return buildCongruencePerpendicularApexFigure({ figureId, notationLanguage });
   }
 
-  // 18. مطابقة عامة لدرس التطابق في 2 إعدادي
-  if (/تطابق/i.test(d) && /مثلث|2ع|ثاني\s*إعدادي|صفحة\s*17/i.test(d)) {
-    return buildCongruenceReflectionInDBFigure({ figureId, notationLanguage });
-  }
-
   return undefined;
 }

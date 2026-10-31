@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file natural-arabic-geometry-matcher.ts
  * @description المترجم الحتمي الموحد للوصف العربي الطبيعي (`[رسم هندسي: ...]`) إلى فروع السجل الهندسي القياسي (`CanonicalGeometryFigureIR`).
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
@@ -6,6 +6,10 @@
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
+import {
+  isFigureFaithfulToPrompt,
+  isPurelyTheoreticalNoDiagramProblem,
+} from "./verification/geometry-figure-fidelity-gate";
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
 import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
@@ -64,7 +68,11 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
 
-  if (/≅|تطابق|متطابق|صورة.*بالانعكاس/i.test(desc)) {
+  const isSimilarity =
+    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|زوايا\s*متطابقة|نسبة\s*التشابه|معامل\s*التشابه/i.test(
+      desc
+    );
+  if (!isSimilarity && /≅|\\cong|تطابق|متطابق|صورة.*بالانعكاس/i.test(desc)) {
     const prep2Congruence = matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage);
     if (prep2Congruence) return prep2Congruence;
     const prep1Congruence = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
@@ -75,7 +83,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage) ??
     matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage) ??
     matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage) ??
+    (!isSimilarity ? matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage) : undefined) ??
     matchPrepGrade2PythagorasConverseFigure(desc, figureId, notationLanguage) ??
     matchPrepGrade2ParallelApplicationsFigure(desc, figureId, notationLanguage) ??
     matchPrepGrade2TriangleMediansFigure(desc, figureId, notationLanguage) ??
@@ -162,19 +170,25 @@ export function matchGeometryWithDiagnostics(
   readonly warnings: readonly string[];
   readonly source: "compositor" | "catalog" | "none";
 } {
+  if (isPurelyTheoreticalNoDiagramProblem(desc)) {
+    return {
+      warnings: ["المسألة نظرية لفظية عامة ولا تتطلب شكلاً هندسياً."],
+      source: "none",
+    };
+  }
   const composed = composeFigureFromGeometryDescription(desc, figureId, notation);
   if (composed.figure && composed.warnings.length === 0) {
     return { ...finalizeVerifiedFigure(composed.figure, []), source: "compositor" };
   }
   const legacy = matchOptionalGeometryFigureFromArabicDescription(desc, figureId, notation);
-  if (legacy) {
+  if (legacy && isFigureFaithfulToPrompt(legacy, desc)) {
     return { ...finalizeVerifiedFigure(legacy, composed.figure ? composed.warnings : []), source: "catalog" };
   }
   if (composed.figure) {
     return { ...finalizeVerifiedFigure(composed.figure, composed.warnings), source: "compositor" };
   }
   return {
-    warnings: composed.warnings.length ? composed.warnings : ["لم يُتعرَّف على الشكل من الوصف."],
+    warnings: composed.warnings.length ? composed.warnings : ["لم يُتعرَّف على شكل مطابق للمسألة بدقة."],
     source: "none",
   };
 }

@@ -72,13 +72,8 @@ export function matchPrepGrade3TriangleSimilarityFigure(
   }
 
   // 7. مثلثان منفصلان بزاوية 120° (مثال 6)
-  if ((/120°|120\s*درجة/i.test(d) && (/تشابه|متشابه|منفصل/i.test(d) || /DEF/i.test(d))) || /ABC\s*~\s*DEF/i.test(d)) {
+  if (/120°|120\s*درجة/i.test(d) && (/تشابه|متشابه|منفصل/i.test(d) || /DEF/i.test(d))) {
     return buildTwoSeparateSimilarTrianglesWithAngle120Figure({ figureId, notationLanguage });
-  }
-
-  // 8. مطابقة عامة لتشابه المثلثات
-  if (/تشابه\s*مثلث|مثلثين\s*متشابهين|مثلثان\s*متشابهان/i.test(d)) {
-    return buildTriangleButterflyAtApexAFigure({ figureId, notationLanguage });
   }
 
   return undefined;

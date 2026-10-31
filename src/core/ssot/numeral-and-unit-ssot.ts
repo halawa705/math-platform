@@ -49,7 +49,7 @@ const EASTERN_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "�
 /**
  * يحول أي نص أو رقم إلى الأرقام العربية الغربية القياسية (0-9) للحسابات الداخلية.
  */
-function toWesternNumeralsSSOT(input: string | number): string {
+export function toWesternNumeralsSSOT(input: string | number): string {
   return String(input).replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632));
 }
 
