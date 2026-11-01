@@ -39,6 +39,7 @@ export function convertGeometryLatexToPlainText(raw: string): string {
     .replace(/\bcm\b/gi, " سم ")
     .replace(/[“”«»]/g, " ")
     .replace(/مثلثان\s+([A-Z]{3})\s*و\s*([A-Z]{3})\s*متشابهان/g, "مثلث $1 ~ $2")
+    .replace(/نسبة\s*تشابه\s*(?:مثلث\s*)?([A-Z]{3})\s*(?:إلى|الى|على|لـ?)\s*(?:مثلث\s*)?([A-Z]{3})/g, "مثلث $1 ~ مثلث $2")
     .replace(/\s+/g, " ")
     .trim();
   return t;

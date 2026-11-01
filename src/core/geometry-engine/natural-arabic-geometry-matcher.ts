@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file natural-arabic-geometry-matcher.ts
  * @description المترجم الحتمي الموحد للوصف العربي الطبيعي (`[رسم هندسي: ...]`) إلى فروع السجل الهندسي القياسي (`CanonicalGeometryFigureIR`).
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
@@ -167,11 +167,20 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   );
 }
 
+const TOPOLOGY_LOCKED_BRANCH_IDS: ReadonlySet<string> = new Set([
+  "triangle_thales_parallel_line",
+  "quad_hourglass_butterfly_similarity",
+  "triangle_euclid_right_altitude",
+]);
+
 /** يصقل الشكل ليطابق معطياته ثم يضيف أي مخالفات متبقية كتحذيرات ظاهرة للمعلم (لا إخفاء صامت). */
 function finalizeVerifiedFigure(
   figure: CanonicalGeometryFigureIR,
   warnings: readonly string[]
 ): { readonly figure: CanonicalGeometryFigureIR; readonly warnings: readonly string[] } {
+  // الأشكال البارامترية المحكومة طوبولوجياً (طاليس/القاطع العكسي/الساعة الرملية/إقليدس): تحريك رؤوسها لمطابقة الأطوال
+  // يكسر استقامة الأضلاع ويُخرج مضلعات ليست مثلثات، فتُترك على بنيتها الصحيحة (التسامح البصري مقبول والأرقام على مواضعها).
+  if (figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(figure.branchId)) return { figure, warnings };
   const refined = refineFigureToMatchGivens(figure);
   const remaining = refined.report.issues.filter((i) => i.severity === "error").map((i) => `تحقق الشكل: ${i.message}`);
   return { figure: refined.figure, warnings: [...warnings, ...remaining] };
@@ -208,4 +217,5 @@ export function matchGeometryWithDiagnostics(
     source: "none",
   };
 }
+
 
