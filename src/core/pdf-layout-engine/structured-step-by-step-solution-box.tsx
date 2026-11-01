@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file structured-step-by-step-solution-box.tsx
@@ -39,13 +39,13 @@ export function StructuredStepByStepSolutionBox({
       ? item.solutionStepsAr
       : [item.modelAnswerAr];
 
-  const effectiveEm = Number((0.84 * compactScale).toFixed(2));
+  const effectiveEm = Number((0.86 * compactScale).toFixed(2));
   const useTwoColShortSteps = steps.length >= 4;
 
   return (
     <div
       style={{ fontSize: `${effectiveEm}em` }}
-      className="mt-1.5 pt-1.5 border-t border-slate-200/90 space-y-1 min-w-0"
+      className="mt-1 pt-1 border-t border-slate-200/90 space-y-1 min-w-0"
     >
       <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
         <span>خطوات الحل والشرح بالتفصيل:</span>
@@ -77,7 +77,7 @@ export function StructuredStepByStepSolutionBox({
           return (
             <div
               key={idx}
-              className={`p-1 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs ${
+              className={`py-0.5 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs ${
                 useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
               } ${
                 isLast
@@ -109,3 +109,4 @@ export function StructuredStepByStepSolutionBox({
     </div>
   );
 }
+

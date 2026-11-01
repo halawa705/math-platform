@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file side-by-side-diagram-docker.tsx
@@ -72,7 +72,7 @@ export default function SideBySideDiagramDocker({
   const stepsCount = question.solutionStepsAr?.length ?? 0;
   const totalStepsLength = (question.solutionStepsAr ?? []).reduce((sum, s) => sum + s.length, 0);
   const autoCompactScale =
-    stepsCount >= 5 || totalStepsLength > 240 ? 0.86 : stepsCount >= 3 || totalStepsLength > 130 ? 0.92 : 1;
+    stepsCount >= 5 || totalStepsLength > 240 ? 0.95 : stepsCount >= 3 || totalStepsLength > 130 ? 0.98 : 1;
   const optionsFontEm = question.mcqChoicesAr && question.mcqChoicesAr.some((c) => c.length > 18) ? "0.82em" : "0.88em";
 
   return (
@@ -196,3 +196,4 @@ export default function SideBySideDiagramDocker({
     </article>
   );
 }
+
