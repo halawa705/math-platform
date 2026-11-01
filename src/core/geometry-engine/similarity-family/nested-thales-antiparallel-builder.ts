@@ -103,7 +103,11 @@ export function buildNestedThalesAntiparallelFigure(
       id: `${opts.figureId}_s_${apex}_${cut1}`,
       fromVertexId: vApex.id,
       toVertexId: vCut1.id,
-      lengthLabel: getLen(apex, cut1) ? { value: getLen(apex, cut1)!.text } : undefined,
+      lengthLabel: getLen(apex, cut1)
+        ? { value: getLen(apex, cut1)!.text }
+        : !getLen(cut1, base1) && getLen(apex, base1)
+        ? { value: getLen(apex, base1)!.text }
+        : undefined,
     },
     {
       id: `${opts.figureId}_s_${cut1}_${base1}`,
@@ -117,7 +121,11 @@ export function buildNestedThalesAntiparallelFigure(
       id: `${opts.figureId}_s_${apex}_${cut2}`,
       fromVertexId: vApex.id,
       toVertexId: vCut2.id,
-      lengthLabel: getLen(apex, cut2) ? { value: getLen(apex, cut2)!.text } : undefined,
+      lengthLabel: getLen(apex, cut2)
+        ? { value: getLen(apex, cut2)!.text }
+        : !getLen(cut2, base2) && getLen(apex, base2)
+        ? { value: getLen(apex, base2)!.text }
+        : undefined,
     },
     {
       id: `${opts.figureId}_s_${cut2}_${base2}`,

@@ -74,19 +74,15 @@ export function buildAppliedShadowHeightFigure(
   // C = طرف الظل على الأرض
   // D = قاعدة الرجل، E = رأس الرجل
   // B = قاعدة العمود، A = قمة العمود
-  const groundY = 175;
-  const cX = 35;
-  const dX = 135;
-  const bX = 250;
+  const groundY = 1.0;
+  const cX = 1.0;
+  const dX = 4.5;
+  const bX = 8.5;
 
-  // زاوية شعاع الضوء
-  const shadowSpan = dX - cX; // 100
-  const personSpanY = 65;
-  const eY = groundY - personSpanY; // 110
-
-  // امتداد الخط المستقيم من C(35, 175) عبر E(135, 110) إلى B(250)
-  const slope = -personSpanY / shadowSpan; // -0.65
-  const aY = groundY + slope * (bX - cX); // 175 - 0.65 * 215 = 35.25
+  const eY = 3.2;
+  // زاوية شعاع الضوء: خط مستقيم من C(1, 1) عبر E(4.5, 3.2) إلى A(8.5, aY)
+  const slope = (eY - groundY) / (dX - cX); // 2.2 / 3.5 ≈ 0.628
+  const aY = Number((groundY + slope * (bX - cX)).toFixed(2)); // 1.0 + 0.628 * 7.5 ≈ 5.71
 
   const keyId = (v: string) => `${figureId}_v_${v}`;
 
@@ -95,7 +91,7 @@ export function buildAppliedShadowHeightFigure(
     { id: keyId(pFoot), label: toDisplayLabel(pFoot, notationLanguage), position: { x: dX, y: groundY } },
     { id: keyId(bFoot), label: toDisplayLabel(bFoot, notationLanguage), position: { x: bX, y: groundY } },
     { id: keyId(pHead), label: toDisplayLabel(pHead, notationLanguage), position: { x: dX, y: eY } },
-    { id: keyId(bTop), label: toDisplayLabel(bTop, notationLanguage), position: { x: bX, y: Math.round(aY) } },
+    { id: keyId(bTop), label: toDisplayLabel(bTop, notationLanguage), position: { x: bX, y: aY } },
   ];
 
   // 4. الأضلاع والقطع المستقيمة

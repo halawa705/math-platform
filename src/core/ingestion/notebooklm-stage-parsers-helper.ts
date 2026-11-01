@@ -189,7 +189,12 @@ export function buildStage2PrintableItem(params: {
   const graphMatch = params.block.rawText.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
   const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
   const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
-  const combinedGeo = !graphSpec
+  const hasFigureRef =
+    Boolean(geoMatch) ||
+    /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(
+      params.block.rawText || params.block.promptText
+    );
+  const combinedGeo = !graphSpec && hasFigureRef
     ? combineProblemAndTagGeometryContext(geoMatch?.[1], params.block.rawText || params.block.promptText)
     : "";
   const geoDiag = combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `${params.id}_geo`) : undefined;

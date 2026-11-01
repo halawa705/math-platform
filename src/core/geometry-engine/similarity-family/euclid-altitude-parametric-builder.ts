@@ -40,11 +40,25 @@ export function buildEuclidAltitudeParametricFigure(
   const { rightApex: a, hyp1: b, hyp2: c } = opts;
   const d = opts.altitudeFoot || "D";
 
+  const getLen = (u: string, v: string) => {
+    const p = pairKey(u, v);
+    return opts.givenLengths?.get(p) || opts.givenLengths?.get(`${u}${v}`) || opts.givenLengths?.get(`${v}${u}`);
+  };
+
   // 1. حساب إحداثيات المثلث القائم (الوتر BC على محور السينات، ورأس القائمة A في الأعلى)
-  // حسب نظرية إقليدس: AD^2 = BD * DC، إذا كان BD = 3.6 و DC = 6.4 فإن BC = 10 و AD = 4.8
   const baseBC = 8.0;
-  const ratio =
-    opts.splitRatio && opts.splitRatio > 0 && opts.splitRatio < 1 ? opts.splitRatio : 0.36;
+  const lenH1Foot = getLen(b, d)?.numeric;
+  const lenFootH2 = getLen(d, c)?.numeric;
+  const lenHyp = getLen(b, c)?.numeric;
+
+  let ratio = 0.36;
+  if (lenH1Foot && lenFootH2 && lenH1Foot + lenFootH2 > 0) {
+    ratio = Math.max(0.2, Math.min(0.8, lenH1Foot / (lenH1Foot + lenFootH2)));
+  } else if (lenH1Foot && lenHyp && lenHyp > lenH1Foot) {
+    ratio = Math.max(0.2, Math.min(0.8, lenH1Foot / lenHyp));
+  } else if (opts.splitRatio && opts.splitRatio > 0 && opts.splitRatio < 1) {
+    ratio = opts.splitRatio;
+  }
 
   const footX = 1.0 + ratio * baseBC;
   const altHeight = Number((Math.sqrt(ratio * (1 - ratio)) * baseBC).toFixed(2)) || 3.5;
@@ -73,10 +87,6 @@ export function buildEuclidAltitudeParametricFigure(
   const vertices: CanonicalVertexNode[] = [vA, vB, vC, vD];
 
   // 2. بناء الأضلاع مع الأطوال المعطاة
-  const getLen = (u: string, v: string) => {
-    const p = pairKey(u, v);
-    return opts.givenLengths?.get(p) || opts.givenLengths?.get(`${u}${v}`) || opts.givenLengths?.get(`${v}${u}`);
-  };
 
   const segments: CanonicalSegmentNode[] = [
     // ضلعي القائمة: AB و AC

@@ -84,7 +84,12 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
 
       examples.forEach((ex, exIdx) => {
         const graphSpec = ex.geometryRaw ? parseCartesianGraphDescription(ex.geometryRaw) ?? undefined : undefined;
-        const combinedGeo = !graphSpec
+        const hasFigureRef =
+          Boolean(ex.geometryRaw) ||
+          /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(
+            ex.promptAr
+          );
+        const combinedGeo = !graphSpec && hasFigureRef
           ? combineProblemAndTagGeometryContext(ex.geometryRaw, ex.promptAr)
           : "";
         const geoDiag =

@@ -21,25 +21,28 @@ interface ExtraSeg { readonly a: string; readonly b: string; readonly dashed?: b
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
-  const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
-  if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
-    const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
-    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description)) {
-      return fromTag;
-    }
-  }
-
-  // فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية عند وجود سياق تشابه صريح
+  // 1. فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية أولاً على كامل النص المدمج
   const isSimilarityContext =
-    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|AED.*B|ADE.*C/i.test(
+    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|اقليدس/i.test(
       description
     ) ||
-    (/∈|ينتمي/.test(description) && /\/\/|يوازي/.test(description) && /مثلث|Δ/.test(description) && !/متوسط/.test(description));
+    /AED.*=.*B|ADE.*=.*C/i.test(description) ||
+    (description.includes("∩") && (/يوازي|\/\/|تشابه|~/.test(description) || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?[A-Z]\}?/i.test(description))) ||
+    ((description.includes("قائم") || /m\s*\(\s*∠\s*[A-Z]\s*\)\s*=\s*90/i.test(description)) && description.includes("⊥") && !description.includes("مربع") && !description.includes("مستطيل")) ||
+    ((/∈|ينتمي/.test(description) || /قاطع/.test(description)) && (/\/\/|يوازي/.test(description) || /ADE|AED|ADH|XY/.test(description)) && (/مثلث|Δ/.test(description) || /[A-Za-z]{3}/.test(description)) && !/متوسط/.test(description));
 
   if (isSimilarityContext) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
     if (parametricFig) {
       return { figure: parametricFig, warnings: [] };
+    }
+  }
+
+  const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
+  if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
+    const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
+    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description)) {
+      return fromTag;
     }
   }
 

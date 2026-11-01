@@ -18,6 +18,7 @@ import { buildHourglassIntersectionFigure } from "./hourglass-intersection-param
 import { buildSharedAngleSecantFigure } from "./shared-angle-and-bisector-builder";
 import { buildEuclidAltitudeParametricFigure } from "./euclid-altitude-parametric-builder";
 import { buildAppliedShadowHeightFigure } from "./applied-shadow-height-builder";
+import { resolveNestedThalesAntiparallelRoles } from "./nested-triangle-roles-resolver";
 import {
   convertGeometryLatexToPlainText,
 } from "../description-intake/geometry-latex-to-plain-normalizer";
@@ -111,19 +112,16 @@ export function buildParametricSimilarityFigure(
 
     case "thales_parallel_in_triangle": {
       const commonApex = topologyRes.sharedVertices[0] || tri1[0] || "A";
-      const base1 = tri1.find((v) => v !== commonApex) || "B";
-      const base2 = tri1.find((v) => v !== commonApex && v !== base1) || "C";
-      const cut1 = tri2.find((v) => v !== commonApex) || "D";
-      const cut2 = tri2.find((v) => v !== commonApex && v !== cut1) || "E";
+      const roles = resolveNestedThalesAntiparallelRoles(tri1, tri2, commonApex, clean);
       return buildNestedThalesAntiparallelFigure({
         figureId,
         notationLanguage,
         isAntiparallel: false,
-        apex: commonApex,
-        base1,
-        base2,
-        cut1,
-        cut2,
+        apex: roles.apex,
+        base1: roles.base1,
+        base2: roles.base2,
+        cut1: roles.cut1,
+        cut2: roles.cut2,
         givenLengths: lengths,
         givenAngles: angles,
       });
@@ -131,19 +129,16 @@ export function buildParametricSimilarityFigure(
 
     case "antiparallel_in_triangle": {
       const commonApex = topologyRes.sharedVertices[0] || tri1[0] || "A";
-      const base1 = tri1.find((v) => v !== commonApex) || "B";
-      const base2 = tri1.find((v) => v !== commonApex && v !== base1) || "C";
-      const cut1 = tri2.find((v) => v !== commonApex) || "D";
-      const cut2 = tri2.find((v) => v !== commonApex && v !== cut1) || "E";
+      const roles = resolveNestedThalesAntiparallelRoles(tri1, tri2, commonApex, clean);
       return buildNestedThalesAntiparallelFigure({
         figureId,
         notationLanguage,
         isAntiparallel: true,
-        apex: commonApex,
-        base1,
-        base2,
-        cut1,
-        cut2,
+        apex: roles.apex,
+        base1: roles.base1,
+        base2: roles.base2,
+        cut1: roles.cut1,
+        cut2: roles.cut2,
         givenLengths: lengths,
         givenAngles: angles,
       });
@@ -196,10 +191,24 @@ export function buildParametricSimilarityFigure(
     }
 
     case "euclid_right_triangle_altitude": {
-      const altFoot = topologyRes.altitudePoint || "D";
-      const apex = tri1[0] || "A";
-      const b = tri1[1] || "B";
-      const c = tri1[2] || "C";
+      let altFoot = topologyRes.altitudePoint || "D";
+      let apex = tri1[0] || "A";
+      let b = tri1[1] || "B";
+      let c = tri1[2] || "C";
+
+      const perpMatch = clean.match(/([A-Za-z]{2})\s*⊥\s*([A-Za-z]{2})/i);
+      if (perpMatch) {
+        const altSeg = perpMatch[1].toUpperCase();
+        const hypSeg = perpMatch[2].toUpperCase();
+        apex = altSeg[0];
+        altFoot = altSeg[1];
+        b = hypSeg[0];
+        c = hypSeg[1];
+      } else if (c === altFoot || c === apex) {
+        if (b === "B") c = "C";
+        else if (b === "A") c = "B";
+      }
+
       return buildEuclidAltitudeParametricFigure({
         figureId,
         notationLanguage,
