@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file structured-step-by-step-solution-box.tsx
@@ -26,27 +26,28 @@ export function StructuredStepByStepSolutionBox({
   palette,
   numeralMode,
   notationLanguage,
+  compactScale = 1,
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
+  readonly compactScale?: number;
 }) {
   const steps =
     item.solutionStepsAr && item.solutionStepsAr.length > 0
       ? item.solutionStepsAr
       : [item.modelAnswerAr];
 
-  // خط الحل مقروء دائماً: 0.94em من خط الصفحة (≈ 11.3pt عند 12pt) بلا أي تصغير تلقائي إضافي.
-  const solutionFontEm = 0.94;
-  const useTwoColShortSteps = steps.length >= 3;
+  const effectiveEm = Number((0.84 * compactScale).toFixed(2));
+  const useTwoColShortSteps = steps.length >= 4;
 
   return (
     <div
-      style={{ fontSize: `${solutionFontEm}em` }}
-      className="mt-1 pt-1 border-t border-slate-200/90 space-y-0.5 min-w-0"
+      style={{ fontSize: `${effectiveEm}em` }}
+      className="mt-1.5 pt-1.5 border-t border-slate-200/90 space-y-1 min-w-0"
     >
-      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.92em]">
+      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
         <span>خطوات الحل والشرح بالتفصيل:</span>
         {item.kind === "mcq" && item.correctMcqIndex !== undefined && (
           <span
@@ -61,7 +62,7 @@ export function StructuredStepByStepSolutionBox({
           </span>
         )}
       </div>
-      <div className={useTwoColShortSteps ? "grid grid-cols-2 gap-x-1 gap-y-0.5 items-stretch" : "space-y-0.5"}>
+      <div className={useTwoColShortSteps ? "grid grid-cols-2 gap-1 items-stretch" : "space-y-0.5"}>
         {steps.map((rawStepText, idx) => {
           const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
           const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
@@ -71,12 +72,12 @@ export function StructuredStepByStepSolutionBox({
             .trim();
 
           const visualLen = cleanStepText.replace(/\$[^$]*\$/g, "______").length;
-          const isShortStep = useTwoColShortSteps && !isLast && visualLen <= 46;
+          const isShortStep = useTwoColShortSteps && !isLast && visualLen <= 38;
 
           return (
             <div
               key={idx}
-              className={`py-0.5 px-1 rounded border min-w-0 flex items-start gap-1 text-[1em] leading-[1.45] break-inside-avoid shadow-2xs ${
+              className={`p-1 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs ${
                 useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
               } ${
                 isLast
@@ -90,9 +91,9 @@ export function StructuredStepByStepSolutionBox({
                   color: isLast ? "#ffffff" : palette.primaryHex,
                   borderColor: isLast ? palette.primaryHex : "#CBD5E1",
                 }}
-                className="shrink-0 min-w-[1.35em] text-center px-1 rounded text-[0.78em] font-black border mt-[0.15em]"
+                className="shrink-0 px-1 py-0.2 rounded text-[0.74em] font-black border shadow-2xs mt-0.5"
               >
-                {isLast ? "الناتج" : formatNumeralsByModeSSOT(idx + 1, numeralMode)}
+                {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(idx + 1, numeralMode)}`}
               </span>
               <div className="min-w-0 flex-1 break-words">
                 <SafeKaTeXBiDiMathRenderer
@@ -108,4 +109,3 @@ export function StructuredStepByStepSolutionBox({
     </div>
   );
 }
-
