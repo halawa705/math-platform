@@ -17,6 +17,7 @@ import type {
   PrintableMathQuestionItem,
   PrintThemePaletteTokens,
 } from "./a4-vector-html-sheet-renderer";
+import type { FlowSolutionSlice } from "./flow-item-model";
 
 export const MODULE_ID_STRUCTURED_STEP_BY_STEP_SOLUTION_BOX =
   "structured_step_by_step_solution_box" as const;
@@ -27,17 +28,24 @@ export function StructuredStepByStepSolutionBox({
   numeralMode,
   notationLanguage,
   compactScale = 1,
+  slice,
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
   readonly compactScale?: number;
+  /** شريحة الخطوات المعروضة عند تقسيم الحل بين صفحتين (الخطوة تُعرض كاملة دائماً). */
+  readonly slice?: FlowSolutionSlice;
 }) {
-  const steps =
+  const allSteps =
     item.solutionStepsAr && item.solutionStepsAr.length > 0
       ? item.solutionStepsAr
       : [item.modelAnswerAr];
+  const stepOffset = slice ? slice.from : 0;
+  const steps = slice ? allSteps.slice(slice.from, slice.to) : allSteps;
+  const isContinuation = stepOffset > 0;
+  const continuesNextPage = slice !== undefined && slice.to < allSteps.length;
 
   const effectiveEm = Number((0.86 * compactScale).toFixed(2));
   const useTwoColShortSteps = steps.length >= 4;
@@ -48,8 +56,8 @@ export function StructuredStepByStepSolutionBox({
       className="mt-1 pt-1 border-t border-slate-200/90 space-y-1 min-w-0"
     >
       <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
-        <span>خطوات الحل والشرح بالتفصيل:</span>
-        {item.kind === "mcq" && item.correctMcqIndex !== undefined && (
+        <span>{isContinuation ? "تابع خطوات الحل:" : "خطوات الحل والشرح بالتفصيل:"}</span>
+        {!isContinuation && item.kind === "mcq" && item.correctMcqIndex !== undefined && (
           <span
             style={{
               backgroundColor: palette.primaryHex,
@@ -65,7 +73,8 @@ export function StructuredStepByStepSolutionBox({
       <div className={useTwoColShortSteps ? "grid grid-cols-2 gap-1 items-stretch" : "space-y-0.5"}>
         {steps.map((rawStepText, idx) => {
           const isExplicitFinal = /^الناتج\s*النهائي\s*:/i.test(rawStepText);
-          const isLast = (idx === steps.length - 1 && steps.length > 1) || isExplicitFinal;
+          const absIdx = idx + stepOffset;
+          const isLast = (absIdx === allSteps.length - 1 && allSteps.length > 1) || isExplicitFinal;
           const cleanStepText = rawStepText
             .replace(/^الناتج\s*النهائي\s*:\s*/i, "")
             .replace(/^\d+[\.\-–]\s*/, "")
@@ -93,7 +102,7 @@ export function StructuredStepByStepSolutionBox({
                 }}
                 className="shrink-0 px-1 py-0.2 rounded text-[0.74em] font-black border shadow-2xs mt-0.5"
               >
-                {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(idx + 1, numeralMode)}`}
+                {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(absIdx + 1, numeralMode)}`}
               </span>
               <div className="min-w-0 flex-1 break-words">
                 <SafeKaTeXBiDiMathRenderer
@@ -106,7 +115,11 @@ export function StructuredStepByStepSolutionBox({
           );
         })}
       </div>
+      {continuesNextPage && (
+        <div className="text-[0.8em] font-black text-slate-500 text-left">يتبع الحل في الصفحة التالية ◂</div>
+      )}
     </div>
   );
 }
+
 

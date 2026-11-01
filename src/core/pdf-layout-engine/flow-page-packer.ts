@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file flow-page-packer.ts
  * @description فاصل الصفحات الأمثل (Optimal Page Breaker): بدل التعبئة الجشعة التي ترمي الكائن الذي لا يتسع إلى صفحة جديدة وتترك فراغاً،
  * يبحث بالبرمجة الديناميكية عن أفضل مواضع كسر الصفحات: أولاً أقل عدد أوراق، ثم أقل فراغ سفلي وأقل عدم تساوٍ بين الأعمدة.
@@ -15,6 +15,7 @@ import { distributePageSlack } from "./flow-page-slack-distributor";
 import { fallbackFlowItemHeightPx, isStretchableFlowItem, type FlowItem, type FlowPage } from "./flow-item-model";
 import type { FlowDensityProfile } from "./flow-page-geometry-constants";
 import type { FlowPageBudgetsPx } from "./flow-page-budget-resolver";
+import { optimizePagesWithSolutionSplits } from "./flow-page-solution-split-optimizer";
 
 export const MODULE_ID_FLOW_PAGE_PACKER = "flow_page_packer" as const;
 
@@ -41,7 +42,19 @@ function isBetter(a: BreakNode, b: BreakNode | undefined): boolean {
   return a.cost < b.cost - 1e-9;
 }
 
+/** يوزّع الكائنات على الصفحات ثم يملأ الفراغ السفلي بتقسيم حل المثال التالي (إن توفرت قياساته) دون تجزئة أي خطوة. */
 export function packFlowItemsIntoPages(
+  items: readonly FlowItem[],
+  heights: ReadonlyMap<string, number>,
+  options: FlowPackOptions
+): readonly FlowPage[] {
+  const base = packFlowItemsIndivisible(items, heights, options);
+  return optimizePagesWithSolutionSplits(items, heights, base, (candidate) =>
+    packFlowItemsIndivisible(candidate, heights, options)
+  ).pages;
+}
+
+function packFlowItemsIndivisible(
   items: readonly FlowItem[],
   heights: ReadonlyMap<string, number>,
   options: FlowPackOptions
@@ -106,3 +119,4 @@ export function packFlowItemsIntoPages(
   });
   return pages;
 }
+

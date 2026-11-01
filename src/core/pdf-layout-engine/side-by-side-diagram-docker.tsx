@@ -25,18 +25,23 @@ import { QuestionGivenRequiredBadges } from "./question-given-required-badges";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
 import { resolveQuestionCardColorScheme } from "./question-card-palette-resolver";
 import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
+import type { FlowSolutionSlice } from "./flow-item-model";
 
 export const MODULE_ID_SIDE_BY_SIDE_DIAGRAM_DOCKER = "side_by_side_diagram_docker" as const;
 
 export interface SideBySideDiagramDockerProps {
   readonly question: PrintableMathQuestionItem;
   readonly settings: PDFPrintSettingsStateSSOT;
+  /** عند تقسيم حل المثال بين صفحتين: الشريحة المعروضة من الخطوات (from = 0 رأس البطاقة، from > 0 ذيلها). */
+  readonly solutionSlice?: FlowSolutionSlice;
 }
 
 export default function SideBySideDiagramDocker({
   question,
   settings,
+  solutionSlice,
 }: SideBySideDiagramDockerProps) {
+  const isContinuation = solutionSlice !== undefined && solutionSlice.from > 0;
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const formattedQNum = formatNumeralsByModeSSOT(question.questionNumber, settings.numeralMode);
   const formattedIdeaIndex =
@@ -98,7 +103,7 @@ export default function SideBySideDiagramDocker({
           formattedIdeaIndex={formattedIdeaIndex}
         />
 
-        {settings.answerVisibilityMode !== "answer_key_only" && (
+        {settings.answerVisibilityMode !== "answer_key_only" && !isContinuation && (
           <div className="min-w-0" style={{ breakAfter: "avoid" }}>
             <div
               className={
@@ -165,6 +170,7 @@ export default function SideBySideDiagramDocker({
             numeralMode={settings.numeralMode}
             notationLanguage={settings.notationLanguage}
             compactScale={autoCompactScale}
+            slice={solutionSlice}
           />
         )}
 
@@ -196,4 +202,5 @@ export default function SideBySideDiagramDocker({
     </article>
   );
 }
+
 

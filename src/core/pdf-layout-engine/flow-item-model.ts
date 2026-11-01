@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file flow-item-model.ts
  * @description نموذج «الكائن المرن» للتدفق: كل فكرة/قاعدة/مثال/تدريب/فاصل/جدول هو FlowItem مستقل له عرض (كامل أو عمود)،
  * وتتألف الصفحة من مقاطع: مقطع بعرض كامل، أو مقطع أعمدة متوازنة (يمين ثم يسار بترتيب القراءة).
@@ -7,6 +7,14 @@
 import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
 
 export const MODULE_ID_FLOW_ITEM_MODEL = "flow_item_model" as const;
+
+export interface FlowSolutionSlice {
+  /** فهرس أول خطوة معروضة (0 = رأس البطاقة بسؤالها وشكلها). */
+  readonly from: number;
+  /** فهرس يلي آخر خطوة معروضة (حصري). */
+  readonly to: number;
+  readonly total: number;
+}
 
 export type FlowItem =
   | {
@@ -21,6 +29,8 @@ export type FlowItem =
       readonly kind: "question";
       readonly span: "full" | "column";
       readonly question: PrintableMathQuestionItem;
+      /** شريحة من خطوات الحل لبطاقة مقسومة بين صفحتين (غير معرّفة = البطاقة كاملة). الخطوة لا تُجزَّأ أبداً. */
+      readonly solutionSlice?: FlowSolutionSlice;
     }
   | { readonly id: string; readonly kind: "idea_divider"; readonly span: "full"; readonly ideaIndex: number }
   | { readonly id: string; readonly kind: "mcq_answer_key"; readonly span: "full" }
@@ -69,3 +79,4 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
     default: return 190;
   }
 }
+

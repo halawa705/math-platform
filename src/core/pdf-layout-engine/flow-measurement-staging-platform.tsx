@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file flow-measurement-staging-platform.tsx
@@ -13,6 +13,7 @@ import type { PrintFontFamilySpecification, PDFPrintSettingsStateSSOT } from "..
 import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
 import { fullWidthHeightKey, type FlowItem } from "./flow-item-model";
+import { buildSolutionSplitVariants } from "./flow-solution-split-variants-builder";
 import { FLOW_COLUMN_WIDTH_PX, FLOW_PAGE_INNER_WIDTH_PX } from "./flow-page-geometry-constants";
 import {
   SovereignFirstPageHeader,
@@ -42,6 +43,11 @@ const WRAPPER_BASE_STYLE: React.CSSProperties = { display: "flow-root" };
 export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlatformProps) {
   const { stagingRef, flowItems, renderFlowItem, settings, identity, palette, activeFont } = props;
   const numeralMode = settings.numeralMode;
+  // نسخ رأس/ذيل الأمثلة المحلولة (تقسيم الحل بين صفحتين) تُقاس بعرض الصفحة الكامل مثل بقية الكائنات.
+  const splitVariantItems = React.useMemo(
+    () => [...buildSolutionSplitVariants(flowItems).values()].flatMap((vs) => vs.flatMap((v) => [v.head, v.tail])),
+    [flowItems]
+  );
   return (
     <div
       ref={stagingRef}
@@ -97,6 +103,12 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
           )}
         </React.Fragment>
       ))}
+      {splitVariantItems.map((item) => (
+        <div key={item.id} data-flow-item-id={item.id} className="min-w-0" style={{ ...WRAPPER_BASE_STYLE, width: `${FLOW_PAGE_INNER_WIDTH_PX}px` }}>
+          {renderFlowItem(item)}
+        </div>
+      ))}
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * @file flow-item-renderer.tsx
@@ -40,7 +40,7 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
     case "question":
       return (
         <div className="w-full min-w-0 flex-1 flex flex-col">
-          <SideBySideDiagramDocker question={item.question} settings={settings} />
+          <SideBySideDiagramDocker question={item.question} settings={settings} solutionSlice={item.solutionSlice} />
         </div>
       );
     case "idea_divider":
@@ -66,3 +66,4 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
       );
   }
 }
+
