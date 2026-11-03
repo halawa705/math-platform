@@ -66,6 +66,7 @@ export function PedagogicalIdeaAndRuleCapsule({
   const bannerKind = resolveFlowBannerKind(rawBanner);
   const isHomeworkSection = bannerKind === "homework";
   const isPlainSection = bannerKind === "section";
+  const isWorksheetSection = bannerKind === "worksheet";
   const displayTitle = rawBanner;
 
   return (
@@ -79,13 +80,22 @@ export function PedagogicalIdeaAndRuleCapsule({
             breakInside: "avoid",
             background: isHomeworkSection
               ? "linear-gradient(90deg, #FDF2F8 0%, #9D174D 100%)"
-              : palette.headerGradientCss,
-            borderColor: isHomeworkSection ? "#BE185D" : palette.primaryHex,
+              : isWorksheetSection
+                ? "linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)"
+                : palette.headerGradientCss,
+            borderColor: isHomeworkSection ? "#BE185D" : isWorksheetSection ? "#4338CA" : palette.primaryHex,
           }}
           className="rounded-xl border-2 p-1.5 text-white flex items-center justify-between gap-2 shadow-xs"
         >
           <div className="flex items-center gap-2 min-w-0">
-            {isPlainSection ? null : !isHomeworkSection ? (
+            {isWorksheetSection ? (
+              <span
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                className="px-2.5 py-0.5 rounded-lg text-white text-[0.88em] font-black shrink-0 shadow-2xs border border-white/30"
+              >
+                ⚡ ورقة عمل وتطبيق شامل
+              </span>
+            ) : isPlainSection ? null : !isHomeworkSection ? (
               <span
                 style={{ color: palette.primaryHex }}
                 className="bg-white px-2.5 py-0.5 rounded-lg text-[0.88em] font-black shrink-0 shadow-2xs border border-slate-200"
@@ -109,20 +119,28 @@ export function PedagogicalIdeaAndRuleCapsule({
 
       {(item.conceptExplanationAr || item.framedRuleAr) && (
         <div
-          className={`grid ${
-            item.conceptExplanationAr && item.framedRuleAr ? "grid-cols-2" : "grid-cols-1"
-          } gap-1.5 items-stretch w-full min-w-0`}
+          className={`${
+            isWorksheetSection
+              ? "flex flex-col space-y-1.5"
+              : `grid ${item.conceptExplanationAr && item.framedRuleAr ? "grid-cols-2" : "grid-cols-1"} gap-1.5`
+          } items-stretch w-full min-w-0`}
         >
           {item.conceptExplanationAr && (
             <div
-              style={{ backgroundColor: "#FFFDF5", borderColor: "#F59E0B" }}
-              className="p-1.5 px-2 rounded-xl border-2 text-[0.85em] text-slate-900 leading-snug min-w-0 shadow-2xs"
+              style={{
+                backgroundColor: isWorksheetSection ? "#F0FDF4" : "#FFFDF5",
+                borderColor: isWorksheetSection ? "#10B981" : "#F59E0B",
+              }}
+              className="p-2 rounded-xl border-2 text-[0.86em] text-slate-900 leading-relaxed min-w-0 shadow-2xs"
             >
-              <div className="text-[#92400E] font-black mb-0.5 pb-0.5 border-b border-amber-200/80 flex items-center gap-1 text-[0.88em]">
+              <div
+                style={{ color: isWorksheetSection ? "#065F46" : "#92400E" }}
+                className="font-black mb-1 pb-1 border-b border-slate-200/80 flex items-center gap-1.5 text-[0.9em]"
+              >
                 <span>💡</span>
-                <span>المفهوم الرياضي والشرح:</span>
+                <span>{isWorksheetSection ? "الفكرة العامة وما يستفيده الطالب:" : "المفهوم الرياضي والشرح:"}</span>
               </div>
-              <div className="font-bold text-slate-800 break-words">
+              <div className="font-bold text-slate-800 break-words leading-relaxed">
                 <SafeKaTeXBiDiMathRenderer
                   text={item.conceptExplanationAr}
                   numeralMode={numeralMode}
@@ -134,17 +152,20 @@ export function PedagogicalIdeaAndRuleCapsule({
 
           {item.framedRuleAr && (
             <div
-              style={{ backgroundColor: "#F5F7FF", borderColor: "#818CF8" }}
-              className="p-1.5 px-2 rounded-xl border-2 text-[0.78em] sm:text-[0.81em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
+              style={{
+                backgroundColor: isWorksheetSection ? "#F8FAFC" : "#F5F7FF",
+                borderColor: isWorksheetSection ? "#3B82F6" : "#818CF8",
+              }}
+              className="p-2 rounded-xl border-2 text-[0.82em] sm:text-[0.85em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
             >
               <div
                 style={{ color: palette.primaryHex }}
-                className="font-black mb-0.5 pb-0.5 border-b border-indigo-200/80 flex items-center gap-1 text-[0.88em]"
+                className="font-black mb-1 pb-1 border-b border-indigo-200/80 flex items-center gap-1.5 text-[0.9em]"
               >
                 <span>📐</span>
-                <span>القاعدة والقانون المعتمد:</span>
+                <span>{isWorksheetSection ? "القوانين الذكية ومفاتيح الحل (بذكاء وليس بجفاء):" : "القاعدة والقانون المعتمد:"}</span>
               </div>
-              <div className="font-extrabold text-slate-900 max-w-full overflow-hidden break-words">
+              <div className="font-extrabold text-slate-900 max-w-full overflow-hidden break-words space-y-1">
                 <SafeKaTeXBiDiMathRenderer
                   text={item.framedRuleAr}
                   numeralMode={numeralMode}

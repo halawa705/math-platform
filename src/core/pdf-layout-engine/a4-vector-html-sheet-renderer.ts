@@ -32,12 +32,14 @@ export interface PrintableMathQuestionItem {
   readonly ideaIndex?: number;
   readonly geometryFigure?: CanonicalGeometryFigureIR;
   readonly graphSpec?: CartesianGraphSpec;
+  readonly rawSvgMarkup?: string;
   readonly figureDiagnosticsAr?: readonly string[];
   /** حقول إضافية اختيارية خاصة بالمذكرات التعليمية والمراجعات النهائية */
   readonly ideaBannerTitleAr?: string;
   readonly conceptExplanationAr?: string;
   readonly framedRuleAr?: string;
   readonly studentDrillPromptAr?: string;
+  readonly isWorkedExample?: boolean;
 }
 
 export interface PrintThemePaletteTokens {

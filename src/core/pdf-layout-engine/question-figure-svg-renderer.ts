@@ -24,9 +24,13 @@ export function renderQuestionFigureSvg(
     readonly geometryFigure?: CanonicalGeometryFigureIR;
     readonly attachedGeometryFigure?: CanonicalGeometryFigureIR;
     readonly graphSpec?: CartesianGraphSpec;
+    readonly rawSvgMarkup?: string;
   },
   options: RenderQuestionFigureSvgOptions = {}
 ): string | null {
+  if (question.rawSvgMarkup) {
+    return question.rawSvgMarkup;
+  }
   const geo = question.geometryFigure ?? question.attachedGeometryFigure;
   if (geo) {
     return projectGeometryFigureToSVGMarkup(geo, options);

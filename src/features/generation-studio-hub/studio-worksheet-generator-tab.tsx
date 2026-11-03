@@ -183,10 +183,11 @@ export default function StudioWorksheetGeneratorTab({
     setNotice(null);
     onApplyParsedQuestionsToSheet?.(parsed);
 
-    // مزامنة نمط مساحات الحل مع إعدادات الطباعة للـ A4
+    // مزامنة نمط مساحات الحل وقالب الورقة السيادي لورقة العمل
     const currentPrint = loadPersistedPDFPrintSettingsSSOT();
     savePersistedPDFPrintSettingsSSOT({
       ...currentPrint,
+      paperTemplateId: "classic_sovereign",
       answerSpaceStyle: includeAnswerLines ? "dotted" : "hidden",
     });
 

@@ -1,8 +1,9 @@
 /**
  * @file notebooklm-worksheet-parser.ts
  * @description محلل حتمي ذكي لرد NotebookLM الخاص بورقة العمل:
- * يستخرج كبسولة الدرس (الفكرة العامة، القوانين الذكية، سر الحل)، الأمثلة المحلولة لكل فكرة، وبنك أسئلة التدريب (اختر ومقالي).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 270 سطراً).
+ * يستخرج كبسولة الدرس (الفكرة العامة، القوانين الذكية، سر الحل)، الأمثلة المحلولة لكل فكرة،
+ * ويرسم نماذج مساحة المستطيل الحسابية كـ Vector SVG نقي، وبنك أسئلة التدريب (اختر ومقالي).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 285 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -11,6 +12,7 @@ import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sa
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
+import { detectAndBuildAreaModelSvg } from "../geometry-engine/arithmetic-area-model/area-model-arithmetic-svg-builder";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -32,8 +34,7 @@ export interface ParseNotebookLMWorksheetParams {
 interface ParsedWorksheetCore {
   readonly lessonTitle?: string;
   readonly generalOverview?: string;
-  readonly smartRulesArabic?: string;
-  readonly formulasAndTipsArabic?: string;
+  readonly smartRulesCards?: string;
 }
 
 interface ParsedConceptExample {
@@ -55,6 +56,21 @@ interface ParsedWorksheetQuestion {
   readonly steps: readonly string[];
 }
 
+function deriveCleanWorksheetTitle(scopeRaw: string, overview?: string): string {
+  const clean = scopeRaw.replace(/\[باستثناء:[^\]]*\]/g, "").trim();
+  if (/ضرب.*قسمة|قسمة.*ضرب/i.test(clean) || /ضرب.*قسمة|قسمة.*ضرب/i.test(overview || "")) {
+    return "ورقة عمل: ضرب وقسمة الأعداد والكسور العشرية";
+  }
+  if (/تشابه/i.test(clean)) return "ورقة عمل: تشابه المضلعات";
+  if (clean.length > 40 && clean.includes("الوحدة")) {
+    const uNums = Array.from(clean.matchAll(/الوحدة\s+([0-9٠-٩]+)/g)).map((m) => m[1]);
+    if (uNums.length > 1) {
+      return `ورقة عمل شاملة — الوحدات (${uNums.join("، ")})`;
+    }
+  }
+  return `ورقة عمل: ${clean}`;
+}
+
 function parseCoreBlock(raw: string): ParsedWorksheetCore {
   const coreMatch = raw.match(/===\s*\[(?:WORKSHEET_CORE|كبسولة_الدرس|لب_الدرس)\]\s*===([\s\S]*?)(?====\s*\[(?:CONCEPT_EXAMPLE|QUESTION|مثال|سؤال)|$)/i);
   if (!coreMatch) return {};
@@ -67,9 +83,7 @@ function parseCoreBlock(raw: string): ParsedWorksheetCore {
   const rulesMatch = body.match(/القوانين_الذكية\s*:?\s*([\s\S]*?)(?====|$)/i);
   const rulesLines = rulesMatch?.[1]?.split("\n").map((l) => l.trim()).filter((l) => l.startsWith("-") || l.startsWith("•") || l.startsWith("*")) || [];
 
-  const verbalParts: string[] = [];
-  const mathParts: string[] = [];
-
+  const ruleCards: string[] = [];
   for (const line of rulesLines) {
     const cleanLine = line.replace(/^[-•*]\s*/, "");
     const lawName = cleanLine.match(/القانون\s*:\s*([^|]+)/i)?.[1]?.trim();
@@ -77,20 +91,17 @@ function parseCoreBlock(raw: string): ParsedWorksheetCore {
     const mathFormula = cleanLine.match(/الصيغة_الرياضية\s*:\s*([^|]+)/i)?.[1]?.trim();
     const tip = cleanLine.match(/سر_الحل\s*:\s*(.+)$/i)?.[1]?.trim();
 
-    if (verbal) {
-      verbalParts.push(lawName ? `**${lawName}:** ${verbal}` : verbal);
-    }
-    if (mathFormula) {
-      const formulaSnippet = tip ? `${mathFormula} *(سر الحل: ${tip})*` : mathFormula;
-      mathParts.push(formulaSnippet);
-    }
+    const parts: string[] = [];
+    if (lawName || verbal) parts.push(`📌 **${lawName || "قانون"}:** ${verbal || ""}`);
+    if (mathFormula) parts.push(mathFormula);
+    if (tip) parts.push(`⚡ *سر الحل وفخ الامتحان:* ${tip}`);
+    if (parts.length > 0) ruleCards.push(parts.join("\n"));
   }
 
   return {
     lessonTitle,
     generalOverview,
-    smartRulesArabic: verbalParts.length > 0 ? verbalParts.join("\n\n") : undefined,
-    formulasAndTipsArabic: mathParts.length > 0 ? mathParts.join("\n\n") : undefined,
+    smartRulesCards: ruleCards.length > 0 ? ruleCards.join("\n\n---\n\n") : undefined,
   };
 }
 
@@ -144,7 +155,7 @@ function parseQuestionsBlocks(raw: string): ParsedWorksheetQuestion[] {
     const choices = isMcq ? parseChoicesTupleFromBlock(body) : undefined;
     promptText = stripInlineChoicesFromPromptText(promptText);
 
-    const ansMatch = body.match(/الإجابة_الصحيحة\s*:\s*([^\n]+)/i);
+    const ansMatch = body.match(/الإجابة_الصحيحة\s*:\s*([^\n|]+)/i);
     const rawCorrect = ansMatch?.[1]?.trim() || "";
     const correctIndex = isMcq && choices ? resolveCorrectChoiceIndex(rawCorrect, choices) : undefined;
 
@@ -181,39 +192,44 @@ export function parseNotebookLMWorksheetResponse(
   const output: PrintableMathQuestionItem[] = [];
 
   // ١. تجهيز كبسولة الفكرة العامة والقوانين الذكية (إذا وجدت)
-  const capsuleBanner = core.lessonTitle || lessonTitleArabic;
-  let explanationText = "";
-  if (core.generalOverview) {
-    explanationText += `💡 الفكرة العامة: ${core.generalOverview}`;
-  }
-  if (core.smartRulesArabic) {
-    explanationText += (explanationText ? "\n\n" : "") + `📐 مفاتيح القوانين:\n${core.smartRulesArabic}`;
-  }
-
-  const framedRuleText = core.formulasAndTipsArabic || undefined;
+  const cleanTitle = deriveCleanWorksheetTitle(core.lessonTitle || lessonTitleArabic, core.generalOverview);
+  const explanationText = core.generalOverview ? core.generalOverview : undefined;
+  const framedRuleText = core.smartRulesCards || undefined;
 
   // ٢. تحويل الأمثلة المحلولة لكل فكرة
   conceptExamples.forEach((ex, idx) => {
     const isFirst = idx === 0;
-    const diagCombined = ex.diagramDesc
-      ? combineProblemAndTagGeometryContext(ex.examplePrompt, ex.diagramDesc)
-      : undefined;
-    const geoMatch = diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
-    const graphSpec = ex.diagramDesc ? parseCartesianGraphDescription(ex.diagramDesc) : undefined;
+    const fullPrompt = `${ex.examplePrompt} ${ex.diagramDesc || ""}`;
+
+    // فحص نموذج مساحة المستطيل أولاً لتفادي الأشكال الإقليدية الخاطئة
+    const areaModelSvg = detectAndBuildAreaModelSvg(fullPrompt);
+
+    let geoMatch;
+    let graphSpec;
+    if (!areaModelSvg) {
+      const diagCombined = ex.diagramDesc
+        ? combineProblemAndTagGeometryContext(ex.examplePrompt, ex.diagramDesc)
+        : undefined;
+      geoMatch = diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
+      graphSpec = ex.diagramDesc ? parseCartesianGraphDescription(ex.diagramDesc) : undefined;
+    }
 
     output.push({
       id: `ws-concept-${idx + 1}`,
       questionNumber: idx + 1,
       kind: "essay_algebra",
-      branchBadgeAr: `${branchNameAr} • ${ex.conceptTitle}`,
+      branchBadgeAr: ex.conceptTitle,
       marks: 0,
-      promptAr: `مثال توضيحي (${ex.conceptTitle}): ${ex.examplePrompt}`,
+      promptAr: ex.examplePrompt,
       modelAnswerAr: ex.quickSolutionSteps.join(" ⇐ "),
       solutionStepsAr: ex.quickSolutionSteps,
+      citationBadgeAr: ex.conceptTitle,
+      isWorkedExample: true,
+      rawSvgMarkup: areaModelSvg ?? undefined,
       geometryFigure: geoMatch?.figure,
       graphSpec: graphSpec ?? undefined,
-      ideaBannerTitleAr: isFirst ? capsuleBanner : undefined,
-      conceptExplanationAr: isFirst ? explanationText || undefined : undefined,
+      ideaBannerTitleAr: isFirst ? cleanTitle : undefined,
+      conceptExplanationAr: isFirst ? explanationText : undefined,
       framedRuleAr: isFirst ? framedRuleText : undefined,
     });
   });
@@ -221,11 +237,20 @@ export function parseNotebookLMWorksheetResponse(
   // ٣. تحويل بنك تدريبات ورقة العمل (اختر ومقالي)
   questions.forEach((q, idx) => {
     const isFirstQuestion = conceptExamples.length === 0 && idx === 0;
-    const diagCombined = q.diagramDesc
-      ? combineProblemAndTagGeometryContext(q.promptText, q.diagramDesc)
-      : undefined;
-    const geoMatch = diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
-    const graphSpec = q.diagramDesc ? parseCartesianGraphDescription(q.diagramDesc) : undefined;
+    const fullPrompt = `${q.promptText} ${q.diagramDesc || ""}`;
+
+    // فحص نموذج مساحة المستطيل
+    const areaModelSvg = detectAndBuildAreaModelSvg(fullPrompt);
+
+    let geoMatch;
+    let graphSpec;
+    if (!areaModelSvg) {
+      const diagCombined = q.diagramDesc
+        ? combineProblemAndTagGeometryContext(q.promptText, q.diagramDesc)
+        : undefined;
+      geoMatch = diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
+      graphSpec = q.diagramDesc ? parseCartesianGraphDescription(q.diagramDesc) : undefined;
+    }
 
     const isEssay = q.kind === "essay";
 
@@ -241,10 +266,11 @@ export function parseNotebookLMWorksheetResponse(
       modelAnswerAr: q.rawSolution || q.steps.join(" ⇐ "),
       solutionStepsAr: q.steps,
       studentDrillPromptAr: isEssay && includeAnswerLines ? "مساحة إجابة الطالب:" : undefined,
+      rawSvgMarkup: areaModelSvg ?? undefined,
       geometryFigure: geoMatch?.figure,
       graphSpec: graphSpec ?? undefined,
-      ideaBannerTitleAr: isFirstQuestion ? capsuleBanner : undefined,
-      conceptExplanationAr: isFirstQuestion ? explanationText || undefined : undefined,
+      ideaBannerTitleAr: isFirstQuestion ? cleanTitle : undefined,
+      conceptExplanationAr: isFirstQuestion ? explanationText : undefined,
       framedRuleAr: isFirstQuestion ? framedRuleText : undefined,
     });
   });

@@ -31,7 +31,11 @@ function groupQuestionsByIdea(questions: readonly PrintableMathQuestionItem[]): 
 }
 
 function isSolvedExample(q: PrintableMathQuestionItem): boolean {
-  return q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-");
+  return (
+    Boolean(q.isWorkedExample) ||
+    q.id.startsWith("ws-concept-") ||
+    (q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-"))
+  );
 }
 
 function isMcqQuestion(q: PrintableMathQuestionItem): boolean {

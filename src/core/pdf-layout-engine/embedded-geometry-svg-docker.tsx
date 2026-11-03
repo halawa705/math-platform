@@ -15,6 +15,7 @@ import { renderQuestionFigureSvg } from "./question-figure-svg-renderer";
 export interface EmbeddedGeometrySVGDockerProps {
   readonly geometryFigure?: CanonicalGeometryFigureIR;
   readonly graphSpec?: CartesianGraphSpec;
+  readonly rawSvgMarkup?: string;
   readonly borderHex: string;
   readonly softSurfaceHex: string;
   readonly primaryHex: string;
@@ -28,6 +29,7 @@ export interface EmbeddedGeometrySVGDockerProps {
 export function EmbeddedGeometrySVGDocker({
   geometryFigure,
   graphSpec,
+  rawSvgMarkup,
   borderHex,
   softSurfaceHex,
   primaryHex,
@@ -37,12 +39,12 @@ export function EmbeddedGeometrySVGDocker({
   figureScale = 1,
   columnsCount = 2,
 }: EmbeddedGeometrySVGDockerProps) {
-  if (!geometryFigure && !graphSpec) return null;
+  if (!geometryFigure && !graphSpec && !rawSvgMarkup) return null;
 
-  const aspect = geometryFigure ? computeFigureAspectFromVertices(geometryFigure.vertices) : 1.3;
+  const aspect = geometryFigure ? computeFigureAspectFromVertices(geometryFigure.vertices) : 1.4;
   const box = computeFigureBoxSizePx({ aspect, figureScale, columnsCount });
   const svgMarkup = renderQuestionFigureSvg(
-    { geometryFigure, graphSpec },
+    { geometryFigure, graphSpec, rawSvgMarkup },
     {
       widthPx: box.svgWidthPx,
       heightPx: box.svgHeightPx,

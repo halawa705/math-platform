@@ -94,13 +94,22 @@ export function buildStandardDocumentTitleSSOT(params: {
     resolvedUnitTitle = unitFromReply.trim();
   }
 
+  // تنظيف الأقواس الخاصة بالاستثناءات مثل [باستثناء: ...]
+  resolvedLessonTitle = resolvedLessonTitle.replace(/\[باستثناء:[^\]]*\]/g, "").trim();
+
   const isJunkOrGeneric =
     !resolvedLessonTitle ||
     /^الدرس\s+(?:الأول|الاول|\d+)$/i.test(resolvedLessonTitle) ||
-    /idea|معرف|نوع|أكمل|اختر|\[/i.test(resolvedLessonTitle);
+    /^(?:idea[-_\d]*|معرف|نوع|أكمل|اختر)$/i.test(resolvedLessonTitle);
 
   if (isJunkOrGeneric) {
-    if (/تشابه\s+(?:مضلعين|المضلعات)/i.test(replyRaw)) {
+    if (/ضرب.*قسمة|قسمة.*ضرب/i.test(replyRaw)) {
+      resolvedLessonTitle = "ضرب وقسمة الأعداد والكسور العشرية";
+    } else if (/ضرب\s+الأعداد/i.test(replyRaw)) {
+      resolvedLessonTitle = "ضرب الأعداد الصحيحة";
+    } else if (/القسمة\s+على/i.test(replyRaw)) {
+      resolvedLessonTitle = "القسمة على أعداد صحيحة";
+    } else if (/تشابه\s+(?:مضلعين|المضلعات)/i.test(replyRaw)) {
       resolvedLessonTitle = "تشابه المضلعات";
     } else if (/تشابه\s+المثلثات/i.test(replyRaw)) {
       resolvedLessonTitle = "تشابه المثلثات";
@@ -110,8 +119,22 @@ export function buildStandardDocumentTitleSSOT(params: {
       resolvedLessonTitle = "نظرية فيثاغورس";
     } else if (/النسب\s+المثلثية/i.test(replyRaw)) {
       resolvedLessonTitle = "النسب المثلثية الأساسية";
+    } else if (units.length > 0 && units[0].lessons[0]) {
+      resolvedLessonTitle = units[0].lessons[0].titleArabic;
     } else {
-      resolvedLessonTitle = "تشابه المضلعات";
+      resolvedLessonTitle = "تطبيقات وتمارين شاملة";
+    }
+  }
+
+  // إذا كان العنوان طويلاً جداً نتيجة تحديد عدة وحدات بالشيك بوكس
+  if (resolvedLessonTitle.length > 35 && resolvedLessonTitle.includes("الوحدة")) {
+    if (/ضرب.*قسمة|قسمة.*ضرب/i.test(resolvedLessonTitle) || /ضرب.*قسمة|قسمة.*ضرب/i.test(replyRaw)) {
+      resolvedLessonTitle = "ضرب وقسمة الأعداد والكسور العشرية";
+    } else {
+      const unitsMatches = Array.from(resolvedLessonTitle.matchAll(/الوحدة\s+([0-9٠-٩]+)/g)).map((m) => m[1]);
+      if (unitsMatches.length > 1) {
+        resolvedLessonTitle = `تطبيقات الوحدات (${unitsMatches.join("، ")})`;
+      }
     }
   }
 
@@ -124,10 +147,10 @@ export function buildStandardDocumentTitleSSOT(params: {
     .trim();
 
   if (!cleanLesson || cleanLesson === "الأول" || cleanLesson.length < 2) {
-    cleanLesson = "تشابه المضلعات";
+    cleanLesson = units.length > 0 && units[0].lessons[0] ? units[0].lessons[0].titleArabic : "تطبيقات وتمارين شاملة";
   }
 
-  const finalUnit = resolvedUnitTitle || "الوحدة الثالثة";
+  const finalUnit = resolvedUnitTitle || (units.length > 0 ? units[0].titleArabic : "الوحدة");
 
   return `${resolvedLessonOrder} - ${gradeCode} - ${finalUnit} - ${cleanLesson}`;
 }

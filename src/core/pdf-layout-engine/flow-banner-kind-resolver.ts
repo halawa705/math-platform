@@ -7,13 +7,15 @@
 
 export const MODULE_ID_FLOW_BANNER_KIND_RESOLVER = "flow_banner_kind_resolver" as const;
 
-export type FlowBannerKind = "idea" | "homework" | "section";
+export type FlowBannerKind = "idea" | "homework" | "section" | "worksheet";
 
 const HOMEWORK_TITLE_RE = /الواجب\s*المنزلي|واجبات\s*منزلية/;
 const SECTION_TITLE_RE = /^\s*(?:[^\p{L}\p{N}]*)(?:أولاً|ثانياً|ثالثاً|رابعاً|خامساً)\s*[:：—-]/u;
+const WORKSHEET_TITLE_RE = /ورقة\s*عمل|بطاقة\s*تعلم/;
 
 export function resolveFlowBannerKind(bannerTitleAr: string | undefined): FlowBannerKind {
   const title = bannerTitleAr ?? "";
+  if (WORKSHEET_TITLE_RE.test(title)) return "worksheet";
   if (HOMEWORK_TITLE_RE.test(title)) return "homework";
   if (SECTION_TITLE_RE.test(title)) return "section";
   return "idea";

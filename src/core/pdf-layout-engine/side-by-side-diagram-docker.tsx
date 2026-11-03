@@ -47,7 +47,10 @@ export default function SideBySideDiagramDocker({
   const formattedIdeaIndex =
     question.ideaIndex !== undefined ? formatNumeralsByModeSSOT(question.ideaIndex, settings.numeralMode) : undefined;
   const isBookletDrill = question.id.includes("-drill-");
-  const isBookletSolvedExample = question.id.startsWith("booklet-s1-") && !isBookletDrill;
+  const isBookletSolvedExample =
+    Boolean(question.isWorkedExample) ||
+    question.id.startsWith("ws-concept-") ||
+    (question.id.startsWith("booklet-s1-") && !isBookletDrill);
   const isBookletHomework = question.id.includes("-hw-") || question.id.startsWith("booklet-s2-");
   const isBookletDrillOrHomework = isBookletDrill || isBookletHomework;
   const isSolvedMode =
@@ -139,6 +142,7 @@ export default function SideBySideDiagramDocker({
               <EmbeddedGeometrySVGDocker
                 geometryFigure={question.geometryFigure}
                 graphSpec={question.graphSpec}
+                rawSvgMarkup={question.rawSvgMarkup}
                 borderHex={palette.borderHex}
                 softSurfaceHex={palette.softSurfaceHex}
                 primaryHex={palette.primaryHex}
