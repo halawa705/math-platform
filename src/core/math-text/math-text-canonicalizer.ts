@@ -30,7 +30,7 @@ function tidyLine(line: string, indentation: string): string {
   return (indentation + joined).replace(/[ \t]+$/g, "");
 }
 
-function canonicalizeMathLine(line: string): string {
+function canonicalizeSingleSegment(line: string): string {
   const diagramTags: string[] = [];
   const protectedLine = line.replace(
     /\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:[^\]]*\]/gi,
@@ -51,6 +51,18 @@ function canonicalizeMathLine(line: string): string {
   l = finalizeMathLine(l);
   const tidied = tidyLine(l, line.match(/^[ \t]*/)?.[0] ?? "");
   return tidied.replace(/@@DIAGRAM_TAG_(\d+)@@/g, (_m, idx: string) => diagramTags[Number(idx)] ?? "");
+}
+
+function canonicalizeMathLine(line: string): string {
+  if (/^\s*\|[\s\-:|]+\|\s*$/.test(line)) {
+    return line.trim();
+  }
+  if (/^\s*\|.*\|\s*$/.test(line)) {
+    const inner = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    const cells = inner.split("|").map((cell) => canonicalizeSingleSegment(cell.trim()).trim());
+    return `| ${cells.join(" | ")} |`;
+  }
+  return canonicalizeSingleSegment(line);
 }
 
 export function canonicalizeMathText(raw: string): string {

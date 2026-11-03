@@ -36,7 +36,9 @@ export function isArabicMeasurementUnit(phrase: string): boolean {
 /** مفتاح الوحدة الإنجليزية بعد حذف المسافات و`^` و`{}` ← الوحدة العربية. */
 export const ENGLISH_UNIT_KEY_TO_ARABIC: Readonly<Record<string, string>> = {
   cm2: "سم²", "cm²": "سم²", cm3: "سم³", "cm³": "سم³", cm: "سم", mm: "مم", km: "كم",
-  kg: "كجم", "m/s2": "م/ث²", "m/s²": "م/ث²", "m/s": "م/ث",
+  m2: "م²", "m²": "م²", m3: "م³", "m³": "م³", m: "م",
+  kg: "كجم", gm: "جم", g: "جم", ml: "مللتر", l: "لتر",
+  "m/s2": "م/ث²", "m/s²": "م/ث²", "m/s": "م/ث",
 };
 
 export const SUPERSCRIPT_DIGIT_TO_UNICODE: Readonly<Record<string, string>> = {

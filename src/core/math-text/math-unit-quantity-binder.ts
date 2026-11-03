@@ -23,15 +23,25 @@ const UNIT = `(${ARABIC_UNIT_ALTERNATION_SRC})${NOT_FOLLOWED_BY_ARABIC_LETTER_SR
 const SWAP_UNIT = `${NOT_PRECEDED_BY_ARABIC_LETTER_SRC}(${ARABIC_SWAPPABLE_UNIT_ALTERNATION_SRC})${NOT_FOLLOWED_BY_ARABIC_LETTER_SRC}`;
 const PLAIN_NUMBER = "(\\d+(?:\\.\\d+)?|[٠-٩]+(?:\\.[٠-٩]+)?)";
 const ENGLISH_UNIT =
-  /(\$|[0-9٠-٩])\s*(cm\s*(?:\^\s*\{?[23]\}?|[²³])?|mm|km|kg|m\s*\/\s*s\s*(?:\^\s*\{?2\}?|²)?)(?![A-Za-z])/g;
-const ENDS_LIKE_A_NUMBER = /[0-9٠-٩}\)]$/;
+  /(\$|\\dots|\\ldots|\.\.\.|[0-9٠-٩])\s*(cm\s*(?:\^\s*\{?[23]\}?|[²³])?|mm|km|kg|gm|ml|m\s*(?:\^\s*\{?[23]\}?|[²³])|m\s*\/\s*s\s*(?:\^\s*\{?2\}?|²)?)(?![A-Za-z])/gi;
+const ENGLISH_TEXT_WRAPPED_UNIT =
+  /(\$|\\dots|\\ldots|\.\.\.|[0-9٠-٩])\s*\\(?:text|mathrm)\{\s*(cm[²³23]?|mm|km|kg|gm|g|ml|l|L|m[²³23]?)\s*\}/g;
+const ENGLISH_STANDALONE_METER =
+  /(\$|\\dots|\\ldots|\.\.\.|[0-9٠-٩])[ \t]+([mM])(?=(?:[\s=،,.:;!?)\]$]|$))(?!\s*\()/g;
+const ENDS_LIKE_A_NUMBER = /(?:[0-9٠-٩}\)]|\\dots|\\ldots|\.\.\.)\s*$/;
 
 /** `cm^2` ← `سم²` وغيرها، قبل أي معالجة أخرى. */
 export function convertEnglishUnitsToArabic(line: string): string {
-  return line.replace(ENGLISH_UNIT, (_m, lead: string, unit: string) => {
-    const key = unit.replace(/\s/g, "").replace(/[\^{}]/g, "");
-    return `${lead} ${ENGLISH_UNIT_KEY_TO_ARABIC[key] ?? unit}`;
-  });
+  return line
+    .replace(ENGLISH_TEXT_WRAPPED_UNIT, (_m, lead: string, unit: string) => {
+      const key = unit.replace(/\s/g, "").replace(/[\^{}]/g, "").toLowerCase();
+      return `${lead} \\text{${ENGLISH_UNIT_KEY_TO_ARABIC[key] ?? unit}}`;
+    })
+    .replace(ENGLISH_UNIT, (_m, lead: string, unit: string) => {
+      const key = unit.replace(/\s/g, "").replace(/[\^{}]/g, "").toLowerCase();
+      return `${lead} ${ENGLISH_UNIT_KEY_TO_ARABIC[key] ?? unit}`;
+    })
+    .replace(ENGLISH_STANDALONE_METER, (_m, lead: string) => `${lead} م`);
 }
 
 export function bindMeasurementUnits(line: string): string {
@@ -49,7 +59,7 @@ export function bindMeasurementUnits(line: string): string {
   }
 
   // 2) وحدة محبوسة في آخر الرياضيات، 3) رياضيات يتبعها نص يبدأ بوحدة
-  const insideTail = new RegExp(`^(.*[0-9٠-٩}\\)])\\s*\\\\text\\{\\s*${UNIT}\\s*\\}$`);
+  const insideTail = new RegExp(`^(.*(?:[0-9٠-٩}\\)]|\\\\dots|\\\\ldots|\\.\\.\\.))\\s*\\\\text\\{\\s*${UNIT}\\s*\\}$`);
   const startsWithUnit = new RegExp(`^[ ${NON_BREAKING_SPACE}]*${UNIT}`);
   for (let i = 1; i < segs.length; i += 2) {
     if (!segs[i]) continue;

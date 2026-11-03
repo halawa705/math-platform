@@ -88,10 +88,16 @@ function scanTopLevelPieces(rawInner: string): ScanPiece[] {
   const flush = () => { if (buffer.trim()) pieces.push({ kind: "math", latex: buffer }); buffer = ""; };
   const handlePhrase = (phrase: string) => {
     const afterGeoSym = /(?:\\angle|∠|\\triangle|△|\\overline)\s*$/.test(buffer);
+    const trimmedPhrase = phrase.trim();
+    const afterQuantityOrDots = /(?:[0-9٠-٩}\)]|\\dots|\\ldots|\.\.\.)\s*$/.test(buffer);
     if (depth > 0 || parenDepth > 0) buffer += `\\text{${phrase}}`;
-    else if (isArabicMeasurementUnit(phrase)) buffer += `\\text{ ${phrase}}`;
-    else if (isProsePhrase(phrase, parenDepth > 0, afterGeoSym)) { flush(); pieces.push({ kind: "prose", text: phrase }); }
-    else buffer += `\\text{${phrase}}`;
+    else if (isArabicMeasurementUnit(trimmedPhrase) && (trimmedPhrase !== "م" || afterQuantityOrDots)) {
+      flush();
+      pieces.push({ kind: "prose", text: trimmedPhrase });
+    } else if (isProsePhrase(phrase, parenDepth > 0, afterGeoSym)) {
+      flush();
+      pieces.push({ kind: "prose", text: phrase });
+    } else buffer += `\\text{${phrase}}`;
   };
 
   let i = 0;

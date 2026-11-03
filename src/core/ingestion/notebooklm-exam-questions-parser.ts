@@ -17,7 +17,10 @@ export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER = "notebooklm_exam_quest
 const INLINE_OPTION_SPLIT_REGEX =
   /(?:^|\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])\s*([\s\S]*?)(?=(?:\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])|\n\s*(?:الإجابة|الحل|خطوات|الناتج|\|\s*معرف)|$)/gi;
 
-export function parseChoicesTupleFromBlock(rawBlock: string): readonly [string, string, string, string] | undefined {
+export function parseChoicesTupleFromBlock(
+  rawBlock: string,
+  rawKind = ""
+): readonly [string, string, string, string] | undefined {
   if (!rawBlock) return undefined;
   const cleanChoice = (c: string) =>
     c
@@ -34,18 +37,40 @@ export function parseChoicesTupleFromBlock(rawBlock: string): readonly [string, 
     if (pipeParts.length >= 4) return [pipeParts[0], pipeParts[1], pipeParts[2], pipeParts[3]];
   }
 
-  const preAnswerText =
-    rawBlock.split(/\n\s*(?:الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0] || rawBlock;
+  if (/(?:مقالي|برهان|أكمل|قصيرة|essay|proof|comp|short)/i.test(rawKind)) {
+    return undefined;
+  }
+
+  const preAnswerText = (
+    rawBlock.split(/\n\s*(?:الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0] || rawBlock
+  ).replace(/^\s*\|.*$/gm, "");
   const optionMatches = Array.from(preAnswerText.matchAll(INLINE_OPTION_SPLIT_REGEX)).map((m) => cleanChoice(m[1] || ""));
   return optionMatches.length >= 4 ? [optionMatches[0], optionMatches[1], optionMatches[2], optionMatches[3]] : undefined;
 }
 
 export function stripInlineChoicesFromPromptText(promptText: string): string {
   if (!promptText) return "";
-  const firstOptIdx = promptText.search(
-    /(?:^|\n|\s+)(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])\s+\S[\s\S]*?(?:\(\s*ب\s*\)|ب\s*[)\].:-])\s+/i
+  const lines = promptText.split("\n");
+  const nonTableLines: string[] = [];
+  for (const line of lines) {
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      nonTableLines.push(line);
+      continue;
+    }
+    const inlineIdx = line.search(
+      /(?:^|\s+)(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])\s+\S[\s\S]*?(?:\(\s*ب\s*\)|ب\s*[)\].:-])\s+/i
+    );
+    if (inlineIdx >= 0) {
+      if (inlineIdx > 2) nonTableLines.push(line.slice(0, inlineIdx).trim());
+      break;
+    }
+    nonTableLines.push(line);
+  }
+  const joined = nonTableLines.join("\n").trim();
+  const multiLineOptIdx = joined.search(
+    /\n\s*(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])\s+[^\n|]+\n\s*(?:\(\s*ب\s*\)|ب\s*[)\].:-])\s+/i
   );
-  return firstOptIdx > 4 ? promptText.slice(0, firstOptIdx).trim() : promptText;
+  return multiLineOptIdx > 4 ? joined.slice(0, multiLineOptIdx).trim() : joined;
 }
 
 export function mergeLogicalSolutionSteps(rawStepsText: string): string[] {
@@ -136,7 +161,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const rawGov = extractFieldMultiline(block, "المحافظة|المصدر");
 
     const fallbackPrompt = block
-      .split(/\n\s*(?:البدائل|الاختيارات|الإجابة|خطوات|البرهان|الحل|الشرح|\(\s*[أابجدABCD]\s*\)|[أابجد][)\].:-]\s+)/i)[0]
+      .split(/\n\s*(?:البدائل|الاختيارات|الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0]
       ?.replace(/^(?:النمط|النوع|الدرجة)\s*:.*$/gm, "")
       .replace(/\|\s*معرف\s*السؤال\s*:\s*[^\n|]+/gi, "")
       .replace(/^\[(?:اختر|أكمل|مقالي)\]\s*/i, "")
@@ -154,7 +179,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const attachedGeometryFigure = geoDiag?.figure;
     const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
-    const mcqChoicesArabic = parseChoicesTupleFromBlock(block);
+    const mcqChoicesArabic = parseChoicesTupleFromBlock(block, rawKind);
     const inlineGovMatch = basePrompt.match(/(?:\{\s*(محافظة\s+[^}\n]+)\s*\}|\[\s*(محافظة\s+[^\]\n]+)\s*\]|\(\s*(محافظة\s+[^)\n]+)\s*\))/i);
     const resolvedGov = (rawGov || inlineGovMatch?.[1] || inlineGovMatch?.[2] || inlineGovMatch?.[3] || "").trim();
     const rawCleanPrompt = basePrompt

@@ -15,6 +15,10 @@ import {
   localizeGeometricEntitiesInLatex,
 } from "./math-geometric-entity-localizer";
 import { localizeLatinSymbolsInLatexToArabic } from "./math-latex-latin-symbols-arabic-localizer";
+import {
+  reverseLatexForEasternRtl,
+  shouldReverseForEasternRtl,
+} from "./math-eastern-rtl-expression-reverser";
 
 export const MODULE_ID_MATH_LATEX_NOTATION_AND_NUMERAL_LOCALIZER =
   "math_latex_notation_and_numeral_localizer" as const;
@@ -40,9 +44,12 @@ export function localizeCanonicalLatex(
   out = localizeGeometricEntitiesInLatex(out, notation);
   if (notation === "arabic") out = localizeLatinSymbolsInLatexToArabic(out);
   if (notation === "english") {
-    out = out.replace(/\\text\{\s*([سصعكح])\s*\}/g, (_m, ch: string) => ARABIC_VARIABLE_TO_LATIN[ch]);
     out = out.replace(
-      /\\text\{[^{}]*\}|(?<![\u0621-\u064A])([سصعكح]|[أإابجدهوزخيلمنفقرشطتثغ]ـ?)(?![\u0621-\u064A])/g,
+      /(?<![0-9٠-٩.]\s*|\\dots\s*|\\ldots\s*|\/\s*)\\text\{\s*([سصعكح])\s*\}/g,
+      (_m, ch: string) => ARABIC_VARIABLE_TO_LATIN[ch]
+    );
+    out = out.replace(
+      /\\text\{[^{}]*\}|(?<![0-9٠-٩.\u0621-\u064A])([سصعكح]|[أإابجدهوزخيلمنفقرشطتثغ]ـ?)(?![\u0621-\u064A])/g,
       (m, sym: string | undefined) => {
         if (!sym) return m;
         const clean = sym.replace(/\u0640/g, "");
@@ -51,6 +58,9 @@ export function localizeCanonicalLatex(
     );
   }
   out = wrapBareArabicInText(out);
+  if (numeralMode === "eastern" && shouldReverseForEasternRtl(latex)) {
+    out = reverseLatexForEasternRtl(out);
+  }
   if (/\\frac|\\sqrt/.test(out) && !out.includes("\\displaystyle")) out = `\\displaystyle ${out}`;
   return formatNumeralsByModeSSOT(out, numeralMode);
 }

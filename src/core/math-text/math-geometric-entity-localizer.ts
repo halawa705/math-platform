@@ -280,9 +280,9 @@ export function localizeGeometricEntitiesInLatex(
     (_m, verts: string) => convertArabicVerticesToLatin(verts)
   );
 
-  // 8. الأحرف الهندسية الفردية داخل \text{أ} أو \text{ب} أو \text{جـ}
+  // 8. الأحرف الهندسية الفردية داخل \text{أ} أو \text{ب} أو \text{جـ} (مع استثناء وحدات القياس المسبوقة بعدد أو نقاط مثل 600\text{ م})
   out = out.replace(
-    /\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع][\u0640]?)\s*\}/g,
+    /(?<![0-9٠-٩.]\s*|\\dots\s*|\\ldots\s*|\/\s*)\\text\{\s*([أإابجدهوزحخيكلمنفقرشطتثغسصع][\u0640]?)\s*\}/g,
     (_m, ch: string) => ARABIC_TO_LATIN_VERTEX[ch.replace(/\u0640/g, "")] || _m
   );
 

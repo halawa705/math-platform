@@ -19,6 +19,10 @@ import { localizeCanonicalLatex } from "../../core/math-text/math-latex-notation
 import { localizeGeometricEntitiesInPlainText } from "../../core/math-text/math-geometric-entity-localizer";
 import { renderKatexHtmlCached } from "./math-katex-cached-html-renderer";
 import MathFormulaFitBox from "./math-formula-fit-box";
+import {
+  MathMarkdownTableBlockRenderer,
+  splitTextIntoProseAndTableSegments,
+} from "./math-markdown-table-block-renderer";
 
 export const MODULE_ID_SAFE_KATEX_BIDI_MATH_RENDERER =
   "safe_katex_bidi_math_renderer" as const;
@@ -51,7 +55,7 @@ export default function SafeKaTeXBiDiMathRenderer({
   notationLanguage = "english",
   className = "",
 }: SafeKaTeXBiDiMathRendererProps) {
-  const nodes = useMemo(() => parseCanonicalTextToNodes(canonicalizeCached(text ?? "")), [text]);
+  const segments = useMemo(() => splitTextIntoProseAndTableSegments(text ?? ""), [text]);
   if (!text) return null;
 
   const renderFormula = (latex: string) => (
@@ -60,23 +64,46 @@ export default function SafeKaTeXBiDiMathRenderer({
     />
   );
 
+  const renderProseNodes = (proseText: string) => {
+    const nodes = parseCanonicalTextToNodes(canonicalizeCached(proseText));
+    return nodes.map((node, idx) => {
+      if (node.kind === "newline") return <br key={idx} />;
+      if (node.kind === "text") {
+        const localized = localizeGeometricEntitiesInPlainText(node.value, notationLanguage);
+        return <React.Fragment key={idx}>{formatNumeralsByModeSSOT(localized, numeralMode)}</React.Fragment>;
+      }
+      if (node.kind === "math") return <React.Fragment key={idx}>{renderFormula(node.latex)}</React.Fragment>;
+      return (
+        <span key={idx} className="whitespace-nowrap">
+          {renderFormula(node.latex)}
+          {"\u00A0"}
+          {node.unit}
+        </span>
+      );
+    });
+  };
+
+  if (segments.length === 1 && segments[0].kind === "prose") {
+    return (
+      <span className={`inline break-words leading-[1.9] ${className}`}>
+        {renderProseNodes(segments[0].text)}
+      </span>
+    );
+  }
+
   return (
     <span className={`inline break-words leading-[1.9] ${className}`}>
-      {nodes.map((node, idx) => {
-        if (node.kind === "newline") return <br key={idx} />;
-        if (node.kind === "text") {
-          const localized = localizeGeometricEntitiesInPlainText(node.value, notationLanguage);
-          return <React.Fragment key={idx}>{formatNumeralsByModeSSOT(localized, numeralMode)}</React.Fragment>;
-        }
-        if (node.kind === "math") return <React.Fragment key={idx}>{renderFormula(node.latex)}</React.Fragment>;
-        return (
-          <span key={idx} className="whitespace-nowrap">
-            {renderFormula(node.latex)}
-            {"\u00A0"}
-            {node.unit}
-          </span>
-        );
-      })}
+      {segments.map((seg, sIdx) =>
+        seg.kind === "table" ? (
+          <MathMarkdownTableBlockRenderer
+            key={sIdx}
+            rows={seg.rows}
+            renderCell={(cellText) => renderProseNodes(cellText)}
+          />
+        ) : (
+          <React.Fragment key={sIdx}>{renderProseNodes(seg.text)}</React.Fragment>
+        )
+      )}
     </span>
   );
 }

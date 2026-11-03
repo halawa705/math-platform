@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { parseNotebookLMExamQuestionsToIR } from "./notebooklm-exam-questions-parser";
 import { splitExamIntoPublicAndKey } from "../exam-grading/online-exam-public-key-splitter";
+import { localizeCanonicalLatex } from "../math-text/math-latex-notation-and-numeral-localizer";
+import { canonicalizeMathText } from "../math-text/math-text-canonicalizer";
+import { splitTextIntoProseAndTableSegments } from "../../components/global-ui/math-markdown-table-block-renderer";
 
 const USER_ACTUAL_25_QUESTIONS_REPLY = `### [Q: 1]
 [TYPE]: multiple_choice
@@ -73,5 +76,72 @@ describe("parseNotebookLMExamQuestionsToIR — English bracketed tags & governor
     const split = splitExamIntoPublicAndKey(parsed);
     expect(split.publicQuestions.length).toBe(4);
     expect(split.excludedQuestionNumbers.length).toBe(0);
+  });
+
+  it("reverses non-commutative arithmetic expressions for RTL reading when Eastern numerals (٠-٩) are selected", () => {
+    // في وضع الأرقام المشرقية: 738 - 218 = \dots يجب أن تُعكس داخل KaTeX إلى \dots = ٢١٨ - ٧٣٨ لتظهر من اليمين لليسار: ٧٣٨ - ٢١٨ = ...
+    expect(localizeCanonicalLatex("738 - 218 = \\dots", "eastern", "english")).toBe("\\dots = ٢١٨ - ٧٣٨");
+    expect(localizeCanonicalLatex("1000 - 347 = \\dots", "eastern", "english")).toBe("\\dots = ٣٤٧ - ١٠٠٠");
+    expect(localizeCanonicalLatex("24 \\div 6 = 4", "eastern", "english")).toBe("٤ = ٦ \\div ٢٤");
+    expect(localizeCanonicalLatex("5^2 - 10 \\div 2", "eastern", "english")).toBe("٢ \\div ١٠ - ٥^٢");
+    expect(localizeCanonicalLatex("7 > 5", "eastern", "english")).toBe("٥ < ٧");
+
+    // بينما في وضع الأرقام الغربية تظل كما هي من اليسار لليمين
+    expect(localizeCanonicalLatex("738 - 218 = \\dots", "western", "english")).toBe("738 - 218 = \\dots");
+    // والمعادلات ذات المتغيرات اللاتينية لا تُعكس
+    expect(localizeCanonicalLatex("2x + 5 = 11", "eastern", "english")).toBe("٢x + ٥ = ١١");
+  });
+
+  it("preserves Arabic meter unit (م) and converts English m unit without turning it into Latin vertex M", () => {
+    const q2 = canonicalizeMathText("\\(4\\text{ كم و }600\\text{ م} = \\dots\\text{ م}\\)");
+    expect(q2).toContain("كم");
+    expect(q2).toContain("م");
+    expect(q2).not.toContain("M");
+
+    // حتى لو بقيت داخل \text{ م} في تعبير كسري، لا تتحول إلى M عند التوطين
+    expect(localizeCanonicalLatex("600\\text{ م} = \\dots\\text{ م}", "eastern", "english")).not.toContain("M");
+
+    const englishMeter = canonicalizeMathText("4 كم و 600 m = ... m");
+    expect(englishMeter).toContain("600\u00A0م");
+    expect(englishMeter).not.toMatch(/\bm\b/i);
+  });
+
+  it("preserves Markdown tables in questions without mangling --- separators or swallowing rows into MCQ options", () => {
+    const grade3TableReply = `### [Q: 13]
+[TYPE]: essay
+[MARKS]: 2
+[TEXT]: يوضح الجدول التالي عدد الكتب التي قرأها تلاميذ الصف الثالث الابتدائي في ثلاثة فصول مختلفة:
+| الكتب المقروءة | الفصل (1) | الفصل (2) | الفصل (3) | المجموع |
+|---|---|---|---|---|
+| القصص | 12 | 7 | 5 | (أ) |
+| العلوم | 5 | 10 | 6 | 21 |
+| المعلومات العامة | 4 | 3 | 8 | 15 |
+| المجموع | 21 | 20 | (ب) | (جـ) |
+[SOLUTION]: (أ) مجموع القصص = 24 | (ب) مجموع الفصل الثالث = 19 | (جـ) المجموع الكلي = 60`;
+
+    const parsed = parseNotebookLMExamQuestionsToIR({
+      rawText: grade3TableReply,
+      branchId: "statistics_probability",
+      unitId: "u1",
+      lessonId: "l1",
+      lessonTitleArabic: "تمثيل البيانات",
+    });
+
+    expect(parsed.length).toBe(1);
+    const q13 = parsed[0];
+    expect(q13.patternKind).toBe("proof_reasoning");
+    expect(q13.mcqChoicesArabic).toBeUndefined();
+
+    const segments = splitTextIntoProseAndTableSegments(q13.promptArabic);
+    const tableSeg = segments.find((s) => s.kind === "table");
+    expect(tableSeg).toBeDefined();
+    if (tableSeg?.kind === "table") {
+      expect(tableSeg.rows.length).toBe(5);
+      expect(tableSeg.rows[0][0]).toContain("الكتب المقروءة");
+      expect(tableSeg.rows[1][0]).toContain("القصص");
+      expect(tableSeg.rows[2][0]).toContain("العلوم");
+      expect(tableSeg.rows[3][0]).toContain("المعلومات العامة");
+      expect(tableSeg.rows[4][0]).toContain("المجموع");
+    }
   });
 });
