@@ -101,4 +101,62 @@ describe("notebooklm-worksheet-parser", () => {
     expect(q1.rawSvgMarkup).toContain("س");
     expect(q1.geometryFigure).toBeUndefined();
   });
+
+  it("handles decimal area models, division, and 3-column multi-digit multiplication without failing", () => {
+    const raw = `
+=== [WORKSHEET_CORE] ===
+اسم_الدرس: الوحدات (3، 4، 5)
+الفكرة_العامة: تمكين الطالب من مهارات الضرب والقسمة للأعداد والكسور العشرية.
+القوانين_الذكية:
+- القانون: مساحة المستطيل | المقولة_اللفظية: فكك واجمع | الصيغة_الرياضية: [A = l \\times w] | سر_الحل: حفظ الخانات
+- القانون: التحقق من القسمة | المقولة_اللفظية: المقسوم يساوي خارج القسمة في المقسوم عليه | الصيغة_الرياضية: [d = q \\times v] | سر_الحل: جمع الباقي
+
+=== [CONCEPT_EXAMPLE: 1] | عنوان_الفكرة: قسمة عددين ===
+المثال: أوجد خارج قسمة $1,620 \\div 36$ بنموذج مساحة المستطيل. | الرسم: [رسم هندسي: مستطيل داخل خانته الأولى المقسوم 1,620 وعلى يساره المقسوم عليه 36، وأعلاه الأعداد الجزئية 40 و 5] | الحل_السريع: خارج القسمة 45
+
+=== [CONCEPT_EXAMPLE: 2] | عنوان_الفكرة: ضرب الكسور العشرية ===
+المثال: أوجد حاصل ضرب $1.6 \\times 3.8$ بنموذج مساحة المستطيل. | الرسم: [رسم هندسي: مستطيل أبعاده الرأسية $1$ و $0.6$ والأفقية $3$ و $0.8$] | الحل_السريع: الناتج = 6.08
+
+=== [QUESTION: 1] | النوع: MCQ | الدرجة: 1 ===
+النص: في مسألة القسمة $8,757 \\div 63$ باستخدام نموذج مساحة المستطيل، إذا كانت الأعداد المكتوبة أعلى المستطيل هي $100$ و $30$ و $9$، فإن خارج القسمة الفعلي يساوي:
+البدائل: (أ) 139 | (ب) 129 | (جـ) 149 | (د) 119
+الإجابة_الصحيحة: (أ) 139
+البرهان_والخطوات: 100 + 30 + 9 = 139
+
+=== [QUESTION: 2] | النوع: ESSAY | الدرجة: 2 ===
+النص: أكمل نموذج مساحة المستطيل لإيجاد حاصل ضرب $246 \\times 35$ المقابل.
+الرسم: [رسم هندسي: نموذج مساحة المستطيل مقسم إلى صفين للعدد $35$ ($30$ و $5$) وثلاثة أعمدة للعدد $246$ ($200$ و $40$ و $6$)]
+الإجابة_الصحيحة: 8,610
+البرهان_والخطوات: حاصل الضرب الكلي = 8,610
+    `;
+
+    const items = parseNotebookLMWorksheetResponse({
+      rawText: raw,
+      branchId: "numbers",
+      branchNameAr: "الأعداد والعمليات",
+      lessonTitleArabic: "الوحدات (3، 4، 5)",
+    });
+
+    expect(items.length).toBe(4);
+
+    // Division example
+    expect(items[0].rawSvgMarkup).toBeDefined();
+    expect(items[0].rawSvgMarkup).toContain("36");
+    expect(items[0].rawSvgMarkup).toContain("40");
+
+    // Decimal multiplication example
+    expect(items[1].rawSvgMarkup).toBeDefined();
+    expect(items[1].rawSvgMarkup).toContain("1.8");
+    expect(items[1].rawSvgMarkup).toContain("0.48");
+
+    // Question 1 division
+    expect(items[2].rawSvgMarkup).toBeDefined();
+    expect(items[2].rawSvgMarkup).toContain("63");
+    expect(items[2].rawSvgMarkup).toContain("100");
+
+    // Question 2 3-column multiplication
+    expect(items[3].rawSvgMarkup).toBeDefined();
+    expect(items[3].rawSvgMarkup).toContain("200");
+    expect(items[3].rawSvgMarkup).toContain("6000");
+  });
 });

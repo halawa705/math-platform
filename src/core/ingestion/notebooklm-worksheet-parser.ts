@@ -59,16 +59,16 @@ interface ParsedWorksheetQuestion {
 function deriveCleanWorksheetTitle(scopeRaw: string, overview?: string): string {
   const clean = scopeRaw.replace(/\[باستثناء:[^\]]*\]/g, "").trim();
   if (/ضرب.*قسمة|قسمة.*ضرب/i.test(clean) || /ضرب.*قسمة|قسمة.*ضرب/i.test(overview || "")) {
-    return "ورقة عمل: ضرب وقسمة الأعداد والكسور العشرية";
+    return "ضرب وقسمة الأعداد والكسور العشرية";
   }
-  if (/تشابه/i.test(clean)) return "ورقة عمل: تشابه المضلعات";
+  if (/تشابه/i.test(clean)) return "تشابه المضلعات";
   if (clean.length > 40 && clean.includes("الوحدة")) {
     const uNums = Array.from(clean.matchAll(/الوحدة\s+([0-9٠-٩]+)/g)).map((m) => m[1]);
     if (uNums.length > 1) {
-      return `ورقة عمل شاملة — الوحدات (${uNums.join("، ")})`;
+      return `تطبيقات شاملة — الوحدات (${uNums.join("، ")})`;
     }
   }
-  return `ورقة عمل: ${clean}`;
+  return clean.replace(/^ورقة\s*عمل\s*[:\-–]?\s*/i, "").trim();
 }
 
 function parseCoreBlock(raw: string): ParsedWorksheetCore {
@@ -92,9 +92,10 @@ function parseCoreBlock(raw: string): ParsedWorksheetCore {
     const tip = cleanLine.match(/سر_الحل\s*:\s*(.+)$/i)?.[1]?.trim();
 
     const parts: string[] = [];
-    if (lawName || verbal) parts.push(`📌 **${lawName || "قانون"}:** ${verbal || ""}`);
+    if (lawName) parts.push(`📌 ${lawName}: ${verbal || ""}`.trim());
+    else if (verbal) parts.push(`📌 قاعدة: ${verbal}`);
     if (mathFormula) parts.push(mathFormula);
-    if (tip) parts.push(`⚡ *سر الحل وفخ الامتحان:* ${tip}`);
+    if (tip) parts.push(`⚡ سر الحل: ${tip}`);
     if (parts.length > 0) ruleCards.push(parts.join("\n"));
   }
 
@@ -218,12 +219,12 @@ export function parseNotebookLMWorksheetResponse(
       id: `ws-concept-${idx + 1}`,
       questionNumber: idx + 1,
       kind: "essay_algebra",
-      branchBadgeAr: ex.conceptTitle,
+      branchBadgeAr: branchNameAr,
       marks: 0,
       promptAr: ex.examplePrompt,
       modelAnswerAr: ex.quickSolutionSteps.join(" ⇐ "),
       solutionStepsAr: ex.quickSolutionSteps,
-      citationBadgeAr: ex.conceptTitle,
+      citationBadgeAr: `💡 مثال محلول: ${ex.conceptTitle}`,
       isWorkedExample: true,
       rawSvgMarkup: areaModelSvg ?? undefined,
       geometryFigure: geoMatch?.figure,

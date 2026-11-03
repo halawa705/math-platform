@@ -34,6 +34,7 @@ import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioCurriculumUnitsChecklist, {
   formatSelectedCurriculumScopeArabic,
 } from "./studio-curriculum-units-checklist";
+import StudioWorksheetQuestionsCountCard from "./studio-worksheet-questions-count-card";
 
 export const MODULE_ID_STUDIO_WORKSHEET_GENERATOR_TAB =
   "studio_worksheet_generator_tab" as const;
@@ -153,18 +154,7 @@ export default function StudioWorksheetGeneratorTab({
         customDirectivesArabic: customDirectives,
       })
     );
-  }, [
-    gradeNameAr,
-    branchId,
-    lessonTitle,
-    targetedScopeText,
-    effectiveMcq,
-    effectiveEssay,
-    durationMinutes,
-    includeAnswerLines,
-    notationLanguage,
-    customDirectives,
-  ]);
+  }, [gradeNameAr, branchId, lessonTitle, targetedScopeText, effectiveMcq, effectiveEssay, durationMinutes, includeAnswerLines, notationLanguage, customDirectives]);
 
   const handleRender = () => {
     const parsed = parseNotebookLMWorksheetResponse({
@@ -191,18 +181,27 @@ export default function StudioWorksheetGeneratorTab({
       answerSpaceStyle: includeAnswerLines ? "dotted" : "hidden",
     });
 
+    const selectedUnitsList = units.filter((u) => selectedUnitIds.includes(u.id));
+    let derivedUnitTitle = unitTitleAr;
+    if (selectedUnitsList.length > 1) {
+      const uNums = selectedUnitsList
+        .map((u) => u.orderIndex || u.titleArabic.match(/\d+/)?.[0])
+        .filter(Boolean);
+      derivedUnitTitle = uNums.length > 0 ? `الوحدات (${uNums.join("، ")})` : "الوحدات المختارة";
+    } else if (selectedUnitsList.length === 1) {
+      derivedUnitTitle = selectedUnitsList[0].titleArabic;
+    }
+
     onApplyWorksheetTitleToSheet(
       buildStandardDocumentTitleSSOT({
         gradeId,
-        unitTitleInput: unitTitleAr,
+        unitTitleInput: derivedUnitTitle,
         lessonTitleInput: activeScopeDisplay,
         promptText: prompt,
         rawReplyText: reply,
       })
     );
   };
-
-  const summaryAr = `${effectiveMcq} اختر • ${effectiveEssay} مقالي • ${durationMinutes} دقيقة`;
 
   return (
     <div className="space-y-3">
@@ -226,102 +225,43 @@ export default function StudioWorksheetGeneratorTab({
       </StudioCollapsibleSectionCard>
 
       {/* أعداد الأسئلة وزمن الحل كتابة حرة ومساحات الإجابة */}
-      <StudioCollapsibleSectionCard icon="🔢" titleAr="أعداد الأسئلة ومساحات الحل" summaryAr={summaryAr}>
-        <div className="space-y-3 pt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5">
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-black text-slate-800 dark:text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={mcqEnabled}
-                  onChange={(e) => {
-                    setMcqEnabled(e.target.checked);
-                    persist({ mcqEnabled: e.target.checked });
-                  }}
-                  className="rounded text-indigo-600"
-                />
-                <span>اختر من متعدد (MCQ)</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                disabled={!mcqEnabled}
-                value={mcqCount}
-                onChange={(e) => {
-                  const val = Math.max(0, parseInt(e.target.value || "0", 10));
-                  setMcqCount(val);
-                  persist({ mcqCount: val });
-                }}
-                className="w-full min-h-[40px] px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-black text-center disabled:opacity-40"
-              />
-            </div>
-
-            <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5">
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-black text-slate-800 dark:text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={essayEnabled}
-                  onChange={(e) => {
-                    setEssayEnabled(e.target.checked);
-                    persist({ essayEnabled: e.target.checked });
-                  }}
-                  className="rounded text-indigo-600"
-                />
-                <span>أسئلة مقالية وبرهان</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                disabled={!essayEnabled}
-                value={essayCount}
-                onChange={(e) => {
-                  const val = Math.max(0, parseInt(e.target.value || "0", 10));
-                  setEssayCount(val);
-                  persist({ essayCount: val });
-                }}
-                className="w-full min-h-[40px] px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-black text-center disabled:opacity-40"
-              />
-            </div>
-
-            <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5">
-              <div className="text-xs font-black text-slate-700 dark:text-slate-300">
-                <span>الزمن المقترح للحل (د)</span>
-              </div>
-              <input
-                type="number"
-                min={5}
-                value={durationMinutes}
-                onChange={(e) => {
-                  const val = Math.max(5, parseInt(e.target.value || "25", 10));
-                  setDurationMinutes(val);
-                  persist({ durationMinutes: val });
-                }}
-                className="w-full min-h-[40px] px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-black text-center"
-              />
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-700 dark:text-slate-200">
-              <input
-                type="checkbox"
-                checked={includeAnswerLines}
-                onChange={(e) => {
-                  setIncludeAnswerLines(e.target.checked);
-                  persist({ includeAnswerLines: e.target.checked });
-                  const cur = loadPersistedPDFPrintSettingsSSOT();
-                  savePersistedPDFPrintSettingsSSOT({
-                    ...cur,
-                    answerSpaceStyle: e.target.checked ? "dotted" : "hidden",
-                  });
-                }}
-                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
-              />
-              <span>✍️ تضمين مساحات أسطر منقطة للحل داخل الورقة المطبوعة (Answer Lines)</span>
-            </label>
-          </div>
-        </div>
-      </StudioCollapsibleSectionCard>
+      <StudioWorksheetQuestionsCountCard
+        mcqCount={mcqCount}
+        mcqEnabled={mcqEnabled}
+        essayCount={essayCount}
+        essayEnabled={essayEnabled}
+        durationMinutes={durationMinutes}
+        includeAnswerLines={includeAnswerLines}
+        onToggleMcq={(v) => {
+          setMcqEnabled(v);
+          persist({ mcqEnabled: v });
+        }}
+        onChangeMcqCount={(v) => {
+          setMcqCount(v);
+          persist({ mcqCount: v });
+        }}
+        onToggleEssay={(v) => {
+          setEssayEnabled(v);
+          persist({ essayEnabled: v });
+        }}
+        onChangeEssayCount={(v) => {
+          setEssayCount(v);
+          persist({ essayCount: v });
+        }}
+        onChangeDuration={(v) => {
+          setDurationMinutes(v);
+          persist({ durationMinutes: v });
+        }}
+        onToggleAnswerLines={(v) => {
+          setIncludeAnswerLines(v);
+          persist({ includeAnswerLines: v });
+          const cur = loadPersistedPDFPrintSettingsSSOT();
+          savePersistedPDFPrintSettingsSSOT({
+            ...cur,
+            answerSpaceStyle: v ? "dotted" : "hidden",
+          });
+        }}
+      />
 
       <StudioCustomDirectivesCard
         customDirectives={customDirectives}
