@@ -109,6 +109,19 @@ export async function pullCurriculumUnitsFromSupabaseCloud(): Promise<readonly C
   }
 }
 
+export async function deleteCurriculumUnitsFromSupabaseCloud(gradeId: string): Promise<boolean> {
+  if (typeof window === "undefined" || !gradeId) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/curriculum_units?grade_id=eq.${encodeURIComponent(gradeId)}`, {
+      method: "DELETE",
+      headers: buildSupabaseHeaders(),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function syncStudentRecordToSupabaseCloud(student: RegisteredStudentRecordSSOT): Promise<boolean> {
   if (typeof window === "undefined") return false;
   try {

@@ -10,7 +10,10 @@
 
 import type { MathBranchId, SchoolStageId } from "./math-branches-ssot";
 import { MATH_BRANCHES_SSOT } from "./math-branches-ssot";
-import { syncCurriculumUnitsToSupabaseCloud } from "../supabase/supabase-cloud-sync-ssot";
+import {
+  syncCurriculumUnitsToSupabaseCloud,
+  deleteCurriculumUnitsFromSupabaseCloud,
+} from "../supabase/supabase-cloud-sync-ssot";
 
 export interface CurriculumLessonNode {
   readonly id: string;
@@ -71,6 +74,20 @@ export function buildCurriculumSplitterPrompt(params: {
   ].join("\n");
 }
 
+export function detectGradeIdFromArabic(text: string): string | undefined {
+  if (/(?:الصف\s+)?السادس\s+الابتدائي|سادس\s+ابتدائي|6\s*ب(?:\s|$|[^\w\u0600-\u06FF])|prim-6/i.test(text)) return "prim-6";
+  if (/(?:الصف\s+)?الخامس\s+الابتدائي|خامس\s+ابتدائي|5\s*ب(?:\s|$|[^\w\u0600-\u06FF])|prim-5/i.test(text)) return "prim-5";
+  if (/(?:الصف\s+)?الرابع\s+الابتدائي|رابع\s+ابتدائي|4\s*ب(?:\s|$|[^\w\u0600-\u06FF])|prim-4/i.test(text)) return "prim-4";
+  if (/(?:الصف\s+)?الثالث\s+الابتدائي|ثالث\s+ابتدائي|3\s*ب(?:\s|$|[^\w\u0600-\u06FF])|prim-3/i.test(text)) return "prim-3";
+  if (/(?:الصف\s+)?الأول\s+الإعدادي|أولى\s+إعدادي|1\s*ع(?:\s|$|[^\w\u0600-\u06FF])|prep-1/i.test(text)) return "prep-1";
+  if (/(?:الصف\s+)?الثاني\s+الإعدادي|تانية\s+إعدادي|2\s*ع(?:\s|$|[^\w\u0600-\u06FF])|prep-2/i.test(text)) return "prep-2";
+  if (/(?:الصف\s+)?الثالث\s+الإعدادي|تالتة\s+إعدادي|3\s*ع(?:\s|$|[^\w\u0600-\u06FF])|prep-3/i.test(text)) return "prep-3";
+  if (/(?:الصف\s+)?الأول\s+الثانوي|أولى\s+ثانوي|1\s*ث(?:\s|$|[^\w\u0600-\u06FF])|sec-1/i.test(text)) return "sec-1";
+  if (/(?:الصف\s+)?الثاني\s+الثانوي|تانية\s+ثانوي|2\s*ث(?:\s|$|[^\w\u0600-\u06FF])|sec-2/i.test(text)) return "sec-2";
+  if (/(?:الصف\s+)?الثالث\s+الثانوي|تالتة\s+ثانوي|3\s*ث(?:\s|$|[^\w\u0600-\u06FF])|sec-3/i.test(text)) return "sec-3";
+  return undefined;
+}
+
 export function parseCurriculumSplitterResponse(
   rawResponse: string,
   gradeId: string,
@@ -81,8 +98,10 @@ export function parseCurriculumSplitterResponse(
   if (!rawResponse || !rawResponse.trim()) return units;
 
   const lines = rawResponse.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  let activeGradeId = gradeId;
   let currentUnit: {
     id: string;
+    gradeId: string;
     branchId: MathBranchId;
     branchNameArabic: string;
     orderIndex: number;
@@ -105,15 +124,21 @@ export function parseCurriculumSplitterResponse(
   };
 
   for (const line of lines) {
+    const detected = detectGradeIdFromArabic(line);
+    if (detected && (line.includes("الصف") || line.includes("منهج") || line.includes("GRADE") || line.startsWith("#") || line.startsWith("==="))) {
+      activeGradeId = detected;
+    }
+
     const unitMatch = line.match(/\[UNIT:\s*(\d+)\]\s*\|\s*الفرع:\s*([^|]+)\|\s*العنوان:\s*(.+?)(?:===|$)/i);
     if (unitMatch) {
       const orderIdx = parseInt(unitMatch[1], 10) || units.length + 1;
       const branchRaw = unitMatch[2].trim();
       const titleRaw = unitMatch[3].replace(/===/g, "").trim();
-      const unitId = `${gradeId}-t${termNumber}-u${orderIdx}`;
+      const unitId = `${activeGradeId}-t${termNumber}-u${orderIdx}`;
       const resolvedBranchId = inferBranchFromArabic(branchRaw + " " + titleRaw);
       currentUnit = {
         id: unitId,
+        gradeId: activeGradeId,
         branchId: resolvedBranchId,
         branchNameArabic: branchRaw || MATH_BRANCHES_SSOT[resolvedBranchId].nameArabic,
         orderIndex: orderIdx,
@@ -122,7 +147,7 @@ export function parseCurriculumSplitterResponse(
       };
       units.push({
         id: currentUnit.id,
-        gradeId,
+        gradeId: activeGradeId,
         termNumber,
         branchId: currentUnit.branchId,
         branchNameArabic: currentUnit.branchNameArabic,
@@ -154,22 +179,26 @@ export function parseCurriculumSplitterResponse(
 }
 
 const CURRICULUM_STORAGE_KEY = "math_platform_real_curriculum_units_ssot_v2" as const;
+export const CURRICULUM_UNITS_UPDATED_EVENT = "math_platform_curriculum_units_updated" as const;
+
+const inMemoryFallback = new Map<string, string>();
+const isBrowser = () => typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 export function loadActiveCurriculumUnitsSSOT(
   gradeId?: string
 ): readonly CurriculumUnitNode[] {
-  if (typeof window !== "undefined") {
-    try {
-      const raw = window.localStorage.getItem(CURRICULUM_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as CurriculumUnitNode[];
-        if (Array.isArray(parsed)) {
-          return gradeId ? parsed.filter((u) => u.gradeId === gradeId) : parsed;
-        }
+  try {
+    const raw = isBrowser()
+      ? window.localStorage.getItem(CURRICULUM_STORAGE_KEY)
+      : inMemoryFallback.get(CURRICULUM_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as CurriculumUnitNode[];
+      if (Array.isArray(parsed)) {
+        return gradeId ? parsed.filter((u) => u.gradeId === gradeId) : parsed;
       }
-    } catch {
-      // ignore storage read error
     }
+  } catch {
+    // ignore storage read error
   }
   return [];
 }
@@ -177,16 +206,50 @@ export function loadActiveCurriculumUnitsSSOT(
 export function saveImportedCurriculumUnitsSSOT(
   newUnits: readonly CurriculumUnitNode[]
 ): void {
-  if (typeof window === "undefined" || newUnits.length === 0) return;
+  if (newUnits.length === 0) return;
   try {
     const existing = loadActiveCurriculumUnitsSSOT();
-    const gradeToReplace = newUnits[0].gradeId;
+    const incomingGradeIds = new Set(newUnits.map((u) => u.gradeId));
     const merged = [
-      ...existing.filter((u) => u.gradeId !== gradeToReplace),
+      ...existing.filter((u) => !incomingGradeIds.has(u.gradeId)),
       ...newUnits,
     ];
-    window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(merged));
+    const s = JSON.stringify(merged);
+    if (isBrowser()) {
+      window.localStorage.setItem(CURRICULUM_STORAGE_KEY, s);
+      window.dispatchEvent(new Event(CURRICULUM_UNITS_UPDATED_EVENT));
+    }
+    inMemoryFallback.set(CURRICULUM_STORAGE_KEY, s);
     void syncCurriculumUnitsToSupabaseCloud(merged);
+  } catch {
+    // ignore storage write error
+  }
+}
+
+export function deleteCurriculumUnitsForGradeSSOT(gradeId: string): void {
+  if (!gradeId) return;
+  try {
+    const existing = loadActiveCurriculumUnitsSSOT();
+    const filtered = existing.filter((u) => u.gradeId !== gradeId);
+    const s = JSON.stringify(filtered);
+    if (isBrowser()) {
+      window.localStorage.setItem(CURRICULUM_STORAGE_KEY, s);
+      window.dispatchEvent(new Event(CURRICULUM_UNITS_UPDATED_EVENT));
+    }
+    inMemoryFallback.set(CURRICULUM_STORAGE_KEY, s);
+    void deleteCurriculumUnitsFromSupabaseCloud(gradeId);
+  } catch {
+    // ignore storage write error
+  }
+}
+
+export function deleteAllCurriculumUnitsSSOT(): void {
+  try {
+    if (isBrowser()) {
+      window.localStorage.removeItem(CURRICULUM_STORAGE_KEY);
+      window.dispatchEvent(new Event(CURRICULUM_UNITS_UPDATED_EVENT));
+    }
+    inMemoryFallback.delete(CURRICULUM_STORAGE_KEY);
   } catch {
     // ignore storage write error
   }
