@@ -30,6 +30,16 @@ function headers(prefer?: string): Record<string, string> {
   };
 }
 
+function buildStateFallbackId(table: string, rowOrParams: Record<string, string>): string | null {
+  if (table === "exam_answer_keys" && rowOrParams.exam_code) {
+    return `exam_key__${rowOrParams.exam_code}`;
+  }
+  if (table === "exam_attempts" && rowOrParams.exam_code && rowOrParams.student_code) {
+    return `exam_attempt__${rowOrParams.exam_code}__${rowOrParams.student_code}`;
+  }
+  return null;
+}
+
 export async function sbSelect<T>(pathAndQuery: string): Promise<T[] | null> {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${pathAndQuery}`, {
@@ -40,25 +50,56 @@ export async function sbSelect<T>(pathAndQuery: string): Promise<T[] | null> {
       return (await res.json()) as T[];
     }
   } catch {
-    // fallback to memory if network/table unavailable
+    // fallback to state table or memory
   }
 
   const [table, queryStr] = pathAndQuery.split("?");
   if (table && table in memoryFallbackTables) {
     const params = new URLSearchParams(queryStr || "");
-    const rows = memoryFallbackTables[table].filter((r) => {
-      for (const [k, v] of params.entries()) {
-        if (k === "select" || k === "order" || k === "limit") continue;
-        if (v.startsWith("eq.")) {
-          const expected = v.slice(3);
-          if (String(r[k] ?? "") !== expected) return false;
+    const eqMap: Record<string, string> = {};
+    for (const [k, v] of params.entries()) {
+      if (v.startsWith("eq.")) eqMap[k] = v.slice(3);
+    }
+    const stateId = buildStateFallbackId(table, eqMap);
+    if (stateId) {
+      try {
+        const stRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/platform_ssot_state?id=eq.${encodeURIComponent(stateId)}&select=identity_json`,
+          { headers: headers(), cache: "no-store" }
+        );
+        if (stRes.ok) {
+          const stRows = (await stRes.json()) as Array<{ identity_json?: T }>;
+          if (stRows[0]?.identity_json) return [stRows[0].identity_json];
         }
+      } catch {
+        // continue to memory fallback
       }
-      return true;
-    });
+    }
+    const rows = memoryFallbackTables[table].filter((r) =>
+      Object.entries(eqMap).every(([k, expected]) => String(r[k] ?? "") === expected)
+    );
     return rows as unknown as T[];
   }
   return null;
+}
+
+async function saveToStateFallback(table: string, row: Record<string, unknown>): Promise<boolean> {
+  const strMap: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (typeof v === "string") strMap[k] = v;
+  }
+  const stateId = buildStateFallbackId(table, strMap);
+  if (!stateId) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/platform_ssot_state?on_conflict=id`, {
+      method: "POST",
+      headers: headers("resolution=merge-duplicates,return=minimal"),
+      body: JSON.stringify({ id: stateId, identity_json: row, updated_at: new Date().toISOString() }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function sbInsert(
@@ -71,9 +112,7 @@ export async function sbInsert(
     const conflictCols = onConflict ? onConflict.split(",") : [];
     const existingIdx =
       conflictCols.length > 0
-        ? list.findIndex((item) =>
-            conflictCols.every((c) => item[c] === row[c])
-          )
+        ? list.findIndex((item) => conflictCols.every((c) => item[c] === row[c]))
         : -1;
     if (existingIdx >= 0) list[existingIdx] = { ...list[existingIdx], ...row };
     else list.push({ ...row });
@@ -89,10 +128,15 @@ export async function sbInsert(
       headers: headers(prefer),
       body: JSON.stringify(row),
     });
-    return res.ok || table in memoryFallbackTables;
+    if (res.ok) return true;
   } catch {
-    return table in memoryFallbackTables;
+    // fallback below
   }
+  if (table in memoryFallbackTables) {
+    await saveToStateFallback(table, row);
+    return true;
+  }
+  return false;
 }
 
 export async function sbInsertIgnore(
@@ -103,9 +147,7 @@ export async function sbInsertIgnore(
   if (table in memoryFallbackTables) {
     const list = memoryFallbackTables[table];
     const conflictCols = onConflict.split(",");
-    const exists = list.some((item) =>
-      conflictCols.every((c) => item[c] === row[c])
-    );
+    const exists = list.some((item) => conflictCols.every((c) => item[c] === row[c]));
     if (!exists) list.push({ ...row });
   }
 
@@ -116,10 +158,15 @@ export async function sbInsertIgnore(
       headers: headers("resolution=ignore-duplicates,return=minimal"),
       body: JSON.stringify(row),
     });
-    return res.ok || table in memoryFallbackTables;
+    if (res.ok) return true;
   } catch {
-    return table in memoryFallbackTables;
+    // fallback below
   }
+  if (table in memoryFallbackTables) {
+    await saveToStateFallback(table, row);
+    return true;
+  }
+  return false;
 }
 
 export async function sbPatch(

@@ -2,15 +2,16 @@
 
 /**
  * @file student-assigned-exams-tab.tsx
- * @description تبويب الاختبارات الإلكترونية للطالب (منسّق ذري خفيف):
- * يعرض سؤالاً واحداً في الشاشة مع شريط تنقل ونقاط حالة، ويصحح حصرياً عبر الخادم (`/api/exams/submit`).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * @description تبويب الاختبارات الإلكترونية للطالب + وضع المحاكاة التفاعلية للمعلم المالك:
+ * يعرض سؤالاً واحداً في الشاشة مع شريط تنقل ونقاط حالة، ويصحح عبر الخادم أو محاكاة المعلم الفورية.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 215 سطراً).
  */
 
 import { useEffect, useState } from "react";
 import {
   PUBLISHED_EXAMS_UPDATED_EVENT,
   loadActiveExamsForGradeSSOT,
+  loadAllPublishedExamsSSOT,
   refreshPublishedExamsFromSupabaseSSOT,
   type PublishedOnlineExam,
 } from "@/features/electronic-exams-hub/published-online-exams-store";
@@ -29,6 +30,7 @@ export interface StudentAssignedExamsTabProps {
   readonly studentCode?: string;
   readonly studentNameAr?: string;
   readonly gradeId?: string;
+  readonly initialExamId?: string;
   readonly isTeacherPreview?: boolean;
   readonly onExamSubmitted?: () => void;
 }
@@ -37,19 +39,31 @@ export default function StudentAssignedExamsTab({
   studentCode,
   studentNameAr = "",
   gradeId = "",
+  initialExamId = "",
   isTeacherPreview = false,
   onExamSubmitted,
 }: StudentAssignedExamsTabProps) {
   const [activeExams, setActiveExams] = useState<readonly PublishedOnlineExam[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState<string>("");
+  const [selectedExamId, setSelectedExamId] = useState<string>(initialExamId);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
+    if (initialExamId) setSelectedExamId(initialExamId);
+  }, [initialExamId]);
+
+  useEffect(() => {
     const syncLocal = () => {
-      const list = gradeId ? loadActiveExamsForGradeSSOT(gradeId) : [];
+      const list = isTeacherPreview
+        ? loadAllPublishedExamsSSOT().filter((e) => !gradeId || e.gradeId === gradeId || e.examId === initialExamId)
+        : gradeId
+          ? loadActiveExamsForGradeSSOT(gradeId)
+          : [];
       setActiveExams(list);
-      setSelectedExamId((prev) => (list.some((e) => e.examId === prev) ? prev : list[0]?.examId || ""));
+      setSelectedExamId((prev) => {
+        if (initialExamId && list.some((e) => e.examId === initialExamId)) return initialExamId;
+        return list.some((e) => e.examId === prev) ? prev : list[0]?.examId || "";
+      });
     };
     syncLocal();
     void refreshPublishedExamsFromSupabaseSSOT();
@@ -60,22 +74,28 @@ export default function StudentAssignedExamsTab({
       window.removeEventListener(PUBLISHED_EXAMS_UPDATED_EVENT, syncLocal);
       window.removeEventListener(EXAM_SUBMISSIONS_UPDATED_EVENT, syncLocal);
     };
-  }, [gradeId]);
+  }, [gradeId, initialExamId, isTeacherPreview]);
 
   const exam = activeExams.find((e) => e.examId === selectedExamId) || activeExams[0] || null;
   useEffect(() => { setCurrentIdx(0); setConfirmOpen(false); }, [exam?.examId]);
 
   const {
     answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, resultItems, reviewList,
-    updateAnswer, toggleFlag, submitExam,
-  } = useExamSession({ exam, studentCode, studentNameAr, isTeacherPreview, onExamSubmitted });
+    updateAnswer, toggleFlag, submitExam, resetSimulation,
+  } = useExamSession({
+    exam,
+    studentCode,
+    studentNameAr: studentNameAr || (isTeacherPreview ? "تجربة المعلم" : ""),
+    isTeacherPreview,
+    onExamSubmitted,
+  });
 
   if (!exam || exam.questions.length === 0) {
     return (
       <div className="p-10 rounded-3xl bg-white dark:bg-[#111827] border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-1.5">
         <div className="text-3xl">🎯</div>
-        <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">لا يوجد اختبار نشط لصفك الآن</h3>
-        <p className="text-xs font-bold text-slate-500">سيظهر الاختبار هنا فور نشره من المعلم.</p>
+        <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">لا يوجد اختبار نشط لهذا الصف الآن</h3>
+        <p className="text-xs font-bold text-slate-500">سيظهر الاختبار هنا فور نشره من الاستوديو.</p>
       </div>
     );
   }
@@ -104,7 +124,7 @@ export default function StudentAssignedExamsTab({
                   : "bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
               }`}
             >
-              🎯 {e.titleAr}
+              🎯 {e.titleAr} {e.status === "archived" ? "(مؤرشف)" : ""}
             </button>
           ))}
         </div>
@@ -113,12 +133,30 @@ export default function StudentAssignedExamsTab({
       <ExamTopProgressBar examTitleAr={exam.titleAr} currentIndex={safeIdx} totalQuestions={totalQ} answeredCount={answeredCount} remainingSeconds={remainingSeconds} isSubmitted={submitted} />
 
       {isTeacherPreview && (
-        <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs font-black text-amber-900">
-          👁️ وضع المعاينة: هكذا يرى الطالب الاختبار، ولا يمكن التسليم من حساب المعلم.
+        <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-slate-900 border border-indigo-200 dark:border-teal-800 flex flex-wrap items-center justify-between gap-2 text-xs font-black text-indigo-950 dark:text-teal-200">
+          <span>🧑‍🎓 وضع تجربة المعلم: يمكنك حل الأسئلة وتجربة التصحيح التلقائي والحلول كما يراها الطالب تماماً.</span>
+          {submitted ? (
+            <button
+              type="button"
+              onClick={resetSimulation}
+              className="px-3.5 py-1.5 rounded-xl bg-indigo-900 dark:bg-teal-600 text-white text-xs font-black cursor-pointer"
+            >
+              🔄 إعادة تجربة الحل من جديد
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black cursor-pointer"
+            >
+              ✓ تسليم وتجربة التصحيح الآن ({answeredCount}/{totalQ})
+            </button>
+          )}
         </div>
       )}
+
       {errorMsg && <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-black text-rose-800">⚠️ {errorMsg}</div>}
-      {submitted && resultPct !== null && <ExamResultScreen studentNameAr={studentNameAr} examTitleAr={exam.titleAr} percentageScore={resultPct} />}
+      {submitted && resultPct !== null && <ExamResultScreen studentNameAr={studentNameAr || "تجربة المعلم"} examTitleAr={exam.titleAr} percentageScore={resultPct} />}
 
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
         {exam.questions.map((q, idx) => {
@@ -158,27 +196,35 @@ export default function StudentAssignedExamsTab({
         />
       )}
 
-      <div className="flex items-center justify-between gap-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
         <button type="button" disabled={safeIdx === 0} onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))} className="min-h-[46px] px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-black disabled:opacity-40 cursor-pointer">
           ➡ السؤال السابق
         </button>
 
-        {safeIdx < totalQ - 1 ? (
-          <button type="button" onClick={() => setCurrentIdx((i) => Math.min(totalQ - 1, i + 1))} className="min-h-[46px] px-5 rounded-2xl bg-indigo-900 dark:bg-teal-600 text-white text-xs font-black cursor-pointer">
-            السؤال التالي ⬅
-          </button>
-        ) : (
-          !submitted && !isTeacherPreview && (
-            <button type="button" onClick={() => setConfirmOpen(true)} className="min-h-[46px] px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md cursor-pointer">
-              تسليم الاختبار الآن ✓
+        <div className="flex items-center gap-2">
+          {!submitted && safeIdx < totalQ - 1 && answeredCount > 0 && (
+            <button type="button" onClick={() => setConfirmOpen(true)} className="min-h-[46px] px-4 rounded-2xl bg-emerald-600/15 text-emerald-800 dark:text-emerald-300 border border-emerald-400/50 text-xs font-black cursor-pointer">
+              إنهاء وتسليم ({answeredCount}/{totalQ}) ✓
             </button>
-          )
-        )}
+          )}
+
+          {safeIdx < totalQ - 1 ? (
+            <button type="button" onClick={() => setCurrentIdx((i) => Math.min(totalQ - 1, i + 1))} className="min-h-[46px] px-5 rounded-2xl bg-indigo-900 dark:bg-teal-600 text-white text-xs font-black cursor-pointer">
+              السؤال التالي ⬅
+            </button>
+          ) : (
+            !submitted && (
+              <button type="button" onClick={() => setConfirmOpen(true)} className="min-h-[46px] px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md cursor-pointer">
+                {isTeacherPreview ? "تسليم وتجربة التصحيح الآن ✓" : "تسليم الاختبار الآن ✓"}
+              </button>
+            )
+          )}
+        </div>
       </div>
 
       {confirmOpen && !submitted && (
         <div className="p-4 rounded-3xl bg-indigo-950 text-white space-y-3 text-center">
-          <p className="text-xs sm:text-sm font-black">أجبت على {answeredCount} من {totalQ} أسئلة — هل أنت متأكد من تسليم الاختبار؟</p>
+          <p className="text-xs sm:text-sm font-black">أجبت على {answeredCount} من {totalQ} أسئلة — هل أنت متأكد من تسليم الاختبار وتصحيحه؟</p>
           <div className="flex items-center justify-center gap-3">
             <button type="button" disabled={submitting} onClick={() => { setConfirmOpen(false); void submitExam(); }} className="min-h-[44px] px-6 rounded-2xl bg-emerald-500 text-slate-950 text-xs font-black cursor-pointer">
               {submitting ? "جارٍ التصحيح..." : "نعم، سلّم وصحّح الآن"}

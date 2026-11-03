@@ -8,6 +8,7 @@
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import {
   splitExamIntoPublicAndKey,
+  type OnlineAnswerKeyItem,
   type OnlinePublicQuestion,
 } from "@/core/exam-grading/online-exam-public-key-splitter";
 import { pullPublishedExamsFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
@@ -30,7 +31,48 @@ export interface PublishedOnlineExam {
 }
 
 const PUBLISHED_EXAMS_STORAGE_KEY = "math_platform_published_exams_v2" as const;
+const TEACHER_EXAM_KEYS_STORAGE_KEY = "math_platform_teacher_exam_keys_v1" as const;
 export const PUBLISHED_EXAMS_UPDATED_EVENT = "math-platform-exams-updated" as const;
+
+export function saveLocalExamAnswerKeySSOT(
+  examId: string,
+  answerKey: readonly OnlineAnswerKeyItem[]
+): void {
+  if (typeof window === "undefined" || !examId) return;
+  try {
+    const raw = window.localStorage.getItem(TEACHER_EXAM_KEYS_STORAGE_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, readonly OnlineAnswerKeyItem[]>) : {};
+    map[examId] = answerKey;
+    window.localStorage.setItem(TEACHER_EXAM_KEYS_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // ignore storage quota errors
+  }
+}
+
+export function loadLocalExamAnswerKeySSOT(
+  examId: string
+): readonly OnlineAnswerKeyItem[] | null {
+  if (typeof window === "undefined" || !examId) return null;
+  try {
+    const raw = window.localStorage.getItem(TEACHER_EXAM_KEYS_STORAGE_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, readonly OnlineAnswerKeyItem[]>;
+    return Array.isArray(map[examId]) ? map[examId] : null;
+  } catch {
+    return null;
+  }
+}
+
+export function buildStudentExamShareUrlSSOT(exam: {
+  readonly examId: string;
+  readonly gradeId: string;
+}): string {
+  const origin =
+    typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "";
+  return `${origin}/student?tab=live_exam&gradeId=${encodeURIComponent(exam.gradeId)}&examId=${encodeURIComponent(exam.examId)}`;
+}
 
 function normalizeAndAutoExpireExams(rawList: readonly PublishedOnlineExam[]): {
   readonly exams: readonly PublishedOnlineExam[];
@@ -91,8 +133,11 @@ export async function refreshPublishedExamsFromSupabaseSSOT(): Promise<readonly 
   for (const e of local) byId.set(e.examId, e);
   for (const c of cloud) {
     const existing = byId.get(c.examId);
-    const finalStatus = existing?.status === "archived" || c.status === "archived" ? "archived" : "active";
-    byId.set(c.examId, { ...c, status: finalStatus });
+    if (existing && Date.parse(existing.expiresAtIso) > Date.parse(c.expiresAtIso)) {
+      byId.set(c.examId, existing);
+    } else {
+      byId.set(c.examId, c);
+    }
   }
 
   const merged = Array.from(byId.values()).sort((a, b) => b.publishedAtIso.localeCompare(a.publishedAtIso));
@@ -119,10 +164,13 @@ export function publishOnlineExamSSOT(input: {
   const nowMs = Date.now();
   const publishedAtIso = new Date(nowMs).toISOString();
   const expiresAtIso = new Date(nowMs + safeDays * 86_400_000).toISOString();
-  const { publicQuestions } = splitExamIntoPublicAndKey(input.questions);
+  const { publicQuestions, answerKey } = splitExamIntoPublicAndKey(input.questions);
+  const resolvedExamId = input.examId || `exam_${input.gradeId}_${nowMs}`;
+
+  saveLocalExamAnswerKeySSOT(resolvedExamId, answerKey);
 
   const created: PublishedOnlineExam = {
-    examId: input.examId || `exam_${input.gradeId}_${nowMs}`,
+    examId: resolvedExamId,
     gradeId: input.gradeId,
     gradeNameArabic: input.gradeNameArabic,
     titleAr: input.titleAr,
@@ -137,6 +185,75 @@ export function publishOnlineExamSSOT(input: {
   persistExams([created, ...existing.filter((e) => e.examId !== created.examId)]);
   notifyRealtimeTableUpdated("electronic_exams");
   return created;
+}
+
+export function updateOnlineExamSettingsSSOT(params: {
+  readonly examId: string;
+  readonly titleAr?: string;
+  readonly durationMinutes?: number;
+  readonly availabilityDays?: number;
+  readonly status?: "active" | "archived";
+}): PublishedOnlineExam | null {
+  let updatedTarget: PublishedOnlineExam | null = null;
+  const updatedList = loadAllPublishedExamsSSOT().map((e) => {
+    if (e.examId !== params.examId) return e;
+    const nextDays =
+      params.availabilityDays !== undefined
+        ? Math.max(1, Math.min(365, Math.round(params.availabilityDays)))
+        : e.availabilityDays;
+    const nextStatus = params.status ?? e.status;
+    const nextExpires =
+      params.availabilityDays !== undefined || params.status === "active"
+        ? new Date(Date.now() + nextDays * 86_400_000).toISOString()
+        : e.expiresAtIso;
+    updatedTarget = {
+      ...e,
+      titleAr: params.titleAr?.trim() ? params.titleAr.trim() : e.titleAr,
+      durationMinutes:
+        params.durationMinutes !== undefined
+          ? Math.max(5, Math.min(180, Math.round(params.durationMinutes)))
+          : e.durationMinutes,
+      availabilityDays: nextDays,
+      expiresAtIso: nextExpires,
+      status: nextStatus,
+    };
+    return updatedTarget;
+  });
+
+  if (updatedTarget) {
+    persistExams(updatedList);
+    notifyRealtimeTableUpdated("electronic_exams");
+    if (typeof window !== "undefined") {
+      const target = updatedTarget as PublishedOnlineExam;
+      void fetch("/api/exams/archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          examCode: target.examId,
+          action: params.status === "active" ? "reactivate" : "update_settings",
+          titleAr: target.titleAr,
+          durationMinutes: target.durationMinutes,
+          availabilityDays: target.availabilityDays,
+          expiresAtIso: target.expiresAtIso,
+          status: target.status,
+        }),
+      });
+    }
+  }
+  return updatedTarget;
+}
+
+export function deleteOnlineExamSSOT(examId: string): void {
+  const remaining = loadAllPublishedExamsSSOT().filter((e) => e.examId !== examId);
+  persistExams(remaining);
+  notifyRealtimeTableUpdated("electronic_exams");
+  if (typeof window !== "undefined") {
+    void fetch("/api/exams/archive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ examCode: examId, action: "archive" }),
+    });
+  }
 }
 
 export function archiveOnlineExamSSOT(examId: string): void {

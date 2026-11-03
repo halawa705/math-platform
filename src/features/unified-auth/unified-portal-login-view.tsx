@@ -86,7 +86,21 @@ export default function UnifiedPortalLoginView() {
         </div>
 
         <StudentCodeLoginForm
-          onStudentSubmit={() => router.push("/student")}
+          onStudentSubmit={() => {
+            let target = "/student";
+            if (typeof window !== "undefined") {
+              try {
+                const pending = window.sessionStorage.getItem("math_platform_pending_redirect");
+                if (pending && pending.startsWith("/student")) {
+                  target = pending;
+                  window.sessionStorage.removeItem("math_platform_pending_redirect");
+                }
+              } catch {
+                // ignore
+              }
+            }
+            router.push(target);
+          }}
           onStealthCodeDetected={() => setIsTeacherStealthOpen(true)}
           onDirectTeacherLogin={() => router.push("/dashboard")}
         />

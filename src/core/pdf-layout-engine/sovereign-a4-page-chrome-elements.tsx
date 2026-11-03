@@ -71,7 +71,13 @@ export function SovereignFirstPageHeader({
             </div>
             <div className="text-[7.2pt] font-extrabold text-slate-600 truncate">إدارة التربية والتعليم</div>
             <div style={{ color: palette.accentHex }} className="text-[7.2pt] font-black truncate">
-              {isSolvedMode ? "مذكرة الشرح والتأسيس والتطبيقات" : "ورقة تقييم واختبار رسمي معتمد"}
+              {/اختبار|امتحان|تقييم/i.test(documentTitle)
+                ? isSolvedMode
+                  ? "نموذج إجابة الاختبار الرسمي المعتمد"
+                  : "ورقة تقييم واختبار رسمي معتمد"
+                : isSolvedMode
+                  ? "مذكرة الشرح والتأسيس والتطبيقات"
+                  : "ورقة تقييم واختبار رسمي معتمد"}
             </div>
           </div>
         </div>

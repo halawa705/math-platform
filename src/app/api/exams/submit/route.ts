@@ -11,6 +11,10 @@ import {
   verifyStudentSessionToken,
 } from "@/core/auth/student-auth-server-ssot";
 import {
+  TEACHER_AUTH_COOKIE_NAME,
+  verifyTeacherSessionToken,
+} from "@/core/auth/teacher-auth-server-ssot";
+import {
   readCookieFromRequest,
   sbInsert,
   sbSelect,
@@ -23,19 +27,10 @@ import type { OnlineAnswerKeyItem } from "@/core/exam-grading/online-exam-public
 
 export async function POST(req: Request) {
   try {
-    const session = await verifyStudentSessionToken(
-      readCookieFromRequest(req, STUDENT_AUTH_COOKIE_NAME)
-    );
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "يرجى تسجيل دخول الطالب أولاً." },
-        { status: 401 }
-      );
-    }
-
     const body = (await req.json()) as {
       examCode?: string;
       studentNameAr?: string;
+      isTeacherSimulation?: boolean;
       answers?: Readonly<Record<string, StudentAnswerInput | undefined>>;
     };
     const examCode = (body.examCode || "").trim();
@@ -43,6 +38,55 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "رمز الاختبار مفقود." },
         { status: 400 }
+      );
+    }
+
+    if (body.isTeacherSimulation) {
+      const isTeacher = await verifyTeacherSessionToken(
+        readCookieFromRequest(req, TEACHER_AUTH_COOKIE_NAME)
+      );
+      if (!isTeacher) {
+        return NextResponse.json(
+          { success: false, error: "محاكاة المعلم متاحة للمعلم المالك فقط." },
+          { status: 401 }
+        );
+      }
+      const keyRows = await sbSelect<{
+        answer_key: readonly OnlineAnswerKeyItem[];
+      }>(
+        `exam_answer_keys?exam_code=eq.${encodeURIComponent(examCode)}&select=answer_key`
+      );
+      const keyRow = keyRows?.[0];
+      if (!keyRow || !Array.isArray(keyRow.answer_key)) {
+        return NextResponse.json(
+          { success: false, error: "مفتاح تصحيح هذا الاختبار غير متوفر على الخادم." },
+          { status: 404 }
+        );
+      }
+      const result = gradeOnlineExam(keyRow.answer_key, body.answers ?? {});
+      const review = keyRow.answer_key.map((k) => ({
+        questionId: k.questionId,
+        correctMcqChoiceIndex: k.correctMcqChoiceIndex,
+        finalAnswerArabic: k.finalAnswerArabic,
+        modelSolutionStepsArabic: k.modelSolutionStepsArabic,
+      }));
+      return NextResponse.json({
+        success: true,
+        percentage: result.percentage,
+        totalEarnedMarks: result.totalEarnedMarks,
+        totalAllocatedMarks: result.totalAllocatedMarks,
+        items: result.items,
+        review,
+      });
+    }
+
+    const session = await verifyStudentSessionToken(
+      readCookieFromRequest(req, STUDENT_AUTH_COOKIE_NAME)
+    );
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "يرجى تسجيل دخول الطالب أولاً." },
+        { status: 401 }
       );
     }
 

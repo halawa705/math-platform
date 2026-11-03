@@ -70,7 +70,6 @@ export function sanitizeNotebookLMCitationsAndLatex(
     .replace(/💡\s*[\u0600-\u06FF\s:]*$/gi, "")
     .replace(/^\s*[-*_]{3,}\s*$/gm, "\n\n")
     .replace(/\s*---+\s*/g, "\n\n")
-    .replace(/\[(?:TEXT|PROMPT|SOLUTION|ANSWER)\]\s*:?\s*/gi, "")
     .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "")
     .replace(
       /\[\s*(رسم\s*(?:هندسي|توضيحي|بياني)\s*:[^\]]*)\]/gi,
@@ -80,6 +79,33 @@ export function sanitizeNotebookLMCitationsAndLatex(
       /(?:^|(?<![\[أ-ي]))(رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+)\]/gi,
       "[$1]"
     );
+
+  // 3.5 تطبيع أوسمة هيكلة الأسئلة الإنجليزية والمختلطة إلى الأوسمة العربية القياسية قبل معالجة الرياضيات
+  text = text
+    .replace(/(?:^|\n)\s*\[?\s*نموذج\s+الإجابة\s+الرسمي[\s\S]*$/i, "")
+    .replace(
+      /===\s*\[\s*(?:QUESTION|سؤال|Q)\s*:\s*(\d+)\s*\]([^\n=]*?)===/gi,
+      (_m, qNum: string, tail: string) => {
+        const kindMatch = tail.match(/النوع\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
+        const marksMatch = tail.match(/الدرجة\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*\]?/i);
+        const extraLines: string[] = [];
+        if (kindMatch?.[1]) extraLines.push(`النوع: ${kindMatch[1].trim()}`);
+        if (marksMatch?.[1]) extraLines.push(`الدرجة: ${marksMatch[1].trim()}`);
+        return `=== [سؤال: ${qNum}] ===${extraLines.length ? `\n${extraLines.join("\n")}` : ""}`;
+      }
+    )
+    .replace(/^\s*(?:#{1,4}\s*)?\[\s*(?:QUESTION|سؤال|Q)\s*:\s*(\d+)\s*\][^\n]*/gim, "=== [سؤال: $1] ===")
+    .replace(/^\s*(?:\[\s*TYPE\s*\]|TYPE|النوع|النمط)\s*:\s*(?:multiple_choice|mcq|اختر[^\n]*)\s*$/gim, "النوع: اختر")
+    .replace(/^\s*(?:\[\s*TYPE\s*\]|TYPE|النوع|النمط)\s*:\s*(?:short_answer|short|إجابة\s*قصيرة)\s*$/gim, "النوع: إجابة قصيرة")
+    .replace(/^\s*(?:\[\s*TYPE\s*\]|TYPE|النوع|النمط)\s*:\s*(?:completion|complete|أكمل)\s*$/gim, "النوع: أكمل")
+    .replace(/^\s*(?:\[\s*TYPE\s*\]|TYPE|النوع|النمط)\s*:\s*(?:proof|essay|مقالي|برهان)\s*$/gim, "النوع: مقالي")
+    .replace(/^\s*\[\s*TYPE\s*\]\s*:\s*([^\n]+)$/gim, "النوع: $1")
+    .replace(/^\s*\[\s*MARKS\s*\]\s*:\s*([^\n]+)$/gim, "الدرجة: $1")
+    .replace(/^\s*\[\s*(?:TEXT|PROMPT)\s*\]\s*:\s*/gim, "النص: ")
+    .replace(/^\s*\[\s*(?:OPTIONS|CHOICES)\s*\]\s*:\s*/gim, "البدائل: ")
+    .replace(/^\s*\[\s*(?:ANSWER|CORRECT_ANSWER)\s*\]\s*:\s*/gim, "الإجابة_الصحيحة: ")
+    .replace(/^\s*\[\s*ACCEPTED_ANSWERS\s*\]\s*:\s*/gim, "الإجابات_المقبولة: ")
+    .replace(/^\s*\[\s*(?:SOLUTION|STEPS)\s*\]\s*:\s*/gim, "خطوات_الحل: ");
 
   // 4. خط الأنابيب الرياضي الوحيد: توحيد المحددات + الفترات + العربي داخل الرياضيات + التشابه + الوحدات + بوابة التسرب
   text = canonicalizeMathText(text);
@@ -102,11 +128,15 @@ export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
     .replace(/\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)[\s\S]*?\]\.?\s*/gi, "")
     .replace(/(?:^|\n)\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)\s*:[^\n]*/gi, "")
     .replace(/(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية)[\s\S]*$/gi, "")
+    .replace(/^\s*#{1,4}\s*\[\s*(?:QUESTION|سؤال|Q)\s*:\s*\d+\s*\]\s*$/gim, "")
+    .replace(/^\s*\[\s*(?:TYPE|MARKS|OPTIONS|CHOICES)\s*\]\s*:\s*[^\n]*$/gim, "")
+    .replace(/^\s*\[\s*(?:TEXT|PROMPT|ANSWER|SOLUTION)\s*\]\s*:\s*/gim, "")
+    .replace(/\{\s*محافظة\s+[^}\n]+\s*\}/g, "")
     .replace(/\|\s*نوع\s*المسألة\s*:\s*\[?[^|\n\]]+\]?/gi, "")
     .replace(/\|\s*معرف\s*(?:السؤال|المثال|الفكرة)\s*:\s*[^\n|]+/gi, "")
     .replace(/^(?:معرف\s*(?:السؤال|المثال|الفكرة))\s*:\s*[^\n]+/gim, "")
     .replace(/\[\s*(?:أكمل|اختر|مقالي|مسألة|تطبيق|متقدم)\s*\]/gi, "")
-    .replace(/\bidea[-_]\d+\b/gi, "")
+    .replace(/\bidea[-_]\d+\b/i, "")
     .replace(/(?<=[^\n])\s*(?=(?:أولاً|ثانياً|ثالثاً|رابعاً)\s*:)/g, "\n\n• ")
     .trim();
 }

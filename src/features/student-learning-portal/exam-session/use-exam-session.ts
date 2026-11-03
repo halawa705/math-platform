@@ -2,15 +2,22 @@
 
 /**
  * @file use-exam-session.ts
- * @description خطاف إدارة جلسة الاختبار الإلكتروني للطالب:
- * يستدعي `/api/exams/start` لحساب الوقت المتبقي من وقت الخادم الفعلي (لا يعيد الضبط عند التحديث)،
- * ويحفظ مسودة الإجابات في `sessionStorage` فقط، ويرسل التسليم لـ `/api/exams/submit`.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * @description خطاف إدارة جلسة الاختبار الإلكتروني للطالب + وضع محاكاة وتجربة الحل للمعلم المالك:
+ * يستدعي `/api/exams/start` لحساب الوقت المتبقي من وقت الخادم الفعلي،
+ * ويسمح للمعلم بتجربة حل الاختبار وتصحيحه تلقائياً مع إظهار الحلول النموذجية وإمكانية إعادة التجربة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 215 سطراً).
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import type { OnlineQuestionResult, StudentAnswerInput } from "@/core/exam-grading/online-exam-grader";
-import type { PublishedOnlineExam } from "@/features/electronic-exams-hub/published-online-exams-store";
+import {
+  gradeOnlineExam,
+  type OnlineQuestionResult,
+  type StudentAnswerInput,
+} from "@/core/exam-grading/online-exam-grader";
+import {
+  loadLocalExamAnswerKeySSOT,
+  type PublishedOnlineExam,
+} from "@/features/electronic-exams-hub/published-online-exams-store";
 import {
   findStudentSubmissionForExamSSOT,
   recordStudentOnlineExamSubmissionSSOT,
@@ -46,6 +53,20 @@ export function useExamSession(params: {
 
   const draftKey = exam && studentCode ? `exam_draft_${exam.examId}_${studentCode}` : "";
 
+  const resetSimulation = useCallback(() => {
+    setErrorMsg(null);
+    setResultPct(null);
+    setResultItems([]);
+    setReviewList(null);
+    setFlaggedIds({});
+    setAnswers({});
+    if (exam) {
+      const initialSec = (exam.durationMinutes || 30) * 60;
+      setRemainingSeconds(initialSec);
+      deadlineMsRef.current = Date.now() + initialSec * 1000;
+    }
+  }, [exam]);
+
   useEffect(() => {
     setErrorMsg(null);
     setResultPct(null);
@@ -56,6 +77,7 @@ export function useExamSession(params: {
 
     const initialSec = (exam.durationMinutes || 30) * 60;
     setRemainingSeconds(initialSec);
+    deadlineMsRef.current = Date.now() + initialSec * 1000;
 
     if (draftKey && typeof window !== "undefined") {
       try {
@@ -104,11 +126,9 @@ export function useExamSession(params: {
           const leftMs = Math.max(0, totalMs - elapsedMs);
           deadlineMsRef.current = Date.now() + leftMs;
           setRemainingSeconds(Math.ceil(leftMs / 1000));
-        } else {
-          deadlineMsRef.current = Date.now() + initialSec * 1000;
         }
       } catch {
-        deadlineMsRef.current = Date.now() + initialSec * 1000;
+        // احتفظ بالمؤقت المحلي في حال تعذر الاتصال
       }
     })();
 
@@ -133,9 +153,54 @@ export function useExamSession(params: {
   }, []);
 
   const submitExam = useCallback(async () => {
-    if (!exam || !studentCode || isTeacherPreview || submitting || resultPct !== null) return;
+    if (!exam || submitting || resultPct !== null) return;
+    if (!isTeacherPreview && !studentCode) return;
+
     setSubmitting(true);
     setErrorMsg(null);
+
+    if (isTeacherPreview) {
+      try {
+        const res = await fetch("/api/exams/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ examCode: exam.examId, isTeacherSimulation: true, answers }),
+        });
+        const data = (await res.json()) as {
+          success: boolean; percentage?: number; items?: readonly OnlineQuestionResult[];
+          review?: readonly ExamQuestionReviewInfo[] | null;
+        };
+        if (res.ok && data.success) {
+          setResultPct(data.percentage ?? 0);
+          setResultItems(data.items ?? []);
+          setReviewList(data.review ?? null);
+          setSubmitting(false);
+          return;
+        }
+      } catch {
+        // المتابعة بالتصحيح المحلي من مفتاح المعلم المحفوظ
+      }
+
+      const localKey = loadLocalExamAnswerKeySSOT(exam.examId);
+      if (localKey && localKey.length > 0) {
+        const localRes = gradeOnlineExam(localKey, answers);
+        setResultPct(localRes.percentage);
+        setResultItems(localRes.items);
+        setReviewList(
+          localKey.map((k) => ({
+            questionId: k.questionId,
+            correctMcqChoiceIndex: k.correctMcqChoiceIndex,
+            finalAnswerArabic: k.finalAnswerArabic,
+            modelSolutionStepsArabic: k.modelSolutionStepsArabic,
+          }))
+        );
+      } else {
+        setErrorMsg("تعذر العثور على مفتاح إجابة هذا الاختبار للتصحيح التجريبي.");
+      }
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/exams/submit", {
         method: "POST",
@@ -157,7 +222,7 @@ export function useExamSession(params: {
       setResultItems(items);
       setReviewList(data.review ?? null);
       recordStudentOnlineExamSubmissionSSOT({
-        exam, studentCode, studentNameAr, percentageScore: pct,
+        exam, studentCode: studentCode!, studentNameAr, percentageScore: pct,
         startedAtIso: startedAtIso || new Date().toISOString(),
         answersJson: answers,
         resultJson: {
@@ -174,7 +239,7 @@ export function useExamSession(params: {
   }, [exam, studentCode, studentNameAr, isTeacherPreview, submitting, resultPct, answers, startedAtIso, draftKey, onExamSubmitted]);
 
   useEffect(() => {
-    if (!exam || isTeacherPreview || resultPct !== null) return;
+    if (!exam || resultPct !== null) return;
     const timer = window.setInterval(() => {
       if (!deadlineMsRef.current) return;
       const leftSec = Math.max(0, Math.ceil((deadlineMsRef.current - Date.now()) / 1000));
@@ -185,10 +250,10 @@ export function useExamSession(params: {
       }
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [exam, isTeacherPreview, resultPct, submitExam]);
+  }, [exam, resultPct, submitExam]);
 
   return {
     answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, resultItems, reviewList,
-    updateAnswer, toggleFlag, submitExam,
+    updateAnswer, toggleFlag, submitExam, resetSimulation,
   };
 }

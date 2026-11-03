@@ -25,7 +25,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = (await req.json()) as { examCode?: string };
+    const body = (await req.json()) as {
+      examCode?: string;
+      action?: "archive" | "reactivate" | "update_settings";
+      titleAr?: string;
+      durationMinutes?: number;
+      availabilityDays?: number;
+      expiresAtIso?: string;
+      status?: "active" | "archived";
+    };
     const examCode = (body.examCode || "").trim();
     if (!examCode) {
       return NextResponse.json(
@@ -34,12 +42,32 @@ export async function POST(req: Request) {
       );
     }
 
+    if (body.action === "reactivate" || body.action === "update_settings") {
+      const safeDays = Math.max(1, Math.min(365, Number(body.availabilityDays) || 7));
+      const nextStatus = body.action === "reactivate" ? "active" : (body.status || "active");
+      const expiresAt =
+        body.expiresAtIso ||
+        new Date(Date.now() + safeDays * 86_400_000).toISOString();
+      const patchObj: Record<string, unknown> = {
+        status: nextStatus,
+        is_published: nextStatus === "active",
+        availability_days: safeDays,
+        expires_at: expiresAt,
+      };
+      if (body.titleAr?.trim()) patchObj.title_ar = body.titleAr.trim();
+      if (body.durationMinutes && Number(body.durationMinutes) >= 5) {
+        patchObj.duration_minutes = Math.min(180, Math.round(Number(body.durationMinutes)));
+      }
+      await sbPatch(`electronic_exams?exam_code=eq.${encodeURIComponent(examCode)}`, patchObj);
+      return NextResponse.json({ success: true, status: nextStatus, expiresAtIso: expiresAt });
+    }
+
     await sbPatch(`electronic_exams?exam_code=eq.${encodeURIComponent(examCode)}`, {
       status: "archived",
       is_published: false,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, status: "archived" });
   } catch {
     return NextResponse.json(
       { success: false, error: "تعذر أرشفة الاختبار." },

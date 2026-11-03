@@ -12,7 +12,9 @@ import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
 export interface QuestionCardBadgeHeaderProps {
   readonly isBookletSolvedExample: boolean;
   readonly isBookletDrill: boolean;
+  readonly isBookletHomework?: boolean;
   readonly formattedQNum: string;
+  readonly formattedMarks?: string;
   readonly exampleRoleLabel: string;
   readonly badgeBgColorHex: string;
   readonly cardBorderColorHex: string;
@@ -24,7 +26,9 @@ export interface QuestionCardBadgeHeaderProps {
 export function QuestionCardBadgeHeader({
   isBookletSolvedExample,
   isBookletDrill,
+  isBookletHomework = false,
   formattedQNum,
+  formattedMarks,
   exampleRoleLabel,
   badgeBgColorHex,
   cardBorderColorHex,
@@ -102,10 +106,15 @@ export function QuestionCardBadgeHeader({
         )}
       </div>
       <span
-        style={{ color: "#9D174D" }}
+        style={{ color: isBookletHomework ? "#9D174D" : palette.primaryHex }}
         className="text-[0.78em] font-black bg-white px-2 py-0.2 rounded-md border border-slate-200 shrink-0 shadow-2xs inline-flex items-center gap-1"
       >
-        <span>مسألة واجب ({formattedQNum})</span>
+        <span>{isBookletHomework ? `مسألة واجب (${formattedQNum})` : `سؤال (${formattedQNum})`}</span>
+        {!isBookletHomework && formattedMarks && (
+          <span className="text-slate-600 bg-slate-50 px-1.5 py-0.1 rounded border border-slate-200 font-extrabold text-[0.88em]">
+            ({formattedMarks} درجـة)
+          </span>
+        )}
         {formattedIdeaIndex && (
           <span className="text-[#9D174D] bg-pink-50 px-1 py-0.1 rounded border border-pink-200 font-extrabold text-[0.88em]">
             (فكرة {formattedIdeaIndex})

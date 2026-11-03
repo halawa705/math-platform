@@ -44,7 +44,11 @@ function resolveDocAutoFitDefaults(
       customTitle?.includes("مراجعة") ||
       customQuestions?.some((q) => q.id.startsWith("booklet-s1-"))
   );
-  const isExamDoc = Boolean(!isBookletOrReview && customTitle?.includes("اختبار"));
+  const isExamDoc = Boolean(
+    !isBookletOrReview &&
+      (customTitle?.includes("اختبار") ||
+        customQuestions?.some((q) => q.id.startsWith("q-exam-")))
+  );
   return { isBookletOrReview, isExamDoc };
 }
 
@@ -64,7 +68,9 @@ export default function PDFPreviewOrchestrator({
       ...persisted,
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
-        : persisted.answerVisibilityMode,
+        : isExamDoc
+          ? "questions_only"
+          : persisted.answerVisibilityMode,
       autoFitMode: isExamDoc
         ? "exam_max_pages"
         : isBookletOrReview
@@ -87,7 +93,9 @@ export default function PDFPreviewOrchestrator({
       ...persisted,
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
-        : persisted.answerVisibilityMode,
+        : isExamDoc
+          ? "questions_only"
+          : persisted.answerVisibilityMode,
       autoFitMode: userChangedAutoFitRef.current
         ? prev.autoFitMode
         : isExamDoc

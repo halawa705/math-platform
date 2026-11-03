@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     }
 
     const body = (await req.json()) as {
+      examCode?: string;
       gradeId?: string;
       gradeNameArabic?: string;
       titleAr?: string;
@@ -57,13 +58,13 @@ export async function POST(req: Request) {
     const gradeNameArabic = (body.gradeNameArabic || "").trim();
     const titleAr = (body.titleAr || "اختبار إلكتروني").trim();
     const durationMinutes = Math.max(5, Math.min(180, Number(body.durationMinutes) || 30));
-    const availabilityDays = Math.max(1, Math.min(60, Number(body.availabilityDays) || 7));
+    const availabilityDays = Math.max(1, Math.min(365, Number(body.availabilityDays) || 7));
     const revealAnswers = body.revealAnswers !== false;
 
     const nowMs = Date.now();
     const publishedAtIso = new Date(nowMs).toISOString();
     const expiresAtIso = new Date(nowMs + availabilityDays * 86_400_000).toISOString();
-    const examCode = `exam_${gradeId}_${nowMs}`;
+    const examCode = (body.examCode || "").trim() || `exam_${gradeId}_${nowMs}`;
 
     await sbInsert(
       "exam_answer_keys",

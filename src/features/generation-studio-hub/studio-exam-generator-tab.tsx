@@ -2,26 +2,32 @@
 
 /**
  * @file studio-exam-generator-tab.tsx
- * @description تبويب الاختبار التقييمي الرسمي والإلكتروني مع استرجاع وحفظ الحالة وتوجيهات المعلم الخاصة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
+ * @description تبويب الاختبار التقييمي الرسمي والإلكتروني مع المعاينة الفورية للأسئلة المستخرجة وتعديلها ونشرها وطباعتها.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
 import { useEffect, useState } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { buildOnlineExamNotebookLMPrompt } from "@/core/prompts/online-exam-prompt-builder";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
-import { publishOnlineExamSSOT, refreshPublishedExamsFromSupabaseSSOT } from "@/features/electronic-exams-hub/published-online-exams-store";
+import {
+  buildStudentExamShareUrlSSOT,
+  publishOnlineExamSSOT,
+  refreshPublishedExamsFromSupabaseSSOT,
+} from "@/features/electronic-exams-hub/published-online-exams-store";
 import { loadStudioExamSettingsSSOT, saveStudioExamSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
-import StudioExamOnlinePublishPanel from "./studio-exam-online-publish-panel";
+import StudioExamOnlinePublishPanel, { type PublishedExamSummaryInfo } from "./studio-exam-online-publish-panel";
+import StudioExamQuestionsInspectorCard from "./studio-exam-questions-inspector-card";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 
 export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB = "studio_exam_generator_tab" as const;
@@ -51,9 +57,11 @@ export default function StudioExamGeneratorTab({
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
+  const [parsedQuestions, setParsedQuestions] = useState<readonly QuestionAssessmentIR[]>([]);
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  const [publishedInfo, setPublishedInfo] = useState<PublishedExamSummaryInfo | null>(null);
   const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
   const persist = (p: Partial<ReturnType<typeof loadStudioExamSettingsSSOT>>) => saveStudioExamSettingsSSOT(p);
@@ -75,34 +83,73 @@ export default function StudioExamGeneratorTab({
     );
   }, [gradeNameAr, branchId, lessonTitle, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
 
-  const parseReply = () =>
-    parseNotebookLMExamQuestionsToIR({ rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle });
-
-  const handleRender = () => {
-    const parsed = parseReply();
-    if (parsed.length === 0) { setNotice("⚠️ الصق رد NotebookLM أولاً ثم اضغط تصيير."); return; }
+  const handleReplyChange = (raw: string) => {
     setNotice(null);
-    setDiagRows(parsed.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! })));
-    onApplyParsedQuestionsToSheet?.(parsed.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)));
-    onApplyExamTitleToSheet(buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: lessonTitle, promptText: prompt, rawReplyText: reply }));
+    setReply(raw);
+    if (!raw.trim()) {
+      setParsedQuestions([]);
+      setDiagRows([]);
+      return;
+    }
+    const extracted = parseNotebookLMExamQuestionsToIR({
+      rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
+    });
+    setParsedQuestions(extracted);
+    setDiagRows(
+      extracted
+        .filter((q) => q.figureDiagnosticsAr?.length)
+        .map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! }))
+    );
   };
 
-  const handlePublish = async (p: { durationMinutes: number; availabilityDays: number; revealAnswers: boolean }) => {
-    const parsed = parseReply();
-    if (parsed.length === 0) { setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة."); return; }
+  const getActiveQuestions = (): readonly QuestionAssessmentIR[] => {
+    if (parsedQuestions.length > 0) return parsedQuestions;
+    const fresh = parseNotebookLMExamQuestionsToIR({
+      rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
+    });
+    if (fresh.length > 0) setParsedQuestions(fresh);
+    return fresh;
+  };
+
+  const handleRender = () => {
+    const qs = getActiveQuestions();
+    if (qs.length === 0) { setNotice("⚠️ الصق رد NotebookLM أولاً ثم اضغط تصيير."); return; }
+    setNotice(null);
+    onApplyParsedQuestionsToSheet?.(qs.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)));
+    const stdTitle = buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: lessonTitle, promptText: prompt, rawReplyText: reply });
+    onApplyExamTitleToSheet(stdTitle.includes("اختبار") ? stdTitle : `اختبار — ${stdTitle}`);
+  };
+
+  const handlePublish = async (p: { customTitleAr: string; durationMinutes: number; availabilityDays: number; revealAnswers: boolean }) => {
+    const qs = getActiveQuestions();
+    if (qs.length === 0) { setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة."); return; }
+    const finalTitle = p.customTitleAr.trim() || `اختبار — ${lessonTitle}`;
+    let examCode = publishedInfo?.examId;
+    let excl: readonly number[] = [];
+
     try {
       const res = await fetch("/api/exams/publish", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gradeId, gradeNameArabic: gradeNameAr, titleAr: `اختبار — ${lessonTitle}`, durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, revealAnswers: p.revealAnswers, questions: parsed }),
+        body: JSON.stringify({ examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: finalTitle, durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, revealAnswers: p.revealAnswers, questions: qs }),
       });
-      const data = (await res.json()) as { success: boolean; examCode?: string; publishedCount?: number; excludedQuestionNumbers?: readonly number[]; error?: string; };
-      if (!res.ok || !data.success) { setPublishMsg(`⚠️ ${data.error || "تعذر نشر الاختبار عبر الخادم."}`); return; }
-      publishOnlineExamSSOT({ examId: data.examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: `اختبار — ${lessonTitle}`, durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, questions: parsed });
-      void refreshPublishedExamsFromSupabaseSSOT();
-      const excl = data.excludedQuestionNumbers ?? [];
-      const exclNote = excl.length > 0 ? ` ⚠️ استُبعدت الأسئلة رقم (${excl.join("، ")}) لعدم قابليتها للتصحيح الآلي.` : "";
-      setPublishMsg(`✓ تم نشر الاختبار (${data.publishedCount ?? parsed.length} أسئلة) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.${exclNote}`);
-    } catch { setPublishMsg("⚠️ تعذر الاتصال بالخادم لنشر الاختبار."); }
+      const data = (await res.json()) as { success: boolean; examCode?: string; excludedQuestionNumbers?: readonly number[]; };
+      if (res.ok && data.success && data.examCode) {
+        examCode = data.examCode;
+        excl = data.excludedQuestionNumbers ?? [];
+      }
+    } catch {
+      // المتابعة بالحفظ المحلي حتى لا يتعطل المعلم
+    }
+
+    const created = publishOnlineExamSSOT({
+      examId: examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: finalTitle,
+      durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, questions: qs,
+    });
+    void refreshPublishedExamsFromSupabaseSSOT();
+    const shareUrl = buildStudentExamShareUrlSSOT({ examId: created.examId, gradeId });
+    setPublishedInfo({ examId: created.examId, gradeId, titleAr: finalTitle, shareUrl });
+    const exclNote = excl.length > 0 ? ` ⚠️ استُبعدت الأسئلة (${excl.join("، ")}) لعدم قابليتها للتصحيح الآلي.` : "";
+    setPublishMsg(`✓ تم نشر «${finalTitle}» (${created.questions.length} سؤالاً) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.${exclNote}`);
   };
 
   const summaryAr = `${effectiveMcq} اختر • ${effectiveProof} ${isOnlineMode ? "إجابة قصيرة" : "مقالي"} • ${difficulty === "standard_balanced" ? "متوازن" : "متفوقين"}`;
@@ -146,15 +193,19 @@ export default function StudioExamGeneratorTab({
       />
 
       <StudioSingleStagePastePanel
-        stageTitleAr={`اختبار تقييمي — ${lessonTitle}`} stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لتحويله إلى ورقة اختبار."
+        stageTitleAr={`اختبار تقييمي — ${lessonTitle}`} stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لمعاينة الأسئلة وتعديلها وطباعتها أو نشرها أونلاين."
         promptText={prompt} onChangePrompt={setPrompt}
         onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
-        isPromptCopied={copied} replyValue={reply} onChangeReply={(v) => { setNotice(null); setReply(v); }} replyPlaceholderAr="الصق رد أسئلة الاختبار هنا..."
+        isPromptCopied={copied} replyValue={reply} onChangeReply={handleReplyChange} replyPlaceholderAr="الصق رد أسئلة الاختبار هنا..."
       />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />
-      <StudioExamOnlinePublishPanel gradeNameAr={gradeNameAr} statusMessageAr={publishMsg} onPublish={handlePublish} />
-      <StudioStickyPrimaryActionBar primaryLabelAr="📄 تصيير الاختبار ومعاينته" onPrimary={handleRender} noticeAr={notice} />
+      <StudioExamQuestionsInspectorCard questions={parsedQuestions} onChangeQuestions={setParsedQuestions} />
+      <StudioExamOnlinePublishPanel
+        gradeNameAr={gradeNameAr} defaultTitleAr={`اختبار — ${unitTitleAr ? `${unitTitleAr} — ` : ""}${lessonTitle}`}
+        statusMessageAr={publishMsg} publishedExamInfo={publishedInfo} onPublish={handlePublish}
+      />
+      <StudioStickyPrimaryActionBar primaryLabelAr="📄 تصيير الاختبار كـ PDF ومعاينته" onPrimary={handleRender} noticeAr={notice} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import SegmentedWorkspaceTabsBar, { type SegmentedTabItem } from "@/components/global-ui/segmented-workspace-tabs-bar";
+import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
   STUDENTS_REGISTRY_UPDATED_EVENT,
@@ -56,6 +57,7 @@ export default function StudentLearningPortalView() {
   const [studentCode, setStudentCode] = useState<string | undefined>(undefined);
   const [studentName, setStudentName] = useState<string>("");
   const [studentGradeId, setStudentGradeId] = useState<string>("");
+  const [targetExamId, setTargetExamId] = useState<string>("");
   const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [metric, setMetric] = useState<GradeAnalyticsMetric | null>(null);
   const [history, setHistory] = useState<readonly StudentExamHistoryItem[]>([]);
@@ -65,23 +67,51 @@ export default function StudentLearningPortalView() {
     const grades = loadEnabledGradesSSOT();
     setEnabledGrades(grades);
     setFooterText(loadTeacherIdentitySSOT().footerText);
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const urlTab = params?.get("tab") || "";
+    const urlGradeId = params?.get("gradeId") || "";
+    const urlExamId = params?.get("examId") || "";
+
     const session = loadRememberedSessionSSOT();
     if (!session) {
+      if (typeof window !== "undefined" && (urlTab || urlExamId)) {
+        try {
+          window.sessionStorage.setItem(
+            "math_platform_pending_redirect",
+            window.location.pathname + window.location.search
+          );
+        } catch {
+          // ignore
+        }
+      }
       router.replace("/");
       return;
     }
+    if (urlTab && STUDENT_PORTAL_TABS.some((t) => t.id === urlTab)) {
+      setActiveTabId(urlTab);
+    } else if (urlExamId) {
+      setActiveTabId("live_exam");
+    }
+    if (urlExamId) setTargetExamId(urlExamId);
+
     if (session.role === "teacher") {
       setIsTeacherPreview(true);
-      setStudentGradeId(grades[0]?.id || "");
+      setStudentGradeId(urlGradeId || grades[0]?.id || "prep-3");
+      if (urlGradeId && !grades.some((g) => g.id === urlGradeId)) {
+        const extraGrade = EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === urlGradeId);
+        if (extraGrade) setEnabledGrades([...grades, extraGrade]);
+      }
     } else {
       setStudentCode(session.studentCode);
       setStudentName(session.studentNameAr || "");
-      setStudentGradeId(session.gradeId || grades[0]?.id || "");
+      setStudentGradeId(session.gradeId || urlGradeId || grades[0]?.id || "");
     }
     setReady(true);
   }, [router]);
 
-  const gradeObj = enabledGrades.find((g) => g.id === studentGradeId);
+  const gradeObj =
+    enabledGrades.find((g) => g.id === studentGradeId) ||
+    EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === studentGradeId);
   const gradeName = gradeObj?.nameArabic || "";
 
   useEffect(() => {
@@ -181,7 +211,13 @@ export default function StudentLearningPortalView() {
         )}
 
         {activeTabId === "live_exam" && (
-          <StudentAssignedExamsTab studentCode={studentCode} studentNameAr={studentName} gradeId={studentGradeId} isTeacherPreview={isTeacherPreview} />
+          <StudentAssignedExamsTab
+            studentCode={studentCode}
+            studentNameAr={studentName}
+            gradeId={studentGradeId}
+            initialExamId={targetExamId}
+            isTeacherPreview={isTeacherPreview}
+          />
         )}
         {activeTabId === "videos" && <StudentAssignedVideosTab gradeId={studentGradeId} />}
         {activeTabId === "booklets" && <StudentAssignedBookletsTab gradeId={studentGradeId} />}

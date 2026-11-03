@@ -23,11 +23,12 @@ export function parseChoicesTupleFromBlock(rawBlock: string): readonly [string, 
     c
       .replace(/^(?:(?:أ|ا|ب|جـ?|د|[ABCD1-4])[)\].:-]\s*|\((?:أ|ا|ب|جـ?|د|[ABCD1-4])\)\s*)/i, "")
       .replace(/\|\s*معرف\s*السؤال.*$/i, "")
+      .replace(/^\s*\|\s*|\s*\|\s*$/g, "")
       .replace(/\s*---+\s*$/g, "")
       .replace(/[،,.;]+$/g, "")
       .trim();
 
-  const explicitChoicesLine = rawBlock.match(/(?:^|\n)\s*(?:البدائل|الاختيارات)\s*:\s*([^\n]+)/i)?.[1];
+  const explicitChoicesLine = rawBlock.match(/(?:^|\n)\s*(?:البدائل|الاختيارات|\[?OPTIONS\]?|\[?CHOICES\]?)\s*:\s*([^\n]+)/i)?.[1];
   if (explicitChoicesLine) {
     const pipeParts = explicitChoicesLine.split("|").map(cleanChoice).filter(Boolean);
     if (pipeParts.length >= 4) return [pipeParts[0], pipeParts[1], pipeParts[2], pipeParts[3]];
@@ -154,15 +155,20 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
     const mcqChoicesArabic = parseChoicesTupleFromBlock(block);
-    const rawCleanPrompt = basePrompt.replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "").trim();
+    const inlineGovMatch = basePrompt.match(/(?:\{\s*(محافظة\s+[^}\n]+)\s*\}|\[\s*(محافظة\s+[^\]\n]+)\s*\]|\(\s*(محافظة\s+[^)\n]+)\s*\))/i);
+    const resolvedGov = (rawGov || inlineGovMatch?.[1] || inlineGovMatch?.[2] || inlineGovMatch?.[3] || "").trim();
+    const rawCleanPrompt = basePrompt
+      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
+      .replace(/(?:\{\s*محافظة\s+[^}\n]+\s*\}|\[\s*محافظة\s+[^\]\n]+\s*\]|\(\s*محافظة\s+[^)\n]+\s*\))/gi, "")
+      .trim();
     const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
 
     const patternKind: MathQuestionPatternKind =
-      rawKind.includes("mcq") || rawKind.includes("اختر") || mcqChoicesArabic !== undefined
+      rawKind.includes("mcq") || rawKind.includes("اختر") || rawKind.includes("multiple") || mcqChoicesArabic !== undefined
         ? "mcq"
-        : rawKind.includes("short")
+        : rawKind.includes("short") || rawKind.includes("قصيرة")
           ? "direct_answer"
-          : rawKind.includes("proof") || rawKind.includes("برهان")
+          : rawKind.includes("proof") || rawKind.includes("برهان") || rawKind.includes("مقالي") || rawKind.includes("essay")
             ? "proof_reasoning"
             : rawKind.includes("comp") || rawKind.includes("أكمل")
               ? "completion"
@@ -194,7 +200,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       figureDiagnosticsAr,
       attachedGeometryFigure,
       graphSpec,
-      authenticCitation: rawGov && !rawGov.includes("غير مذكور") ? { governorateNameArabic: rawGov } : undefined,
+      authenticCitation: resolvedGov && !resolvedGov.includes("غير مذكور") ? { governorateNameArabic: resolvedGov } : undefined,
     };
   });
 }

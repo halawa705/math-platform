@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file side-by-side-diagram-docker.tsx
@@ -94,7 +94,9 @@ export default function SideBySideDiagramDocker({
         <QuestionCardBadgeHeader
           isBookletSolvedExample={isBookletSolvedExample}
           isBookletDrill={isBookletDrill}
+          isBookletHomework={isBookletHomework}
           formattedQNum={formattedQNum}
+          formattedMarks={formatNumeralsByModeSSOT(question.marks, settings.numeralMode)}
           exampleRoleLabel={exampleRoleLabel}
           badgeBgColorHex={badgeBgColorHex}
           cardBorderColorHex={cardBorderColorHex}
