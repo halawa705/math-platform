@@ -51,23 +51,16 @@ export async function pullTeacherIdentityFromSupabaseCloud(): Promise<Partial<Ow
 }
 
 export async function syncCurriculumUnitsToSupabaseCloud(units: readonly CurriculumUnitNode[]): Promise<boolean> {
-  if (typeof window === "undefined" || units.length === 0) return false;
+  if (typeof window === "undefined") return false;
   try {
-    const payload = units.map((u) => ({
-      id: u.id,
-      grade_id: u.gradeId,
-      term_number: u.termNumber,
-      branch_id: u.branchId,
-      branch_name_ar: u.branchNameArabic,
-      title_ar: u.titleArabic,
-      order_index: u.orderIndex,
-      lessons_json: u.lessons,
-      updated_at: new Date().toISOString(),
-    }));
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/curriculum_units?on_conflict=id`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/platform_ssot_state?on_conflict=id`, {
       method: "POST",
       headers: buildSupabaseHeaders(),
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        id: "curriculum_units_ssot",
+        identity_json: { units },
+        updated_at: new Date().toISOString(),
+      }),
     });
     return res.ok;
   } catch {
@@ -78,32 +71,20 @@ export async function syncCurriculumUnitsToSupabaseCloud(units: readonly Curricu
 export async function pullCurriculumUnitsFromSupabaseCloud(): Promise<readonly CurriculumUnitNode[] | null> {
   if (typeof window === "undefined") return null;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/curriculum_units?select=*&order=order_index.asc`, {
-      method: "GET",
-      headers: buildSupabaseHeaders(),
-    });
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/platform_ssot_state?id=eq.curriculum_units_ssot&select=identity_json`,
+      {
+        method: "GET",
+        headers: buildSupabaseHeaders(),
+      }
+    );
     if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{
-      id: string;
-      grade_id: string;
-      term_number: 1 | 2;
-      branch_id: CurriculumUnitNode["branchId"];
-      branch_name_ar: string;
-      title_ar: string;
-      order_index: number;
-      lessons_json: CurriculumUnitNode["lessons"];
-    }>;
-    if (!Array.isArray(rows) || rows.length === 0) return null;
-    return rows.map((r) => ({
-      id: r.id,
-      gradeId: r.grade_id,
-      termNumber: r.term_number,
-      branchId: r.branch_id,
-      branchNameArabic: r.branch_name_ar,
-      titleArabic: r.title_ar,
-      orderIndex: r.order_index,
-      lessons: Array.isArray(r.lessons_json) ? r.lessons_json : [],
-    }));
+    const rows = (await res.json()) as Array<{ identity_json?: { units?: CurriculumUnitNode[] } }>;
+    const candidate = rows[0]?.identity_json?.units;
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -112,14 +93,18 @@ export async function pullCurriculumUnitsFromSupabaseCloud(): Promise<readonly C
 export async function deleteCurriculumUnitsFromSupabaseCloud(gradeId: string): Promise<boolean> {
   if (typeof window === "undefined" || !gradeId) return false;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/curriculum_units?grade_id=eq.${encodeURIComponent(gradeId)}`, {
-      method: "DELETE",
-      headers: buildSupabaseHeaders(),
-    });
-    return res.ok;
+    const cloudUnits = await pullCurriculumUnitsFromSupabaseCloud();
+    if (!cloudUnits) return false;
+    const updated = cloudUnits.filter((u) => u.gradeId !== gradeId);
+    return await syncCurriculumUnitsToSupabaseCloud(updated);
   } catch {
     return false;
   }
+}
+
+export async function wipeCurriculumUnitsFromSupabaseCloud(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  return await syncCurriculumUnitsToSupabaseCloud([]);
 }
 
 export async function syncStudentRecordToSupabaseCloud(student: RegisteredStudentRecordSSOT): Promise<boolean> {

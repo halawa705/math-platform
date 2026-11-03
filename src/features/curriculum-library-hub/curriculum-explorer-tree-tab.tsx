@@ -3,7 +3,7 @@
 /**
  * @file curriculum-explorer-tree-tab.tsx
  * @description مستكشف المنهج المعتمد: يعرض شجرة الوحدات والدروس المعتمدة لكل صف دراسي على حدة
- * مع شريط أفقي للصفوف الدراسية، وإحصائيات فورية، وعزل تام لكل صف عن الآخر.
+ * عبر قائمة منسدلة أنيقة تقرأ من مصدر الحقيقة SSOT، مع إحصائيات فورية، وإمكانية المسح الشامل للبدء من جديد.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 220 سطراً).
  */
 
@@ -11,8 +11,10 @@ import { useState, useEffect, useMemo } from "react";
 import CalmEmptyStateCard from "@/components/global-ui/calm-empty-state-card";
 import {
   CURRICULUM_UNITS_UPDATED_EVENT,
+  deleteAllCurriculumUnitsSSOT,
   deleteCurriculumUnitsForGradeSSOT,
   loadActiveCurriculumUnitsSSOT,
+  saveImportedCurriculumUnitsSSOT,
   type CurriculumUnitNode,
 } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { loadEnabledGradesSSOT } from "@/core/ssot/teacher-identity-ssot";
@@ -45,7 +47,11 @@ export default function CurriculumExplorerTreeTab({
     refreshUnits();
     void pullCurriculumUnitsFromSupabaseCloud().then((cloudUnits) => {
       if (cloudUnits && cloudUnits.length > 0) {
-        refreshUnits();
+        const local = loadActiveCurriculumUnitsSSOT();
+        if (local.length === 0) {
+          saveImportedCurriculumUnitsSSOT(cloudUnits);
+          refreshUnits();
+        }
       }
     });
 
@@ -57,7 +63,7 @@ export default function CurriculumExplorerTreeTab({
     };
   }, []);
 
-  // فلترة حتمية صارمة: وحدات الصف المختار فقط لا غير
+  // فلترة حتمية صارمة: وحدات الصف المختار فقط لا غير من مصدر الحقيقة
   const activeGradeUnits = useMemo(
     () => allUnits.filter((u) => u.gradeId === selectedGradeId),
     [allUnits, selectedGradeId]
@@ -83,51 +89,46 @@ export default function CurriculumExplorerTreeTab({
     setTimeout(() => setIsDeleting(false), 500);
   };
 
+  const handleWipeAllCurriculums = () => {
+    const confirmed = window.confirm(
+      "تحذير حاسم وإعادة ضبط شاملة:\nهل أنت متأكد تماماً من مسح كافة المناهج والوحدات والدروس المسجلة لجميع الصفوف بالكامل والبدء من جديد من الصفر؟"
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    deleteAllCurriculumUnitsSSOT();
+    refreshUnits();
+    setTimeout(() => setIsDeleting(false), 500);
+  };
+
   return (
     <div className="space-y-4">
-      {/* شريط اختيار الصفوف الدراسيّة القابل للتمرير الأفقي */}
-      <section aria-label="اختيار الصف الدراسي" className="space-y-2">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+      {/* قائمة منسدلة لاختيار الصف الدراسي وقراءة بياناته من الـ SSOT */}
+      <section aria-label="اختيار الصف الدراسي" className="p-3.5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+        <div className="flex items-center justify-between gap-2 px-0.5">
+          <label htmlFor="curriculum-grade-select" className="text-xs font-black text-slate-800 dark:text-slate-200">
             اختر الصف الدراسي لاستعراض منهجه:
-          </span>
-          <span className="text-[11px] font-bold text-slate-400">
-            {allUnits.length} وحدة محفوظة إجمالاً
+          </label>
+          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+            {allUnits.length} وحدة محفوظة بالمنصة إجمالاً
           </span>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+        <select
+          id="curriculum-grade-select"
+          value={selectedGradeId}
+          onChange={(e) => setSelectedGradeId(e.target.value)}
+          className="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-800 dark:text-slate-100 cursor-pointer shadow-inner"
+        >
           {enabledGrades.map((grade) => {
             const countForGrade = allUnits.filter((u) => u.gradeId === grade.id).length;
-            const isSelected = grade.id === selectedGradeId;
-
             return (
-              <button
-                key={grade.id}
-                type="button"
-                onClick={() => setSelectedGradeId(grade.id)}
-                className={`min-h-[44px] px-3.5 py-1.5 rounded-2xl text-xs font-black shrink-0 transition-all cursor-pointer flex items-center gap-1.5 border ${
-                  isSelected
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-sm"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300"
-                }`}
-              >
-                <span>{grade.nameArabic}</span>
-                <span
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                    isSelected
-                      ? "bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900"
-                      : countForGrade > 0
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                      : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                  }`}
-                >
-                  {countForGrade}
-                </span>
-              </button>
+              <option key={grade.id} value={grade.id}>
+                {grade.nameArabic} {countForGrade > 0 ? `(${countForGrade} وحدات معتمدة)` : "(⚠️ غير مسجل بعد)"}
+              </option>
             );
           })}
-        </div>
+        </select>
       </section>
 
       {/* بطاقة معلومات وتحكم الصف المختار */}
@@ -137,8 +138,16 @@ export default function CurriculumExplorerTreeTab({
             <span className="text-base font-black text-slate-900 dark:text-white">
               {gradeName}
             </span>
-            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-              {activeGradeUnits.length} وحدات • {totalLessonsCount} درساً
+            <span
+              className={`text-[11px] font-black px-2.5 py-0.5 rounded-full ${
+                activeGradeUnits.length > 0
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+              }`}
+            >
+              {activeGradeUnits.length > 0
+                ? `${activeGradeUnits.length} وحدات • ${totalLessonsCount} درساً`
+                : "غير مسجل بعد"}
             </span>
           </div>
           <p className="text-[11px] font-bold text-slate-400 mt-0.5">
@@ -146,12 +155,12 @@ export default function CurriculumExplorerTreeTab({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {onOpenSplitterForGrade && (
             <button
               type="button"
               onClick={() => onOpenSplitterForGrade(selectedGradeId)}
-              className="min-h-[40px] px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-black cursor-pointer hover:opacity-90"
+              className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-black cursor-pointer hover:opacity-90"
             >
               تقسيم أو تحديث هذا الصف ↗
             </button>
@@ -167,16 +176,41 @@ export default function CurriculumExplorerTreeTab({
               {isDeleting ? "جارٍ المسح..." : "مسح وحدات هذا الصف"}
             </button>
           )}
+
+          {allUnits.length > 0 && (
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={handleWipeAllCurriculums}
+              className="min-h-[40px] px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 bg-rose-100/60 dark:bg-rose-950/40 text-xs font-black cursor-pointer hover:bg-rose-200 dark:hover:bg-rose-900/50 disabled:opacity-40"
+              title="مسح كافة وحدات جميع الصفوف وإعادة الضبط من الصفر"
+            >
+              مسح كل المناهج بالكامل 🗑️
+            </button>
+          )}
         </div>
       </div>
 
       {/* قائمة الوحدات والدروس المعزولة لهذا الصف */}
       {activeGradeUnits.length === 0 ? (
-        <CalmEmptyStateCard
-          icon="📂"
-          titleAr={`لا توجد وحدات معتمدة بعد لـ (${gradeName})`}
-          hintAr="اضغط على زر «تقسيم أو تحديث هذا الصف» بالأعلى، وانسخ البرومبت والصق الرد من NotebookLM لاعتماد وحدات هذا الصف بشكل مستقل تماماً."
-        />
+        <div className="space-y-3">
+          <CalmEmptyStateCard
+            icon="📂"
+            titleAr={`لا توجد وحدات أو دروس مسجلة بعد لـ (${gradeName})`}
+            hintAr={`لم يتم استيراد منهج ${gradeName} حتى الآن. يمكنك النقر على الزر بالأسفل للانتقال لتبويب التقسيم ونسخ البرومبت إلى NotebookLM واعتماد المنهج في ثوانٍ.`}
+          />
+          {onOpenSplitterForGrade && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => onOpenSplitterForGrade(selectedGradeId)}
+                className="min-h-[44px] px-5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-black cursor-pointer hover:opacity-90 shadow-sm flex items-center gap-2"
+              >
+                <span>🚀 تقسيم واستيراد منهج {gradeName} الآن ↗</span>
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         <CurriculumSavedUnitsList units={activeGradeUnits} gradeNameAr={gradeName} />
       )}

@@ -13,6 +13,7 @@ import { MATH_BRANCHES_SSOT } from "./math-branches-ssot";
 import {
   syncCurriculumUnitsToSupabaseCloud,
   deleteCurriculumUnitsFromSupabaseCloud,
+  wipeCurriculumUnitsFromSupabaseCloud,
 } from "../supabase/supabase-cloud-sync-ssot";
 
 export interface CurriculumLessonNode {
@@ -58,17 +59,19 @@ export const EGYPTIAN_MATH_GRADES_SSOT: readonly CurriculumGradeNode[] = [
 export function buildCurriculumSplitterPrompt(params: {
   gradeName: string;
   termNumber: 1 | 2;
+  gradeId?: string;
   branchId?: MathBranchId;
 }): string {
   const termText = params.termNumber === 1 ? "الفصل الدراسي الأول" : "الفصل الدراسي الثاني";
+  const resolvedGradeId = params.gradeId || detectGradeIdFromArabic(params.gradeName) || "prim-6";
 
   return [
-    `المهمة: استخراج الفهرس الكامل والدقيق لوحدات ودروس الرياضيات — ${params.gradeName} (${termText}).`,
+    `المهمة الحصرية: استخراج الفهرس الكامل والدقيق لوحدات ودروس الرياضيات لـ (${params.gradeName}) [كود المنهج: ${resolvedGradeId}] (${termText}) فقط.`,
     "📚 أولوية المصادر: (١) كتاب التقييمات الوزارية ← (٢) كتاب المدرسة ← (٣) الكتب الخارجية المرفوعة.",
-    "⛔ ضوابط الإخراج (للاستيراد الآلي دون مقدمات أو اختلاق):",
-    "1. التزم حصراً بأسماء وترتيب الوحدات والدروس الواردة نصاً في المصادر المرفوعة وحدد فرع كل وحدة.",
-    "2. أخرج الهيكل بالصيغة القياسية التالية فقط:",
-    "=== [UNIT: رقم الوحدة] | الفرع: [اسم الفرع] | العنوان: [اسم الوحدة كاملاً] ===",
+    "⛔ ضوابط الإخراج (للاستيراد الآلي الدقيق دون اختلاق أو خلط مناهج):",
+    `1. التزم حصراً بأسماء وترتيب الوحدات والدروس الخاصة بـ (${params.gradeName}) ولا تخلط بينه وبين أي صف دراسي آخر.`,
+    `2. أخرج الهيكل بالصيغة القياسية التالية فقط لكل وحدة (مع تثبيت كود الصف [GRADE: ${resolvedGradeId}] في كل وحدة):`,
+    `=== [GRADE: ${resolvedGradeId}] | [UNIT: رقم الوحدة] | الفرع: [اسم الفرع] | العنوان: [اسم الوحدة كاملاً] ===`,
     "- [LESSON: 1] [اسم الدرس الأول] | المفاهيم: [مفهوم 1، مفهوم 2]",
     "- [LESSON: 2] [اسم الدرس الثاني] | المفاهيم: [مفهوم 1، مفهوم 2]",
   ].join("\n");
@@ -90,7 +93,7 @@ export function detectGradeIdFromArabic(text: string): string | undefined {
 
 export function parseCurriculumSplitterResponse(
   rawResponse: string,
-  gradeId: string,
+  targetGradeId: string,
   termNumber: 1 | 2,
   defaultBranchId: MathBranchId = "algebra"
 ): CurriculumUnitNode[] {
@@ -98,7 +101,6 @@ export function parseCurriculumSplitterResponse(
   if (!rawResponse || !rawResponse.trim()) return units;
 
   const lines = rawResponse.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  let activeGradeId = gradeId;
   let currentUnit: {
     id: string;
     gradeId: string;
@@ -123,22 +125,34 @@ export function parseCurriculumSplitterResponse(
     return defaultBranchId;
   };
 
+  let activeGradeId = targetGradeId;
   for (const line of lines) {
-    const detected = detectGradeIdFromArabic(line);
-    if (detected && (line.includes("الصف") || line.includes("منهج") || line.includes("GRADE") || line.startsWith("#") || line.startsWith("==="))) {
-      activeGradeId = detected;
+    // رصد العناوين الترويسية للصفوف في حال وجود أكثر من صف (مثل: # منهج الصف الأول الإعدادي)
+    if (line.startsWith("#") || (line.startsWith("===") && line.includes("GRADE"))) {
+      const detected = detectGradeIdFromArabic(line);
+      if (detected) {
+        activeGradeId = detected;
+      }
     }
 
-    const unitMatch = line.match(/\[UNIT:\s*(\d+)\]\s*\|\s*الفرع:\s*([^|]+)\|\s*العنوان:\s*(.+?)(?:===|$)/i);
+    const unitMatch = line.match(
+      /(?:\[GRADE:\s*([^|\]]+)\]\s*\|\s*)?\[UNIT:\s*(\d+)\]\s*\|\s*الفرع:\s*([^|]+)\|\s*العنوان:\s*(.+?)(?:===|$)/i
+    );
     if (unitMatch) {
-      const orderIdx = parseInt(unitMatch[1], 10) || units.length + 1;
-      const branchRaw = unitMatch[2].trim();
-      const titleRaw = unitMatch[3].replace(/===/g, "").trim();
-      const unitId = `${activeGradeId}-t${termNumber}-u${orderIdx}`;
+      if (unitMatch[1]) {
+        const explicitGradeRaw = unitMatch[1].trim();
+        activeGradeId = detectGradeIdFromArabic(explicitGradeRaw) || explicitGradeRaw;
+      }
+      const unitGradeId = activeGradeId;
+
+      const orderIdx = parseInt(unitMatch[2], 10) || units.length + 1;
+      const branchRaw = unitMatch[3].trim();
+      const titleRaw = unitMatch[4].replace(/===/g, "").trim();
+      const unitId = `${unitGradeId}-t${termNumber}-u${orderIdx}`;
       const resolvedBranchId = inferBranchFromArabic(branchRaw + " " + titleRaw);
       currentUnit = {
         id: unitId,
-        gradeId: activeGradeId,
+        gradeId: unitGradeId,
         branchId: resolvedBranchId,
         branchNameArabic: branchRaw || MATH_BRANCHES_SSOT[resolvedBranchId].nameArabic,
         orderIndex: orderIdx,
@@ -147,7 +161,7 @@ export function parseCurriculumSplitterResponse(
       };
       units.push({
         id: currentUnit.id,
-        gradeId: activeGradeId,
+        gradeId: unitGradeId,
         termNumber,
         branchId: currentUnit.branchId,
         branchNameArabic: currentUnit.branchNameArabic,
@@ -250,6 +264,7 @@ export function deleteAllCurriculumUnitsSSOT(): void {
       window.dispatchEvent(new Event(CURRICULUM_UNITS_UPDATED_EVENT));
     }
     inMemoryFallback.delete(CURRICULUM_STORAGE_KEY);
+    void wipeCurriculumUnitsFromSupabaseCloud();
   } catch {
     // ignore storage write error
   }

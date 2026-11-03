@@ -56,15 +56,18 @@ export default function CurriculumNotebooklmSplitterTab({
   const [copiedAndOpened, setCopiedAndOpened] = useState<boolean>(false);
   const [savedToSSOT, setSavedToSSOT] = useState<boolean>(false);
 
-  // مزامنة سحابية أولية لمرة واحدة عند تحميل المكون
+  // مزامنة سحابية أولية لمرة واحدة عند تحميل المكون إن لم تكن هناك بيانات محلية
   useEffect(() => {
     void pullCurriculumUnitsFromSupabaseCloud().then((cloudUnits) => {
       if (cloudUnits && cloudUnits.length > 0) {
-        saveImportedCurriculumUnitsSSOT(cloudUnits);
-        setSavedUnits(loadActiveCurriculumUnitsSSOT(gradeId));
+        const local = loadActiveCurriculumUnitsSSOT();
+        if (local.length === 0) {
+          saveImportedCurriculumUnitsSSOT(cloudUnits);
+          setSavedUnits(loadActiveCurriculumUnitsSSOT(gradeId));
+        }
       }
     });
-  }, []);
+  }, [gradeId]);
 
   // تحديث بيانات الصف المحدد
   useEffect(() => {
@@ -79,6 +82,7 @@ export default function CurriculumNotebooklmSplitterTab({
     setSavedUnits(loadActiveCurriculumUnitsSSOT(targetGrade?.id || gradeId));
 
     const generatedPrompt = buildCurriculumSplitterPrompt({
+      gradeId: targetGrade?.id || gradeId,
       gradeName: targetGrade?.nameArabic || "الصف الثالث الإعدادي",
       termNumber,
     });
@@ -126,10 +130,7 @@ export default function CurriculumNotebooklmSplitterTab({
   };
 
   const handleDeleteGradeUnits = () => {
-    const confirmed = window.confirm(
-      `هل أنت متأكد من مسح جميع وحدات (${selectedGrade?.nameArabic || "هذا الصف"})؟`
-    );
-    if (!confirmed) return;
+    if (!window.confirm(`هل أنت متأكد من مسح جميع وحدات (${selectedGrade?.nameArabic || "هذا الصف"})؟`)) return;
     deleteCurriculumUnitsForGradeSSOT(gradeId);
     setSavedUnits([]);
   };
@@ -139,6 +140,19 @@ export default function CurriculumNotebooklmSplitterTab({
 
   return (
     <div className="space-y-4">
+      {/* تنبيه واضح للصف المستهدف بالتقسيم */}
+      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3">
+        <span className="text-xl">🎯</span>
+        <div>
+          <p className="text-xs font-black text-amber-900 dark:text-amber-200">
+            أنت تقوم حالياً بتقسيم واستيراد منهج: {gradeName} ({termNumber === 1 ? "الفصل الأول" : "الفصل الثاني"})
+          </p>
+          <p className="text-[11px] font-bold text-amber-700/90 dark:text-amber-400">
+            كود المنهج: <code className="px-1 py-0.5 rounded bg-amber-500/20 font-mono text-[10px]">{gradeId}</code> — الوحدات التي تُعتمد هنا ستُسجل حصراً لهذا الصف دون تداخل مع صفوف أخرى.
+          </p>
+        </div>
+      </div>
+
       {/* الخطوة ١: اختيار الصف وربط NotebookLM ونسخ البرومبت */}
       <StudioCollapsibleSectionCard
         icon="🧭"
