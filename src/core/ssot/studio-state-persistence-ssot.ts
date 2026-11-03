@@ -160,6 +160,8 @@ export interface StudioExamFormsSettingsState {
   readonly formsCount: number;
   readonly scopeKind: ExamFormsScopeKind;
   readonly targetedUnitsOrLessons: string;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
   readonly mcqCount: number;
   readonly mcqEnabled: boolean;
   readonly proofCount: number;
@@ -172,6 +174,8 @@ export const DEFAULT_STUDIO_EXAM_FORMS_SETTINGS: StudioExamFormsSettingsState = 
   formsCount: 3,
   scopeKind: "monthly_exam",
   targetedUnitsOrLessons: "",
+  selectedUnitIds: [],
+  selectedLessonIds: [],
   mcqCount: 5,
   mcqEnabled: true,
   proofCount: 3,

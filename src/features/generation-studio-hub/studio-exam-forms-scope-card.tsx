@@ -2,20 +2,30 @@
 
 /**
  * @file studio-exam-forms-scope-card.tsx
- * @description بطاقة ذرية مستقلة لاختيار الغرض من النماذج (شهر / نهاية ترم / مراجعة) ونطاق الوحدات المستهدفة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 75 سطراً).
+ * @description بطاقة ذرية مستقلة لاختيار الغرض من النماذج ونطاق الوحدات والدروس المستهدفة
+ * مع شيك بوكس بجوار كل وحدة وكل درس تتيح تحديد أكثر من وحدة ودروس بعينها.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 120 سطراً).
  */
 
 import React from "react";
 import type { ExamFormsScopeKind } from "@/core/ssot/studio-state-persistence-ssot";
+import type { CurriculumUnitNode } from "@/core/ssot/curriculum-hierarchy-ssot";
+import StudioCurriculumUnitsChecklist from "./studio-curriculum-units-checklist";
 
 export const MODULE_ID_STUDIO_EXAM_FORMS_SCOPE_CARD = "studio_exam_forms_scope_card" as const;
 
 export interface StudioExamFormsScopeCardProps {
   readonly scopeKind: ExamFormsScopeKind;
   readonly scopeDescription: string;
+  readonly units: readonly CurriculumUnitNode[];
+  readonly selectedUnitIds: readonly string[];
+  readonly selectedLessonIds: readonly string[];
   readonly onSelectScopeKind: (kind: ExamFormsScopeKind) => void;
   readonly onChangeScopeDescription: (desc: string) => void;
+  readonly onToggleUnit: (unitId: string) => void;
+  readonly onToggleLesson: (lessonId: string, unitId: string) => void;
+  readonly onSelectAll: () => void;
+  readonly onDeselectAll: () => void;
 }
 
 const SCOPE_OPTIONS: readonly { readonly id: ExamFormsScopeKind; readonly label: string }[] = [
@@ -27,13 +37,23 @@ const SCOPE_OPTIONS: readonly { readonly id: ExamFormsScopeKind; readonly label:
 export default function StudioExamFormsScopeCard({
   scopeKind,
   scopeDescription,
+  units,
+  selectedUnitIds,
+  selectedLessonIds,
   onSelectScopeKind,
   onChangeScopeDescription,
+  onToggleUnit,
+  onToggleLesson,
+  onSelectAll,
+  onDeselectAll,
 }: StudioExamFormsScopeCardProps) {
   return (
-    <div className="space-y-2 pb-1">
+    <div className="space-y-2.5 pb-1">
+      {/* اختيار الغرض من النماذج */}
       <div className="space-y-1">
-        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">🎯 الغرض من النماذج:</span>
+        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">
+          🎯 الغرض من النماذج:
+        </span>
         <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
           {SCOPE_OPTIONS.map((opt) => (
             <button
@@ -52,13 +72,32 @@ export default function StudioExamFormsScopeCard({
         </div>
       </div>
 
+      {/* قائمة الشيك بوكس التفاعلية للوحدات والدروس */}
+      <StudioCurriculumUnitsChecklist
+        units={units}
+        selectedUnitIds={selectedUnitIds}
+        selectedLessonIds={selectedLessonIds}
+        onToggleUnit={onToggleUnit}
+        onToggleLesson={onToggleLesson}
+        onSelectAll={onSelectAll}
+        onDeselectAll={onDeselectAll}
+      />
+
+      {/* الصياغة النصية الناتجة لنطاق الاختبار */}
       <div className="space-y-1">
-        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">📖 الوحدات والدروس المستهدفة في النماذج:</span>
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">
+            📝 الصياغة الموجهة لـ NotebookLM (تتحدث مع التحديد):
+          </span>
+          <span className="text-[10px] font-bold text-slate-400">
+            يمكنك التعديل اليدوي إن رغبت
+          </span>
+        </div>
         <input
           type="text"
           value={scopeDescription}
           onChange={(e) => onChangeScopeDescription(e.target.value)}
-          placeholder="مثال: الوحدة الأولى والثانية (أو اتركها لكامل المنهج)"
+          placeholder="مثال: الوحدة الأولى والثانية (أو كامل المنهج)"
           className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>

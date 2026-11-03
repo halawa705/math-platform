@@ -2,8 +2,8 @@
 
 /**
  * @file studio-exam-forms-generator-tab.tsx
- * @description تبويب توليد النماذج الامتحانية المتعددة والمتكافئة (A/B/C) الورقية حصراً مع المعاينة والطباعة المجمعة والمفردة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 285 سطراً).
+ * @description تبويب توليد النماذج الامتحانية المتعددة والمتكافئة الورقية مع اختيار الوحدات والدروس بالشيك بوكس.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 290 سطراً).
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -28,6 +28,7 @@ import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioExamQuestionsInspectorCard from "./studio-exam-questions-inspector-card";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
+import { useStudioExamFormsScopeSelection } from "./use-studio-exam-forms-scope-selection";
 
 export const MODULE_ID_STUDIO_EXAM_FORMS_GENERATOR_TAB = "studio_exam_forms_generator_tab" as const;
 
@@ -65,6 +66,18 @@ export default function StudioExamFormsGeneratorTab({
   const [difficulty, setDifficulty] = useState(initial.difficulty);
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
 
+  const persist = (p: Partial<ReturnType<typeof loadStudioExamFormsSettingsSSOT>>) =>
+    saveStudioExamFormsSettingsSSOT(p);
+
+  const scopeSelection = useStudioExamFormsScopeSelection({
+    gradeId,
+    unitTitleAr,
+    scopeKind,
+    initialUnitIds: initial.selectedUnitIds,
+    initialLessonIds: initial.selectedLessonIds,
+    onScopeDescChanged: (d) => setScopeDesc(d),
+  });
+
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
   const [parsedForms, setParsedForms] = useState<readonly ParsedExamFormBlock[]>([]);
@@ -72,9 +85,6 @@ export default function StudioExamFormsGeneratorTab({
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
-
-  const persist = (p: Partial<ReturnType<typeof loadStudioExamFormsSettingsSSOT>>) =>
-    saveStudioExamFormsSettingsSSOT(p);
 
   const effectiveMcq = mcqEnabled ? mcqCount : 0;
   const effectiveProof = proofEnabled ? proofCount : 0;
@@ -171,26 +181,35 @@ export default function StudioExamFormsGeneratorTab({
       questions: f.questions.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)),
     }));
 
-    const allFlatQuestions = printableForms.flatMap((f) => f.questions);
-    onApplyParsedQuestionsToSheet?.(allFlatQuestions);
+    onApplyParsedQuestionsToSheet?.(printableForms.flatMap((f) => f.questions));
     onApplyExamFormsToSheet?.(printableForms);
     onApplyFormsTitleToSheet(finalBaseTitle);
   };
 
-  const summaryAr = `${formsCount} نماذج • ${effectiveMcq} اختر • ${effectiveProof} مقالي • ${difficulty === "standard_balanced" ? "متوازن" : "متفوقين"}`;
+  const summaryAr = `${formsCount} نماذج • ${effectiveMcq} اختر • ${effectiveProof} مقالي • ${scopeSelection.selectedUnitIds.length} وحدات مختارة`;
 
   return (
     <div className="space-y-3">
-      <StudioCollapsibleSectionCard icon="📑" titleAr="نطاق النماذج وعددها وتركيب الأسئلة" summaryAr={summaryAr}>
+      <StudioCollapsibleSectionCard icon="📑" titleAr="نطاق النماذج واختيار الوحدات والدروس" summaryAr={summaryAr} defaultOpen>
         <div className="space-y-2.5 pt-2">
           <StudioExamFormsScopeCard
             scopeKind={scopeKind}
             scopeDescription={scopeDesc}
-            onSelectScopeKind={(k) => { setScopeKind(k); persist({ scopeKind: k }); }}
+            units={scopeSelection.units}
+            selectedUnitIds={scopeSelection.selectedUnitIds}
+            selectedLessonIds={scopeSelection.selectedLessonIds}
+            onSelectScopeKind={(k) => {
+              setScopeKind(k);
+              if (k === "end_of_term") scopeSelection.handleSelectAll();
+              else persist({ scopeKind: k });
+            }}
             onChangeScopeDescription={(d) => { setScopeDesc(d); persist({ targetedUnitsOrLessons: d }); }}
+            onToggleUnit={scopeSelection.handleToggleUnit}
+            onToggleLesson={scopeSelection.handleToggleLesson}
+            onSelectAll={scopeSelection.handleSelectAll}
+            onDeselectAll={scopeSelection.handleDeselectAll}
           />
 
-          {/* أعداد النماذج والأسئلة - كتابة حرة بلا تحجيم */}
           <div className="grid grid-cols-3 gap-2">
             <StudioNumberStepperField
               labelAr="عدد النماذج"
@@ -219,26 +238,6 @@ export default function StudioExamFormsGeneratorTab({
             />
           </div>
 
-          {/* اختيارات سريعة مريحة لعدد النماذج */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <span className="text-[10px] font-bold text-slate-500 shrink-0">اختيار سريع للنماذج:</span>
-            {[2, 3, 5, 8, 10, 15, 20].map((num) => (
-              <button
-                key={num}
-                type="button"
-                onClick={() => { setFormsCount(num); persist({ formsCount: num }); }}
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-black shrink-0 cursor-pointer border transition-all ${
-                  formsCount === num
-                    ? "bg-indigo-600 text-white border-indigo-700 shadow-xs"
-                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
-                }`}
-              >
-                {num} نماذج
-              </button>
-            ))}
-          </div>
-
-          {/* مستوى الصعوبة */}
           <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
             {([{ id: "standard_balanced", label: "متوازن رسمي (تدرج وزاري)" }, { id: "olympiad_challenge", label: "تحدي وتمايز (مستويات عليا)" }] as const).map((o) => (
               <button
@@ -283,7 +282,6 @@ export default function StudioExamFormsGeneratorTab({
 
       {parsedForms.length > 0 && (
         <div className="space-y-2">
-          {/* شريط اختيار النموذج للمعاينة وتعديل الأسئلة */}
           <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900 overflow-x-auto no-scrollbar">
             <span className="text-[11px] font-black px-2 text-slate-700 dark:text-slate-300 shrink-0">معاينة النموذج:</span>
             {parsedForms.map((f, idx) => (
