@@ -15,6 +15,10 @@ import {
   deleteCurriculumUnitsFromSupabaseCloud,
   wipeCurriculumUnitsFromSupabaseCloud,
 } from "../supabase/supabase-cloud-sync-ssot";
+import {
+  normalizeCurriculumSplitterRawText,
+  deduplicateCurriculumUnitsSSOT,
+} from "./curriculum-deduplication-engine";
 
 export interface CurriculumLessonNode {
   readonly id: string;
@@ -100,7 +104,8 @@ export function parseCurriculumSplitterResponse(
   const units: CurriculumUnitNode[] = [];
   if (!rawResponse || !rawResponse.trim()) return units;
 
-  const lines = rawResponse.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const normalized = normalizeCurriculumSplitterRawText(rawResponse);
+  const lines = normalized.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   let currentUnit: {
     id: string;
     gradeId: string;
@@ -189,7 +194,7 @@ export function parseCurriculumSplitterResponse(
     }
   }
 
-  return units;
+  return deduplicateCurriculumUnitsSSOT(units) as CurriculumUnitNode[];
 }
 
 const CURRICULUM_STORAGE_KEY = "math_platform_real_curriculum_units_ssot_v2" as const;
@@ -208,7 +213,14 @@ export function loadActiveCurriculumUnitsSSOT(
     if (raw) {
       const parsed = JSON.parse(raw) as CurriculumUnitNode[];
       if (Array.isArray(parsed)) {
-        return gradeId ? parsed.filter((u) => u.gradeId === gradeId) : parsed;
+        const cleaned = deduplicateCurriculumUnitsSSOT(parsed);
+        if (cleaned.length !== parsed.length && isBrowser()) {
+          const s = JSON.stringify(cleaned);
+          window.localStorage.setItem(CURRICULUM_STORAGE_KEY, s);
+          inMemoryFallback.set(CURRICULUM_STORAGE_KEY, s);
+          void syncCurriculumUnitsToSupabaseCloud(cleaned);
+        }
+        return gradeId ? cleaned.filter((u) => u.gradeId === gradeId) : cleaned;
       }
     }
   } catch {
@@ -223,11 +235,12 @@ export function saveImportedCurriculumUnitsSSOT(
   if (newUnits.length === 0) return;
   try {
     const existing = loadActiveCurriculumUnitsSSOT();
-    const incomingGradeIds = new Set(newUnits.map((u) => u.gradeId));
-    const merged = [
+    const cleanNew = deduplicateCurriculumUnitsSSOT(newUnits);
+    const incomingGradeIds = new Set(cleanNew.map((u) => u.gradeId));
+    const merged = deduplicateCurriculumUnitsSSOT([
       ...existing.filter((u) => !incomingGradeIds.has(u.gradeId)),
-      ...newUnits,
-    ];
+      ...cleanNew,
+    ]);
     const s = JSON.stringify(merged);
     if (isBrowser()) {
       window.localStorage.setItem(CURRICULUM_STORAGE_KEY, s);
