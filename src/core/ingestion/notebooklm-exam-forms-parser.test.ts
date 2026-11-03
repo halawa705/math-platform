@@ -49,9 +49,9 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
     expect(prompt).toContain("النموذج (أ)");
     expect(prompt).toContain("النموذج (ب)");
     expect(prompt).toContain("النموذج (جـ)");
-    expect(prompt).toContain("التكافؤ التام والاختلاف الكلي");
-    expect(prompt).toContain("حظر التكرار وتغيير الأرقام السطحي");
-    expect(prompt).toContain("المطابقة الصارمة للمصادر");
+    expect(prompt).toContain("التكافؤ التام والاختلاف الحقيقي");
+    expect(prompt).toContain("يُمنع منعاً باتاً تكرار أي سؤال بنفس الفكرة");
+    expect(prompt).toContain("المطابقة الصارمة والتامة للمصادر");
     expect(prompt).toContain("=== [FORM: رقم_النموذج]");
   });
 
@@ -124,5 +124,49 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
     expect(forms[0].questions.length).toBe(2);
     expect(forms[1].formLetterAr).toBe("ب");
     expect(forms[1].questions.length).toBe(2);
+  });
+
+  it("supports large form counts (e.g. 15 forms) and adjusts prompt rules for high-yield ideas", () => {
+    const prompt = buildExamFormsNotebookLMPrompt({
+      gradeNameArabic: "الصف الثالث الإعدادي",
+      termNumber: 1,
+      branchId: "plane_geometry",
+      scopeKind: "end_of_term",
+      scopeDescriptionArabic: "كامل منهج الترم الأول",
+      formsCount: 15,
+      mcqQuestionsCount: 6,
+      essayAndProofQuestionsCount: 4,
+      totalMarksPerForm: 18,
+      durationTextArabic: "ساعتان",
+      difficultyProfile: "standard_balanced",
+    });
+
+    expect(prompt).toContain("(15) نماذج امتحانية ورقية متكافئة");
+    expect(prompt).toContain("إجمالي 15 نماذج متتالية");
+    expect(prompt).toContain("استثناء النماذج الضخمة والأفكار الأكثر تكراراً");
+    expect(prompt).toContain("المطلوب 15 نماذج");
+    expect(prompt).toContain("الأفكار الجوهرية الكبرى الأكثر تكراراً وشهرة");
+
+    // Test partitioning 30 questions into 15 forms
+    const thirtyQuestionsText = Array.from({ length: 30 }, (_, i) => `
+=== [QUESTION: ${i + 1}] | النوع: [MCQ] | الدرجة: [1] ===
+النص: مسألة رقم ${i + 1} في الهندسة.
+البدائل: (أ) 1 | (ب) 2 | (جـ) 3 | (د) 4
+الإجابة_الصحيحة: (أ) 1
+`).join("\n");
+
+    const parsed15 = parseNotebookLMExamForms({
+      rawText: thirtyQuestionsText,
+      branchId: "plane_geometry",
+      unitId: "geo-term1",
+      lessonId: "all-term1",
+      lessonTitleArabic: "هندسة الترم الأول",
+      expectedFormsCount: 15,
+    });
+
+    expect(parsed15.length).toBe(15);
+    expect(parsed15[0].formTitleAr).toBe("النموذج (أ)");
+    expect(parsed15[14].formTitleAr).toContain("النموذج");
+    expect(parsed15.every((f) => f.questions.length === 2)).toBe(true);
   });
 });

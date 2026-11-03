@@ -8,11 +8,18 @@ import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer"
 
 export const MODULE_ID_PRINTABLE_EXAM_FORMS_MODEL = "printable_exam_forms_model" as const;
 
-export const ARABIC_FORM_LETTERS = ["أ", "ب", "جـ", "د", "هـ", "و"] as const;
-export type ArabicFormLetter = (typeof ARABIC_FORM_LETTERS)[number];
+export const ARABIC_FORM_LETTERS = [
+  "أ", "ب", "جـ", "د", "هـ", "و", "ز", "ح", "ط", "ي",
+  "ك", "ل", "م", "ن", "س", "ع", "ف", "ص", "ق", "ر",
+  "ش", "ت", "ث", "خ", "ذ", "ض", "ظ", "غ",
+] as const;
+export type ArabicFormLetter = string;
 
-export function getArabicFormLetter(index: number): ArabicFormLetter {
-  return ARABIC_FORM_LETTERS[index % ARABIC_FORM_LETTERS.length];
+export function getArabicFormLetter(index: number): string {
+  if (index >= 0 && index < ARABIC_FORM_LETTERS.length) {
+    return ARABIC_FORM_LETTERS[index];
+  }
+  return String(index + 1);
 }
 
 export function buildFormTitleArabic(formLetter: string): string {

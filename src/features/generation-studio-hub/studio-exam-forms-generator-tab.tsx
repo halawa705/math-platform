@@ -21,6 +21,7 @@ import {
 } from "@/core/ssot/studio-state-persistence-ssot";
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
+import StudioExamFormsScopeCard from "./studio-exam-forms-scope-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
@@ -41,12 +42,6 @@ export interface StudioExamFormsGeneratorTabProps {
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
   readonly onApplyExamFormsToSheet?: (forms: readonly PrintableExamFormGroup[]) => void;
 }
-
-const SCOPE_OPTIONS: readonly { readonly id: ExamFormsScopeKind; readonly label: string }[] = [
-  { id: "monthly_exam", label: "اختبار شهر (وحدات محددة)" },
-  { id: "end_of_term", label: "نهاية ترم (كامل المنهج)" },
-  { id: "custom_units_review", label: "مراجعة بنماذج (دروس معينة)" },
-];
 
 export default function StudioExamFormsGeneratorTab({
   gradeId = "prep-3",
@@ -188,53 +183,27 @@ export default function StudioExamFormsGeneratorTab({
     <div className="space-y-3">
       <StudioCollapsibleSectionCard icon="📑" titleAr="نطاق النماذج وعددها وتركيب الأسئلة" summaryAr={summaryAr}>
         <div className="space-y-2.5 pt-2">
-          {/* اختيار نوع التقييم والهدف من النماذج */}
-          <div className="space-y-1">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">🎯 الغرض من النماذج:</span>
-            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
-              {SCOPE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => { setScopeKind(opt.id); persist({ scopeKind: opt.id }); }}
-                  className={`min-h-[40px] px-2 rounded-xl text-[11px] font-black cursor-pointer transition-all ${
-                    scopeKind === opt.id
-                      ? "bg-white dark:bg-slate-800 text-indigo-950 dark:text-teal-300 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <StudioExamFormsScopeCard
+            scopeKind={scopeKind}
+            scopeDescription={scopeDesc}
+            onSelectScopeKind={(k) => { setScopeKind(k); persist({ scopeKind: k }); }}
+            onChangeScopeDescription={(d) => { setScopeDesc(d); persist({ targetedUnitsOrLessons: d }); }}
+          />
 
-          {/* تحديد الوحدات والدروس المستهدفة */}
-          <div className="space-y-1">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">📖 الوحدات والدروس المستهدفة في النماذج:</span>
-            <input
-              type="text"
-              value={scopeDesc}
-              onChange={(e) => { setScopeDesc(e.target.value); persist({ targetedUnitsOrLessons: e.target.value }); }}
-              placeholder="مثال: الوحدة الأولى والثانية (أو اتركها لكامل المنهج)"
-              className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* أعداد النماذج والأسئلة */}
+          {/* أعداد النماذج والأسئلة - كتابة حرة بلا تحجيم */}
           <div className="grid grid-cols-3 gap-2">
             <StudioNumberStepperField
               labelAr="عدد النماذج"
               value={formsCount}
-              min={2}
-              max={6}
+              min={1}
+              max={999}
               onChange={(v) => { setFormsCount(v); persist({ formsCount: v }); }}
             />
             <StudioNumberStepperField
               labelAr="اختر لكل نموذج"
               value={mcqCount}
               min={0}
-              max={30}
+              max={999}
               enabled={mcqEnabled}
               onToggleEnabled={(v) => { setMcqEnabled(v); persist({ mcqEnabled: v }); }}
               onChange={(v) => { setMcqCount(v); persist({ mcqCount: v }); }}
@@ -243,11 +212,30 @@ export default function StudioExamFormsGeneratorTab({
               labelAr="مقالي لكل نموذج"
               value={proofCount}
               min={0}
-              max={20}
+              max={999}
               enabled={proofEnabled}
               onToggleEnabled={(v) => { setProofEnabled(v); persist({ proofEnabled: v }); }}
               onChange={(v) => { setProofCount(v); persist({ proofCount: v }); }}
             />
+          </div>
+
+          {/* اختيارات سريعة مريحة لعدد النماذج */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <span className="text-[10px] font-bold text-slate-500 shrink-0">اختيار سريع للنماذج:</span>
+            {[2, 3, 5, 8, 10, 15, 20].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => { setFormsCount(num); persist({ formsCount: num }); }}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-black shrink-0 cursor-pointer border transition-all ${
+                  formsCount === num
+                    ? "bg-indigo-600 text-white border-indigo-700 shadow-xs"
+                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                }`}
+              >
+                {num} نماذج
+              </button>
+            ))}
           </div>
 
           {/* مستوى الصعوبة */}

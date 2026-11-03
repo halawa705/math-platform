@@ -21,10 +21,19 @@ export interface ParsedExamFormBlock {
 }
 
 const FORM_SPLIT_REGEX =
-  /(?:^|\n)\s*(?:===\s*\[(?:FORM|نموذج|MODEL)\s*:\s*(?:\d+|[أابجد])\][^\n]*===|النموذج\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|\([أابجد]\)|[أابجد]|\d+)\s*[:.-]?)/gi;
+  /(?:^|\n)\s*(?:===\s*\[(?:FORM|نموذج|MODEL)\s*:\s*(?:\d+|[^\n\]]+)\][^\n]*===|النموذج\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|\([^\n)]+\)|[^\n:.-]+|\d+)\s*[:.-]?)/gi;
 
 function extractFormLetterFromHeader(headerText: string, fallbackIndex: number): string {
-  const match = headerText.match(/\((?:أ|ا|ب|جـ?|د|هـ|و)\)|(?:النموذج|MODEL|FORM)\s*[:\s]*([أابجدABCD1-6])/i);
+  const parenMatch = headerText.match(/\(([^)\n]+)\)/);
+  if (parenMatch?.[1]) {
+    const raw = parenMatch[1].trim();
+    if (raw === "ا" || raw === "A" || raw === "1") return "أ";
+    if (raw === "B" || raw === "2") return "ب";
+    if (raw === "C" || raw === "3") return "جـ";
+    if (raw === "D" || raw === "4") return "د";
+    return raw;
+  }
+  const match = headerText.match(/(?:النموذج|MODEL|FORM)\s*[:\s]*([^\n:.-]+)/i);
   if (match?.[1]) {
     const raw = match[1].trim();
     if (raw === "ا" || raw === "A" || raw === "1") return "أ";
@@ -98,7 +107,7 @@ export function parseNotebookLMExamForms(params: {
 
   // فحص ما إذا كان هناك تقسيم داخلي في النص بذكر رمز النموذج
   const taggedFormsMap = new Map<string, QuestionAssessmentIR[]>();
-  const formQuestionRegex = /النموذج\s*:\s*\[?([أابجدABCD1-6])\]?/i;
+  const formQuestionRegex = /النموذج\s*:\s*\[?([^\n|\]]+)\]?/i;
 
   const rawBlocks = raw.split(/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\]/i);
   if (rawBlocks.length > 1 && rawBlocks.length - 1 === allQuestions.length) {

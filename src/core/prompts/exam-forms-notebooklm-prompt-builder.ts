@@ -36,7 +36,10 @@ export function buildExamFormsNotebookLMPrompt(
   const branchSpec = MATH_BRANCHES_SSOT[config.branchId];
   const termLabel = config.termNumber === 1 ? "ترم ١" : "ترم ٢";
   const totalQPerForm = config.mcqQuestionsCount + config.essayAndProofQuestionsCount;
-  const formLettersList = Array.from({ length: config.formsCount }, (_, i) => `النموذج (${getArabicFormLetter(i)})`).join(" ، ");
+  const formLettersList =
+    config.formsCount <= 8
+      ? Array.from({ length: config.formsCount }, (_, i) => `النموذج (${getArabicFormLetter(i)})`).join(" ، ")
+      : `من النموذج (${getArabicFormLetter(0)}) إلى النموذج (${getArabicFormLetter(config.formsCount - 1)}) — إجمالي ${config.formsCount} نماذج متتالية`;
 
   const scopeLabel =
     config.scopeKind === "end_of_term"
@@ -60,10 +63,12 @@ export function buildExamFormsNotebookLMPrompt(
     `📊 التركيب الحسابي الإلزامي لكل نموذج (إجمالي ${totalQPerForm} سؤالاً بكل نموذج بلا زيادة أو نقصان):`,
     `   - (${config.mcqQuestionsCount}) أسئلة اختيار من متعدد [MCQ].`,
     `   - (${config.essayAndProofQuestionsCount}) أسئلة مقالية وبرهان هندسي/جبري استدلالي [PROOF/ESSAY].`,
-    `⚠️ ضوابط حاسمة غير قابلة للكسر (Critical Anti-Duplication & Source Match Rules):`,
-    `   ١. التكافؤ التام والاختلاف الكلي: النماذج متكافئة بدقة في الوزن النسبي ومستوى الصعوبة (${difficultyAr})، ولكن كل نموذج مستقل تماماً بأسئلته وأفكاره عن النماذج الأخرى.`,
-    `   ٢. حظر التكرار وتغيير الأرقام السطحي: يُمنع منعاً باتاً تكرار نفس السؤال بين النماذج أو الاكتفاء بتغيير الأرقام بصورة شكلية؛ كل سؤال في كل نموذج يجب أن يقيس مهارة أو فكرة رياضية مختلفة مستخلصة من المصادر.`,
-    `   ٣. المطابقة الصارمة للمصادر: جميع الأسئلة مستقاة بنسبة 100% من كتب الوزارة ونماذج امتحانات المحافظات الرسمية الموثقة.`,
+    `⚠️ ضوابط حاسمة غير قابلة للكسر (Anti-Duplication & Exam High-Yield Invariants):`,
+    `   ١. التكافؤ التام والاختلاف الحقيقي: النماذج متكافئة بدقة في الوزن النسبي ومستوى الصعوبة (${difficultyAr}) والزمن والدرجات، ولكن كل نموذج مستقل تماماً بأسئلته.`,
+    `   ٢. ضابط الأفكار وتنوع الأسئلة ومنع التكرار:`,
+    `      - الأصل الصارم الحاسم: يُمنع منعاً باتاً تكرار أي سؤال بنفس الفكرة في أي نموذج، ويُحظر الاكتفاء بنسخ المسائل وتغيير الأرقام بصورة شكلية؛ يجب أن يقيس كل سؤال مهارة رياضية وفكرة مستقلة لتغطية مختلف زوايا المنهج.`,
+    `      - استثناء النماذج الضخمة والأفكار الأكثر تكراراً${config.formsCount >= 5 ? ` (المطلوب ${config.formsCount} نماذج)` : ""}: عند طلب عدد كبير من النماذج، يُسمح بتناول الأفكار الجوهرية الكبرى الأكثر تكراراً وشهرة في اختبارات نصف العام ونهاية العام الرسمية بالمحافظات، بشرط تغيير صياغة المسألة والمعطيات والشكل الهندسي وطريقة الحل كلياً بحيث يقدم كل سؤال تجربة امتحانية جديدة ومستقلة للطالب.`,
+    `   ٣. المطابقة الصارمة والتامة للمصادر: جميع الأسئلة والمسائل مستقاة بنسبة 100% من كتب الوزارة ونماذج امتحانات المحافظات الرسمية الموثقة.`,
     ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
