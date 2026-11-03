@@ -57,15 +57,15 @@ export function OfficialSchoolExamQuestionRow({
   const isComplexChoices = choices.some((c) => c.length > 22);
 
   return (
-    <article className="w-full min-w-0 py-1.5 border-b border-slate-200/90 break-inside-avoid print:break-inside-avoid text-slate-900">
+    <article className="w-full min-w-0 py-1 border-b border-slate-200/70 break-inside-avoid print:break-inside-avoid text-slate-900">
       {/* 1. سطر نص السؤال الرئيسي + شارات الدرجة والمحافظة */}
-      <div className="flex items-start gap-2 text-[0.98em] font-extrabold leading-relaxed">
+      <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
         {/* الترقيم النقطي: .١ */}
-        <span className="shrink-0 font-black text-indigo-950 min-w-[1.6rem] text-right font-mono">
+        <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
           {qNumStr}
         </span>
 
-        {/* متن السؤال + الأشكال الهندسية */}
+        {/* متن السؤال + الأشكال الهندسية + مساحة الحل بجوار السطور */}
         <div className="flex-1 min-w-0">
           <div className="break-words">
             <SafeKaTeXBiDiMathRenderer
@@ -73,10 +73,17 @@ export function OfficialSchoolExamQuestionRow({
               numeralMode={numeralMode}
               notationLanguage={notationLanguage}
             />
+            {/* مساحة الحل بجوار السطر مباشرة للأسئلة المقالية وليست سطراً منفصلاً */}
+            {!isMcq && !isSolvedMode && settings.answerSpaceStyle !== "hidden" && (
+              <span
+                className="inline-block border-b border-dotted border-slate-400 min-w-[80px] w-24 mr-2 h-3.5 align-middle print:border-slate-500"
+                aria-label="مساحة الحل"
+              />
+            )}
           </div>
 
           {(question.geometryFigure || question.graphSpec) && (
-            <div className="my-2 flex justify-center">
+            <div className="my-1.5 flex justify-center">
               <EmbeddedGeometrySVGDocker
                 geometryFigure={question.geometryFigure}
                 graphSpec={question.graphSpec}
@@ -91,16 +98,28 @@ export function OfficialSchoolExamQuestionRow({
               />
             </div>
           )}
+
+          {/* في وضع الإجابات النموذجية فقط: عرض الحل بشكل مضغوط */}
+          {!isMcq && isSolvedMode && question.modelAnswerAr && (
+            <div className="mt-1 p-1 rounded bg-emerald-50/80 border border-emerald-300 text-emerald-950 text-xs font-bold">
+              <span className="font-black text-emerald-800 ml-1">الحل:</span>
+              <SafeKaTeXBiDiMathRenderer
+                text={question.modelAnswerAr}
+                numeralMode={numeralMode}
+                notationLanguage={notationLanguage}
+              />
+            </div>
+          )}
         </div>
 
         {/* يسار السطر: شارة المحافظة ودرجة المسألة */}
         <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap self-start text-xs font-bold">
           {question.citationBadgeAr && (
-            <span className="text-slate-600 font-sans text-[11px]">
+            <span className="text-slate-600 font-sans text-[10.5px]">
               {formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}
             </span>
           )}
-          <span className="font-mono text-slate-800 font-black">
+          <span className="font-mono text-slate-800 font-black text-[11px]">
             {marksStr}
           </span>
         </div>
@@ -110,10 +129,10 @@ export function OfficialSchoolExamQuestionRow({
       {isMcq && choices.length > 0 && (
         <div
           dir="rtl"
-          className={`pt-2 pb-0.5 w-full ${
+          className={`pt-1 pb-0.5 w-full ${
             isComplexChoices
-              ? "grid grid-cols-2 gap-2"
-              : "grid grid-cols-4 gap-2"
+              ? "grid grid-cols-2 gap-1.5"
+              : "grid grid-cols-4 gap-1.5"
           }`}
         >
           {choices.slice(0, 4).map((choiceText, optIdx) => {
@@ -121,16 +140,16 @@ export function OfficialSchoolExamQuestionRow({
             return (
               <div
                 key={optIdx}
-                className={`flex items-center gap-2 py-1 px-2.5 rounded-lg border text-xs font-bold text-slate-900 transition-colors ${
+                className={`flex items-center gap-1.5 py-0.5 px-2 rounded-md border text-xs font-bold text-slate-900 transition-colors ${
                   isCorrect
                     ? "bg-emerald-50 border-emerald-600 ring-1 ring-emerald-600 font-black"
                     : "bg-white border-slate-300"
                 }`}
               >
-                <span className="shrink-0 w-5 h-5 rounded-sm bg-indigo-950 text-white flex items-center justify-center text-[10px] font-black font-mono">
+                <span className="shrink-0 w-4 h-4 rounded-xs bg-indigo-950 text-white flex items-center justify-center text-[9.5px] font-black font-mono">
                   {ARABIC_CHOICE_LETTERS[optIdx] ?? `(${optIdx + 1})`}
                 </span>
-                <span className="flex-1 text-center break-words">
+                <span className="flex-1 text-center break-words text-[11px]">
                   <SafeKaTeXBiDiMathRenderer
                     text={choiceText}
                     numeralMode={numeralMode}
@@ -140,28 +159,6 @@ export function OfficialSchoolExamQuestionRow({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* 3. حل المسألة أو مساحة الإجابة المنقطة للأسئلة المقالية والأكمل */}
-      {!isMcq && (
-        <div className="pt-2 pb-1 space-y-1">
-          {isSolvedMode && question.modelAnswerAr ? (
-            <div className="p-2 rounded-lg bg-emerald-50/80 border border-emerald-300 text-emerald-950 text-xs font-bold space-y-1">
-              <div className="font-black text-emerald-800">خطوات الحل والناتج:</div>
-              <SafeKaTeXBiDiMathRenderer
-                text={question.modelAnswerAr}
-                numeralMode={numeralMode}
-                notationLanguage={notationLanguage}
-              />
-            </div>
-          ) : settings.answerSpaceStyle !== "hidden" ? (
-            <div className="space-y-1.5 pt-1">
-              <div className="text-[10px] font-black text-slate-500">مساحة الحل:</div>
-              <div className="w-full h-3.5 border-b border-dotted border-slate-400" />
-              <div className="w-full h-3.5 border-b border-dotted border-slate-400" />
-            </div>
-          ) : null}
         </div>
       )}
     </article>

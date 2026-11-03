@@ -29,11 +29,11 @@ export function OfficialSchoolExamSectionBanner({
     questionsCount > 2 && questionsCount <= 10 ? "أسئلة" : "سؤال";
 
   return (
-    <div className="w-full my-1.5 px-3 py-1.5 rounded-lg bg-slate-100 print:bg-slate-100 border-r-4 border-indigo-950 text-slate-900 flex items-center justify-between break-inside-avoid print:break-inside-avoid shadow-2xs">
-      <span className="text-xs sm:text-sm font-black italic print:text-[13pt] text-indigo-950">
+    <div className="w-full my-1 px-2.5 py-1 rounded-md bg-slate-100 print:bg-slate-100 border-r-4 border-indigo-950 text-slate-900 flex items-center justify-between break-inside-avoid print:break-inside-avoid shadow-2xs">
+      <span className="text-xs sm:text-sm font-black italic print:text-[12pt] text-indigo-950">
         السؤال {sectionOrdinalArabic} : {sectionTitleArabic}
       </span>
-      <span className="text-xs font-bold font-mono text-slate-700">
+      <span className="text-[11px] font-bold font-mono text-slate-700">
         ({formatNumeralsByModeSSOT(questionsCount, numeralMode)} {countLabel})
       </span>
     </div>

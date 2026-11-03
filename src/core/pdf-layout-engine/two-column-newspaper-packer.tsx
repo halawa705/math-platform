@@ -98,7 +98,13 @@ export default function TwoColumnNewspaperPacker({
 
   const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
-  const densityProfile = FLOW_DENSITY_PROFILES[effSettings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact;
+  const densityProfile = React.useMemo(
+    () =>
+      isSchoolExam
+        ? { gapMinPx: 1, gapMaxPx: 3, maxStretchPerItemPx: 0, maxStretchRatio: 0 }
+        : (FLOW_DENSITY_PROFILES[effSettings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact),
+    [isSchoolExam, effSettings.densityMode]
+  );
   const discretePages = React.useMemo(
     () => packFlowItemsIntoPages(flowItems, measured.heights, { budgets: pageBudgets, density: densityProfile }),
     [flowItems, measured.heights, pageBudgets, densityProfile]

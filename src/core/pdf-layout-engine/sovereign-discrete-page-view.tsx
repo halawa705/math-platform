@@ -43,31 +43,39 @@ export interface SovereignDiscretePageViewProps {
 }
 
 /** غلاف الكائن في الصفحة: يمنحه الارتفاع المستهدف (عند التمديد) ويملأ المحتوى هذا الارتفاع بدل ترك فراغ تحت البطاقة. */
-function FlowItemSlot({ item, targetHeightPx, renderFlowItem }: {
+function FlowItemSlot({ item, targetHeightPx, renderFlowItem, isSchoolExam = false }: {
   readonly item: FlowItem;
   readonly targetHeightPx: number | undefined;
   readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
+  readonly isSchoolExam?: boolean;
 }) {
   return (
     <div
       className="w-full min-w-0 flex flex-col"
-      style={targetHeightPx ? { minHeight: `${targetHeightPx}px` } : undefined}
+      style={!isSchoolExam && targetHeightPx ? { minHeight: `${targetHeightPx}px` } : undefined}
     >
       <div className="flex-1 min-w-0 flex flex-col">{renderFlowItem(item)}</div>
     </div>
   );
 }
 
-function FlowColumn({ items, gapPx, targets, renderFlowItem }: {
+function FlowColumn({ items, gapPx, targets, renderFlowItem, isSchoolExam = false }: {
   readonly items: readonly FlowItem[];
   readonly gapPx: number;
   readonly targets: Readonly<Record<string, number>>;
   readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
+  readonly isSchoolExam?: boolean;
 }) {
   return (
     <div className="flex flex-col min-w-0" style={{ gap: `${gapPx}px` }}>
       {items.map((item) => (
-        <FlowItemSlot key={item.id} item={item} targetHeightPx={targets[item.id]} renderFlowItem={renderFlowItem} />
+        <FlowItemSlot
+          key={item.id}
+          item={item}
+          targetHeightPx={targets[item.id]}
+          renderFlowItem={renderFlowItem}
+          isSchoolExam={isSchoolExam}
+        />
       ))}
     </div>
   );
@@ -145,7 +153,7 @@ export function SovereignDiscretePageView({
           />
         )}
 
-        <div className="w-full min-w-0 flex flex-col" style={{ gap: `${page.gapPx}px` }}>
+        <div className="w-full min-w-0 flex flex-col" style={{ gap: isSchoolExam ? "2px" : `${page.gapPx}px` }}>
           {page.segments.map((segment, index) =>
             segment.kind === "full" ? (
               <FlowItemSlot
@@ -153,6 +161,7 @@ export function SovereignDiscretePageView({
                 item={segment.item}
                 targetHeightPx={page.targetHeightPxById[segment.item.id]}
                 renderFlowItem={renderFlowItem}
+                isSchoolExam={isSchoolExam}
               />
             ) : (
               <div
@@ -160,8 +169,20 @@ export function SovereignDiscretePageView({
                 className="grid grid-cols-2 items-start w-full min-w-0"
                 style={{ columnGap: `${FLOW_COLUMN_GAP_PX}px` }}
               >
-                <FlowColumn items={segment.rightItems} gapPx={page.gapPx} targets={page.targetHeightPxById} renderFlowItem={renderFlowItem} />
-                <FlowColumn items={segment.leftItems} gapPx={page.gapPx} targets={page.targetHeightPxById} renderFlowItem={renderFlowItem} />
+                <FlowColumn
+                  items={segment.rightItems}
+                  gapPx={isSchoolExam ? 2 : page.gapPx}
+                  targets={page.targetHeightPxById}
+                  renderFlowItem={renderFlowItem}
+                  isSchoolExam={isSchoolExam}
+                />
+                <FlowColumn
+                  items={segment.leftItems}
+                  gapPx={isSchoolExam ? 2 : page.gapPx}
+                  targets={page.targetHeightPxById}
+                  renderFlowItem={renderFlowItem}
+                  isSchoolExam={isSchoolExam}
+                />
               </div>
             )
           )}
