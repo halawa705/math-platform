@@ -34,33 +34,24 @@ export function formatSelectedCurriculumScopeArabic(
 ): string {
   if (units.length === 0) return "";
 
-  const allLessons = units.flatMap((u) => u.lessons);
-  const totalLessonsCount = allLessons.length;
-  const isAllUnitsSelected = units.every((u) => selectedUnitIds.includes(u.id));
-  const isAllLessonsSelected =
-    totalLessonsCount > 0 && allLessons.every((l) => selectedLessonIds.includes(l.id));
-
-  if (isAllUnitsSelected && isAllLessonsSelected) {
-    return "كامل المنهج المقرر (جميع الوحدات والدروس)";
-  }
-
   const parts: string[] = [];
 
   for (const unit of units) {
-    const unitLessonIds = unit.lessons.map((l) => l.id);
     const chosenLessons = unit.lessons.filter((l) => selectedLessonIds.includes(l.id));
+    const excludedLessons = unit.lessons.filter((l) => !selectedLessonIds.includes(l.id));
 
+    // إذا لم يُختر أي درس من هذه الوحدة وليست محددة: نتخطاها
     if (chosenLessons.length === 0 && !selectedUnitIds.includes(unit.id)) {
       continue;
     }
 
-    if (unitLessonIds.length > 0 && chosenLessons.length === unitLessonIds.length) {
+    if (unit.lessons.length === 0 || excludedLessons.length === 0) {
+      // الوحدة محددة بكامل دروسها بدون أي استثناء
       parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic}) كاملة`);
-    } else if (chosenLessons.length > 0) {
-      const lessonNames = chosenLessons.map((l) => l.titleArabic).join("، ");
-      parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic}): [${lessonNames}]`);
-    } else if (selectedUnitIds.includes(unit.id)) {
-      parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic})`);
+    } else {
+      // استثناء درس أو أكثر: يُكتب اسم الوحدة وأسماء الدروس المستثناة حصراً
+      const excludedNames = excludedLessons.map((l) => l.titleArabic).join("، ");
+      parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic}) [باستثناء: ${excludedNames}]`);
     }
   }
 

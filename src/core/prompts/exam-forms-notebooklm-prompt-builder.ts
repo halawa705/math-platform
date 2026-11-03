@@ -41,12 +41,18 @@ export function buildExamFormsNotebookLMPrompt(
       ? Array.from({ length: config.formsCount }, (_, i) => `النموذج (${getArabicFormLetter(i)})`).join(" ، ")
       : `من النموذج (${getArabicFormLetter(0)}) إلى النموذج (${getArabicFormLetter(config.formsCount - 1)}) — إجمالي ${config.formsCount} نماذج متتالية`;
 
-  const scopeLabel =
+  const scopeKindText =
     config.scopeKind === "end_of_term"
-      ? "اختبارات نهاية الترم (شاملة كامل وحدات ودروس المنهج)"
+      ? "اختبار نهاية الترم"
       : config.scopeKind === "monthly_exam"
-        ? `اختبارات شهر تقييمية على نطاق: [${config.scopeDescriptionArabic.trim() || "الوحدات المقررة"}]`
-        : `مراجعة تدريبية بنماذج متعددة على: [${config.scopeDescriptionArabic.trim() || "الدروس المستهدفة"}]`;
+        ? "اختبار شهر تقييمي"
+        : "مراجعة تدريبية بالنماذج";
+
+  const scopeLabel = config.scopeDescriptionArabic?.trim()
+    ? `${scopeKindText} على نطاق: [${config.scopeDescriptionArabic.trim()}]`
+    : config.scopeKind === "end_of_term"
+      ? "اختبارات نهاية الترم (شاملة كامل وحدات ودروس المنهج المقرر)"
+      : `${scopeKindText} على الوحدات والدروس المقررة`;
 
   const difficultyAr =
     config.difficultyProfile === "olympiad_challenge"
@@ -68,12 +74,12 @@ export function buildExamFormsNotebookLMPrompt(
     `   ٢. ضابط الأفكار وتنوع الأسئلة ومنع التكرار:`,
     `      - الأصل الصارم الحاسم: يُمنع منعاً باتاً تكرار أي سؤال بنفس الفكرة في أي نموذج، ويُحظر الاكتفاء بنسخ المسائل وتغيير الأرقام بصورة شكلية؛ يجب أن يقيس كل سؤال مهارة رياضية وفكرة مستقلة لتغطية مختلف زوايا المنهج.`,
     `      - استثناء النماذج الضخمة والأفكار الأكثر تكراراً${config.formsCount >= 5 ? ` (المطلوب ${config.formsCount} نماذج)` : ""}: عند طلب عدد كبير من النماذج، يُسمح بتناول الأفكار الجوهرية الكبرى الأكثر تكراراً وشهرة في اختبارات نصف العام ونهاية العام الرسمية بالمحافظات، بشرط تغيير صياغة المسألة والمعطيات والشكل الهندسي وطريقة الحل كلياً بحيث يقدم كل سؤال تجربة امتحانية جديدة ومستقلة للطالب.`,
-    `   ٣. المطابقة الصارمة والتامة للمصادر: جميع الأسئلة والمسائل مستقاة بنسبة 100% من كتب الوزارة ونماذج امتحانات المحافظات الرسمية الموثقة.`,
+    `   ٣. الالتزام الصارم بنطاق الوحدات والدروس المستثناة: التزم حصراً بالوحدات المحددة في النطاق، ويُحظر تماماً وضع أي مسألة من أي درس تم النص على استثنائه.`,
+    `   ٤. المطابقة الصارمة والتامة للمصادر: جميع الأسئلة والمسائل مستقاة بنسبة 100% من كتب الوزارة ونماذج امتحانات المحافظات الرسمية الموثقة.`,
     ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
-      lessonTitleArabic: config.scopeDescriptionArabic || branchSpec.nameArabic,
     }),
     `📐 قالب الإخراج الإلزامي الدقيق (التزم به حرفياً لكل نموذج ولكل سؤال):`,
     `اكتب كل نموذج تحت ترويسة واضحة بهذا النمط:`,
