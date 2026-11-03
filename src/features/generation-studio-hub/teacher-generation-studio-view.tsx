@@ -15,6 +15,8 @@ import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vect
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import PDFPreviewOrchestrator from "@/features/pdf-preview-controls/pdf-preview-orchestrator";
 import { loadStudioGlobalContextSSOT, saveStudioGlobalContextSSOT } from "@/core/ssot/studio-state-persistence-ssot";
+import { loadPersistedPDFPrintSettingsSSOT, savePersistedPDFPrintSettingsSSOT } from "@/core/ssot/pdf-print-settings-ssot";
+import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 import StudioContextRibbonBar from "./studio-context-ribbon-bar";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioMobilePaneFloatingSwitch, { type StudioActivePane } from "./studio-mobile-pane-floating-switch";
@@ -48,6 +50,15 @@ export default function TeacherGenerationStudioView() {
   const [sheetQuestions, setSheetQuestions] = useState<readonly PrintableMathQuestionItem[] | undefined>(undefined);
   const [sheetForms, setSheetForms] = useState<readonly PrintableExamFormGroup[] | undefined>(undefined);
   const [pane, setPane] = useState<StudioActivePane>("builder");
+  const [notationLanguage, setNotationLanguage] = useState<MathNotationLanguage>(() => {
+    return loadPersistedPDFPrintSettingsSSOT().notationLanguage ?? "english";
+  });
+
+  const updateNotationLanguage = (lang: MathNotationLanguage) => {
+    setNotationLanguage(lang);
+    const curr = loadPersistedPDFPrintSettingsSSOT();
+    savePersistedPDFPrintSettingsSSOT({ ...curr, notationLanguage: lang });
+  };
 
   const branch = MATH_BRANCHES_SSOT[branchId] || MATH_BRANCHES_SSOT.plane_geometry;
   const grade = EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === gradeId) || EGYPTIAN_MATH_GRADES_SSOT[6];
@@ -79,6 +90,7 @@ export default function TeacherGenerationStudioView() {
           <StudioContextRibbonBar
             selectedGradeId={gradeId} selectedBranchId={branchId} selectedUnitTitle={unitTitle}
             selectedLessonTitle={lessonTitle} selectedLessonOrder={lessonOrder}
+            notationLanguage={notationLanguage} onChangeNotationLanguage={updateNotationLanguage}
             onChangeGrade={updateGrade} onChangeBranch={updateBranch} onChangeUnitTitle={updateUnit}
             onChangeLessonTitle={updateLesson} onChangeLessonOrder={updateOrder}
           />
@@ -122,7 +134,8 @@ export default function TeacherGenerationStudioView() {
               <StudioWorksheetGeneratorTab
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
                 branchNameAr={branch.nameArabic} unitTitleAr={unitTitle || "الوحدة الأولى"}
-                lessonTitle={lessonTitle} onApplyWorksheetTitleToSheet={applyTitle}
+                lessonTitle={lessonTitle} notationLanguage={notationLanguage}
+                onApplyWorksheetTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}

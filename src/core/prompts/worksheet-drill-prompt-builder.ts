@@ -1,7 +1,12 @@
 /**
  * @file worksheet-drill-prompt-builder.ts
- * @description مولد برومبت ورقة العمل والتطبيق السريع والواجب التفاعلي (مكثف < 1450 حرفاً وحازم في العدد والنطاق وتنوع الأفكار وترتيب المصادر).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 85 سطراً).
+ * @description مولد برومبت ورقة العمل والتطبيق السريع المعتمد وفق الرؤية التربوية المتقدمة:
+ * 1. اسم الدرس ونطاق المنهج المستهدف
+ * 2. فكرة عامة عن الدرس وما سوف يستفيده الطالب كمعلومة سريعة
+ * 3. جميع قوانين الدرس معمولة بذكاء وليس بجفاء (مقولة لفظية منطقية بالعربية + القانون الرمزي الرياضي + سر الحل)
+ * 4. مثال واحد لكل فكرة أساسية وحل سريع نموذجي ومختصر له
+ * 5. بنك تدريبات ورقة العمل بالأعداد الحرفية المطلوبة كتابة (اختر ومقالي).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 90 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -16,9 +21,11 @@ export interface WorksheetDrillPromptConfig {
   readonly gradeNameArabic: string;
   readonly branchId: MathBranchId;
   readonly lessonTitleArabic: string;
+  readonly targetedScopeArabic?: string;
   readonly quickMcqCount: number;
   readonly quickEssayCount: number;
   readonly durationMinutes: number;
+  readonly includeAnswerLines?: boolean;
   readonly notationLanguage?: MathNotationLanguage;
   readonly customDirectivesArabic?: string;
 }
@@ -28,27 +35,35 @@ export function buildWorksheetDrillNotebookLMPrompt(
 ): string {
   const branchSpec = MATH_BRANCHES_SSOT[config.branchId];
   const totalQ = config.quickMcqCount + config.quickEssayCount;
+  const notationLang = config.notationLanguage ?? "english";
+  const scopeText = config.targetedScopeArabic?.trim() || config.lessonTitleArabic;
 
   const customRule = config.customDirectivesArabic?.trim()
-    ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
+    ? `💡 توجيهات خاصة: ${config.customDirectivesArabic.trim()}`
     : undefined;
 
   return [
-    `ورقة عمل وواجب تطبيقي (${config.durationMinutes} د): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
-    `🎯 الدرس المستهدف حصراً (ممنوع الخروج عنه): [${config.lessonTitleArabic}].`,
-    `📊 الأعداد الحرفية الإلزامية (إجمالي ${totalQ} أسئلة متنوعة الأفكار بلا تكرار): (${config.quickMcqCount}) اختر [MCQ] + (${config.quickEssayCount}) مقالي/برهان قصير [ESSAY].`,
+    `ورقة عمل وتطبيق (${config.durationMinutes} د): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
+    `🎯 النطاق: [${scopeText}].`,
+    `📊 التدريبات: (${config.quickMcqCount}) اختر + (${config.quickEssayCount}) مقالي.`,
     ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
-      notationLanguage: config.notationLanguage,
+      notationLanguage: notationLang,
       lessonTitleArabic: config.lessonTitleArabic,
     }),
-    "📐 قالب الإخراج الإلزامي لكل سؤال:",
-    "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو ESSAY] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",
-    "النص: [نص السؤال كاملاً بالمعادلات داخل $...$]",
-    "الرسم: [[رسم هندسي: ...] إن لزم فقط وإلا فارغ]",
-    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ فقط)",
-    "الإجابة_الصحيحة: [البديل الصحيح أو الناتج النهائي]",
-    "البرهان_والخطوات: [خطوات الحل مفصولة بـ |]",
+    "📐 هيكل ورقة العمل لـ NotebookLM:",
+    "=== [WORKSHEET_CORE] ===",
+    `اسم_الدرس: ${scopeText}`,
+    "الفكرة_العامة: [سطران: فائدة الدرس الحياتية والامتحانية للطالب]",
+    "القوانين_الذكية:",
+    "- القانون: [الاسم] | المقولة_اللفظية: [المقولة البلاغية] | الصيغة_الرياضية: [$القانون$] | سر_الحل: [فخ شائع]",
+    "=== [CONCEPT_EXAMPLE: 1] | عنوان_الفكرة: [عنوان الفكرة] ===",
+    "المثال: [نص المثال في $...$] | الرسم: [[رسم هندسي: ...] إن وجد] | الحل_السريع: [الخطوات بـ |]",
+    "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو ESSAY] | الدرجة: [الدرجة] ===",
+    "النص: [نص السؤال في $...$]",
+    "الرسم: [[رسم هندسي: ...] إن لزم وإلا فارغ]",
+    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ)",
+    "الإجابة_الصحيحة: [البديل أو الناتج] | البرهان_والخطوات: [خطوات الحل مفصولة بـ |]",
   ].join("\n");
 }

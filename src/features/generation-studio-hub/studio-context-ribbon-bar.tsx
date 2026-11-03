@@ -15,6 +15,7 @@ import {
 } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { loadEnabledGradesSSOT } from "@/core/ssot/teacher-identity-ssot";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_STUDIO_CONTEXT_RIBBON_BAR = "studio_context_ribbon_bar" as const;
 
@@ -24,11 +25,13 @@ export interface StudioContextRibbonBarProps {
   readonly selectedUnitTitle?: string;
   readonly selectedLessonTitle: string;
   readonly selectedLessonOrder?: number;
+  readonly notationLanguage?: MathNotationLanguage;
   readonly onChangeGrade: (gradeId: string) => void;
   readonly onChangeBranch: (branchId: MathBranchId) => void;
   readonly onChangeUnitTitle?: (unitTitle: string) => void;
   readonly onChangeLessonTitle: (lessonTitle: string) => void;
   readonly onChangeLessonOrder?: (order: number) => void;
+  readonly onChangeNotationLanguage?: (lang: MathNotationLanguage) => void;
 }
 
 export default function StudioContextRibbonBar({
@@ -36,11 +39,13 @@ export default function StudioContextRibbonBar({
   selectedUnitTitle,
   selectedLessonTitle,
   selectedLessonOrder = 15,
+  notationLanguage = "english",
   onChangeGrade,
   onChangeBranch,
   onChangeUnitTitle,
   onChangeLessonTitle,
   onChangeLessonOrder,
+  onChangeNotationLanguage,
 }: StudioContextRibbonBarProps) {
   const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
@@ -160,6 +165,34 @@ export default function StudioContextRibbonBar({
               className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
             />
           )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 text-[11px]">
+        <span className="font-extrabold text-slate-600 dark:text-slate-300">📐 رموز المعادلات بالورقة:</span>
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-0.5 rounded-xl border border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => onChangeNotationLanguage?.("english")}
+            className={`px-3 py-1 rounded-lg font-black transition-all ${
+              notationLanguage === "english"
+                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
+          >
+            $x, y$ (لاتيني — افتراضي)
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeNotationLanguage?.("arabic")}
+            className={`px-3 py-1 rounded-lg font-black transition-all ${
+              notationLanguage === "arabic"
+                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
+          >
+            $س، ص$ (عربي)
+          </button>
         </div>
       </div>
 

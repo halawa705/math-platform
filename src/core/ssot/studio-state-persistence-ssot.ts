@@ -141,10 +141,23 @@ export interface StudioWorksheetSettingsState {
   readonly essayEnabled: boolean;
   readonly durationMinutes: number;
   readonly customDirectives?: string;
+  readonly includeAnswerLines?: boolean;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
+  readonly targetedUnitsOrLessons?: string;
 }
 
 export const DEFAULT_STUDIO_WORKSHEET_SETTINGS: StudioWorksheetSettingsState = {
-  mcqCount: 5, mcqEnabled: true, essayCount: 2, essayEnabled: true, durationMinutes: 20, customDirectives: "",
+  mcqCount: 10,
+  mcqEnabled: true,
+  essayCount: 5,
+  essayEnabled: true,
+  durationMinutes: 25,
+  customDirectives: "",
+  includeAnswerLines: true,
+  selectedUnitIds: [],
+  selectedLessonIds: [],
+  targetedUnitsOrLessons: "",
 };
 
 export const loadStudioWorksheetSettingsSSOT = (): StudioWorksheetSettingsState => safeGet(KEYS.WORKSHEET, DEFAULT_STUDIO_WORKSHEET_SETTINGS);
