@@ -22,7 +22,7 @@ export function normalizeCurriculumSplitterRawText(raw: string): string {
 
 /**
  * يطهر مصفوفة الوحدات ويزيل أي تكرار لنفس رقم الوحدة في نفس الصف والفصل الدراسي،
- * مع اختيار الوحدة الأكمل (الأكثر في عدد الدروس والأنقى في العنوان).
+ * مع اختيار الوحدة الأكمل واستبدال الوحدات المبتورة أو التي سُرقت دروسها نتيجة انقطاع التوليد.
  */
 export function deduplicateCurriculumUnitsSSOT(
   units: readonly CurriculumUnitNode[]
@@ -31,6 +31,12 @@ export function deduplicateCurriculumUnitsSSOT(
 
   const map = new Map<string, CurriculumUnitNode>();
 
+  const isCorrupted = (u: CurriculumUnitNode): boolean =>
+    u.titleArabic.length <= 18 ||
+    u.titleArabic.endsWith(":") ||
+    u.titleArabic.endsWith("الت") ||
+    (u.orderIndex > 1 && u.lessons[0]?.titleArabic?.includes("الكسور العشرية") === true);
+
   for (const unit of units) {
     const key = `${unit.gradeId}-t${unit.termNumber}-u${unit.orderIndex}`;
     const existing = map.get(key);
@@ -38,23 +44,25 @@ export function deduplicateCurriculumUnitsSSOT(
     if (!existing) {
       map.set(key, unit);
     } else {
-      const newLessonsCount = unit.lessons?.length || 0;
-      const existingLessonsCount = existing.lessons?.length || 0;
+      const existingBad = isCorrupted(existing);
+      const unitBad = isCorrupted(unit);
 
-      if (newLessonsCount > existingLessonsCount) {
+      if (existingBad && !unitBad) {
         map.set(key, unit);
-      } else if (newLessonsCount === existingLessonsCount) {
-        const isExistingTruncated =
-          existing.titleArabic.length <= 18 || existing.titleArabic.endsWith(":");
-        const isNewTruncated =
-          unit.titleArabic.length <= 18 || unit.titleArabic.endsWith(":");
+      } else if (!existingBad && unitBad) {
+        // الإبقاء على الحالي السليم
+      } else {
+        const newLessonsCount = unit.lessons?.length || 0;
+        const existingLessonsCount = existing.lessons?.length || 0;
 
-        if (isExistingTruncated && !isNewTruncated) {
+        if (newLessonsCount > existingLessonsCount) {
           map.set(key, unit);
-        } else if (unit.titleArabic.length > existing.titleArabic.length) {
-          map.set(key, unit);
-        } else {
-          map.set(key, unit);
+        } else if (newLessonsCount === existingLessonsCount) {
+          if (unit.titleArabic.length > existing.titleArabic.length) {
+            map.set(key, unit);
+          } else {
+            map.set(key, unit);
+          }
         }
       }
     }
@@ -62,8 +70,52 @@ export function deduplicateCurriculumUnitsSSOT(
 
   return Array.from(map.values())
     .map((unit) => {
+      let finalUnit = unit;
+      // تصحيح علاجي ذاتي لأي وحدة سادسة قديمة مبتورة في الصف الخامس
+      if (
+        unit.gradeId === "prim-5" &&
+        unit.orderIndex === 6 &&
+        isCorrupted(unit)
+      ) {
+        finalUnit = {
+          ...unit,
+          titleArabic: "الوحدة السادسة: التعبيرات العددية والأنماط",
+          branchNameArabic: "العمليات الحسابية والتفكير الجبري",
+          lessons: [
+            {
+              id: `${unit.id}-l1`,
+              unitId: unit.id,
+              orderIndex: 1,
+              titleArabic: "ترتيب إجراء العمليات الحسابية",
+              coreConcepts: ["أسبقية الضرب والقسمة ثم الجمع والطرح"],
+            },
+            {
+              id: `${unit.id}-l2`,
+              unitId: unit.id,
+              orderIndex: 2,
+              titleArabic: "تعبيرات عددية تتضمن أقواساً",
+              coreConcepts: ["الأقواس المستديرة والمربعة"],
+            },
+            {
+              id: `${unit.id}-l3`,
+              unitId: unit.id,
+              orderIndex: 3,
+              titleArabic: "كتابة تعبير عددي لتمثيل موقف ما",
+              coreConcepts: ["تحويل اللفظ إلى تعبير عددي"],
+            },
+            {
+              id: `${unit.id}-l4`,
+              unitId: unit.id,
+              orderIndex: 4,
+              titleArabic: "تحديد الأنماط العددية",
+              coreConcepts: ["قاعدة النمط، جداول المدخل والمخرج"],
+            },
+          ],
+        };
+      }
+
       const lessonMap = new Map<number, CurriculumLessonNode>();
-      for (const lesson of unit.lessons || []) {
+      for (const lesson of finalUnit.lessons || []) {
         const lKey = lesson.orderIndex;
         const existingLesson = lessonMap.get(lKey);
         if (
@@ -74,7 +126,7 @@ export function deduplicateCurriculumUnitsSSOT(
         }
       }
       return {
-        ...unit,
+        ...finalUnit,
         lessons: Array.from(lessonMap.values()).sort((a, b) => a.orderIndex - b.orderIndex),
       };
     })

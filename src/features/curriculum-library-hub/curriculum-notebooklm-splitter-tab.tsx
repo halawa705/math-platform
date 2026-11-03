@@ -61,7 +61,8 @@ export default function CurriculumNotebooklmSplitterTab({
     void pullCurriculumUnitsFromSupabaseCloud().then((cloudUnits) => {
       if (cloudUnits && cloudUnits.length > 0) {
         const local = loadActiveCurriculumUnitsSSOT();
-        if (local.length === 0) {
+        const hasBad = local.some((u) => u.titleArabic.length <= 18 || (u.orderIndex > 1 && u.lessons[0]?.titleArabic?.includes("الكسور العشرية")));
+        if (local.length === 0 || hasBad) {
           saveImportedCurriculumUnitsSSOT(cloudUnits);
           setSavedUnits(loadActiveCurriculumUnitsSSOT(gradeId));
         }

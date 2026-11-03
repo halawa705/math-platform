@@ -88,4 +88,32 @@ describe("Curriculum Deduplication & Normalization Engine", () => {
     expect(cleaned[0].lessons).toHaveLength(2);
     expect(cleaned[0].titleArabic).toBe("الوحدة الأولى: القيمة المكانية للأعداد العشرية");
   });
+
+  it("automatically heals an existing corrupted Unit 6 with truncated title or stolen lessons", () => {
+    const corruptedUnit6: CurriculumUnitNode = {
+      id: "prim-5-t1-u6",
+      gradeId: "prim-5",
+      termNumber: 1,
+      branchId: "numbers",
+      branchNameArabic: "العمليات الحسابية والتفكير الجبري",
+      orderIndex: 6,
+      titleArabic: "الوحدة السادسة: الت",
+      lessons: [
+        {
+          id: "prim-5-t1-u6-l1",
+          unitId: "prim-5-t1-u6",
+          orderIndex: 1,
+          titleArabic: "الكسور العشرية حتى جزء من الألف",
+          coreConcepts: [],
+        },
+      ],
+    };
+
+    const healed = deduplicateCurriculumUnitsSSOT([corruptedUnit6]);
+    expect(healed).toHaveLength(1);
+    expect(healed[0].titleArabic).toBe("الوحدة السادسة: التعبيرات العددية والأنماط");
+    expect(healed[0].lessons).toHaveLength(4);
+    expect(healed[0].lessons[0].titleArabic).toBe("ترتيب إجراء العمليات الحسابية");
+    expect(healed[0].lessons[3].titleArabic).toBe("تحديد الأنماط العددية");
+  });
 });

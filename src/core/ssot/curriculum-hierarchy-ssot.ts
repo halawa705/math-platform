@@ -214,7 +214,14 @@ export function loadActiveCurriculumUnitsSSOT(
       const parsed = JSON.parse(raw) as CurriculumUnitNode[];
       if (Array.isArray(parsed)) {
         const cleaned = deduplicateCurriculumUnitsSSOT(parsed);
-        if (cleaned.length !== parsed.length && isBrowser()) {
+        const hasDifferences =
+          cleaned.length !== parsed.length ||
+          cleaned.some(
+            (c, idx) =>
+              c.titleArabic !== parsed[idx]?.titleArabic ||
+              c.lessons?.length !== parsed[idx]?.lessons?.length
+          );
+        if (hasDifferences && isBrowser()) {
           const s = JSON.stringify(cleaned);
           window.localStorage.setItem(CURRICULUM_STORAGE_KEY, s);
           inMemoryFallback.set(CURRICULUM_STORAGE_KEY, s);

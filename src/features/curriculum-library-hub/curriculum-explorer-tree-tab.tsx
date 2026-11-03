@@ -48,7 +48,14 @@ export default function CurriculumExplorerTreeTab({
     void pullCurriculumUnitsFromSupabaseCloud().then((cloudUnits) => {
       if (cloudUnits && cloudUnits.length > 0) {
         const local = loadActiveCurriculumUnitsSSOT();
-        if (local.length === 0) {
+        const hasCorruptedUnit = local.some(
+          (u) =>
+            u.titleArabic.length <= 18 ||
+            u.titleArabic.endsWith(":") ||
+            u.titleArabic.endsWith("الت") ||
+            (u.orderIndex > 1 && u.lessons[0]?.titleArabic?.includes("الكسور العشرية"))
+        );
+        if (local.length === 0 || hasCorruptedUnit) {
           saveImportedCurriculumUnitsSSOT(cloudUnits);
           refreshUnits();
         }
