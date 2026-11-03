@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file flow-item-renderer.tsx
@@ -14,6 +14,9 @@ import { OfficialMcqAnswerKeySummaryTable, PedagogicalIdeaAndRuleCapsule } from 
 import SideBySideDiagramDocker from "./side-by-side-diagram-docker";
 import type { FlowItem } from "./flow-item-model";
 import { SovereignDocumentAccreditationBox } from "./sovereign-a4-page-chrome-elements";
+import { OfficialSchoolExamQuestionRow } from "./official-school-exam-question-row";
+import { OfficialSchoolExamSectionBanner } from "./official-school-exam-section-banner";
+import { OfficialSchoolEndWishBanner } from "./official-school-exam-page-chrome";
 
 export const MODULE_ID_FLOW_ITEM_RENDERER = "flow_item_renderer" as const;
 
@@ -26,7 +29,21 @@ export interface FlowItemRendererProps {
 }
 
 export function FlowItemRenderer({ item, settings, palette, identity, questions }: FlowItemRendererProps) {
+  const isSchoolExam = settings.paperTemplateId === "official_school_exam";
+  const isSolvedMode = settings.answerVisibilityMode !== "questions_only";
+
   switch (item.kind) {
+    case "exam_section_banner":
+      return (
+        <OfficialSchoolExamSectionBanner
+          sectionOrdinalArabic={item.sectionOrdinalArabic}
+          sectionTitleArabic={item.sectionTitleArabic}
+          questionsCount={item.questionsCount}
+          numeralMode={settings.numeralMode}
+        />
+      );
+    case "exam_wish_banner":
+      return <OfficialSchoolEndWishBanner />;
     case "idea_capsule":
       return (
         <PedagogicalIdeaAndRuleCapsule
@@ -40,7 +57,17 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
     case "question":
       return (
         <div className="w-full min-w-0 flex-1 flex flex-col">
-          <SideBySideDiagramDocker question={item.question} settings={settings} solutionSlice={item.solutionSlice} />
+          {isSchoolExam ? (
+            <OfficialSchoolExamQuestionRow
+              question={item.question}
+              sectionLocalNumber={item.sectionLocalNumber}
+              settings={settings}
+              palette={palette}
+              isSolvedMode={isSolvedMode}
+            />
+          ) : (
+            <SideBySideDiagramDocker question={item.question} settings={settings} solutionSlice={item.solutionSlice} />
+          )}
         </div>
       );
     case "idea_divider":
@@ -61,6 +88,7 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
         />
       );
     default:
+      if (isSchoolExam) return null;
       return (
         <SovereignDocumentAccreditationBox identity={identity} palette={palette} numeralMode={settings.numeralMode} />
       );

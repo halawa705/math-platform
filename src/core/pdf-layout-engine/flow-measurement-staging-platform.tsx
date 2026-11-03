@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file flow-measurement-staging-platform.tsx
@@ -20,6 +20,11 @@ import {
   SovereignPageNumberFooterBar,
   SovereignRunningPageHeader,
 } from "./sovereign-a4-page-chrome-elements";
+import {
+  OfficialSchoolFirstPageHeader,
+  OfficialSchoolPageFooterBar,
+  OfficialSchoolRunningPageHeader,
+} from "./official-school-exam-page-chrome";
 
 export const MODULE_ID_FLOW_MEASUREMENT_STAGING_PLATFORM = "flow_measurement_staging_platform" as const;
 
@@ -66,21 +71,47 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
       }}
     >
       <div data-flow-chrome="first" style={WRAPPER_BASE_STYLE}>
-        <SovereignFirstPageHeader
-          identity={identity} palette={palette} documentTitle={settings.customDocumentTitle} subtitleAr={props.subtitleAr}
-          isSolvedMode={props.isSolvedMode} totalIdeasCount={props.totalIdeasCount}
-          totalQuestionsCount={props.totalQuestionsCount} totalMarks={props.totalMarks} numeralMode={numeralMode}
-          compact={settings.compactHeader}
-        />
+        {settings.paperTemplateId === "official_school_exam" ? (
+          <OfficialSchoolFirstPageHeader
+            identity={identity}
+            documentTitle={settings.customDocumentTitle}
+            subtitleAr={props.subtitleAr}
+            durationText={settings.customDurationText}
+            numeralMode={numeralMode}
+            isSolvedMode={props.isSolvedMode}
+          />
+        ) : (
+          <SovereignFirstPageHeader
+            identity={identity} palette={palette} documentTitle={settings.customDocumentTitle} subtitleAr={props.subtitleAr}
+            isSolvedMode={props.isSolvedMode} totalIdeasCount={props.totalIdeasCount}
+            totalQuestionsCount={props.totalQuestionsCount} totalMarks={props.totalMarks} numeralMode={numeralMode}
+            compact={settings.compactHeader}
+          />
+        )}
       </div>
       <div data-flow-chrome="running" style={WRAPPER_BASE_STYLE}>
-        <SovereignRunningPageHeader
-          identity={identity} palette={palette} documentTitle={settings.customDocumentTitle}
-          subtitleAr={props.subtitleAr} pageNumber={88} totalPages={88} numeralMode={numeralMode}
-        />
+        {settings.paperTemplateId === "official_school_exam" ? (
+          <OfficialSchoolRunningPageHeader
+            identity={identity}
+            documentTitle={settings.customDocumentTitle}
+            subtitleAr={props.subtitleAr}
+            pageNumber={88}
+            totalPages={88}
+            numeralMode={numeralMode}
+          />
+        ) : (
+          <SovereignRunningPageHeader
+            identity={identity} palette={palette} documentTitle={settings.customDocumentTitle}
+            subtitleAr={props.subtitleAr} pageNumber={88} totalPages={88} numeralMode={numeralMode}
+          />
+        )}
       </div>
       <div data-flow-chrome="footer" style={WRAPPER_BASE_STYLE}>
-        <SovereignPageNumberFooterBar identity={identity} palette={palette} pageNumber={88} totalPages={88} numeralMode={numeralMode} />
+        {settings.paperTemplateId === "official_school_exam" ? (
+          <OfficialSchoolPageFooterBar identity={identity} pageNumber={88} totalPages={88} numeralMode={numeralMode} />
+        ) : (
+          <SovereignPageNumberFooterBar identity={identity} palette={palette} pageNumber={88} totalPages={88} numeralMode={numeralMode} />
+        )}
       </div>
 
       {flowItems.map((item) => (

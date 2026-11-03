@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file flow-item-model.ts
  * @description نموذج «الكائن المرن» للتدفق: كل فكرة/قاعدة/مثال/تدريب/فاصل/جدول هو FlowItem مستقل له عرض (كامل أو عمود)،
  * وتتألف الصفحة من مقاطع: مقطع بعرض كامل، أو مقطع أعمدة متوازنة (يمين ثم يسار بترتيب القراءة).
@@ -29,10 +29,21 @@ export type FlowItem =
       readonly kind: "question";
       readonly span: "full" | "column";
       readonly question: PrintableMathQuestionItem;
+      /** ترقيم السؤال المحلي داخل القسم في القالب المدرسي (مثلاً: 1، 2، 3...). */
+      readonly sectionLocalNumber?: number;
       /** شريحة من خطوات الحل لبطاقة مقسومة بين صفحتين (غير معرّفة = البطاقة كاملة). الخطوة لا تُجزَّأ أبداً. */
       readonly solutionSlice?: FlowSolutionSlice;
     }
   | { readonly id: string; readonly kind: "idea_divider"; readonly span: "full"; readonly ideaIndex: number }
+  | {
+      readonly id: string;
+      readonly kind: "exam_section_banner";
+      readonly span: "full";
+      readonly sectionOrdinalArabic: string;
+      readonly sectionTitleArabic: string;
+      readonly questionsCount: number;
+    }
+  | { readonly id: string; readonly kind: "exam_wish_banner"; readonly span: "full" }
   | { readonly id: string; readonly kind: "mcq_answer_key"; readonly span: "full" }
   | { readonly id: string; readonly kind: "accreditation_footer"; readonly span: "full" };
 
@@ -74,6 +85,8 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
   switch (item.kind) {
     case "idea_capsule": return 98;
     case "idea_divider": return 22;
+    case "exam_section_banner": return 38;
+    case "exam_wish_banner": return 32;
     case "mcq_answer_key": return 180;
     case "accreditation_footer": return 95;
     default: return 190;

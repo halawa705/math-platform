@@ -88,9 +88,10 @@ export default function TwoColumnNewspaperPacker({
         questions,
         columnsCount: effSettings.columnsCount,
         includeAnswerKey: isSolvedMode,
-        includeAccreditation: !effSettings.hideAccreditation,
+        includeAccreditation: !effSettings.hideAccreditation && effSettings.paperTemplateId !== "official_school_exam",
+        paperTemplateId: effSettings.paperTemplateId,
       }),
-    [questions, effSettings.columnsCount, isSolvedMode, effSettings.hideAccreditation]
+    [questions, effSettings.columnsCount, isSolvedMode, effSettings.hideAccreditation, effSettings.paperTemplateId]
   );
 
   const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`, measureStamp);
@@ -101,7 +102,7 @@ export default function TwoColumnNewspaperPacker({
     [flowItems, measured.heights, pageBudgets, densityProfile]
   );
 
-  const inputSignature = `${questions.map((q) => q.id).join(",")}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.numeralMode}|${settings.notationLanguage}|${settings.customDocumentTitle}`;
+  const inputSignature = `${questions.map((q) => q.id).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.numeralMode}|${settings.notationLanguage}|${settings.customDocumentTitle}`;
   const sweep = useAutoFitSweepController({
     mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: discretePages,
   });

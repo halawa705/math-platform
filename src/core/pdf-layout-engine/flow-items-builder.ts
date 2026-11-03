@@ -6,6 +6,7 @@
  */
 
 import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
+import type { PrintPaperTemplateId } from "../ssot/pdf-print-settings-ssot";
 import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
 import type { FlowItem } from "./flow-item-model";
 
@@ -33,14 +34,82 @@ function isSolvedExample(q: PrintableMathQuestionItem): boolean {
   return q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-");
 }
 
+function isMcqQuestion(q: PrintableMathQuestionItem): boolean {
+  return q.kind === "mcq" || (Array.isArray(q.mcqChoicesAr) && q.mcqChoicesAr.length >= 2);
+}
+
 export function buildFlowItems(params: {
   readonly questions: readonly PrintableMathQuestionItem[];
   readonly columnsCount: 1 | 2;
   readonly includeAnswerKey: boolean;
   readonly includeAccreditation?: boolean;
+  readonly paperTemplateId?: PrintPaperTemplateId;
 }): { readonly items: readonly FlowItem[]; readonly totalIdeasCount: number } {
-  const { questions, columnsCount, includeAnswerKey, includeAccreditation = true } = params;
+  const { questions, columnsCount, includeAnswerKey, includeAccreditation = true, paperTemplateId } = params;
   const questionSpan = columnsCount === 2 ? "column" : "full";
+
+  if (paperTemplateId === "official_school_exam") {
+    const mcqs = questions.filter(isMcqQuestion);
+    const nonMcqs = questions.filter((q) => !isMcqQuestion(q));
+    const items: FlowItem[] = [];
+    let secIdx = 0;
+
+    if (mcqs.length > 0) {
+      secIdx++;
+      items.push({
+        id: "flow-exam-sec-mcq",
+        kind: "exam_section_banner",
+        span: "full",
+        sectionOrdinalArabic: "الأول",
+        sectionTitleArabic: "اختر الإجابة الصحيحة من بين القوسين :",
+        questionsCount: mcqs.length,
+      });
+      mcqs.forEach((q, idx) => {
+        items.push({
+          id: `flow-exam-q-mcq-${q.id || idx + 1}`,
+          kind: "question",
+          span: questionSpan,
+          question: q,
+          sectionLocalNumber: idx + 1,
+        });
+      });
+    }
+
+    if (nonMcqs.length > 0) {
+      const ordinal = secIdx === 0 ? "الأول" : "الثاني";
+      secIdx++;
+      items.push({
+        id: "flow-exam-sec-essay",
+        kind: "exam_section_banner",
+        span: "full",
+        sectionOrdinalArabic: ordinal,
+        sectionTitleArabic: "أجب عن الأسئلة الآتية (الأسئلة المقالية والمسائل) :",
+        questionsCount: nonMcqs.length,
+      });
+      nonMcqs.forEach((q, idx) => {
+        items.push({
+          id: `flow-exam-q-essay-${q.id || idx + 1}`,
+          kind: "question",
+          span: questionSpan,
+          question: q,
+          sectionLocalNumber: idx + 1,
+        });
+      });
+    }
+
+    items.push({
+      id: "flow-exam-wish-banner",
+      kind: "exam_wish_banner",
+      span: "full",
+    });
+
+    if (includeAnswerKey && questions.some((q) => q.kind === "mcq" && q.correctMcqIndex !== undefined)) {
+      items.push({ id: "flow-mcq-answer-key", kind: "mcq_answer_key", span: "full" });
+    }
+
+    return { items, totalIdeasCount: secIdx };
+  }
+
   const groups = groupQuestionsByIdea(questions);
   const items: FlowItem[] = [];
 

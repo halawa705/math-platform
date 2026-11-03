@@ -18,6 +18,8 @@ import type { MathNotationLanguage, NumeralDisplayMode } from "./numeral-and-uni
 
 export type PrintFontFamilyId = "almarai" | "cairo" | "ibm_plex" | "readex_pro" | "tajawal";
 
+export type PrintPaperTemplateId = "classic_sovereign" | "official_school_exam";
+
 export type DocumentAnswerVisibilityMode =
   | "questions_only"
   | "questions_with_answers"
@@ -89,6 +91,7 @@ export const PRINT_FONT_FAMILIES_SSOT: Record<PrintFontFamilyId, PrintFontFamily
 };
 
 export interface PDFPrintSettingsStateSSOT {
+  readonly paperTemplateId?: PrintPaperTemplateId;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
   readonly fontFamilyId: PrintFontFamilyId;
@@ -110,6 +113,7 @@ export interface PDFPrintSettingsStateSSOT {
 }
 
 export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
+  paperTemplateId: "classic_sovereign",
   numeralMode: "western",
   notationLanguage: "english",
   fontFamilyId: "cairo",
@@ -141,6 +145,11 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
     return {
       ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
       ...parsed,
+      paperTemplateId:
+        parsed.paperTemplateId === "official_school_exam" ||
+        parsed.paperTemplateId === "classic_sovereign"
+          ? parsed.paperTemplateId
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.paperTemplateId,
       numeralMode:
         parsed.numeralMode === "eastern" || parsed.numeralMode === "western"
           ? parsed.numeralMode

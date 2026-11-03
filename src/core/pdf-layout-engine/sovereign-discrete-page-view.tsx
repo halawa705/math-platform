@@ -17,6 +17,12 @@ import {
   SovereignPageNumberFooterBar,
   SovereignRunningPageHeader,
 } from "./sovereign-a4-page-chrome-elements";
+import {
+  OfficialSchoolCornerCropMarks,
+  OfficialSchoolFirstPageHeader,
+  OfficialSchoolPageFooterBar,
+  OfficialSchoolRunningPageHeader,
+} from "./official-school-exam-page-chrome";
 
 export const MODULE_ID_SOVEREIGN_DISCRETE_PAGE_VIEW =
   "sovereign_discrete_page_view" as const;
@@ -71,6 +77,8 @@ export function SovereignDiscretePageView({
   page, totalPagesCount, settings, identity, palette, activeFont, subtitleAr = "",
   isSolvedMode, totalIdeasCount, totalQuestionsCount, totalMarks, renderFlowItem,
 }: SovereignDiscretePageViewProps) {
+  const isSchoolExam = settings.paperTemplateId === "official_school_exam";
+
   return (
     <section
       style={{
@@ -79,12 +87,40 @@ export function SovereignDiscretePageView({
         fontFamily: activeFont.cssFontStack,
         fontSize: `${settings.exactFontSizePt}pt`,
         lineHeight: activeFont.optimalLineHeight,
-        boxShadow: `inset 0 0 0 1px ${palette.borderHex}33`,
+        boxShadow: isSchoolExam ? undefined : `inset 0 0 0 1px ${palette.borderHex}33`,
+        border: isSchoolExam ? "2.5pt solid #1e3a8a" : undefined,
+        outline: isSchoolExam ? "1.2pt dashed #93c5fd" : undefined,
+        outlineOffset: isSchoolExam ? "-5pt" : undefined,
+        borderRadius: isSchoolExam ? "4pt" : undefined,
       }}
-      className="sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl px-[20px] py-[18px] flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none"
+      className={`sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl ${
+        isSchoolExam ? "px-[16px] py-[14px]" : "px-[20px] py-[18px]"
+      } flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none`}
     >
-      <div className="w-full min-w-0 flex-1 flex flex-col">
-        {page.isFirstPage ? (
+      {isSchoolExam && <OfficialSchoolCornerCropMarks />}
+
+      <div className="w-full min-w-0 flex-1 flex flex-col relative z-10">
+        {isSchoolExam ? (
+          page.isFirstPage ? (
+            <OfficialSchoolFirstPageHeader
+              identity={identity}
+              documentTitle={settings.customDocumentTitle}
+              subtitleAr={subtitleAr}
+              durationText={settings.customDurationText}
+              numeralMode={settings.numeralMode}
+              isSolvedMode={isSolvedMode}
+            />
+          ) : (
+            <OfficialSchoolRunningPageHeader
+              identity={identity}
+              documentTitle={settings.customDocumentTitle}
+              subtitleAr={subtitleAr}
+              pageNumber={page.pageNumber}
+              totalPages={totalPagesCount}
+              numeralMode={settings.numeralMode}
+            />
+          )
+        ) : page.isFirstPage ? (
           <SovereignFirstPageHeader
             identity={identity}
             palette={palette}
@@ -132,13 +168,24 @@ export function SovereignDiscretePageView({
         </div>
       </div>
 
-      <SovereignPageNumberFooterBar
-        identity={identity}
-        palette={palette}
-        pageNumber={page.pageNumber}
-        totalPages={totalPagesCount}
-        numeralMode={settings.numeralMode}
-      />
+      <div className="relative z-10 w-full">
+        {isSchoolExam ? (
+          <OfficialSchoolPageFooterBar
+            identity={identity}
+            pageNumber={page.pageNumber}
+            totalPages={totalPagesCount}
+            numeralMode={settings.numeralMode}
+          />
+        ) : (
+          <SovereignPageNumberFooterBar
+            identity={identity}
+            palette={palette}
+            pageNumber={page.pageNumber}
+            totalPages={totalPagesCount}
+            numeralMode={settings.numeralMode}
+          />
+        )}
+      </div>
     </section>
   );
 }
