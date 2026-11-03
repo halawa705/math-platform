@@ -130,7 +130,7 @@ export function OfficialSchoolExamQuestionRow({
                 <span className="shrink-0 w-5 h-5 rounded-sm bg-indigo-950 text-white flex items-center justify-center text-[10px] font-black font-mono">
                   {ARABIC_CHOICE_LETTERS[optIdx] ?? `(${optIdx + 1})`}
                 </span>
-                <span className="flex-1 text-center truncate">
+                <span className="flex-1 text-center break-words">
                   <SafeKaTeXBiDiMathRenderer
                     text={choiceText}
                     numeralMode={numeralMode}

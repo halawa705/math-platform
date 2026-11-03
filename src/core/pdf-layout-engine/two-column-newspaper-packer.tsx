@@ -81,17 +81,19 @@ export default function TwoColumnNewspaperPacker({
   const palette = resolvePrintThemePalette(effSettings.colorThemeId);
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
   const isSolvedMode = effSettings.answerVisibilityMode !== "questions_only" || questions.some((q) => q.id.startsWith("booklet-s1-"));
+  const isSchoolExam = effSettings.paperTemplateId === "official_school_exam";
+  const effectiveColumnsCount = isSchoolExam ? 1 : effSettings.columnsCount;
 
   const { items: flowItems, totalIdeasCount } = React.useMemo(
     () =>
       buildFlowItems({
         questions,
-        columnsCount: effSettings.columnsCount,
+        columnsCount: effectiveColumnsCount,
         includeAnswerKey: isSolvedMode,
-        includeAccreditation: !effSettings.hideAccreditation && effSettings.paperTemplateId !== "official_school_exam",
+        includeAccreditation: !effSettings.hideAccreditation && !isSchoolExam,
         paperTemplateId: effSettings.paperTemplateId,
       }),
-    [questions, effSettings.columnsCount, isSolvedMode, effSettings.hideAccreditation, effSettings.paperTemplateId]
+    [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId]
   );
 
   const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`, measureStamp);

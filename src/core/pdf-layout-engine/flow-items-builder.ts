@@ -68,7 +68,7 @@ export function buildFlowItems(params: {
         items.push({
           id: `flow-exam-q-mcq-${q.id || idx + 1}`,
           kind: "question",
-          span: questionSpan,
+          span: "full",
           question: q,
           sectionLocalNumber: idx + 1,
         });
@@ -90,7 +90,7 @@ export function buildFlowItems(params: {
         items.push({
           id: `flow-exam-q-essay-${q.id || idx + 1}`,
           kind: "question",
-          span: questionSpan,
+          span: "full",
           question: q,
           sectionLocalNumber: idx + 1,
         });

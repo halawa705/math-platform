@@ -122,14 +122,16 @@ export default function PDFControlsGroupedToolPanel({
               onChangeDensity={(densityMode) => set({ densityMode })}
             />
           </ToolRow>
-          <ToolRow labelAr="الأعمدة">
-            <PDFColumnsLayoutToggle
-              columnsCount={settings.columnsCount}
-              showDivider={settings.showColumnDivider}
-              onChangeColumns={(columnsCount) => set({ columnsCount })}
-              onToggleDivider={(showColumnDivider) => set({ showColumnDivider })}
-            />
-          </ToolRow>
+          {settings.paperTemplateId !== "official_school_exam" && (
+            <ToolRow labelAr="الأعمدة">
+              <PDFColumnsLayoutToggle
+                columnsCount={settings.columnsCount}
+                showDivider={settings.showColumnDivider}
+                onChangeColumns={(columnsCount) => set({ columnsCount })}
+                onToggleDivider={(showColumnDivider) => set({ showColumnDivider })}
+              />
+            </ToolRow>
+          )}
           <ToolRow labelAr="مساحة حل الطالب">
             <PDFAnswerSpaceStyleSelector
               currentStyle={settings.answerSpaceStyle}
