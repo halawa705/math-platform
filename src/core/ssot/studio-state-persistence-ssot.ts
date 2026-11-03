@@ -14,6 +14,7 @@ const KEYS = {
   GLOBAL: "math_platform_studio_global_context_v1",
   BOOKLET: "math_platform_studio_booklet_settings_v1",
   EXAM: "math_platform_studio_exam_settings_v1",
+  EXAM_FORMS: "math_platform_studio_exam_forms_settings_v1",
   REVIEW: "math_platform_studio_review_settings_v1",
   WORKSHEET: "math_platform_studio_worksheet_settings_v1",
 } as const;
@@ -152,3 +153,41 @@ export const saveStudioWorksheetSettingsSSOT = (updates: Partial<StudioWorksheet
   safeSet(KEYS.WORKSHEET, next);
   return next;
 };
+
+export type ExamFormsScopeKind = "end_of_term" | "monthly_exam" | "custom_units_review";
+
+export interface StudioExamFormsSettingsState {
+  readonly formsCount: number;
+  readonly scopeKind: ExamFormsScopeKind;
+  readonly targetedUnitsOrLessons: string;
+  readonly mcqCount: number;
+  readonly mcqEnabled: boolean;
+  readonly proofCount: number;
+  readonly proofEnabled: boolean;
+  readonly difficulty: "standard_balanced" | "olympiad_challenge";
+  readonly customDirectives?: string;
+}
+
+export const DEFAULT_STUDIO_EXAM_FORMS_SETTINGS: StudioExamFormsSettingsState = {
+  formsCount: 3,
+  scopeKind: "monthly_exam",
+  targetedUnitsOrLessons: "",
+  mcqCount: 5,
+  mcqEnabled: true,
+  proofCount: 3,
+  proofEnabled: true,
+  difficulty: "standard_balanced",
+  customDirectives: "",
+};
+
+export const loadStudioExamFormsSettingsSSOT = (): StudioExamFormsSettingsState =>
+  safeGet(KEYS.EXAM_FORMS, DEFAULT_STUDIO_EXAM_FORMS_SETTINGS);
+
+export const saveStudioExamFormsSettingsSSOT = (
+  updates: Partial<StudioExamFormsSettingsState>
+): StudioExamFormsSettingsState => {
+  const next = { ...loadStudioExamFormsSettingsSSOT(), ...updates };
+  safeSet(KEYS.EXAM_FORMS, next);
+  return next;
+};
+

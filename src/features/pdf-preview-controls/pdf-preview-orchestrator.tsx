@@ -18,6 +18,8 @@ import {
 } from "@/core/ssot/pdf-print-settings-ssot";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import TwoColumnNewspaperPacker from "@/core/pdf-layout-engine/two-column-newspaper-packer";
+import MultiFormNewspaperPacker from "@/core/pdf-layout-engine/multi-form-newspaper-packer";
+import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import PDFControlsGroupedToolPanel from "./pdf-controls-grouped-tool-panel";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
 import {
@@ -27,6 +29,7 @@ import {
 export interface PDFPreviewOrchestratorProps {
   readonly customTitle?: string;
   readonly customQuestions?: readonly PrintableMathQuestionItem[];
+  readonly customForms?: readonly PrintableExamFormGroup[];
   readonly gradeNameAr?: string;
   readonly branchNameAr?: string;
   readonly children?: React.ReactNode;
@@ -55,12 +58,14 @@ function resolveDocAutoFitDefaults(
 export default function PDFPreviewOrchestrator({
   customTitle,
   customQuestions,
+  customForms,
   gradeNameAr = "",
   branchNameAr = "",
   children,
 }: PDFPreviewOrchestratorProps) {
   const userChangedAutoFitRef = useRef<boolean>(false);
   const [pagesCount, setPagesCount] = useState<number>(1);
+  const [selectedFormId, setSelectedFormId] = useState<string>("all");
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => {
     const persisted = loadPersistedPDFPrintSettingsSSOT();
     const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
@@ -193,15 +198,77 @@ export default function PDFPreviewOrchestrator({
         />
       )}
 
-      <TwoColumnNewspaperPacker
-        settings={settings}
-        questions={questions}
-        subtitleAr={gradeNameAr}
-        sheetContainerRef={sheetContainerRef}
-        onPagesCountChange={setPagesCount}
-      >
-        {children}
-      </TwoColumnNewspaperPacker>
+      {customForms && customForms.length > 1 && (
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedFormId("all")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black shrink-0 cursor-pointer transition-all ${
+              selectedFormId === "all"
+                ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-sm"
+                : "text-slate-600 dark:text-slate-400"
+            }`}
+          >
+            📑 جميع النماذج ({customForms.length})
+          </button>
+          {customForms.map((f) => (
+            <button
+              key={f.formId}
+              type="button"
+              onClick={() => setSelectedFormId(f.formId)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black shrink-0 cursor-pointer transition-all ${
+                selectedFormId === f.formId
+                  ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400"
+              }`}
+            >
+              {f.formTitleAr} ({f.questions.length})
+            </button>
+          ))}
+        </div>
+      )}
+
+      {customForms && customForms.length > 0 ? (
+        selectedFormId === "all" ? (
+          <MultiFormNewspaperPacker
+            forms={customForms}
+            settings={settings}
+            subtitleAr={gradeNameAr}
+            sheetContainerRef={sheetContainerRef}
+            onPagesCountChange={setPagesCount}
+          >
+            {children}
+          </MultiFormNewspaperPacker>
+        ) : (
+          (() => {
+            const activeForm = customForms.find((f) => f.formId === selectedFormId) || customForms[0];
+            return (
+              <TwoColumnNewspaperPacker
+                settings={{
+                  ...settings,
+                  customDocumentTitle: activeForm.fullDocumentTitleAr,
+                }}
+                questions={activeForm.questions}
+                subtitleAr={gradeNameAr}
+                sheetContainerRef={sheetContainerRef}
+                onPagesCountChange={setPagesCount}
+              >
+                {children}
+              </TwoColumnNewspaperPacker>
+            );
+          })()
+        )
+      ) : (
+        <TwoColumnNewspaperPacker
+          settings={settings}
+          questions={questions}
+          subtitleAr={gradeNameAr}
+          sheetContainerRef={sheetContainerRef}
+          onPagesCountChange={setPagesCount}
+        >
+          {children}
+        </TwoColumnNewspaperPacker>
+      )}
     </div>
   );
 }

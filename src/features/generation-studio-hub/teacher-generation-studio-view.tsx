@@ -12,12 +12,14 @@ import SegmentedWorkspaceTabsBar, { type SegmentedTabItem } from "@/components/g
 import { MATH_BRANCHES_SSOT, type MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
+import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import PDFPreviewOrchestrator from "@/features/pdf-preview-controls/pdf-preview-orchestrator";
 import { loadStudioGlobalContextSSOT, saveStudioGlobalContextSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import StudioContextRibbonBar from "./studio-context-ribbon-bar";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioMobilePaneFloatingSwitch, { type StudioActivePane } from "./studio-mobile-pane-floating-switch";
 import StudioExamGeneratorTab from "./studio-exam-generator-tab";
+import StudioExamFormsGeneratorTab from "./studio-exam-forms-generator-tab";
 import StudioBookletGeneratorTab from "./studio-booklet-generator-tab";
 import StudioFinalReviewGeneratorTab from "./studio-final-review-generator-tab";
 import StudioWorksheetGeneratorTab from "./studio-worksheet-generator-tab";
@@ -27,6 +29,7 @@ export const MODULE_ID_TEACHER_GENERATION_STUDIO_VIEW = "teacher_generation_stud
 
 const STUDIO_TABS: readonly SegmentedTabItem[] = [
   { id: "exam", labelAr: "اختبار", icon: "📄" },
+  { id: "forms", labelAr: "النماذج", icon: "📑" },
   { id: "booklet", labelAr: "مذكرة", icon: "📘" },
   { id: "review", labelAr: "مراجعة", icon: "🏆" },
   { id: "worksheet", labelAr: "ورقة عمل", icon: "⚡" },
@@ -43,6 +46,7 @@ export default function TeacherGenerationStudioView() {
   const [lessonTitle, setLessonTitle] = useState<string>(initial.lessonTitle);
   const [sheetTitle, setSheetTitle] = useState<string>(initial.sheetTitle);
   const [sheetQuestions, setSheetQuestions] = useState<readonly PrintableMathQuestionItem[] | undefined>(undefined);
+  const [sheetForms, setSheetForms] = useState<readonly PrintableExamFormGroup[] | undefined>(undefined);
   const [pane, setPane] = useState<StudioActivePane>("builder");
 
   const branch = MATH_BRANCHES_SSOT[branchId] || MATH_BRANCHES_SSOT.plane_geometry;
@@ -55,7 +59,8 @@ export default function TeacherGenerationStudioView() {
   const updateLesson = (l: string) => { setLessonTitle(l); saveStudioGlobalContextSSOT({ lessonTitle: l }); };
   const updateOrder = (o: number) => { setLessonOrder(o); saveStudioGlobalContextSSOT({ lessonOrder: o }); };
   const applyTitle = (t: string) => { setSheetTitle(t); setPane("preview"); saveStudioGlobalContextSSOT({ sheetTitle: t }); };
-  const applyQuestions = (qs: readonly PrintableMathQuestionItem[]) => { setSheetQuestions(qs); setPane("preview"); };
+  const applyQuestions = (qs: readonly PrintableMathQuestionItem[]) => { setSheetQuestions(qs); setSheetForms(undefined); setPane("preview"); };
+  const applyForms = (forms: readonly PrintableExamFormGroup[]) => { setSheetForms(forms); setPane("preview"); };
 
   const contextSummary = `${grade.nameArabic} • درس (${lessonOrder}) • ${unitTitle || "الوحدة"} • ${lessonTitle}`;
 
@@ -89,6 +94,15 @@ export default function TeacherGenerationStudioView() {
                 onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
+            {activeTabId === "forms" && (
+              <StudioExamFormsGeneratorTab
+                gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
+                unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
+                branchNameAr={branch.nameArabic} onApplyFormsTitleToSheet={applyTitle}
+                onApplyParsedQuestionsToSheet={setSheetQuestions}
+                onApplyExamFormsToSheet={applyForms}
+              />
+            )}
             {activeTabId === "booklet" && (
               <StudioBookletGeneratorTab
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
@@ -117,7 +131,7 @@ export default function TeacherGenerationStudioView() {
         ) : (
           <PDFPreviewOrchestrator
             key={sheetTitle} customTitle={sheetTitle} customQuestions={sheetQuestions}
-            gradeNameAr={grade.nameArabic} branchNameAr={branch.nameArabic}
+            customForms={sheetForms} gradeNameAr={grade.nameArabic} branchNameAr={branch.nameArabic}
           />
         )}
       </main>
