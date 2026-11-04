@@ -34,6 +34,8 @@ export interface PrintableMathQuestionItem {
   readonly graphSpec?: CartesianGraphSpec;
   readonly rawSvgMarkup?: string;
   readonly figureDiagnosticsAr?: readonly string[];
+  readonly answerLinesCount?: number;
+  readonly hasDottedDivider?: boolean;
   /** حقول إضافية اختيارية خاصة بالمذكرات التعليمية والمراجعات النهائية */
   readonly ideaBannerTitleAr?: string;
   readonly conceptExplanationAr?: string;
@@ -193,5 +195,7 @@ export function convertQuestionAssessmentIRToPrintableItem(
     geometryFigure: q.attachedGeometryFigure,
     graphSpec: q.graphSpec,
     figureDiagnosticsAr: q.figureDiagnosticsAr,
+    answerLinesCount: q.answerLinesCount,
+    hasDottedDivider: q.hasDottedDivider,
   };
 }

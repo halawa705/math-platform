@@ -115,7 +115,7 @@ export function resolveCorrectChoiceIndex(
 
 function extractFieldMultiline(block: string, fieldPattern: string): string {
   const regex = new RegExp(
-    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الإجابة_الصحيحة|الإجابة الصحيحة|الإجابات_المقبولة|الإجابات المقبولة|خطوات_الحل|خطوات الحل|البرهان_والخطوات|الحل|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج النهائي|المحافظة|المصدر)\\s*:|$)`,
+    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الخيارات|الإجابة_الصحيحة|الإجابة الصحيحة|إجابة_الصحيحة|إجابة الصحيحة|الإجابة|إجابة|الإجابات_المقبولة|الإجابات المقبولة|خطوات_الحل|خطوات الحل|خطوات|البرهان_والخطوات|الحل|البرهان|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج_النهائي|الناتج النهائي|الرسم|رسم|الشكل|شكل|المحافظة|المصدر)\\s*:|$)`,
     "i"
   );
   return (block.match(regex)?.[1] ?? "").replace(/\s*---+\s*$/g, "").trim();
@@ -159,9 +159,10 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const rawFinalAnswer = extractFieldMultiline(block, "الإجابة_النهائية|الإجابة النهائية|الناتج النهائي");
     const rawAccepted = extractFieldMultiline(block, "الإجابات_المقبولة|الإجابات المقبولة");
     const rawGov = extractFieldMultiline(block, "المحافظة|المصدر");
+    const rawDrawing = extractFieldMultiline(block, "الرسم|رسم|الشكل|شكل");
 
     const fallbackPrompt = block
-      .split(/\n\s*(?:البدائل|الاختيارات|الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0]
+      .split(/\n\s*(?:الرسم|رسم|الشكل|شكل|البدائل|الاختيارات|الخيارات|الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0]
       ?.replace(/^(?:النمط|النوع|الدرجة)\s*:.*$/gm, "")
       .replace(/\|\s*معرف\s*السؤال\s*:\s*[^\n|]+/gi, "")
       .replace(/^\[(?:اختر|أكمل|مقالي)\]\s*/i, "")
@@ -172,7 +173,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
     const geoMatch = !graphMatch ? block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
     const combinedGeo = !graphSpec
-      ? combineProblemAndTagGeometryContext(geoMatch?.[1], basePrompt)
+      ? combineProblemAndTagGeometryContext(rawDrawing || geoMatch?.[1], basePrompt)
       : "";
     const diagramAllowed = isDiagramJustifiedForQuestion({ promptArabic: basePrompt, rawDiagramTagText: combinedGeo, branchId: params.branchId });
     const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `geom_${params.lessonId}_${orderNumber}`) : undefined;
@@ -184,6 +185,10 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const resolvedGov = (rawGov || inlineGovMatch?.[1] || inlineGovMatch?.[2] || inlineGovMatch?.[3] || "").trim();
     const rawCleanPrompt = basePrompt
       .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
+      .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
+      .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")
+      .replace(/(?:^|\n)\s*(?:لا يوجد رسم|بدون رسم|لا رسم)[^\n]*/gi, "")
+      .replace(/(?:^|\n)\s*(?:الإجابة_الصحيحة|الإجابة الصحيحة|إجابة_الصحيحة|إجابة الصحيحة|الإجابة|الحل|خطوات الحل|خطوات_الحل)\s*:[^\n]*/gi, "")
       .replace(/(?:\{\s*محافظة\s+[^}\n]+\s*\}|\[\s*محافظة\s+[^\]\n]+\s*\]|\(\s*محافظة\s+[^)\n]+\s*\))/gi, "")
       .trim();
     const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
@@ -226,6 +231,8 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       attachedGeometryFigure,
       graphSpec,
       authenticCitation: resolvedGov && !resolvedGov.includes("غير مذكور") ? { governorateNameArabic: resolvedGov } : undefined,
+      answerLinesCount: 0,
+      hasDottedDivider: true,
     };
   });
 }

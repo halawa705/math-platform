@@ -108,4 +108,14 @@ export interface QuestionAssessmentIR {
    * التوثيق الصارم للمصدر (يُمنع اختلاق محافظة غير واردة في المصدر الأصلي).
    */
   readonly authenticCitation?: AuthenticExamSourceCitationIR;
+
+  /**
+   * عدد سطور مساحة الحل المخصصة لهذا السؤال المقالي في الطباعة (0 = بدون سطور حل).
+   */
+  readonly answerLinesCount?: number;
+
+  /**
+   * خط منقط فاصل أسفل السؤال المقالي في الطباعة (افتراضياً true).
+   */
+  readonly hasDottedDivider?: boolean;
 }

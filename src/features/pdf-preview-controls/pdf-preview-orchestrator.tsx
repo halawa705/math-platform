@@ -21,6 +21,7 @@ import TwoColumnNewspaperPacker from "@/core/pdf-layout-engine/two-column-newspa
 import MultiFormNewspaperPacker from "@/core/pdf-layout-engine/multi-form-newspaper-packer";
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import PDFControlsGroupedToolPanel from "./pdf-controls-grouped-tool-panel";
+import PDFDocumentEditionSegmentedSwitch from "./pdf-document-edition-segmented-switch";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
 import {
   saveDocumentToOvermathDriveVault,
@@ -134,7 +135,17 @@ export default function PDFPreviewOrchestrator({
   const questions = customQuestions ?? [];
 
   const handlePrintNow = () => {
-    triggerIsolatedA4Print(sheetContainerRef.current?.innerHTML || "", settings);
+    const editionSuffix =
+      settings.answerVisibilityMode === "questions_only"
+        ? " (نسخة الطالب)"
+        : settings.answerVisibilityMode === "questions_with_answers"
+          ? " (نسخة ولي الأمر - بالإجابات)"
+          : " (نموذج الإجابة)";
+    const effectiveTitle = `${settings.customDocumentTitle || customTitle || "مستند رياضيات"}${editionSuffix}`;
+    triggerIsolatedA4Print(sheetContainerRef.current?.innerHTML || "", {
+      ...settings,
+      customDocumentTitle: effectiveTitle,
+    });
   };
 
   const handleSaveToDrive = () => {
@@ -157,6 +168,12 @@ export default function PDFPreviewOrchestrator({
   return (
     <div className="flex flex-col gap-3 w-full">
       <div className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+        {/* شريط التبديل السريع بين نسخة الطالب (أسئلة فقط) ونسخة ولي الأمر (الأسئلة بالإجابات) */}
+        <PDFDocumentEditionSegmentedSwitch
+          currentMode={settings.answerVisibilityMode}
+          onChangeMode={(nextMode) => handleUpdateSettings({ ...settings, answerVisibilityMode: nextMode })}
+        />
+
         <button
           type="button"
           onClick={handlePrintNow}
