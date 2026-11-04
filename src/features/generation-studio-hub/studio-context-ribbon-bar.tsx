@@ -2,9 +2,9 @@
 
 /**
  * @file studio-context-ribbon-bar.tsx
- * @description شريط السياق الهادئ لاختيار (الصف الدراسي النشط -> الوحدة الحقيقية -> الدرس الحقيقي)
- * مربوط حصرياً بمستكشف المنهج (`loadActiveCurriculumUnitsSSOT`) وبالصفوف المفعلة مع الحفاظ على التحديد المحفوظ.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
+ * @description شريط السياق العام لاستوديو التوليد لاختيار (الصف الدراسي -> الوحدات والدروس بالشيك بوكس التفاعلي).
+ * يربط كافة تبويبات الاستوديو بقائمة موحدة تتيح تحديد أكثر من وحدة ودروس بعينها أو المنهج كاملاً.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 250 سطراً).
  */
 
 import Link from "next/link";
@@ -16,6 +16,7 @@ import {
 import { loadEnabledGradesSSOT } from "@/core/ssot/teacher-identity-ssot";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
+import StudioCurriculumUnitsChecklist from "./studio-curriculum-units-checklist";
 
 export const MODULE_ID_STUDIO_CONTEXT_RIBBON_BAR = "studio_context_ribbon_bar" as const;
 
@@ -26,12 +27,15 @@ export interface StudioContextRibbonBarProps {
   readonly selectedLessonTitle: string;
   readonly selectedLessonOrder?: number;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
   readonly onChangeGrade: (gradeId: string) => void;
   readonly onChangeBranch: (branchId: MathBranchId) => void;
   readonly onChangeUnitTitle?: (unitTitle: string) => void;
   readonly onChangeLessonTitle: (lessonTitle: string) => void;
   readonly onChangeLessonOrder?: (order: number) => void;
   readonly onChangeNotationLanguage?: (lang: MathNotationLanguage) => void;
+  readonly onChangeScopeSelection?: (unitIds: readonly string[], lessonIds: readonly string[]) => void;
 }
 
 export default function StudioContextRibbonBar({
@@ -40,12 +44,15 @@ export default function StudioContextRibbonBar({
   selectedLessonTitle,
   selectedLessonOrder = 15,
   notationLanguage = "english",
+  selectedUnitIds = [],
+  selectedLessonIds = [],
   onChangeGrade,
   onChangeBranch,
   onChangeUnitTitle,
   onChangeLessonTitle,
   onChangeLessonOrder,
   onChangeNotationLanguage,
+  onChangeScopeSelection,
 }: StudioContextRibbonBarProps) {
   const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
@@ -56,150 +63,179 @@ export default function StudioContextRibbonBar({
     setUnits(loaded);
     if (loaded.length === 0) return;
 
-    const matchedUnit = loaded.find((u) => u.titleArabic === selectedUnitTitle);
-    if (!matchedUnit) {
-      const fallbackUnit = loaded[0];
-      onChangeUnitTitle?.(fallbackUnit.titleArabic);
-      onChangeBranch(fallbackUnit.branchId);
-      if (fallbackUnit.lessons[0]) {
-        onChangeLessonTitle(fallbackUnit.lessons[0].titleArabic);
-        onChangeLessonOrder?.(fallbackUnit.lessons[0].orderIndex);
+    // إذا لم يكن هناك تحديد مسبق للوحدات والدروس، نحدد أول وحدة افتراضياً
+    if (selectedUnitIds.length === 0 && selectedLessonIds.length === 0) {
+      const firstUnit = loaded[0];
+      const initialUnitIds = [firstUnit.id];
+      const initialLessonIds = firstUnit.lessons.map((l) => l.id);
+      onChangeScopeSelection?.(initialUnitIds, initialLessonIds);
+      onChangeUnitTitle?.(firstUnit.titleArabic);
+      onChangeBranch(firstUnit.branchId);
+      if (firstUnit.lessons[0]) {
+        onChangeLessonTitle(firstUnit.lessons[0].titleArabic);
+        onChangeLessonOrder?.(firstUnit.lessons[0].orderIndex);
       }
     } else {
-      const matchedLesson = matchedUnit.lessons.find((l) => l.titleArabic === selectedLessonTitle);
-      if (!matchedLesson && matchedUnit.lessons[0]) {
-        onChangeLessonTitle(matchedUnit.lessons[0].titleArabic);
-        onChangeLessonOrder?.(matchedUnit.lessons[0].orderIndex);
+      const matchedUnit = loaded.find((u) => selectedUnitIds.includes(u.id)) || loaded[0];
+      if (matchedUnit) {
+        onChangeBranch(matchedUnit.branchId);
       }
     }
   }, [selectedGradeId]);
 
-  const activeUnit = units.find((u) => u.titleArabic === selectedUnitTitle) || units[0];
-  const lessonsList = activeUnit?.lessons || [];
+  const handleToggleUnit = (unitId: string) => {
+    const targetUnit = units.find((u) => u.id === unitId);
+    if (!targetUnit) return;
+    const isChecked = selectedUnitIds.includes(unitId);
+    const unitLessonIds = targetUnit.lessons.map((l) => l.id);
+
+    const nextUnitIds = isChecked
+      ? selectedUnitIds.filter((id) => id !== unitId)
+      : [...selectedUnitIds, unitId];
+
+    const nextLessonIds = isChecked
+      ? selectedLessonIds.filter((id) => !unitLessonIds.includes(id))
+      : Array.from(new Set([...selectedLessonIds, ...unitLessonIds]));
+
+    onChangeScopeSelection?.(nextUnitIds, nextLessonIds);
+    if (!isChecked) {
+      onChangeUnitTitle?.(targetUnit.titleArabic);
+      onChangeBranch(targetUnit.branchId);
+      if (targetUnit.lessons[0]) {
+        onChangeLessonTitle(targetUnit.lessons[0].titleArabic);
+        onChangeLessonOrder?.(targetUnit.lessons[0].orderIndex);
+      }
+    }
+  };
+
+  const handleToggleLesson = (lessonId: string, unitId: string) => {
+    const isChecked = selectedLessonIds.includes(lessonId);
+    const nextLessonIds = isChecked
+      ? selectedLessonIds.filter((id) => id !== lessonId)
+      : [...selectedLessonIds, lessonId];
+
+    const targetUnit = units.find((u) => u.id === unitId);
+    let nextUnitIds = [...selectedUnitIds];
+
+    if (targetUnit) {
+      const allLessonsChecked =
+        targetUnit.lessons.length > 0 &&
+        targetUnit.lessons.every((l) => nextLessonIds.includes(l.id));
+
+      if (allLessonsChecked && !nextUnitIds.includes(unitId)) {
+        nextUnitIds.push(unitId);
+      } else if (!allLessonsChecked && nextUnitIds.includes(unitId)) {
+        nextUnitIds = nextUnitIds.filter((id) => id !== unitId);
+      }
+
+      const clickedLesson = targetUnit.lessons.find((l) => l.id === lessonId);
+      if (clickedLesson && !isChecked) {
+        onChangeLessonTitle(clickedLesson.titleArabic);
+        onChangeLessonOrder?.(clickedLesson.orderIndex);
+        onChangeUnitTitle?.(targetUnit.titleArabic);
+        onChangeBranch(targetUnit.branchId);
+      }
+    }
+
+    onChangeScopeSelection?.(nextUnitIds, nextLessonIds);
+  };
+
+  const handleSelectAll = () => {
+    const allU = units.map((u) => u.id);
+    const allL = units.flatMap((u) => u.lessons.map((l) => l.id));
+    onChangeScopeSelection?.(allU, allL);
+  };
+
+  const handleDeselectAll = () => {
+    onChangeScopeSelection?.([], []);
+  };
 
   return (
-    <section aria-label="سياق الصف والوحدة والدرس من مستكشف المنهج" className="space-y-3 pt-2">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+    <section aria-label="سياق الصف والوحدات والدروس المستهدفة" className="space-y-3 pt-2">
+      {/* الصف الدراسي والخيارات الأساسية */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">الصف الدراسي</label>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            الصف الدراسي
+          </label>
           <select
             value={selectedGradeId}
             onChange={(e) => onChangeGrade(e.target.value)}
             className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
           >
             {enabledGrades.map((g) => (
-              <option key={g.id} value={g.id}>{g.nameArabic}</option>
+              <option key={g.id} value={g.id}>
+                {g.nameArabic}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">رقم الدرس</label>
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            رقم الدرس الفردي
+          </label>
           <input
             type="number"
             min={1}
             max={60}
             value={selectedLessonOrder}
-            onChange={(e) => onChangeLessonOrder?.(Math.max(1, parseInt(e.target.value || "1", 10)))}
+            onChange={(e) =>
+              onChangeLessonOrder?.(Math.max(1, parseInt(e.target.value || "1", 10)))
+            }
             className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-center"
           />
         </div>
 
-        <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">
-            الوحدة {activeUnit ? `(${activeUnit.branchNameArabic})` : ""}:
+        <div className="col-span-2 sm:col-span-1 flex flex-col justify-end">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
+            رموز المعادلات
           </label>
-          {units.length > 0 ? (
-            <select
-              value={activeUnit?.titleArabic || ""}
-              onChange={(e) => {
-                const pickedUnit = units.find((u) => u.titleArabic === e.target.value);
-                onChangeUnitTitle?.(e.target.value);
-                if (pickedUnit) {
-                  onChangeBranch(pickedUnit.branchId);
-                  if (pickedUnit.lessons[0]) {
-                    onChangeLessonTitle(pickedUnit.lessons[0].titleArabic);
-                    onChangeLessonOrder?.(pickedUnit.lessons[0].orderIndex);
-                  }
-                }
-              }}
-              className="w-full min-h-[44px] px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[44px]">
+            <button
+              type="button"
+              onClick={() => onChangeNotationLanguage?.("english")}
+              className={`flex-1 min-h-[34px] rounded-lg font-black text-[11px] transition-all ${
+                notationLanguage === "english"
+                  ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
             >
-              {units.map((u) => (
-                <option key={u.id} value={u.titleArabic}>[{u.branchNameArabic}] {u.titleArabic}</option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type="text"
-              value={selectedUnitTitle || ""}
-              onChange={(e) => onChangeUnitTitle?.(e.target.value)}
-              placeholder="الوحدة الثالثة..."
-              className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
-            />
-          )}
-        </div>
-
-        <div className="col-span-1">
-          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate">اسم الدرس</label>
-          {lessonsList.length > 0 ? (
-            <select
-              value={selectedLessonTitle}
-              onChange={(e) => {
-                const pickedLesson = lessonsList.find((l) => l.titleArabic === e.target.value);
-                onChangeLessonTitle(e.target.value);
-                if (pickedLesson) onChangeLessonOrder?.(pickedLesson.orderIndex);
-              }}
-              className="w-full min-h-[44px] px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white"
+              $x, y$ (افتراضي)
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeNotationLanguage?.("arabic")}
+              className={`flex-1 min-h-[34px] rounded-lg font-black text-[11px] transition-all ${
+                notationLanguage === "arabic"
+                  ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
             >
-              {lessonsList.map((lesson) => (
-                <option key={lesson.id} value={lesson.titleArabic}>{lesson.orderIndex}. {lesson.titleArabic}</option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type="text"
-              value={selectedLessonTitle}
-              onChange={(e) => onChangeLessonTitle(e.target.value)}
-              placeholder="تشابه المضلعات..."
-              className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black"
-            />
-          )}
+              $س، ص$ (عربي)
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 text-[11px]">
-        <span className="font-extrabold text-slate-600 dark:text-slate-300">📐 رموز المعادلات بالورقة:</span>
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-0.5 rounded-xl border border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={() => onChangeNotationLanguage?.("english")}
-            className={`px-3 py-1 rounded-lg font-black transition-all ${
-              notationLanguage === "english"
-                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            $x, y$ (لاتيني — افتراضي)
-          </button>
-          <button
-            type="button"
-            onClick={() => onChangeNotationLanguage?.("arabic")}
-            className={`px-3 py-1 rounded-lg font-black transition-all ${
-              notationLanguage === "arabic"
-                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            $س، ص$ (عربي)
-          </button>
-        </div>
-      </div>
-
-      {units.length === 0 && (
-        <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
+      {/* قائمة الشيك بوكس التفاعلية لجميع وحدات ودروس المنهج */}
+      {units.length > 0 ? (
+        <StudioCurriculumUnitsChecklist
+          units={units}
+          selectedUnitIds={selectedUnitIds}
+          selectedLessonIds={selectedLessonIds}
+          onToggleUnit={handleToggleUnit}
+          onToggleLesson={handleToggleLesson}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+        />
+      ) : (
+        <div className="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
           <span>💡 لم تقم بتقسيم منهج هذا الصف بعد في مستكشف المنهج.</span>
-          <Link href="/library" className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black">
+          <Link
+            href="/library"
+            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black"
+          >
             🧭 انتقل لمستكشف المنهج لتقسيم هذا الصف الآن ↗
           </Link>
         </div>

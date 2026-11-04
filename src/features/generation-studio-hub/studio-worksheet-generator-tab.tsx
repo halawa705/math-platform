@@ -27,13 +27,9 @@ import {
   loadPersistedPDFPrintSettingsSSOT,
   savePersistedPDFPrintSettingsSSOT,
 } from "@/core/ssot/pdf-print-settings-ssot";
-import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
-import StudioCurriculumUnitsChecklist, {
-  formatSelectedCurriculumScopeArabic,
-} from "./studio-curriculum-units-checklist";
 import StudioWorksheetQuestionsCountCard from "./studio-worksheet-questions-count-card";
 
 export const MODULE_ID_STUDIO_WORKSHEET_GENERATOR_TAB =
@@ -47,6 +43,9 @@ export interface StudioWorksheetGeneratorTabProps {
   readonly unitTitleAr?: string;
   readonly lessonTitle: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
+  readonly targetedScopeText?: string;
   readonly onApplyWorksheetTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
@@ -59,13 +58,13 @@ export default function StudioWorksheetGeneratorTab({
   unitTitleAr = "",
   lessonTitle,
   notationLanguage = "english",
+  selectedUnitIds = [],
+  selectedLessonIds = [],
+  targetedScopeText,
   onApplyWorksheetTitleToSheet,
   onApplyParsedQuestionsToSheet,
 }: StudioWorksheetGeneratorTabProps) {
   const [initial] = useState(() => loadStudioWorksheetSettingsSSOT());
-  const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
-  const [selectedUnitIds, setSelectedUnitIds] = useState<readonly string[]>(initial.selectedUnitIds || []);
-  const [selectedLessonIds, setSelectedLessonIds] = useState<readonly string[]>(initial.selectedLessonIds || []);
 
   const [mcqCount, setMcqCount] = useState(initial.mcqCount ?? 10);
   const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled ?? true);
@@ -83,58 +82,7 @@ export default function StudioWorksheetGeneratorTab({
   const persist = (p: Partial<ReturnType<typeof loadStudioWorksheetSettingsSSOT>>) =>
     saveStudioWorksheetSettingsSSOT(p);
 
-  // تحميل وحدات المنهج المعتمدة لهذا الصف
-  useEffect(() => {
-    const loaded = loadActiveCurriculumUnitsSSOT(gradeId);
-    setUnits(loaded);
-  }, [gradeId]);
-
-  const handleToggleUnit = (unitId: string) => {
-    const target = units.find((u) => u.id === unitId);
-    if (!target) return;
-    const isChecked = selectedUnitIds.includes(unitId);
-    const unitLessonIds = target.lessons.map((l) => l.id);
-    const nextUnitIds = isChecked ? selectedUnitIds.filter((id) => id !== unitId) : [...selectedUnitIds, unitId];
-    const nextLessonIds = isChecked
-      ? selectedLessonIds.filter((id) => !unitLessonIds.includes(id))
-      : Array.from(new Set([...selectedLessonIds, ...unitLessonIds]));
-
-    setSelectedUnitIds(nextUnitIds);
-    setSelectedLessonIds(nextLessonIds);
-    persist({ selectedUnitIds: nextUnitIds, selectedLessonIds: nextLessonIds });
-  };
-
-  const handleToggleLesson = (lessonId: string, unitId: string) => {
-    const isChecked = selectedLessonIds.includes(lessonId);
-    const nextLessonIds = isChecked ? selectedLessonIds.filter((id) => id !== lessonId) : [...selectedLessonIds, lessonId];
-    const targetUnit = units.find((u) => u.id === unitId);
-    let nextUnitIds = [...selectedUnitIds];
-    if (targetUnit) {
-      const allLessonsChecked = targetUnit.lessons.length > 0 && targetUnit.lessons.every((l) => nextLessonIds.includes(l.id));
-      if (allLessonsChecked && !nextUnitIds.includes(unitId)) nextUnitIds.push(unitId);
-      if (!allLessonsChecked && nextUnitIds.includes(unitId)) nextUnitIds = nextUnitIds.filter((id) => id !== unitId);
-    }
-    setSelectedLessonIds(nextLessonIds);
-    setSelectedUnitIds(nextUnitIds);
-    persist({ selectedUnitIds: nextUnitIds, selectedLessonIds: nextLessonIds });
-  };
-
-  const handleSelectAll = () => {
-    const allU = units.map((u) => u.id);
-    const allL = units.flatMap((u) => u.lessons.map((l) => l.id));
-    setSelectedUnitIds(allU);
-    setSelectedLessonIds(allL);
-    persist({ selectedUnitIds: allU, selectedLessonIds: allL });
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedUnitIds([]);
-    setSelectedLessonIds([]);
-    persist({ selectedUnitIds: [], selectedLessonIds: [] });
-  };
-
-  const targetedScopeText = formatSelectedCurriculumScopeArabic(units, selectedUnitIds, selectedLessonIds);
-  const activeScopeDisplay = targetedScopeText || lessonTitle;
+  const activeScopeDisplay = targetedScopeText?.trim() || lessonTitle;
 
   const effectiveMcq = mcqEnabled ? mcqCount : 0;
   const effectiveEssay = essayEnabled ? essayCount : 0;
@@ -181,7 +129,8 @@ export default function StudioWorksheetGeneratorTab({
       answerSpaceStyle: includeAnswerLines ? "dotted" : "hidden",
     });
 
-    const selectedUnitsList = units.filter((u) => selectedUnitIds.includes(u.id));
+    const allUnits = loadActiveCurriculumUnitsSSOT(gradeId);
+    const selectedUnitsList = allUnits.filter((u) => selectedUnitIds.includes(u.id));
     let derivedUnitTitle = unitTitleAr;
     if (selectedUnitsList.length > 1) {
       const uNums = selectedUnitsList
@@ -205,25 +154,6 @@ export default function StudioWorksheetGeneratorTab({
 
   return (
     <div className="space-y-3">
-      {/* نطاق ورقة العمل من مستكشف المنهج بالشيك بوكس */}
-      <StudioCollapsibleSectionCard
-        icon="📑"
-        titleAr="نطاق ورقة العمل (الوحدات والدروس من مستكشف المنهج)"
-        summaryAr={activeScopeDisplay}
-      >
-        <div className="pt-2">
-          <StudioCurriculumUnitsChecklist
-            units={units}
-            selectedUnitIds={selectedUnitIds}
-            selectedLessonIds={selectedLessonIds}
-            onToggleUnit={handleToggleUnit}
-            onToggleLesson={handleToggleLesson}
-            onSelectAll={handleSelectAll}
-            onDeselectAll={handleDeselectAll}
-          />
-        </div>
-      </StudioCollapsibleSectionCard>
-
       {/* أعداد الأسئلة وزمن الحل كتابة حرة ومساحات الإجابة */}
       <StudioWorksheetQuestionsCountCard
         mcqCount={mcqCount}

@@ -39,6 +39,9 @@ export interface StudioExamFormsGeneratorTabProps {
   readonly unitTitleAr?: string;
   readonly lessonTitle: string;
   readonly branchNameAr: string;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
+  readonly targetedScopeText?: string;
   readonly onApplyFormsTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
   readonly onApplyExamFormsToSheet?: (forms: readonly PrintableExamFormGroup[]) => void;
@@ -51,6 +54,9 @@ export default function StudioExamFormsGeneratorTab({
   unitTitleAr = "",
   lessonTitle,
   branchNameAr,
+  selectedUnitIds = [],
+  selectedLessonIds = [],
+  targetedScopeText,
   onApplyFormsTitleToSheet,
   onApplyParsedQuestionsToSheet,
   onApplyExamFormsToSheet,
@@ -58,7 +64,9 @@ export default function StudioExamFormsGeneratorTab({
   const [initial] = useState(() => loadStudioExamFormsSettingsSSOT());
   const [formsCount, setFormsCount] = useState(initial.formsCount);
   const [scopeKind, setScopeKind] = useState<ExamFormsScopeKind>(initial.scopeKind);
-  const [scopeDesc, setScopeDesc] = useState(initial.targetedUnitsOrLessons || unitTitleAr || lessonTitle);
+  const [scopeDesc, setScopeDesc] = useState(
+    targetedScopeText || initial.targetedUnitsOrLessons || unitTitleAr || lessonTitle
+  );
   const [mcqCount, setMcqCount] = useState(initial.mcqCount);
   const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled);
   const [proofCount, setProofCount] = useState(initial.proofCount);
@@ -73,8 +81,8 @@ export default function StudioExamFormsGeneratorTab({
     gradeId,
     unitTitleAr,
     scopeKind,
-    initialUnitIds: initial.selectedUnitIds,
-    initialLessonIds: initial.selectedLessonIds,
+    initialUnitIds: selectedUnitIds.length > 0 ? selectedUnitIds : initial.selectedUnitIds,
+    initialLessonIds: selectedLessonIds.length > 0 ? selectedLessonIds : initial.selectedLessonIds,
     onScopeDescChanged: (d) => setScopeDesc(d),
   });
 

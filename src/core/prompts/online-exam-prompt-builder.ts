@@ -8,6 +8,10 @@ import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { MATH_BRANCHES_SSOT } from "../ssot/math-branches-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
 import { buildSharedMathInvariantsPromptBlock } from "./shared-math-prompt-invariants";
+import {
+  formatUnitFocusWeightsForPrompt,
+  type UnitFocusWeightItem,
+} from "@/features/generation-studio-hub/studio-curriculum-units-checklist";
 
 export const MODULE_ID_ONLINE_EXAM_PROMPT_BUILDER =
   "online_exam_prompt_builder" as const;
@@ -17,6 +21,8 @@ export interface OnlineExamPromptBuilderConfig {
   readonly termNumber: 1 | 2;
   readonly branchId: MathBranchId;
   readonly targetedLessonTitlesArabic: readonly string[];
+  readonly targetedScopeArabic?: string;
+  readonly unitFocusWeights?: readonly UnitFocusWeightItem[];
   readonly mcqQuestionsCount: number;
   readonly completionQuestionsCount?: number;
   readonly shortAnswerQuestionsCount: number;
@@ -45,9 +51,15 @@ export function buildOnlineExamNotebookLMPrompt(
         : "متوازن قياسي (٣٠٪ مباشر، ٥٠٪ تطبيقي، ٢٠٪ تمييز)";
 
   const lessonsText =
-    config.targetedLessonTitlesArabic.length > 0
+    config.targetedScopeArabic?.trim() ||
+    (config.targetedLessonTitlesArabic.length > 0
       ? config.targetedLessonTitlesArabic.join(" ، ")
-      : "دروس الفرع بالمصادر";
+      : "دروس الفرع بالمصادر");
+
+  const focusBlock =
+    config.unitFocusWeights && config.unitFocusWeights.length > 1
+      ? formatUnitFocusWeightsForPrompt(config.unitFocusWeights)
+      : undefined;
 
   const customRule = config.customDirectivesArabic?.trim()
     ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
@@ -55,7 +67,8 @@ export function buildOnlineExamNotebookLMPrompt(
 
   return [
     `اختبار إلكتروني (تصحيح آلي): ${branchSpec.nameArabic} | ${config.gradeNameArabic} (${termLabel}) | الدرجة: ${config.totalMarks}.`,
-    `🎯 النطاق الحصري: [${lessonsText}] | المستوى: ${difficultyAr}.`,
+    `🎯 النطاق الحصري (ممنوع الخروج عنه): [${lessonsText}] | المستوى: ${difficultyAr}.`,
+    ...(focusBlock ? [focusBlock] : []),
     `📊 الأعداد الحرفية (${totalQ} أسئلة، ممنوع أسئلة البرهان والمقالي): (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.shortAnswerQuestionsCount}) إجابة قصيرة حاسمة [SHORT] (عدد/كسر/جذر/فترة وحيدة).`,
     ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({

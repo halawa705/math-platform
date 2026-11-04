@@ -24,8 +24,39 @@ export interface StudioCurriculumUnitsChecklistProps {
   readonly onDeselectAll: () => void;
 }
 
+export interface UnitFocusWeightItem {
+  readonly unitId: string;
+  readonly unitTitle: string;
+  readonly unitOrderIndex: number;
+  readonly percentage: number;
+  readonly questionCount?: number;
+}
+
 /**
- * يحول الوحدات والدروس المختارة إلى صياغة عربية دقيقة وشاملة للبرومبت وترويسة المستند
+ * يصيغ توزيع نسب الأسئلة على الوحدات للبرومبت بشكل حازم ومكثف
+ */
+export function formatUnitFocusWeightsForPrompt(
+  weights: readonly UnitFocusWeightItem[]
+): string {
+  if (weights.length <= 1) return "";
+  const lines = [
+    "⚖️ نسب التركيز وتوزيع الأسئلة الإلزامي على الوحدات (التزم بها حرفياً بلا زيادة أو نقصان):",
+    ...weights.map(
+      (w) =>
+        `- ${w.unitTitle}: ${w.percentage}%${
+          w.questionCount !== undefined && w.questionCount > 0
+            ? ` (${w.questionCount} أسئلة)`
+            : ""
+        }`
+    ),
+    "ممنوع الإخلال بهذه الأوزان أو تفضيل وحدة على أخرى خلافاً لهذه النسب.",
+  ];
+  return lines.join("\n");
+}
+
+/**
+ * يحول الوحدات والدروس المختارة إلى صياغة عربية دقيقة ومكثفة بأقل عدد كلمات للبرومبت وترويسة المستند
+ * مع مراعاة حصر الدروس المستثناة إن كانت أقل، أو المستهدفة إن كانت أقل للحفاظ على وزن البرومبت.
  */
 export function formatSelectedCurriculumScopeArabic(
   units: readonly CurriculumUnitNode[],
@@ -33,6 +64,19 @@ export function formatSelectedCurriculumScopeArabic(
   selectedLessonIds: readonly string[]
 ): string {
   if (units.length === 0) return "";
+
+  // تحقق ما إذا كان المنهج بالكامل محدداً بكل وحداته ودروسه
+  if (units.length > 1) {
+    const totalLessonsCount = units.reduce((acc, u) => acc + u.lessons.length, 0);
+    const totalChosenCount = units.reduce(
+      (acc, u) => acc + u.lessons.filter((l) => selectedLessonIds.includes(l.id)).length,
+      0
+    );
+    const allUnitsInIds = units.every((u) => selectedUnitIds.includes(u.id));
+    if (totalLessonsCount > 0 && totalChosenCount === totalLessonsCount && allUnitsInIds) {
+      return "كامل وحدات ودروس المنهج المقرر";
+    }
+  }
 
   const parts: string[] = [];
 
@@ -48,10 +92,14 @@ export function formatSelectedCurriculumScopeArabic(
     if (unit.lessons.length === 0 || excludedLessons.length === 0) {
       // الوحدة محددة بكامل دروسها بدون أي استثناء
       parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic}) كاملة`);
-    } else {
-      // استثناء درس أو أكثر: يُكتب اسم الوحدة وأسماء الدروس المستثناة حصراً
+    } else if (excludedLessons.length <= chosenLessons.length) {
+      // استثناء درس أو أكثر والدروس المستثناة أقل أو تساوي المختارة: يُكتب اسم المستثناة لتوفير الكلمات
       const excludedNames = excludedLessons.map((l) => l.titleArabic).join("، ");
       parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic}) [باستثناء: ${excludedNames}]`);
+    } else {
+      // الدروس المختارة أقل صراحة من المستثناة: نذكر المختارة حصراً لتوفير الكلمات
+      const chosenNames = chosenLessons.map((l) => l.titleArabic).join("، ");
+      parts.push(`الوحدة ${unit.orderIndex} (${unit.titleArabic}) [دروس: ${chosenNames}]`);
     }
   }
 

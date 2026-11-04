@@ -6,12 +6,17 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
-import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
+import {
+  buildStandardDocumentTitleSSOT,
+  loadActiveCurriculumUnitsSSOT,
+} from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { buildOnlineExamNotebookLMPrompt } from "@/core/prompts/online-exam-prompt-builder";
+import type { UnitFocusWeightItem } from "./studio-curriculum-units-checklist";
+import StudioExamUnitFocusWeightsCard from "./studio-exam-unit-focus-weights-card";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
@@ -39,13 +44,18 @@ export interface StudioExamGeneratorTabProps {
   readonly unitTitleAr?: string;
   readonly lessonTitle: string;
   readonly branchNameAr: string;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
+  readonly targetedScopeText?: string;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
 
 export default function StudioExamGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
-  unitTitleAr = "", lessonTitle, branchNameAr, onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet,
+  unitTitleAr = "", lessonTitle, branchNameAr,
+  selectedUnitIds = [], selectedLessonIds = [], targetedScopeText,
+  onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioExamGeneratorTabProps) {
   const [initial] = useState(() => loadStudioExamSettingsSSOT());
   const [mcqCount, setMcqCount] = useState(initial.mcqCount);
@@ -55,6 +65,7 @@ export default function StudioExamGeneratorTab({
   const [isOnlineMode, setIsOnlineMode] = useState(initial.isOnlineMode);
   const [difficulty, setDifficulty] = useState(initial.difficulty);
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
+  const [weights, setWeights] = useState<Record<string, number>>(initial.unitFocusWeights || {});
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
   const [parsedQuestions, setParsedQuestions] = useState<readonly QuestionAssessmentIR[]>([]);
@@ -69,10 +80,60 @@ export default function StudioExamGeneratorTab({
   const effectiveMcq = mcqEnabled ? mcqCount : 0;
   const effectiveProof = proofEnabled ? proofCount : 0;
 
+  // جلب الوحدات المحددة حالياً من مستكشف المنهج
+  const allCurriculumUnits = useMemo(() => loadActiveCurriculumUnitsSSOT(gradeId), [gradeId]);
+  const activeSelectedUnits = useMemo(() => {
+    if (!selectedUnitIds || selectedUnitIds.length === 0) return [];
+    return allCurriculumUnits.filter((u) => selectedUnitIds.includes(u.id));
+  }, [allCurriculumUnits, selectedUnitIds]);
+
+  // إعداد أو تحديث الأوزان الافتراضية المتساوية للوحدات المختارة إن لم تكن محددة مسبقاً
+  useEffect(() => {
+    if (activeSelectedUnits.length > 1) {
+      const missing = activeSelectedUnits.some((u) => typeof weights[u.id] !== "number");
+      if (missing) {
+        const count = activeSelectedUnits.length;
+        const base = Math.floor(100 / count);
+        const remainder = 100 - base * count;
+        const next: Record<string, number> = { ...weights };
+        activeSelectedUnits.forEach((u, idx) => {
+          if (typeof next[u.id] !== "number") {
+            next[u.id] = base + (idx < remainder ? 1 : 0);
+          }
+        });
+        setWeights(next);
+        persist({ unitFocusWeights: next });
+      }
+    }
+  }, [activeSelectedUnits]);
+
+  const handleWeightsChange = (newWeights: Record<string, number>) => {
+    setWeights(newWeights);
+    persist({ unitFocusWeights: newWeights });
+  };
+
+  const focusWeightItems: readonly UnitFocusWeightItem[] = useMemo(() => {
+    if (activeSelectedUnits.length <= 1) return [];
+    const totalQ = effectiveMcq + effectiveProof;
+    return activeSelectedUnits.map((u) => {
+      const pct = weights[u.id] ?? 0;
+      return {
+        unitId: u.id,
+        unitTitle: `الوحدة ${u.orderIndex} (${u.titleArabic})`,
+        unitOrderIndex: u.orderIndex,
+        percentage: pct,
+        questionCount: Math.round((pct / 100) * totalQ),
+      };
+    });
+  }, [activeSelectedUnits, weights, effectiveMcq, effectiveProof]);
+
   useEffect(() => {
     const baseCfg = {
       gradeNameArabic: gradeNameAr, termNumber: 1 as const, branchId,
-      targetedLessonTitlesArabic: [lessonTitle], mcqQuestionsCount: effectiveMcq,
+      targetedLessonTitlesArabic: [lessonTitle],
+      targetedScopeArabic: targetedScopeText,
+      unitFocusWeights: focusWeightItems,
+      mcqQuestionsCount: effectiveMcq,
       totalMarks: Math.max(1, effectiveMcq + effectiveProof * 3), durationTextArabic: "ساعة ونصف", difficultyProfile: difficulty,
       customDirectivesArabic: customDirectives,
     };
@@ -81,7 +142,7 @@ export default function StudioExamGeneratorTab({
         ? buildOnlineExamNotebookLMPrompt({ ...baseCfg, shortAnswerQuestionsCount: effectiveProof })
         : buildOfficialExamNotebookLMPrompt({ ...baseCfg, essayAndProofQuestionsCount: effectiveProof })
     );
-  }, [gradeNameAr, branchId, lessonTitle, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
+  }, [gradeNameAr, branchId, lessonTitle, targetedScopeText, focusWeightItems, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
 
   const handleReplyChange = (raw: string) => {
     setNotice(null);
@@ -116,14 +177,15 @@ export default function StudioExamGeneratorTab({
     if (qs.length === 0) { setNotice("⚠️ الصق رد NotebookLM أولاً ثم اضغط تصيير."); return; }
     setNotice(null);
     onApplyParsedQuestionsToSheet?.(qs.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)));
-    const stdTitle = buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: lessonTitle, promptText: prompt, rawReplyText: reply });
+    const activeScope = targetedScopeText || lessonTitle;
+    const stdTitle = buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScope, promptText: prompt, rawReplyText: reply });
     onApplyExamTitleToSheet(stdTitle.includes("اختبار") ? stdTitle : `اختبار — ${stdTitle}`);
   };
 
   const handlePublish = async (p: { customTitleAr: string; durationMinutes: number; availabilityDays: number; revealAnswers: boolean }) => {
     const qs = getActiveQuestions();
     if (qs.length === 0) { setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة."); return; }
-    const finalTitle = p.customTitleAr.trim() || `اختبار — ${lessonTitle}`;
+    const finalTitle = p.customTitleAr.trim() || `اختبار — ${targetedScopeText || lessonTitle}`;
     let examCode = publishedInfo?.examId;
     let excl: readonly number[] = [];
 
@@ -187,13 +249,20 @@ export default function StudioExamGeneratorTab({
         </div>
       </StudioCollapsibleSectionCard>
 
+      <StudioExamUnitFocusWeightsCard
+        selectedUnits={activeSelectedUnits}
+        totalQuestionsCount={effectiveMcq + effectiveProof}
+        weights={weights}
+        onChangeWeights={handleWeightsChange}
+      />
+
       <StudioCustomDirectivesCard
         customDirectives={customDirectives}
         onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }}
       />
 
       <StudioSingleStagePastePanel
-        stageTitleAr={`اختبار تقييمي — ${lessonTitle}`} stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لمعاينة الأسئلة وتعديلها وطباعتها أو نشرها أونلاين."
+        stageTitleAr={`اختبار تقييمي — ${targetedScopeText || lessonTitle}`} stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لمعاينة الأسئلة وتعديلها وطباعتها أو نشرها أونلاين."
         promptText={prompt} onChangePrompt={setPrompt}
         onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
         isPromptCopied={copied} replyValue={reply} onChangeReply={handleReplyChange} replyPlaceholderAr="الصق رد أسئلة الاختبار هنا..."

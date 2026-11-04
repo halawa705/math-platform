@@ -35,6 +35,7 @@ export interface StudioFinalReviewGeneratorTabProps {
   readonly branchId?: MathBranchId;
   readonly unitTitleAr?: string;
   readonly branchNameAr: string;
+  readonly targetedScopeText?: string;
   readonly onApplyReviewTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
@@ -47,7 +48,9 @@ const STAGE_COPY = {
 
 export default function StudioFinalReviewGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
-  unitTitleAr = "جميع وحدات المنهج", branchNameAr, onApplyReviewTitleToSheet, onApplyParsedQuestionsToSheet,
+  unitTitleAr = "جميع وحدات المنهج", branchNameAr,
+  targetedScopeText,
+  onApplyReviewTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioFinalReviewGeneratorTabProps) {
   const [initial] = useState(() => loadStudioReviewSettingsSSOT());
   const [scope, setScope] = useState<FinalReviewScopeKind>(initial.scope);
@@ -74,24 +77,27 @@ export default function StudioFinalReviewGeneratorTab({
       buildFinalReviewNotebookLMPrompt({
         reviewScope: scope, stageNumber: activeStage, gradeNameArabic: gradeNameAr, termNumber: 1, branchId,
         coveredUnitsTitlesArabic: unitTitleAr ? [unitTitleAr] : [],
+        targetedScopeArabic: targetedScopeText,
         totalReviewQuestionsCount: Math.max(1, effectiveMcq + effectiveEssay),
         mcqCount: effectiveMcq, essayCount: effectiveEssay, extractedStage2EssayQuestions: essays,
         customDirectivesArabic: customDirectives,
       })
     );
-  }, [scope, activeStage, gradeNameAr, branchId, unitTitleAr, effectiveMcq, effectiveEssay, essays, customDirectives]);
+  }, [scope, activeStage, gradeNameAr, branchId, unitTitleAr, targetedScopeText, effectiveMcq, effectiveEssay, essays, customDirectives]);
 
   const buildPdf = (withStage3: boolean) => {
+    const defaultScope = scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر";
+    const activeScope = targetedScopeText || defaultScope;
     const items = mergeFinalReviewThreeStagesToPrintableItems({
       stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "", branchId, branchNameAr,
-      titleArabic: scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر",
+      titleArabic: defaultScope,
     });
     if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);
     setDiagRows(items.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! })));
     onApplyParsedQuestionsToSheet?.(items);
     onApplyReviewTitleToSheet(buildStandardDocumentTitleSSOT({
-      gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: scope === "final_exam_night_capsule" ? "المراجعة النهائية الشاملة" : "مراجعة اختبار الشهر",
+      gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScope,
       promptText: prompt, rawReplyText: replies[1] || replies[2],
     }));
   };

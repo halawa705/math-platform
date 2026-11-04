@@ -52,12 +52,16 @@ export interface StudioGlobalContextState {
   readonly lessonTitle: string;
   readonly lessonOrder: number;
   readonly sheetTitle: string;
+  readonly selectedUnitIds?: readonly string[];
+  readonly selectedLessonIds?: readonly string[];
+  readonly targetedScopeText?: string;
 }
 
 export const DEFAULT_STUDIO_GLOBAL_CONTEXT: StudioGlobalContextState = {
   activeTabId: "booklet", gradeId: "prep-3", branchId: "plane_geometry",
   unitTitle: "الوحدة الثالثة", lessonTitle: "تشابه المضلعات", lessonOrder: 15,
   sheetTitle: "15 - 3ع - الوحدة الثالثة - تشابه المضلعات",
+  selectedUnitIds: [], selectedLessonIds: [], targetedScopeText: "",
 };
 
 export const loadStudioGlobalContextSSOT = (): StudioGlobalContextState => safeGet(KEYS.GLOBAL, DEFAULT_STUDIO_GLOBAL_CONTEXT);
@@ -100,10 +104,12 @@ export interface StudioExamSettingsState {
   readonly isOnlineMode: boolean;
   readonly difficulty: "standard_balanced" | "olympiad_challenge";
   readonly customDirectives?: string;
+  readonly unitFocusWeights?: Record<string, number>;
 }
 
 export const DEFAULT_STUDIO_EXAM_SETTINGS: StudioExamSettingsState = {
   mcqCount: 6, mcqEnabled: true, proofCount: 3, proofEnabled: true, isOnlineMode: false, difficulty: "standard_balanced", customDirectives: "",
+  unitFocusWeights: {},
 };
 
 export const loadStudioExamSettingsSSOT = (): StudioExamSettingsState => safeGet(KEYS.EXAM, DEFAULT_STUDIO_EXAM_SETTINGS);

@@ -22,6 +22,7 @@ export interface FinalReviewPromptConfig {
   readonly termNumber: 1 | 2;
   readonly branchId: MathBranchId;
   readonly coveredUnitsTitlesArabic: readonly string[];
+  readonly targetedScopeArabic?: string;
   readonly totalReviewQuestionsCount: number;
   readonly mcqCount?: number;
   readonly essayCount?: number;
@@ -54,9 +55,10 @@ export function buildFinalReviewNotebookLMPrompt(
   const scopeLabel =
     config.reviewScope === "final_exam_night_capsule" ? "مراجعة ليلة الامتحان الشاملة" : "مراجعة مقرر الشهر";
   const unitsList =
-    config.coveredUnitsTitlesArabic.length > 0
+    config.targetedScopeArabic?.trim() ||
+    (config.coveredUnitsTitlesArabic.length > 0
       ? config.coveredUnitsTitlesArabic.join(" ، ")
-      : "جميع وحدات المنهج المقررة";
+      : "جميع وحدات المنهج المقررة");
 
   const customRule = config.customDirectivesArabic?.trim()
     ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`

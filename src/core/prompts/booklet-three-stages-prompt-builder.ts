@@ -21,6 +21,7 @@ export interface BookletStagePromptConfig {
   readonly branchId: MathBranchId;
   readonly unitTitleArabic: string;
   readonly lessonTitleArabic: string;
+  readonly targetedScopeArabic?: string;
   readonly solvedExamplesPerIdea?: number;
   readonly drillsPerIdea?: number;
   readonly homeworkMcqCount?: number;
@@ -103,10 +104,14 @@ export function buildBookletStageNotebookLMPrompt(
     ? `💡 توجيهات المعلم الخاصة: ${config.customDirectivesArabic.trim()}`
     : undefined;
 
+  const scopeText =
+    config.targetedScopeArabic?.trim() ||
+    `${config.unitTitleArabic} — (${config.lessonTitleArabic})`;
+
   if (config.stageNumber === 1) {
     return [
-      `مذكرة الدرس (المرحلة ١: حصر الأفكار والشرح والأمثلة): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | ${config.unitTitleArabic} — (${config.lessonTitleArabic}).`,
-      `🎯 الخطة: (١) ابدأ بـ «فهرس أفكار الدرس:» لحصر أفكار الدرس من المصادر. (٢) اشرح كل فكرة بالترتيب وقاعدتها وأورد (${examplesCount}) أمثلة محلولة عليها (بلا حاول بنفسك أو واجب هنا):`,
+      `مذكرة الشرح والأمثلة (المرحلة ١): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | [${scopeText}].`,
+      `🎯 الخطة الحصرية (ممنوع الخروج عن النطاق): (١) ابدأ بـ «فهرس أفكار الدرس:» لحصر أفكار المصادر. (٢) اشرح كل فكرة وقاعدتها وأورد (${examplesCount}) أمثلة محلولة عليها (بلا حاول بنفسك أو واجب هنا):`,
       ...(customRule ? [customRule] : []),
       sharedRules,
       "📐 قالب الإخراج الإلزامي للمرحلة ١:",
@@ -140,7 +145,7 @@ export function buildBookletStageNotebookLMPrompt(
         : "[1] [نص التمرين] | معرف السؤال: practice-01-01";
 
     return [
-      `مذكرة الدرس (المرحلة ٢: حاول بنفسك + الواجب لكل فكرة بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
+      `مذكرة التدريبات والواجب (المرحلة ٢): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | [${scopeText}].`,
       ideasLine,
       `📊 المطلوب من المصادر (بلا حلول): لكل فكرة أنشئ (${drillsCount}) تمارين «حاول بنفسك» مستقلة بلا دمج + واجب (${totalHw}) أسئلة = (${hwMcq}) [اختر] + (${hwEssay}) [مقالي].`,
       ...(customRule ? [customRule] : []),
@@ -162,7 +167,7 @@ export function buildBookletStageNotebookLMPrompt(
       : "📌 اكتب الحل النموذجي لجميع أسئلة المرحلة ٢ (حاول بنفسك والواجب لجميع الأفكار) بالترتيب.";
 
   return [
-    `مذكرة الدرس (المرحلة ٣: نموذج إجابة أسئلة المرحلة ٢): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | درس (${config.lessonTitleArabic}).`,
+    `مذكرة نموذج الإجابة (المرحلة ٣): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | [${scopeText}].`,
     ideasLine,
     qListLine,
     sharedRules,

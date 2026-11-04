@@ -37,6 +37,7 @@ export interface StudioBookletGeneratorTabProps {
   readonly lessonTitle: string;
   readonly lessonOrder?: number;
   readonly branchNameAr: string;
+  readonly targetedScopeText?: string;
   readonly onApplyBookletTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
@@ -50,6 +51,7 @@ const STAGE_COPY = {
 export default function StudioBookletGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "الوحدة الثالثة", lessonTitle, lessonOrder = 15, branchNameAr,
+  targetedScopeText,
   onApplyBookletTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioBookletGeneratorTabProps) {
   const [initial] = useState(() => loadStudioBookletSettingsSSOT());
@@ -82,20 +84,22 @@ export default function StudioBookletGeneratorTab({
       buildBookletStageNotebookLMPrompt({
         stageNumber: activeStage, gradeNameArabic: gradeNameAr, termNumber: 1, branchId,
         unitTitleArabic: unitTitleAr, lessonTitleArabic: lessonTitle,
+        targetedScopeArabic: targetedScopeText,
         solvedExamplesPerIdea: effectiveExamples, drillsPerIdea: effectiveDrills,
         homeworkMcqCount: effectiveHwMcq, homeworkEssayCount: effectiveHwEssay,
         extractedStage1Ideas: ideas, extractedStage2Questions: questions,
         customDirectivesArabic: customDirectives,
       })
     );
-  }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, effectiveExamples, effectiveDrills, effectiveHwMcq, effectiveHwEssay, ideas, questions, customDirectives]);
+  }, [activeStage, gradeNameAr, branchId, unitTitleAr, lessonTitle, targetedScopeText, effectiveExamples, effectiveDrills, effectiveHwMcq, effectiveHwEssay, ideas, questions, customDirectives]);
 
   const persist = (p: Partial<ReturnType<typeof loadStudioBookletSettingsSSOT>>) => saveStudioBookletSettingsSSOT(p);
 
   const buildPdf = (withStage3: boolean) => {
+    const activeScope = targetedScopeText || lessonTitle;
     const items = mergeBookletThreeStagesRepliesToPrintableItems({
       stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "",
-      branchId, branchNameAr, unitId: "booklet-unit", lessonId: "booklet-lesson", lessonTitleArabic: lessonTitle,
+      branchId, branchNameAr, unitId: "booklet-unit", lessonId: "booklet-lesson", lessonTitleArabic: activeScope,
     });
     if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);
@@ -103,7 +107,7 @@ export default function StudioBookletGeneratorTab({
     onApplyParsedQuestionsToSheet?.(items);
     onApplyBookletTitleToSheet(
       buildStandardDocumentTitleSSOT({
-        gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: lessonTitle, lessonOrderIndex: lessonOrder,
+        gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScope, lessonOrderIndex: lessonOrder,
         promptText: prompt, rawReplyText: replies[1] || replies[2], totalIdeasCount: ideas.length > 0 ? ideas.length : undefined,
       })
     );

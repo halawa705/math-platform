@@ -6,11 +6,15 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import SegmentedWorkspaceTabsBar, { type SegmentedTabItem } from "@/components/global-ui/segmented-workspace-tabs-bar";
 import { MATH_BRANCHES_SSOT, type MathBranchId } from "@/core/ssot/math-branches-ssot";
-import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
+import {
+  EGYPTIAN_MATH_GRADES_SSOT,
+  loadActiveCurriculumUnitsSSOT,
+} from "@/core/ssot/curriculum-hierarchy-ssot";
+import { formatSelectedCurriculumScopeArabic } from "./studio-curriculum-units-checklist";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import PDFPreviewOrchestrator from "@/features/pdf-preview-controls/pdf-preview-orchestrator";
@@ -47,6 +51,8 @@ export default function TeacherGenerationStudioView() {
   const [unitTitle, setUnitTitle] = useState<string>(initial.unitTitle);
   const [lessonTitle, setLessonTitle] = useState<string>(initial.lessonTitle);
   const [sheetTitle, setSheetTitle] = useState<string>(initial.sheetTitle);
+  const [selectedUnitIds, setSelectedUnitIds] = useState<readonly string[]>(initial.selectedUnitIds || []);
+  const [selectedLessonIds, setSelectedLessonIds] = useState<readonly string[]>(initial.selectedLessonIds || []);
   const [sheetQuestions, setSheetQuestions] = useState<readonly PrintableMathQuestionItem[] | undefined>(undefined);
   const [sheetForms, setSheetForms] = useState<readonly PrintableExamFormGroup[] | undefined>(undefined);
   const [pane, setPane] = useState<StudioActivePane>("builder");
@@ -63,17 +69,28 @@ export default function TeacherGenerationStudioView() {
   const branch = MATH_BRANCHES_SSOT[branchId] || MATH_BRANCHES_SSOT.plane_geometry;
   const grade = EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === gradeId) || EGYPTIAN_MATH_GRADES_SSOT[6];
 
+  const gradeUnits = useMemo(() => loadActiveCurriculumUnitsSSOT(gradeId), [gradeId]);
+  const targetedScopeText = useMemo(() => {
+    return formatSelectedCurriculumScopeArabic(gradeUnits, selectedUnitIds, selectedLessonIds);
+  }, [gradeUnits, selectedUnitIds, selectedLessonIds]);
+
   const updateTab = (id: string) => { setActiveTabId(id); setPane("builder"); saveStudioGlobalContextSSOT({ activeTabId: id }); };
   const updateGrade = (id: string) => { setGradeId(id); saveStudioGlobalContextSSOT({ gradeId: id }); };
   const updateBranch = (b: MathBranchId) => { setBranchId(b); saveStudioGlobalContextSSOT({ branchId: b }); };
   const updateUnit = (u: string) => { setUnitTitle(u); saveStudioGlobalContextSSOT({ unitTitle: u }); };
   const updateLesson = (l: string) => { setLessonTitle(l); saveStudioGlobalContextSSOT({ lessonTitle: l }); };
   const updateOrder = (o: number) => { setLessonOrder(o); saveStudioGlobalContextSSOT({ lessonOrder: o }); };
+  const handleScopeSelection = (unitIds: readonly string[], lessonIds: readonly string[]) => {
+    setSelectedUnitIds(unitIds);
+    setSelectedLessonIds(lessonIds);
+    saveStudioGlobalContextSSOT({ selectedUnitIds: unitIds, selectedLessonIds: lessonIds });
+  };
+
   const applyTitle = (t: string) => { setSheetTitle(t); setPane("preview"); saveStudioGlobalContextSSOT({ sheetTitle: t }); };
   const applyQuestions = (qs: readonly PrintableMathQuestionItem[]) => { setSheetQuestions(qs); setSheetForms(undefined); setPane("preview"); };
   const applyForms = (forms: readonly PrintableExamFormGroup[]) => { setSheetForms(forms); setPane("preview"); };
 
-  const contextSummary = `${grade.nameArabic} • درس (${lessonOrder}) • ${unitTitle || "الوحدة"} • ${lessonTitle}`;
+  const contextSummary = `${grade.nameArabic} • ${targetedScopeText || `${unitTitle || "الوحدة"} • ${lessonTitle}`}`;
 
   return (
     <div dir="rtl" className="min-h-screen overflow-x-hidden pb-28 md:pb-12 bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100">
@@ -86,13 +103,15 @@ export default function TeacherGenerationStudioView() {
 
         <SegmentedWorkspaceTabsBar tabs={STUDIO_TABS} activeTabId={activeTabId} onSelectTab={updateTab} />
 
-        <StudioCollapsibleSectionCard icon="🎯" titleAr="الدرس المستهدف" summaryAr={contextSummary}>
+        <StudioCollapsibleSectionCard icon="🎯" titleAr="النطاق والدروس المستهدفة" summaryAr={contextSummary}>
           <StudioContextRibbonBar
             selectedGradeId={gradeId} selectedBranchId={branchId} selectedUnitTitle={unitTitle}
             selectedLessonTitle={lessonTitle} selectedLessonOrder={lessonOrder}
             notationLanguage={notationLanguage} onChangeNotationLanguage={updateNotationLanguage}
+            selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
             onChangeGrade={updateGrade} onChangeBranch={updateBranch} onChangeUnitTitle={updateUnit}
             onChangeLessonTitle={updateLesson} onChangeLessonOrder={updateOrder}
+            onChangeScopeSelection={handleScopeSelection}
           />
         </StudioCollapsibleSectionCard>
 
@@ -102,7 +121,10 @@ export default function TeacherGenerationStudioView() {
               <StudioExamGeneratorTab
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
                 unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
-                branchNameAr={branch.nameArabic} onApplyExamTitleToSheet={applyTitle}
+                branchNameAr={branch.nameArabic}
+                selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+                targetedScopeText={targetedScopeText}
+                onApplyExamTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
@@ -110,7 +132,10 @@ export default function TeacherGenerationStudioView() {
               <StudioExamFormsGeneratorTab
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
                 unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
-                branchNameAr={branch.nameArabic} onApplyFormsTitleToSheet={applyTitle}
+                branchNameAr={branch.nameArabic}
+                selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+                targetedScopeText={targetedScopeText}
+                onApplyFormsTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={setSheetQuestions}
                 onApplyExamFormsToSheet={applyForms}
               />
@@ -120,6 +145,7 @@ export default function TeacherGenerationStudioView() {
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
                 unitTitleAr={unitTitle || "الوحدة الثالثة"} lessonTitle={lessonTitle}
                 lessonOrder={lessonOrder} branchNameAr={branch.nameArabic}
+                targetedScopeText={targetedScopeText}
                 onApplyBookletTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
@@ -127,6 +153,7 @@ export default function TeacherGenerationStudioView() {
               <StudioFinalReviewGeneratorTab
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
                 unitTitleAr={unitTitle || "جميع وحدات المنهج"} branchNameAr={branch.nameArabic}
+                targetedScopeText={targetedScopeText}
                 onApplyReviewTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
@@ -135,6 +162,8 @@ export default function TeacherGenerationStudioView() {
                 gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
                 branchNameAr={branch.nameArabic} unitTitleAr={unitTitle || "الوحدة الأولى"}
                 lessonTitle={lessonTitle} notationLanguage={notationLanguage}
+                selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+                targetedScopeText={targetedScopeText}
                 onApplyWorksheetTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={applyQuestions}
               />
