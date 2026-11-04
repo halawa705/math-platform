@@ -63,6 +63,7 @@ export interface CanonicalVertexNode {
   readonly id: string;
   readonly label: string;
   readonly position: Point2DCoordinate;
+  readonly hideVertexDot?: boolean;
 }
 
 export interface CanonicalSegmentNode {
@@ -73,6 +74,10 @@ export interface CanonicalSegmentNode {
   readonly tickMarks?: 1 | 2 | 3;
   readonly parallelArrows?: 1 | 2;
   readonly strokeStyle?: "solid" | "dashed" | "dotted";
+  readonly isRay?: boolean;
+  readonly isLine?: boolean;
+  readonly arrowAtEnd?: boolean;
+  readonly arrowAtStart?: boolean;
 }
 
 export interface CanonicalAngleNode {

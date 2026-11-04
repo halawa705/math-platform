@@ -66,7 +66,7 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
       });
       expect(svg).toContain("<svg");
       expect(svg).not.toContain("NaN");
-      expect(svg).not.toContain("<polygon");
+      expect(svg).toContain("<polygon");
 
       const cleaned = sanitizeNotebookLMCitationsAndLatex(`[رسم هندسي: ${rawDesc}]`).cleanedText;
       const inner = cleaned.match(/\[\s*رسم\s*هندسي\s*:\s*([^\]]+)\]/i)?.[1] ?? rawDesc;
@@ -161,5 +161,46 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
     expect(d3.warnings).toEqual([]);
     expect(d3.figure).toBeDefined();
     expect(verifyGeometryFigure(d3.figure!).passed).toBe(true);
+  });
+
+  it("يضمن دقة رسم الأسئلة 5 و 6 و 7: أسهم متجهة، زوايا معطاة، وحجب قياس الزاوية المطلوب إيجادها تماماً", () => {
+    // السؤال 5: منصف زاوية + زاوية 70° + المطلوب ABD (يجب عدم كتابة 55° أو 62.5° في الرسم)
+    const q5 =
+      "في الشكل المقابل، إذا كان B ∈ AC، وكان الشعاع BD ينصف ∠ABE. إذا كان m(∠EBC) = 70°، فأوجد بالبرهان الهندسي قياس ∠ABD.";
+    const d5 = matchGeometryWithDiagnostics(q5, "q5_test", "english");
+    expect(d5.source).toBe("compositor");
+    expect(d5.figure).toBeDefined();
+    expect(d5.figure!.segments.length).toBe(4);
+    const svg5 = projectGeometryFigureToSVGMarkup(d5.figure!, { numeralMode: "western" });
+    expect(svg5).toContain("<polygon"); // أسهم الأشعة
+    expect(svg5).toContain("70°"); // الزاوية المعطاة
+    expect(svg5).not.toContain("55°"); // حجب الحل
+    expect(svg5).not.toContain("62.5°");
+
+    // السؤال 6: مستقيمان متقاطعان + منصف زاوية + CMB = 130° (يجب عدم كتابة 65° في الرسم)
+    const q6 =
+      "في الشكل المقابل، إذا تقاطع المستقيمان AB و CD في النقطة M، وكان الشعاع ME ينصف ∠AMD. إذا كان m(∠CMB) = 130°، فأوجد بالبرهان الهندسي m(∠AMC) و m(∠AME).";
+    const d6 = matchGeometryWithDiagnostics(q6, "q6_test", "english");
+    expect(d6.source).toBe("compositor");
+    expect(d6.figure).toBeDefined();
+    expect(d6.figure!.segments.length).toBe(5);
+    const svg6 = projectGeometryFigureToSVGMarkup(d6.figure!, { numeralMode: "western" });
+    expect(svg6).toContain("<polygon");
+    expect(svg6).toContain("130°");
+    expect(svg6).not.toContain("65°"); // حجب الحل
+
+    // السؤال 7: أربعة أشعة تخرج من النقطة M + تعامد MA ⊥ ME + زاويتان 100° و 130° + المطلوب CMD (يجب عدم كتابة 40°)
+    const q7 =
+      "في الشكل المقابل، أربعة أشعة تخرج من النقطة M. إذا كان MA ⊥ ME. وكان m(∠BMC) = 100° و m(∠AMB) = 130°، فأوجد بالبرهان الهندسي m(∠CMD).";
+    const d7 = matchGeometryWithDiagnostics(q7, "q7_test", "english");
+    expect(d7.source).toBe("compositor");
+    expect(d7.figure).toBeDefined();
+    expect(d7.figure!.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["M", "A", "E", "B", "C", "D"]));
+    expect(d7.figure!.segments.length).toBe(5);
+    const svg7 = projectGeometryFigureToSVGMarkup(d7.figure!, { numeralMode: "western" });
+    expect(svg7).toContain("<polygon");
+    expect(svg7).toContain("100°");
+    expect(svg7).toContain("130°");
+    expect(svg7).not.toContain("40°"); // حجب الحل
   });
 });

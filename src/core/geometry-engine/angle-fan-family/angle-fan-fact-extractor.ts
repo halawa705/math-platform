@@ -53,10 +53,15 @@ export function splitAngleFanClauses(rawDescription: string): string[] {
     .replace(/(?:^|[،؛;\s])(?:إذا\s+كان|اذا\s+كان|حيث|بحيث|وكان|علماً\s+بأن|علما\s+بأن)\s+/g, " ؛ ");
 
   // تحويل الفاصلة العربية إلى فاصل جمل إلا إذا كانت داخل قائمة نقاط أو أشعة أو زوايا متتالية
-  plain = plain.replace(
-    /،(?=\s*(?:ق\s*\(|∠|الشعاع|المستقيم|تقاطع|الزوايا|نقطة|مجموع|[فو]?(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن)))/g,
-    "؛"
-  );
+  plain = plain
+    .replace(
+      /،(?=\s*(?:ق\s*\(|∠|الشعاع|المستقيم|تقاطع|الزوايا|نقطة|مجموع|[فو]?(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن)))/g,
+      "؛"
+    )
+    .replace(
+      /\s+و(?=\s*(?:ق\s*\(|m\s*\(|∠))/g,
+      " ؛ "
+    );
 
   const rawParts = plain
     .split(/\s*[;؛\n]+\s*/)
@@ -167,8 +172,10 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       continue;
     }
 
-    // 3. الزوايا متجمعة حول النقطة م
-    const mAround = clause.match(/الزوايا\s+متجمعة\s+حول\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/);
+    // 3. الزوايا متجمعة حول النقطة م أو أشعة تخرج من النقطة م
+    const mAround =
+      clause.match(/الزوايا\s+متجمعة\s+حول\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/i) ??
+      clause.match(/(?:أربعة|اربعة|ثلاثة|ثلاث|خمسة|خمس|\d+)?\s*أشعة\s+تخرج\s+من\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/i);
     if (mAround) {
       setVertex(normalizeLabelKey(mAround[1]));
       isFullCircleAroundVertex = true;
@@ -388,6 +395,21 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
         bound1: lastPairBounds[0],
         bound2: lastPairBounds[1],
       });
+    }
+  }
+
+  // استخراج أي أشعة ذُكرت في جملة المطلوب إن كانت تخرج من نفس الرأس (مثل فأوجد m(∠CMD))
+  if (vertex) {
+    const goalMatches = rawDescription.matchAll(
+      /(?:أوجد|اوجد|احسب|قياس|قيمة)\s+.*?(?:ق\s*\(\s*∠?\s*([A-Za-z]{3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|∠\s*([A-Za-z]{3}))/gi
+    );
+    for (const gm of goalMatches) {
+      const rawA = gm[1] || gm[2] || gm[3];
+      const ks = extractCleanKeys(rawA);
+      if (ks && ks.length === 3 && ks[1] === vertex) {
+        addRay(ks[0]);
+        addRay(ks[2]);
+      }
     }
   }
 

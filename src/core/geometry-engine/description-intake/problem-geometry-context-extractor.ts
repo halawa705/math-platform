@@ -150,7 +150,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠ب) = 65° أو ق(∠أ ب جـ) = 90°
   const angleMatches = clean.matchAll(
-    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9.xسصy+\-\s]+?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|)]|$)/gi
+    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9.xسصy+\-\s]+?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)]|$|\n)/gi
   );
   for (const am of angleMatches) {
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
@@ -162,7 +162,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 5. التوازي والتعامد والنقاط: DE // BC أو AD ⊥ BC أو D ∈ AB أو AD عمودي على BC
   const relMatches = clean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[A-Za-z])\s*(\/\/|⊥|∈|منتصف|عمودي\s*على|يوازي|ينتمي\s*إلى)\s*([A-Za-z]{2}|[A-Za-z])(?=[\s،,;؛|)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[A-Za-z])\s*(\/\/|⊥|∈|منتصف|عمودي\s*على|يوازي|ينتمي\s*إلى)\s*([A-Za-z]{2}|[A-Za-z])(?=[\s،,;؛|.)]|$|\n)/gi
   );
   for (const rm of relMatches) {
     const left = rm[1];
@@ -177,7 +177,43 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 6. المثلث القائم في رأس: مثلث ABC قائم في A
+  // 6. منصف زاوية: BD ينصف ∠ABE أو الشعاع ME ينصف ∠AMD
+  const bisMatches = clean.matchAll(
+    /(?:الشعاع\s+)?([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s+(?:ينصف|يقسم)\s+(?:الزاوية\s+|∠\s*)([A-Za-z]{3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){2})(?=[\s،,;؛|.)]|$|\n)/gi
+  );
+  for (const bm of bisMatches) {
+    const ray = bm[1].replace(/\s+/g, "");
+    const ang = bm[2].replace(/\s+/g, "");
+    const bisStr = `${ray} ينصف ∠${ang}`;
+    if (!facts.includes(bisStr)) facts.push(bisStr);
+  }
+
+  // 7. أشعة متجمعة حول نقطة: أربعة أشعة تخرج من النقطة M
+  const fanMatch = clean.match(/(?:[0-9٠-٩]+|أربعة|اربعة|ثلاثة|ثلاث|خمسة|خمس)?\s*أشعة\s+تخرج\s+من\s+(?:النقطة\s+)?([A-Za-z]|[أ-ي]ـ?)/i);
+  if (fanMatch) {
+    const v = fanMatch[1].trim();
+    const fanStr = `الزوايا متجمعة حول النقطة ${v}`;
+    if (!facts.includes(fanStr)) facts.push(fanStr);
+  }
+
+  // 8. تقاطع مستقيمين: تقاطع المستقيمان AB و CD في النقطة M
+  const interMatch = clean.match(/(?:إذا\s+)?تقاطع\s+(?:المستقيمان\s+|المستقيم\s+)?([A-Za-z]{2})\s*و\s*([A-Za-z]{2})\s*في\s+(?:النقطة\s+)?([A-Za-z])/i);
+  if (interMatch) {
+    const interStr = `تقاطع المستقيم ${interMatch[1]} و المستقيم ${interMatch[2]} في النقطة ${interMatch[3]}`;
+    if (!facts.includes(interStr)) facts.push(interStr);
+  }
+
+  // 9. استخراج أذرع زاوية المطلوب لضمان عدم سقوط أي شعاع ذُكر في المطلوب فقط (مثل m(∠CMD))
+  const goalAngMatches = clean.matchAll(/(?:أوجد|احسب|قياس|قيمة)\s+.*?(?:ق\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|∠\s*([A-Za-z]{3}))/gi);
+  for (const gm of goalAngMatches) {
+    const targetAng = (gm[1] || gm[2] || gm[3] || "").replace(/\s+/g, "");
+    if (targetAng.length === 3) {
+      const goalArmStr = `الشعاع ${targetAng[1]}${targetAng[0]} و ${targetAng[1]}${targetAng[2]}`;
+      if (!facts.includes(goalArmStr)) facts.push(goalArmStr);
+    }
+  }
+
+  // 10. المثلث القائم في رأس: مثلث ABC قائم في A
   const rightTriMatch = clean.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})\s*قائم(?:الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
   if (rightTriMatch) {
     const tri = rightTriMatch[1];

@@ -151,6 +151,28 @@ export function projectGeometryFigureToSVGMarkup(
         )}" fill="none" stroke="${accentColor}" stroke-width="1.5" stroke-linecap="round"/>`;
       }
 
+      // أسهم الأشعة والمتجهات والخطوط المستقيمة (Ray & Line Vector Arrowheads)
+      const arrowLen = 7.5;
+      const arrowHalfW = 3.2;
+      const ux = dx / len;
+      const uy = dy / len;
+
+      if (seg.arrowAtEnd || seg.isRay) {
+        const pLeftX = x2 - ux * arrowLen + nx * arrowHalfW;
+        const pLeftY = y2 - uy * arrowLen + ny * arrowHalfW;
+        const pRightX = x2 - ux * arrowLen - nx * arrowHalfW;
+        const pRightY = y2 - uy * arrowLen - ny * arrowHalfW;
+        decorations += `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${pLeftX.toFixed(1)},${pLeftY.toFixed(1)} ${pRightX.toFixed(1)},${pRightY.toFixed(1)}" fill="${strokeColor}" />`;
+      }
+
+      if (seg.arrowAtStart || seg.isLine) {
+        const pLeftX = x1 + ux * arrowLen + nx * arrowHalfW;
+        const pLeftY = y1 + uy * arrowLen + ny * arrowHalfW;
+        const pRightX = x1 + ux * arrowLen - nx * arrowHalfW;
+        const pRightY = y1 + uy * arrowLen - ny * arrowHalfW;
+        decorations += `<polygon points="${x1.toFixed(1)},${y1.toFixed(1)} ${pLeftX.toFixed(1)},${pLeftY.toFixed(1)} ${pRightX.toFixed(1)},${pRightY.toFixed(1)}" fill="${strokeColor}" />`;
+      }
+
       // تسمية طول الضلع داخل كبسولة عائمة بيضاء أنيقة تمنع التداخل (Floating Pill Badge)
       if (seg.lengthLabel) {
         const rawVal = seg.lengthLabel.value;
@@ -179,15 +201,29 @@ export function projectGeometryFigureToSVGMarkup(
     notation,
   });
 
+  const arrowTipVertexIds = new Set<string>();
+  const outgoingCount = new Map<string, number>();
+  for (const seg of figure.segments) {
+    outgoingCount.set(seg.fromVertexId, (outgoingCount.get(seg.fromVertexId) ?? 0) + 1);
+    if (seg.arrowAtEnd || seg.isRay) arrowTipVertexIds.add(seg.toVertexId);
+    if (seg.arrowAtStart || seg.isLine) arrowTipVertexIds.add(seg.fromVertexId);
+  }
+
   const verticesSvg = Array.from(vertexMap.values())
     .map((v) => {
       const vx = v.screen.sx - centerSx;
       const vy = v.screen.sy - centerSy;
       const vLen = Math.hypot(vx, vy) || 1;
-      const labelX = v.screen.sx + (vx / vLen) * 9;
-      const labelY = v.screen.sy + (vy / vLen) * 9 + 3;
+      const isRayTip = v.hideVertexDot || (arrowTipVertexIds.has(v.id) && (outgoingCount.get(v.id) ?? 0) <= 0);
+      const labelOffset = isRayTip ? 11 : 9;
+      const labelX = v.screen.sx + (vx / vLen) * labelOffset;
+      const labelY = v.screen.sy + (vy / vLen) * labelOffset + 3;
 
-      return `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" /><circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" /><text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${localizeGeometricVertexLabelSSOT(v.label, notation)}</text>`;
+      const dotsSvg = isRayTip
+        ? ""
+        : `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" /><circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" />`;
+
+      return `${dotsSvg}<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${localizeGeometricVertexLabelSSOT(v.label, notation)}</text>`;
     })
     .join("");
 

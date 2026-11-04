@@ -65,6 +65,8 @@ export function composeAngleFanFigureFromDescription(
     id: `${figureId}_s_${idx}`,
     fromVertexId: keyId(spec.vertex),
     toVertexId: keyId(r),
+    isRay: true,
+    arrowAtEnd: true,
   }));
 
   const angles: CanonicalAngleNode[] = [];

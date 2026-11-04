@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file vector-svg-angle-projector.ts
  * @description مصير الزوايا المتجهي (Vector SVG Angle Projector):
  * - يرسم علامة الزاوية القائمة (مربع زاوية قائمة دقيق).
@@ -105,12 +105,15 @@ export function projectGeometryAnglesSVGMarkup(
     const lx = vx + Math.cos(midAng) * labelDist;
     const ly = vy + Math.sin(midAng) * labelDist + 3;
 
-    // 3. كتابة قياس الزاوية (نص أو درجات)
-    const labelText =
-      (ang.degreesLabel ? localizeFigureLabelText(ang.degreesLabel, opts.notation ?? "arabic", opts.numeralMode) : undefined) ||
-      (ang.degrees !== undefined
-        ? `${formatNumeralsByModeSSOT(ang.degrees, opts.numeralMode)}°`
-        : undefined);
+    // 3. كتابة قياس الزاوية (نص أو درجات) - لا يُكتب أي قياس رقمي إذا وُجدت علامة تطابق أو تنصيف رمزية (نقطة أو علامة x)
+    const isCongruenceMark = ang.markSymbol === "dot" || ang.markSymbol === "cross";
+    const labelText = !isCongruenceMark
+      ? (ang.degreesLabel
+          ? localizeFigureLabelText(ang.degreesLabel, opts.notation ?? "arabic", opts.numeralMode)
+          : ang.degrees !== undefined
+            ? `${formatNumeralsByModeSSOT(ang.degrees, opts.numeralMode)}°`
+            : undefined)
+      : undefined;
 
     if (labelText) {
       elements.push(

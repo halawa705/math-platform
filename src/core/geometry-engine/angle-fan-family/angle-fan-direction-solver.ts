@@ -348,9 +348,18 @@ export function solveAngleFanDirections(spec: AngleFanSpec): SolvedAngleFanLayou
       }
     }
 
-    // 3. أي شعاع حر متبقٍ (مثل المستقيم الثاني في تقاطع مستقيمين قبل تطبيق المنصف)
+    // 3. أي شعاع حر متبقٍ (مثل المستقيم الثاني في تقاطع مستقيمين أو شعاع المطلوب غير المقيد)
     const nextRay = spec.rays.find((r) => !assigned.has(r))!;
-    for (const fallbackAng of [55, 125, 45, 135]) {
+    const sortedVals = [...assigned.values()].sort((a, b) => a - b);
+    const sectorMids: number[] = [];
+    for (let i = 0; i < sortedVals.length; i++) {
+      const a = sortedVals[i];
+      const b = sortedVals[(i + 1) % sortedVals.length];
+      const span = norm360(b - a);
+      if (span > 20) sectorMids.push(norm360(a + span / 2));
+    }
+    const cands = [...new Set([...sectorMids, 55, 125, 45, 135, 160, 210, 315])];
+    for (const fallbackAng of cands) {
       assigned.set(nextRay, fallbackAng);
       search(assigned);
       assigned.delete(nextRay);
