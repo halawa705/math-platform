@@ -106,4 +106,60 @@ describe("Studio Exam Dual Editions, Figure Docking & Question Sanitizer", () =>
       expect(cleaned).not.toMatch(/الإجابة_الصحيحة/);
     }
   });
+
+  it("shuffles MCQ choices while strictly preserving the correct answer index", async () => {
+    const { shuffleSingleQuestionMcqChoices, shuffleAllMcqChoicesInQuestions } = await import(
+      "@/core/utils/exam-questions-shuffler"
+    );
+
+    const question: any = {
+      questionId: "q1",
+      displayOrderNumber: 1,
+      patternKind: "mcq",
+      promptArabic: "ما هو ناتج 2 + 3؟",
+      mcqChoicesArabic: ["5", "6", "7", "8"],
+      correctMcqChoiceIndex: 0, // "5" is correct
+    };
+
+    // Shuffle 10 times to verify permutation and correct index alignment
+    for (let i = 0; i < 10; i++) {
+      const shuffled = shuffleSingleQuestionMcqChoices(question);
+      expect(shuffled.mcqChoicesArabic).toHaveLength(4);
+      // "5" must still be in the choices
+      expect(shuffled.mcqChoicesArabic).toContain("5");
+      // The new correct index must point directly to "5"
+      const newIdx = shuffled.correctMcqChoiceIndex!;
+      expect(shuffled.mcqChoicesArabic![newIdx]).toBe("5");
+    }
+
+    const allShuffled = shuffleAllMcqChoicesInQuestions([question]);
+    expect(allShuffled[0].mcqChoicesArabic![allShuffled[0].correctMcqChoiceIndex!]).toBe("5");
+  });
+
+  it("shuffles questions order within the same kind (MCQs remain first, essays remain second)", async () => {
+    const { shuffleExamQuestionsByKind } = await import("@/core/utils/exam-questions-shuffler");
+
+    const questions: any[] = [
+      { questionId: "mcq-1", displayOrderNumber: 1, patternKind: "mcq" },
+      { questionId: "mcq-2", displayOrderNumber: 2, patternKind: "mcq" },
+      { questionId: "mcq-3", displayOrderNumber: 3, patternKind: "mcq" },
+      { questionId: "essay-1", displayOrderNumber: 4, patternKind: "proof_reasoning" },
+      { questionId: "essay-2", displayOrderNumber: 5, patternKind: "proof_reasoning" },
+    ];
+
+    const shuffled = shuffleExamQuestionsByKind(questions);
+    expect(shuffled).toHaveLength(5);
+
+    // First 3 questions MUST still be MCQ
+    expect(shuffled[0].patternKind).toBe("mcq");
+    expect(shuffled[1].patternKind).toBe("mcq");
+    expect(shuffled[2].patternKind).toBe("mcq");
+
+    // Last 2 questions MUST still be essay
+    expect(shuffled[3].patternKind).toBe("proof_reasoning");
+    expect(shuffled[4].patternKind).toBe("proof_reasoning");
+
+    // Display order numbers must be sequential 1, 2, 3, 4, 5
+    expect(shuffled.map((q) => q.displayOrderNumber)).toEqual([1, 2, 3, 4, 5]);
+  });
 });

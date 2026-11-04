@@ -14,7 +14,7 @@ export interface StudentAnswerSpaceDockerProps {
   readonly primaryHex: string;
   readonly answerSpaceStyle: AnswerSpaceStyleMode;
   readonly isMcq?: boolean;
-  readonly lineCount?: 1 | 2 | 3;
+  readonly lineCount?: number;
 }
 
 export function StudentAnswerSpaceDocker({
@@ -25,7 +25,7 @@ export function StudentAnswerSpaceDocker({
   isMcq = false,
   lineCount = 2,
 }: StudentAnswerSpaceDockerProps) {
-  if (answerSpaceStyle === "hidden" || isMcq) return null;
+  if (answerSpaceStyle === "hidden" || isMcq || !lineCount || lineCount <= 0) return null;
 
   const labelColor = isBookletDrill ? "#4338CA" : isBookletHomework ? "#9D174D" : primaryHex;
   const labelText = isBookletDrill

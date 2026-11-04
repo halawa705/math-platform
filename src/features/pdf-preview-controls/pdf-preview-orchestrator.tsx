@@ -72,6 +72,7 @@ export default function PDFPreviewOrchestrator({
     const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
     return {
       ...persisted,
+      paperTemplateId: isExamDoc ? "official_school_exam" : (persisted.paperTemplateId ?? "classic_sovereign"),
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
         : isExamDoc
@@ -97,6 +98,7 @@ export default function PDFPreviewOrchestrator({
     setSettings((prev) => ({
       ...prev,
       ...persisted,
+      paperTemplateId: isExamDoc ? "official_school_exam" : (persisted.paperTemplateId ?? "classic_sovereign"),
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
         : isExamDoc

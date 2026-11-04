@@ -102,11 +102,11 @@ export function OfficialSchoolExamQuestionRow({
   const renderEssayAnswerLines = () => {
     if (isMcq || isSolvedMode || answerLinesCount <= 0) return null;
     return (
-      <div className="space-y-2 pt-2 pb-1 w-full" aria-label="سطور مساحة الحل">
+      <div className="space-y-1.5 pt-2 pb-1 w-full" aria-label="سطور مساحة الحل">
         {Array.from({ length: answerLinesCount }).map((_, lineIdx) => (
           <div
             key={lineIdx}
-            className="w-full border-b border-dotted border-slate-400 h-4 print:border-slate-500"
+            className="w-full border-b border-dotted border-slate-400 h-6 print:border-slate-500"
           />
         ))}
       </div>
@@ -135,52 +135,56 @@ export function OfficialSchoolExamQuestionRow({
     >
       {hasFigure ? (
         /* عند وجود رسم هندسي أو بياني: السؤال جهة اليمين والرسم جهة اليسار بنفس السطور تماماً لحفظ المساحة */
-        <div className="flex flex-row items-start justify-between gap-3 w-full">
-          {/* العمود الأيمن: نص السؤال + الخيارات أو سطور الحل */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
-              <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
-                {qNumStr}
-              </span>
-              <div className="flex-1 min-w-0 break-words">
-                <SafeKaTeXBiDiMathRenderer
-                  text={cleanStudentFacingMathPromptSSOT(question.promptAr)}
-                  numeralMode={numeralMode}
-                  notationLanguage={notationLanguage}
-                />
+        <div>
+          <div className="flex flex-row items-start justify-between gap-3 w-full">
+            {/* العمود الأيمن: نص السؤال + خيارات الاختيار من متعدد */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
+                <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
+                  {qNumStr}
+                </span>
+                <div className="flex-1 min-w-0 break-words">
+                  <SafeKaTeXBiDiMathRenderer
+                    text={cleanStudentFacingMathPromptSSOT(question.promptAr)}
+                    numeralMode={numeralMode}
+                    notationLanguage={notationLanguage}
+                  />
+                </div>
+              </div>
+
+              {isMcq && choices.length > 0 && renderChoicesGrid("grid grid-cols-2 gap-1.5")}
+            </div>
+
+            {/* العمود الأيسر: الرسم المتجهي مدمج على اليسار بنفس السطور */}
+            <div className="shrink-0 max-w-[210px] sm:max-w-[240px] flex flex-col items-center justify-start self-start pt-0.5">
+              <EmbeddedGeometrySVGDocker
+                geometryFigure={question.geometryFigure}
+                graphSpec={question.graphSpec}
+                borderHex={palette.borderHex}
+                softSurfaceHex={palette.softSurfaceHex}
+                primaryHex={palette.primaryHex}
+                accentHex={palette.accentHex}
+                numeralMode={numeralMode}
+                notationLanguage={notationLanguage}
+                figureScale={settings.figureScale ?? 0.85}
+                columnsCount={settings.columnsCount}
+              />
+              <div className="flex items-center gap-1.5 pt-1 text-xs font-bold text-slate-700">
+                {question.citationBadgeAr && (
+                  <span className="text-[10px] text-slate-500 font-sans">
+                    {formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}
+                  </span>
+                )}
+                <span className="font-mono font-black text-[10.5px] text-slate-800">
+                  {marksStr}
+                </span>
               </div>
             </div>
-
-            {isMcq && choices.length > 0 && renderChoicesGrid("grid grid-cols-2 gap-1.5")}
-            {renderEssayAnswerLines()}
-            {renderEssaySolvedModelAnswer()}
           </div>
 
-          {/* العمود الأيسر: الرسم المتجهي مدمج على اليسار بنفس السطور */}
-          <div className="shrink-0 max-w-[210px] sm:max-w-[240px] flex flex-col items-center justify-start self-start pt-0.5">
-            <EmbeddedGeometrySVGDocker
-              geometryFigure={question.geometryFigure}
-              graphSpec={question.graphSpec}
-              borderHex={palette.borderHex}
-              softSurfaceHex={palette.softSurfaceHex}
-              primaryHex={palette.primaryHex}
-              accentHex={palette.accentHex}
-              numeralMode={numeralMode}
-              notationLanguage={notationLanguage}
-              figureScale={settings.figureScale ?? 0.85}
-              columnsCount={settings.columnsCount}
-            />
-            <div className="flex items-center gap-1.5 pt-1 text-xs font-bold text-slate-700">
-              {question.citationBadgeAr && (
-                <span className="text-[10px] text-slate-500 font-sans">
-                  {formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}
-                </span>
-              )}
-              <span className="font-mono font-black text-[10.5px] text-slate-800">
-                {marksStr}
-              </span>
-            </div>
-          </div>
+          {/* مساحة الحل بعرض الصفحة تحت السؤال والرسم */}
+          {renderEssayAnswerLines()}
+          {renderEssaySolvedModelAnswer()}
         </div>
       ) : (
         /* عند عدم وجود رسم: نص السؤال بالعرض الكامل */

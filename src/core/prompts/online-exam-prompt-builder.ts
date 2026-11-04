@@ -69,7 +69,7 @@ export function buildOnlineExamNotebookLMPrompt(
     `اختبار إلكتروني (تصحيح آلي): ${branchSpec.nameArabic} | ${config.gradeNameArabic} (${termLabel}) | الدرجة: ${config.totalMarks}.`,
     `🎯 النطاق الحصري (ممنوع الخروج عنه): [${lessonsText}] | المستوى: ${difficultyAr}.`,
     ...(focusBlock ? [focusBlock] : []),
-    `📊 الأعداد الحرفية (${totalQ} أسئلة، ممنوع أسئلة البرهان والمقالي): (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.shortAnswerQuestionsCount}) إجابة قصيرة حاسمة [SHORT] (عدد/كسر/جذر/فترة وحيدة).`,
+    `📊 الأعداد (${totalQ} أسئلة، ممنوع أسئلة البرهان والمقالي): (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.shortAnswerQuestionsCount}) إجابة قصيرة [SHORT] (عدد/كسر/فترة وحيدة).`,
     ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
@@ -80,7 +80,7 @@ export function buildOnlineExamNotebookLMPrompt(
     "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو SHORT] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",
     "النص: [نص السؤال بالمعادلات بـ $...$]",
     "الرسم: [[رسم هندسي: ...] إن لزم وإلا فارغ]",
-    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لـ MCQ)",
+    "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (وزّع الإجابات الصحيحة عشوائياً بين أ، ب، جـ، د ولا تحصرها في أ)",
     "الإجابة_الصحيحة: [حرف البديل في MCQ، أو القيمة في SHORT]",
     "الإجابات_المقبولة: [في SHORT: الصيغ المكافئة بـ | مثل: 0.5 | 1/2 | \\frac{1}{2}]",
     "البرهان_والخطوات: [خطوات الحل بـ |]",

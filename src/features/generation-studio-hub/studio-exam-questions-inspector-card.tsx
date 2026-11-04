@@ -10,6 +10,14 @@ import { useState } from "react";
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
+import StudioExamQuestionsShuffleBar from "./studio-exam-questions-shuffle-bar";
+import StudioQuestionSolutionLinesController from "./studio-question-solution-lines-controller";
+import {
+  shuffleAllMcqChoicesInQuestions,
+  shuffleBothQuestionsAndChoices,
+  shuffleExamQuestionsByKind,
+  shuffleSingleQuestionMcqChoices,
+} from "@/core/utils/exam-questions-shuffler";
 
 export const MODULE_ID_STUDIO_EXAM_QUESTIONS_INSPECTOR_CARD =
   "studio_exam_questions_inspector_card" as const;
@@ -54,7 +62,14 @@ export default function StudioExamQuestionsInspectorCard({
       summaryAr={summaryAr}
       defaultOpen
     >
-      <div className="space-y-2.5 pt-2 max-h-[520px] overflow-y-auto pr-1">
+      <div className="space-y-2.5 pt-2 max-h-[560px] overflow-y-auto pr-1">
+        <StudioExamQuestionsShuffleBar
+          mcqCount={mcqCount}
+          onShuffleQuestionsOrder={() => onChangeQuestions(shuffleExamQuestionsByKind(questions))}
+          onShuffleMcqChoices={() => onChangeQuestions(shuffleAllMcqChoicesInQuestions(questions))}
+          onShuffleBoth={() => onChangeQuestions(shuffleBothQuestionsAndChoices(questions))}
+        />
+
         {questions.map((q, idx) => {
           const isEditing = editingId === q.questionId;
           const choices = q.mcqChoicesArabic ?? ["", "", "", ""];
@@ -83,6 +98,16 @@ export default function StudioExamQuestionsInspectorCard({
                 </div>
 
                 <div className="flex items-center gap-1.5">
+                  {q.patternKind === "mcq" && q.mcqChoicesArabic && (
+                    <button
+                      type="button"
+                      onClick={() => updateQuestion(q.questionId, shuffleSingleQuestionMcqChoices(q))}
+                      className="px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-black text-indigo-900 dark:text-teal-300 hover:bg-indigo-100 cursor-pointer"
+                      title="خلط بدائل هذا السؤال عشوائياً وتحديث الإجابة الصحيحة تلقائياً"
+                    >
+                      🎲 خلط الخيارات
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setEditingId(isEditing ? null : q.questionId)}
@@ -195,39 +220,12 @@ export default function StudioExamQuestionsInspectorCard({
                   </label>
 
                   {q.patternKind !== "mcq" && (
-                    <div className="flex flex-wrap items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-700 dark:text-slate-200">سطور الحل:</span>
-                        <input
-                          type="number"
-                          min={0}
-                          max={12}
-                          value={q.answerLinesCount ?? 0}
-                          onChange={(e) =>
-                            updateQuestion(q.questionId, {
-                              answerLinesCount: Math.max(0, Number(e.target.value) || 0),
-                            })
-                          }
-                          className="w-16 p-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-black text-center"
-                        />
-                        <span className="text-[10px] text-slate-500">(0 = بدون سطور)</span>
-                      </div>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={q.hasDottedDivider !== false}
-                          onChange={(e) =>
-                            updateQuestion(q.questionId, {
-                              hasDottedDivider: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
-                        />
-                        <span className="font-bold text-slate-700 dark:text-slate-200">
-                          خط منقط فاصل (إلغاؤه يوفر سطر)
-                        </span>
-                      </label>
-                    </div>
+                    <StudioQuestionSolutionLinesController
+                      answerLinesCount={q.answerLinesCount ?? 0}
+                      hasDottedDivider={q.hasDottedDivider !== false}
+                      onChangeLinesCount={(cnt) => updateQuestion(q.questionId, { answerLinesCount: cnt })}
+                      onChangeHasDottedDivider={(hasDiv) => updateQuestion(q.questionId, { hasDottedDivider: hasDiv })}
+                    />
                   )}
                 </div>
               ) : (
@@ -237,14 +235,12 @@ export default function StudioExamQuestionsInspectorCard({
                   </div>
 
                   {q.patternKind !== "mcq" && (
-                    <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold">
-                        سطور الحل: {q.answerLinesCount ?? 0}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold">
-                        {q.hasDottedDivider !== false ? "✓ خط فاصل" : "✕ بدون خط فاصل"}
-                      </span>
-                    </div>
+                    <StudioQuestionSolutionLinesController
+                      answerLinesCount={q.answerLinesCount ?? 0}
+                      hasDottedDivider={q.hasDottedDivider !== false}
+                      onChangeLinesCount={(cnt) => updateQuestion(q.questionId, { answerLinesCount: cnt })}
+                      onChangeHasDottedDivider={(hasDiv) => updateQuestion(q.questionId, { hasDottedDivider: hasDiv })}
+                    />
                   )}
 
                   {q.mcqChoicesArabic && (

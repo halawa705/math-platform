@@ -156,10 +156,21 @@ export default function StudioExamGeneratorTab({
       rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
     });
     setParsedQuestions(extracted);
+    onApplyParsedQuestionsToSheet?.(
+      extracted.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
+    );
     setDiagRows(
       extracted
         .filter((q) => q.figureDiagnosticsAr?.length)
         .map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! }))
+    );
+  };
+
+  const handleUpdateQuestions = (nextQs: readonly QuestionAssessmentIR[]) => {
+    setParsedQuestions(nextQs);
+    // مزامنة فورية ولحظية مع ورقة الـ PDF حتى تنعكس أي سطور حل أو خلط للأسئلة أو البدائل فوراً
+    onApplyParsedQuestionsToSheet?.(
+      nextQs.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
     );
   };
 
@@ -269,7 +280,7 @@ export default function StudioExamGeneratorTab({
       />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />
-      <StudioExamQuestionsInspectorCard questions={parsedQuestions} onChangeQuestions={setParsedQuestions} />
+      <StudioExamQuestionsInspectorCard questions={parsedQuestions} onChangeQuestions={handleUpdateQuestions} />
       <StudioExamOnlinePublishPanel
         gradeNameAr={gradeNameAr} defaultTitleAr={`اختبار — ${unitTitleAr ? `${unitTitleAr} — ` : ""}${lessonTitle}`}
         statusMessageAr={publishMsg} publishedExamInfo={publishedInfo} onPublish={handlePublish}
