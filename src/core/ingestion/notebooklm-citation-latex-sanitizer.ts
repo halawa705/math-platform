@@ -107,7 +107,10 @@ export function sanitizeNotebookLMCitationsAndLatex(
     .replace(/^\s*\[\s*ACCEPTED_ANSWERS\s*\]\s*:\s*/gim, "الإجابات_المقبولة: ")
     .replace(/^\s*\[\s*(?:SOLUTION|STEPS)\s*\]\s*:\s*/gim, "خطوات_الحل: ");
 
-  // 4. خط الأنابيب الرياضي الوحيد: توحيد المحددات + الفترات + العربي داخل الرياضيات + التشابه + الوحدات + بوابة التسرب
+  // 4. تطبيع هلوسة تسميات الأشعة في الزوايا المتجمعة (4 أشعة مع تعامد وهمي بحرف E)
+  text = healFourRaysHallucination(text);
+
+  // 5. خط الأنابيب الرياضي الوحيد: توحيد المحددات + الفترات + العربي داخل الرياضيات + التشابه + الوحدات + بوابة التسرب
   text = canonicalizeMathText(text);
 
   return {
@@ -117,6 +120,27 @@ export function sanitizeNotebookLMCitationsAndLatex(
   };
 }
 
+export function healFourRaysHallucination(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(
+      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([A-Za-z]|[أ-ي]ـ?)[\s\S]*?)(?:\\+vec\{([A-Za-z])E\}|([A-Za-z])E)\s*(?:⊥|\\+perp|عمودي\s*على)\s*(?:\\+vec\{([A-Za-z])A\}|([A-Za-z])A)/gi,
+      (m, prefix, v, r1a, r1b, r2a, r2b) => `${prefix}\\vec{${r1a || r1b}D} ⊥ \\vec{${r2a || r2b}A}`
+    )
+    .replace(
+      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([A-Za-z]|[أ-ي]ـ?)[\s\S]*?)(?:\\+vec\{([A-Za-z])A\}|([A-Za-z])A)\s*(?:⊥|\\+perp|عمودي\s*على)\s*(?:\\+vec\{([A-Za-z])E\}|([A-Za-z])E)/gi,
+      (m, prefix, v, r1a, r1b, r2a, r2b) => `${prefix}\\vec{${r1a || r1b}A} ⊥ \\vec{${r2a || r2b}D}`
+    )
+    .replace(
+      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([أ-ي]ـ?)[\s\S]*?)(?:الشعاع\s+)?([أ-ي]ـ?)\s*هـ\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(?:الشعاع\s+)?([أ-ي]ـ?)\s*أ/gi,
+      "$1الشعاع $3 د ⊥ الشعاع $4 أ"
+    )
+    .replace(
+      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([أ-ي]ـ?)[\s\S]*?)(?:الشعاع\s+)?([أ-ي]ـ?)\s*أ\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(?:الشعاع\s+)?([أ-ي]ـ?)\s*هـ/gi,
+      "$1الشعاع $3 أ ⊥ الشعاع $4 د"
+    );
+}
+
 /**
  * تطهير نصوص المسائل والتدريبات والأمثلة والواجبات الموجهة للطالب في المطبوعات الرسمية:
  * يحذف وسوم الرسوم الهندسية [رسم هندسي: ...] والبيانية بجميع أنواعها حتى لو امتدت لعدة أسطر،
@@ -124,7 +148,8 @@ export function sanitizeNotebookLMCitationsAndLatex(
  */
 export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
   if (!rawText) return "";
-  return rawText
+  const healed = healFourRaysHallucination(rawText);
+  return healed
     .replace(/\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)[\s\S]*?\]\.?\s*/gi, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")

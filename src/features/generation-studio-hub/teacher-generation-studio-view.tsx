@@ -87,6 +87,7 @@ export default function TeacherGenerationStudioView() {
   };
 
   const applyTitle = (t: string) => { setSheetTitle(t); setPane("preview"); saveStudioGlobalContextSSOT({ sheetTitle: t }); };
+  const syncQuestions = (qs: readonly PrintableMathQuestionItem[]) => { setSheetQuestions(qs); setSheetForms(undefined); };
   const applyQuestions = (qs: readonly PrintableMathQuestionItem[]) => { setSheetQuestions(qs); setSheetForms(undefined); setPane("preview"); };
   const applyForms = (forms: readonly PrintableExamFormGroup[]) => { setSheetForms(forms); setPane("preview"); };
 
@@ -126,6 +127,7 @@ export default function TeacherGenerationStudioView() {
                 targetedScopeText={targetedScopeText}
                 onApplyExamTitleToSheet={applyTitle}
                 onApplyParsedQuestionsToSheet={applyQuestions}
+                onSyncQuestionsToSheet={syncQuestions}
               />
             )}
             {activeTabId === "forms" && (

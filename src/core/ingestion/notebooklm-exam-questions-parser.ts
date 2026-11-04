@@ -9,7 +9,7 @@ import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
-import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
+import { sanitizeNotebookLMCitationsAndLatex, healFourRaysHallucination } from "./notebooklm-citation-latex-sanitizer";
 import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER = "notebooklm_exam_questions_parser" as const;
@@ -168,7 +168,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .replace(/^\[(?:اختر|أكمل|مقالي)\]\s*/i, "")
       .trim();
 
-    const basePrompt = explicitPrompt || fallbackPrompt || block;
+    const basePrompt = healFourRaysHallucination(explicitPrompt || fallbackPrompt || block);
     const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
     const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
     const geoMatch = !graphMatch ? block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;

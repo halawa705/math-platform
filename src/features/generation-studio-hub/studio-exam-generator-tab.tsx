@@ -34,6 +34,7 @@ import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioExamOnlinePublishPanel, { type PublishedExamSummaryInfo } from "./studio-exam-online-publish-panel";
 import StudioExamQuestionsInspectorCard from "./studio-exam-questions-inspector-card";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
+import StudioExamFlowChoiceBanner from "./studio-exam-flow-choice-banner";
 
 export const MODULE_ID_STUDIO_EXAM_GENERATOR_TAB = "studio_exam_generator_tab" as const;
 
@@ -49,13 +50,14 @@ export interface StudioExamGeneratorTabProps {
   readonly targetedScopeText?: string;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
+  readonly onSyncQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
 
 export default function StudioExamGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "", lessonTitle, branchNameAr,
   selectedUnitIds = [], selectedLessonIds = [], targetedScopeText,
-  onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet,
+  onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet, onSyncQuestionsToSheet,
 }: StudioExamGeneratorTabProps) {
   const [initial] = useState(() => loadStudioExamSettingsSSOT());
   const [mcqCount, setMcqCount] = useState(initial.mcqCount);
@@ -156,7 +158,8 @@ export default function StudioExamGeneratorTab({
       rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
     });
     setParsedQuestions(extracted);
-    onApplyParsedQuestionsToSheet?.(
+    // فقط مزامنة الأسئلة في الذاكرة دون تحويل الشاشة تلقائياً للـ PDF لتمكين المعلم من اختيار نشر أونلاين أو تصيير PDF
+    onSyncQuestionsToSheet?.(
       extracted.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
     );
     setDiagRows(
@@ -168,8 +171,8 @@ export default function StudioExamGeneratorTab({
 
   const handleUpdateQuestions = (nextQs: readonly QuestionAssessmentIR[]) => {
     setParsedQuestions(nextQs);
-    // مزامنة فورية ولحظية مع ورقة الـ PDF حتى تنعكس أي سطور حل أو خلط للأسئلة أو البدائل فوراً
-    onApplyParsedQuestionsToSheet?.(
+    // مزامنة فورية ولحظية للأسئلة في الذاكرة مع الحفاظ على بقاء المعلم في صفحة الإعداد والتحكم
+    onSyncQuestionsToSheet?.(
       nextQs.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
     );
   };
@@ -267,10 +270,7 @@ export default function StudioExamGeneratorTab({
         onChangeWeights={handleWeightsChange}
       />
 
-      <StudioCustomDirectivesCard
-        customDirectives={customDirectives}
-        onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }}
-      />
+      <StudioCustomDirectivesCard customDirectives={customDirectives} onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }} />
 
       <StudioSingleStagePastePanel
         stageTitleAr={`اختبار تقييمي — ${targetedScopeText || lessonTitle}`} stageHintAr="انسخ البرومبت، ثم الصق رد NotebookLM لمعاينة الأسئلة وتعديلها وطباعتها أو نشرها أونلاين."
@@ -279,12 +279,16 @@ export default function StudioExamGeneratorTab({
         isPromptCopied={copied} replyValue={reply} onChangeReply={handleReplyChange} replyPlaceholderAr="الصق رد أسئلة الاختبار هنا..."
       />
 
+      <StudioExamFlowChoiceBanner questionsCount={parsedQuestions.length} onRenderPdf={handleRender} />
+
       <StudioFigureDiagnosticsBanner rows={diagRows} />
       <StudioExamQuestionsInspectorCard questions={parsedQuestions} onChangeQuestions={handleUpdateQuestions} />
-      <StudioExamOnlinePublishPanel
-        gradeNameAr={gradeNameAr} defaultTitleAr={`اختبار — ${unitTitleAr ? `${unitTitleAr} — ` : ""}${lessonTitle}`}
-        statusMessageAr={publishMsg} publishedExamInfo={publishedInfo} onPublish={handlePublish}
-      />
+      <div id="online-publish-section">
+        <StudioExamOnlinePublishPanel
+          gradeNameAr={gradeNameAr} defaultTitleAr={`اختبار — ${unitTitleAr ? `${unitTitleAr} — ` : ""}${lessonTitle}`}
+          statusMessageAr={publishMsg} publishedExamInfo={publishedInfo} onPublish={handlePublish}
+        />
+      </div>
       <StudioStickyPrimaryActionBar primaryLabelAr="📄 تصيير الاختبار كـ PDF ومعاينته" onPrimary={handleRender} noticeAr={notice} />
     </div>
   );

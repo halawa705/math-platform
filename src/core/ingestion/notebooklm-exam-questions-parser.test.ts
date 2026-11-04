@@ -144,4 +144,38 @@ describe("parseNotebookLMExamQuestionsToIR — English bracketed tags & governor
       expect(tableSeg.rows[4][0]).toContain("المجموع");
     }
   });
+
+  it("heals 4-ray concurrent angles hallucination (ME -> MD) and attaches flawless geometry figure with givens", () => {
+    const rawQ7Block = `=== [سؤال: 7] | النوع: مقالي | الدرجة: 3 ===
+النص: في الشكل المقابل، أربعة أشعة تخرج من النقطة M. إذا كان \\vec{MA} \\perp \\vec{ME}. وكان m(\\angle BMC) = 100^\\circ و m(\\angle AMB) = 130^\\circ، فأوجد بالبرهان الهندسي m(\\angle CMD).
+الرسم:
+البرهان_والخطوات: مجموع الزوايا المتجمعة حول نقطة = 360° | m(∠CMD) = 360 - (90 + 100 + 130) = 40°
+الإجابة_الصحيحة: 40°
+`;
+
+    const parsed = parseNotebookLMExamQuestionsToIR({
+      rawText: rawQ7Block,
+      branchId: "plane_geometry",
+      unitId: "u3",
+      lessonId: "l1",
+      lessonTitleArabic: "أنواع الزوايا والعلاقات بينها",
+    });
+
+    expect(parsed.length).toBe(1);
+    const q7 = parsed[0];
+    expect(q7.promptArabic).toContain("MD");
+    expect(q7.promptArabic).not.toContain("ME");
+    expect(q7.attachedGeometryFigure).toBeDefined();
+    expect(q7.attachedGeometryFigure!.vertices.map((v) => v.label)).toEqual(
+      expect.arrayContaining(["M", "A", "B", "C", "D"])
+    );
+    expect(q7.attachedGeometryFigure!.segments.length).toBe(4);
+    expect(q7.attachedGeometryFigure!.angles.length).toBe(3);
+    const angles = q7.attachedGeometryFigure!.angles;
+    const rightAng = angles.find((a) => a.isRightAngle);
+    expect(rightAng).toBeDefined();
+    expect(angles.some((a) => a.degreesLabel === "100°")).toBe(true);
+    expect(angles.some((a) => a.degreesLabel === "130°")).toBe(true);
+    expect(angles.some((a) => a.degreesLabel === "40°")).toBe(false); // الحل محجوب
+  });
 });
