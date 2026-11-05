@@ -1,0 +1,294 @@
+[
+  {
+    "id": "seed-01-right-tri",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث قائم فيثاغورس",
+    "geometryRaw": "مثلث أ ب جـ قائم في ب ; أ ب = 6 سم ; ب جـ = 8 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-02-iso-tri",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث متساوي الساقين",
+    "geometryRaw": "مثلث أ ب جـ متساوي الساقين رأسه أ ; أ ب = 5 سم ; ب جـ = 6 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "6"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-03-equi-tri",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث متساوي الأضلاع",
+    "geometryRaw": "مثلث أ ب جـ متساوي الأضلاع ; أ ب = 6 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-04-thales",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "توازي طاليس",
+    "geometryRaw": "مثلث أ ب جـ ; د على أ ب ; هـ على أ جـ ; د هـ // ب جـ ; أ د = 2 سم ; د ب = 3 سم ; ب جـ = 10 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3",
+      "10"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-05-midsegment",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "قطعة واصلة بين منتصفي ضلعين",
+    "geometryRaw": "مثلث أ ب جـ ; د منتصف أ ب ; هـ منتصف أ جـ ; د هـ // ب جـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-06-euclid",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "نظرية إقليدس",
+    "geometryRaw": "مثلث أ ب جـ قائم في أ ; أ د ⊥ ب جـ ; أ ب = 6 سم ; أ جـ = 8 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-07-bisector",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "منصف زاوية داخلية",
+    "geometryRaw": "مثلث أ ب جـ ; أ د ينصف ∠ أ ; أ ب = 6 سم ; أ جـ = 9 سم ; ب جـ = 10 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "9",
+      "10"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-08-median",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "متوسط في مثلث",
+    "geometryRaw": "مثلث أ ب جـ ; أ د متوسط ; أ ب = 7 سم ; ب جـ = 8 سم ; أ جـ = 9 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7",
+      "8",
+      "9"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-09-two-medians",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "تقاطع متوسطين في مثلث",
+    "geometryRaw": "مثلث أ ب جـ ; أ د متوسط ; ب هـ متوسط ; أ د ∩ ب هـ = {م}",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-10-ext-angle",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "زاوية خارجة لمثلث",
+    "geometryRaw": "مثلث أ ب جـ ; نمد ب جـ إلى د ; ق(∠أ) = 50° ; ق(∠ب) = 60°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "50",
+      "60"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-11-sim-triangles",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "تشابه مثلثين منفصلين",
+    "geometryRaw": "Δ ABC ~ Δ DEF ; AB = 4 سم ; BC = 6 سم ; CA = 8 سم ; DE = 2 سم ; EF = 3 سم ; FD = 4 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "6",
+      "8",
+      "2",
+      "3",
+      "4"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-12-sim-quads",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "تشابه مضلعين رباعيين",
+    "geometryRaw": "مستطيل أ ب جـ د ~ مستطيل هـ و ز ح ; أ ب = 6 سم ; ب جـ = 4 سم ; هـ و = 3 سم ; و ز = 2 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "4",
+      "3",
+      "2"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-13-rectangle-diag",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "مستطيل وقطراه",
+    "geometryRaw": "مستطيل أ ب جـ د ; أ ب = 8 سم ; ب جـ = 6 سم ; قطراه يتقاطعان في م",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "6"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-14-square-diag",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "مربع وقطراه",
+    "geometryRaw": "مربع أ ب جـ د ; أ ب = 5 سم ; قطراه يتقاطعان في م",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-15-rhombus",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "معين وزاوية",
+    "geometryRaw": "معين أ ب جـ د ; أ ب = 6 سم ; ق(∠أ) = 60° ; قطراه يتقاطعان في م",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "60"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-16-parallelogram",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "متوازي أضلاع",
+    "geometryRaw": "متوازي أضلاع أ ب جـ د ; أ ب = 8 سم ; أ د = 5 سم ; ق(∠أ) = 65°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "5",
+      "65"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-17-trapezoid",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "شبه منحرف متساوي الساقين",
+    "geometryRaw": "شبه منحرف أ ب جـ د ; أ ب = 10 سم ; جـ د = 6 سم ; أ د = ب جـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "10",
+      "6"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-18-algebraic-angle",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث بزوايا جبرية",
+    "geometryRaw": "مثلث أ ب جـ ; ق(∠أ) = 2س ; ق(∠ب) = 3س ; ق(∠جـ) = 40°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3",
+      "40"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-19-circle-chord",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "دائرة ووتر وعمود من المركز",
+    "geometryRaw": "دائرة مركزها م ; نق = 5 ; أ ب وتر ; م د ⊥ أ ب",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-20-circle-tangent",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "دائرة ومماس وقطر",
+    "geometryRaw": "دائرة مركزها م ; نق = 5 ; أ ب قطر ; أ جـ مماس للدائرة عند أ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "seed-theory-01",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "إذا تشابه مثلثان فإن النسبة بين مساحتيهما تساوي مربع نسبة التشابه. وضّح ذلك.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "بذرة أولية — سؤال نظري",
+    "humanVerdict": "unreviewed"
+  }
+]
