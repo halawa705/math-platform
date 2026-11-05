@@ -183,6 +183,7 @@ function finalizeVerifiedFigure(
   // الأشكال البارامترية المحكومة طوبولوجياً (طاليس/القاطع العكسي/الساعة الرملية/إقليدس): تحريك رؤوسها لمطابقة الأطوال
   // يكسر استقامة الأضلاع ويُخرج مضلعات ليست مثلثات، فتُترك على بنيتها الصحيحة (التسامح البصري مقبول والأرقام على مواضعها).
   if (figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(figure.branchId)) return { figure, warnings };
+  if (figure.familyId === "statistics_family" || Boolean(figure.rawSvgMarkup)) return { figure, warnings };
   const refined = refineFigureToMatchGivens(figure);
   const remaining = refined.report.issues.filter((i) => i.severity === "error").map((i) => `تحقق الشكل: ${i.message}`);
   return { figure: refined.figure, warnings: [...warnings, ...remaining] };

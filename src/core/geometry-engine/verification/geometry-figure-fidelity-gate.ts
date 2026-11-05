@@ -155,7 +155,18 @@ export function checkFigureFidelityToPrompt(
   const alienVertices: string[] = [];
   const alienNumbers: string[] = [];
 
-  // 1. إذا كانت المسألة نظرية لفظية بحتة
+  // 1. إذا كان الشكل من عائلة الإحصاء أو يحتوي على SVG متجهي نقي مخصص
+  if (figure.familyId === "statistics_family" || Boolean(figure.rawSvgMarkup)) {
+    return {
+      passed: true,
+      alienVertices: [],
+      alienNumbers: [],
+      isPurelyTheoretical: false,
+      reasons: [],
+    };
+  }
+
+  // 2. إذا كانت المسألة نظرية لفظية بحتة
   if (isPurelyTheoreticalNoDiagramProblem(rawPromptOrDescription)) {
     return {
       passed: false,

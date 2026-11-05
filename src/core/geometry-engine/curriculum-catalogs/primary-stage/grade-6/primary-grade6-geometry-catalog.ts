@@ -15,6 +15,7 @@ import {
   localizeGeometricVertexLabelSSOT,
   type MathNotationLanguage,
 } from "../../../../ssot/numeral-and-unit-ssot";
+import { matchPrimaryGrade6StatisticsFigure } from "./primary-grade6-statistics-catalog";
 
 export const MODULE_ID_PRIMARY_GRADE6_GEOMETRY_CATALOG =
   "primary_grade6_geometry_catalog" as const;
@@ -58,6 +59,9 @@ export function matchPrimaryGrade6GeometryFigure(
 ): CanonicalGeometryFigureIR | undefined {
   const d = description.trim();
   if (!d) return undefined;
+
+  const statFigure = matchPrimaryGrade6StatisticsFigure(d, figureId, notationLanguage);
+  if (statFigure) return statFigure;
 
   if (/دائرة.*نصف\s*قطر|محيط\s*الدائرة|مساحة\s*الدائرة|ط.*نق/i.test(d)) {
     return buildGrade6CircleRadiusFigure({ figureId, notationLanguage });

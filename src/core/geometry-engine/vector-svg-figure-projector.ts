@@ -41,6 +41,10 @@ export function projectGeometryFigureToSVGMarkup(
   const notation = options.notationLanguage || "english";
   const padding = Math.max(16, Math.min(22, Math.round(Math.min(width, height) * 0.14)));
 
+  if (figure.rawSvgMarkup) {
+    return figure.rawSvgMarkup;
+  }
+
   if (figure.vertices.length === 0) {
     return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="100%"></svg>`;
   }

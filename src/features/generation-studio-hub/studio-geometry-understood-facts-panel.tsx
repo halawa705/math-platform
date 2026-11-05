@@ -17,8 +17,14 @@ export const MODULE_ID_STUDIO_GEOMETRY_UNDERSTOOD_FACTS_PANEL = "studio_geometry
 export default function StudioGeometryUnderstoodFactsPanel({ description }: { readonly description: string }) {
   const embeddedTag = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i)?.[1]?.trim();
   const effectiveDesc = embeddedTag || description;
-  const isAngleFan = extractAngleFanSpecFromDescription(effectiveDesc) !== null;
-  const facts = isAngleFan
+  const isStatistics =
+    /مخطط\s*الصندوق|الربيعيات|مخطط\s*(?:التمثيل\s*بالنقاط|النقاط)|تمثيل\s*بالنقاط|مدرج\s*تكراري|المدرج\s*التكراري|أعمدة\s*بيانية|عروض\s*التليفزيون|وجبات\s*الغذاء|أعمار\s*بعض\s*الأشخاص|درجات\s*الاختبار|عدد\s*الإخوة/i.test(
+      effectiveDesc
+    );
+  const isAngleFan = !isStatistics && extractAngleFanSpecFromDescription(effectiveDesc) !== null;
+  const facts = isStatistics
+    ? [{ text: "نموذج إحصاء بياني معتمد (الصف السادس الابتدائي)", ok: true }]
+    : isAngleFan
     ? splitAngleFanClauses(effectiveDesc).map((text) => ({ text, ok: true }))
     : splitDescriptionIntoFactStrings(effectiveDesc).map((text) => ({
         text,

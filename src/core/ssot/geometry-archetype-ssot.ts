@@ -13,7 +13,8 @@ export type GeometryFamilyId =
   | "quadrilateral_family"
   | "circle_family"
   | "analytic_coordinate_family"
-  | "solid3d_mechanics_family";
+  | "solid3d_mechanics_family"
+  | "statistics_family";
 
 export type TriangleDerivedBranchId =
   | "triangle_base_general"
@@ -49,11 +50,18 @@ export type Solid3DDerivedBranchId =
   | "solid_regular_pyramid"
   | "mechanics_inclined_plane_forces";
 
+export type StatisticsDerivedBranchId =
+  | "stats_dot_plot"
+  | "stats_histogram_columns"
+  | "stats_boxplot_and_quartiles"
+  | "stats_bar_chart";
+
 export type GeometryCanonicalBranchId =
   | TriangleDerivedBranchId
   | CircleDerivedBranchId
   | QuadrilateralDerivedBranchId
-  | Solid3DDerivedBranchId;
+  | Solid3DDerivedBranchId
+  | StatisticsDerivedBranchId;
 
 export interface Point2DCoordinate {
   readonly x: number;
@@ -114,4 +122,6 @@ export interface CanonicalGeometryFigureIR {
   readonly polygons?: readonly (readonly string[])[];
   /** شارات ونصوص توضيحية داخل مساحة الشكل (مثل "المحيط = 24 سم" أو "المساحة = 30 سم²"). */
   readonly interiorBadges?: readonly CanonicalInteriorBadgeNode[];
+  /** رسم متجهي SVG نقي مولد مسبقاً (خاص بالأشكال الإحصائية أو المركبة الفائقة الدقة). */
+  readonly rawSvgMarkup?: string;
 }
