@@ -10,7 +10,7 @@
       "214",
       "250"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -24,7 +24,7 @@
       "900",
       "460"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -38,7 +38,7 @@
       "200",
       "300"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -52,7 +52,7 @@
       "13000",
       "5300"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -66,7 +66,7 @@
       "9870",
       "5100"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -80,7 +80,7 @@
       "500",
       "6000"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -94,7 +94,7 @@
       "985",
       "285"
     ],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -105,7 +105,7 @@
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -116,7 +116,7 @@
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -127,7 +127,7 @@
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "source": "أسئلة امتحانات الإدارات رابع ابتدائي (صورة 1)",
     "humanVerdict": "unreviewed"
   },
   {
@@ -312,231 +312,287 @@
     "id": "p4-25",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 3 أسابيع = ... يومًا",
-    "geometryRaw": "",
-    "expectedOutcome": "no_figure",
-    "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "problemText": "اكتب الوقت الذي تشير إليه عقارب الساعة (أ)",
+    "geometryRaw": "ساعة عقارب: 1:35",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1",
+      "35"
+    ],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-26",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 10 دقائق = ... ثانية",
-    "geometryRaw": "",
-    "expectedOutcome": "no_figure",
-    "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "problemText": "اكتب الوقت الذي تشير إليه عقارب الساعة (ب)",
+    "geometryRaw": "ساعة عقارب: 6:30",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "30"
+    ],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-27",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: يومان = ... ساعة",
-    "geometryRaw": "",
-    "expectedOutcome": "no_figure",
-    "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "problemText": "اكتب الوقت الذي تشير إليه عقارب الساعة (ج)",
+    "geometryRaw": "ساعة عقارب: 9:45",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "9",
+      "45"
+    ],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-28",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 6 ساعات = ... دقيقة",
-    "geometryRaw": "",
-    "expectedOutcome": "no_figure",
-    "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "problemText": "اكتب الوقت الذي تشير إليه عقارب الساعة (د)",
+    "geometryRaw": "ساعة عقارب: 4:50",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "50"
+    ],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-29",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 3 ساعات = ... دقيقة",
+    "problemText": "أكمل ما يلي: 3 أسابيع = ... يومًا",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-30",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 7 دقائق = ... ثانية",
+    "problemText": "أكمل ما يلي: 10 دقائق = ... ثانية",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-31",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: أسبوعان = ... يومًا",
+    "problemText": "أكمل ما يلي: يومان = ... ساعة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-32",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 10 أيام = ... ساعة",
+    "problemText": "أكمل ما يلي: 6 ساعات = ... دقيقة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-33",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 48 ساعة = ... يوم",
+    "problemText": "أكمل ما يلي: 3 ساعات = ... دقيقة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-34",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 28 يومًا = ... أسابيع",
+    "problemText": "أكمل ما يلي: 7 دقائق = ... ثانية",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-35",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 120 دقيقة = ... ساعة",
+    "problemText": "أكمل ما يلي: أسبوعان = ... يومًا",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-36",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 180 ثانية = ... دقائق",
+    "problemText": "أكمل ما يلي: 10 أيام = ... ساعة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-37",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: أسبوع ويومان = ... أيام",
+    "problemText": "أكمل ما يلي: 48 ساعة = ... يوم",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-38",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: ساعتان ونصف = ... دقيقة",
+    "problemText": "أكمل ما يلي: 28 يومًا = ... أسابيع",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-39",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: يوم و6 ساعات = ... ساعة",
+    "problemText": "أكمل ما يلي: 120 دقيقة = ... ساعة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-40",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 5 أسابيع و3 أيام = ... يومًا",
+    "problemText": "أكمل ما يلي: 180 ثانية = ... دقائق",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-41",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "أكمل ما يلي: 8 ساعات و50 دقيقة = ... دقيقة",
+    "problemText": "أكمل ما يلي: أسبوع ويومان = ... أيام",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-42",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "قارن باستخدام (>) أو (<) أو (=): 10 أيام ☐ أسبوعين",
+    "problemText": "أكمل ما يلي: ساعتان ونصف = ... دقيقة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-43",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "قارن باستخدام (>) أو (<) أو (=): 80 ساعة ☐ 3 أيام",
+    "problemText": "أكمل ما يلي: يوم و6 ساعات = ... ساعة",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-44",
     "gradeId": "primary-4",
     "branchId": "numbers",
-    "problemText": "قارن باستخدام (>) أو (<) أو (=): 100 دقيقة ☐ ساعتين",
+    "problemText": "أكمل ما يلي: 5 أسابيع و3 أيام = ... يومًا",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   },
   {
     "id": "p4-45",
     "gradeId": "primary-4",
     "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 8 ساعات و50 دقيقة = ... دقيقة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-46",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 10 أيام ☐ أسبوعين",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-47",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 80 ساعة ☐ 3 أيام",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-48",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 100 دقيقة ☐ ساعتين",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-49",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
     "problemText": "قارن باستخدام (>) أو (<) أو (=): 84 ثانية ☐ دقيقتين",
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "source": "تدريبات سلاح التلميذ رابع ابتدائي — الوقت والساعات (صورة 5)",
     "humanVerdict": "unreviewed"
   }
 ]

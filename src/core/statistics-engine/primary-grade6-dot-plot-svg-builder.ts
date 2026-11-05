@@ -64,7 +64,7 @@ export function buildGrade6DotPlotSvgMarkup(
     );
     const labelText = formatNumeralsByModeSSOT(Math.round(v * 10) / 10, numMode);
     ticksAndLabels.push(
-      `<text x="${x.toFixed(1)}" y="${axisY + 16}" text-anchor="middle" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${labelText}</text>`
+      `<text data-furniture="1" x="${x.toFixed(1)}" y="${axisY + 16}" text-anchor="middle" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${labelText}</text>`
     );
   }
 
@@ -80,8 +80,9 @@ export function buildGrade6DotPlotSvgMarkup(
     for (let i = 0; i < count; i++) {
       const y = axisY - 7 - i * dotSpacing;
       const fillCol = isOutlier ? "#DC2626" : stroke;
+      const dataAttr = i === 0 ? ` data-given-values="${pt.value},${pt.count}"` : "";
       dotElements.push(
-        `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotRadius}" fill="${fillCol}" />`
+        `<circle${dataAttr} cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotRadius}" fill="${fillCol}" />`
       );
     }
   }

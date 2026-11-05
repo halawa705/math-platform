@@ -10,8 +10,7 @@
       "3",
       "18",
       "2",
-      "12",
-      "26"
+      "12"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 1. matches Problem 8 p.176: Scissors angle problem (3X-18)° and (2X+12)° to find y = 26°",
     "humanVerdict": "unreviewed"
@@ -24,8 +23,7 @@
     "geometryRaw": "في الشكل المقابل AC ∩ BD = {M} وقياس CMD = 140° والشعاع MX ينصف AMB أوجد قياس DMX = 110°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "140",
-      "110"
+      "140"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 2. matches Problem 3 p.175: AC ∩ BD = {M} with CMD = 140° and MX bisecting AMB to find DMX = 110°",
     "humanVerdict": "unreviewed"
@@ -41,8 +39,7 @@
       "5",
       "7",
       "3",
-      "57",
-      "25"
+      "57"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 3. matches Problem 7-3 p.176: Vertically opposite (5X+7)° and (3X+57)° to find X = 25°",
     "humanVerdict": "unreviewed"
@@ -72,8 +69,7 @@
       "70",
       "100",
       "80",
-      "10",
-      "11"
+      "10"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 5. matches Problem 1-6 p.174: Concurrent angles 70°, 100°, 80°, 10X° to find X = 11°",
     "humanVerdict": "unreviewed"
@@ -86,8 +82,7 @@
     "geometryRaw": "ثلاث زوايا متجمعة حول نقطة M إحداها 140° والأخريان متساويتان X° و X° أوجد قيمة X = 110°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "140",
-      "110"
+      "140"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 6. matches Problem 1-8 p.174: Concurrent angles with 140° and two equal angles X° to find X = 110°",
     "humanVerdict": "unreviewed"
@@ -102,8 +97,7 @@
     "expectedGivenNumbers": [
       "2",
       "115",
-      "48",
-      "101"
+      "48"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 7. matches Problem 5 p.175: BMC = 2 AMB with AMB = 48° and DMC = 115° to find AMD = 101°",
     "humanVerdict": "unreviewed"
@@ -122,8 +116,7 @@
       "4",
       "2",
       "3",
-      "63",
-      "21"
+      "63"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 8. matches Problem 7-5 p.176: Concurrent angles with right angle 90° and (3X-5)°, (4X+2)°, (3X+63)° to find X = 21°",
     "humanVerdict": "unreviewed"
@@ -136,8 +129,7 @@
     "geometryRaw": "النقاط A ، B ، C ، D تقع على مستقيم واحد مع ABE = 56° وتقاطع XY مع BD في C أوجد قياس DCY = 124°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "56",
-      "124"
+      "56"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 9. matches Problem 6 p.175: Collinear ABCD with ABE = 56° and XY ∩ BD = {C} to find DCY = 124°",
     "humanVerdict": "unreviewed"
@@ -165,8 +157,7 @@
     "geometryRaw": "في الشكل المقابل AC ∩ BD = {M} وقياس BMC = 120° والشعاع ME ينصف AMD أوجد قياس EMD = 60°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "120",
-      "60"
+      "120"
     ],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 11. matches Problem 1-2 p.174: AC ∩ BD = {M} with BMC = 120° and ME bisecting AMD to find EMD = 60°",
     "humanVerdict": "unreviewed"
@@ -176,27 +167,10 @@
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
     "problemText": "12. matches general lesson keyword for prep grade 1 angles followup",
-    "geometryRaw": "تابع العلاقات بين الزوايا والزوايا المتجمعة حول نقطة",
-    "expectedOutcome": "figure",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade1-angles-followup-catalog.test.ts :: 12. matches general lesson keyword for prep grade 1 angles followup",
-    "humanVerdict": "unreviewed"
-  },
-  {
-    "id": "prep-1-prep-grade1-angles-followup-catalog-13",
-    "gradeId": "prep-1",
-    "branchId": "plane_geometry",
-    "problemText": "13. projects generated canonical IR figures cleanly to vector SVG markup",
-    "geometryRaw": "تفكير ناقد: إذا كان قياس الزاوية بين ذراعي المقص هما (3X-18)° و (2X+12)° وتم تقليلها أوجد قيمة y = 26°",
-    "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "3",
-      "18",
-      "2",
-      "12",
-      "26"
-    ],
-    "source": "prep-grade1-angles-followup-catalog.test.ts :: 13. projects generated canonical IR figures cleanly to vector SVG markup",
     "humanVerdict": "unreviewed"
   },
   {
@@ -219,9 +193,7 @@
     "problemText": "2. matches Problem 6-2 p.163: Right angle trisected into three equal angles to find EAD = 30°",
     "geometryRaw": "في الشكل AC ⊥ AB زاوية قائمة مقسمة إلى ثلاث زوايا متساوية أوجد قياس زاوية EAD = 30°",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "30"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 2. matches Problem 6-2 p.163: Right angle trisected into three equal angles to find EAD = 30°",
     "humanVerdict": "unreviewed"
   },
@@ -235,8 +207,7 @@
     "expectedGivenNumbers": [
       "2",
       "2",
-      "1",
-      "29"
+      "1"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 3. matches Problem 7 p.165: Algebraic complementary angles (2X+2)° and (X+1)° to find X = 29°",
     "humanVerdict": "unreviewed"
@@ -251,8 +222,7 @@
     "expectedGivenNumbers": [
       "42",
       "3",
-      "3",
-      "15"
+      "3"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 4. matches Problem 14 p.165: Crossing barrier gate at 42° and (3X+3)° to find X = 15",
     "humanVerdict": "unreviewed"
@@ -265,8 +235,7 @@
     "geometryRaw": "في الشكل المقابل A ∈ BC مستقيم ، قياس زاوية DAB = 35° أوجد قيمة X = 145°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "35",
-      "145"
+      "35"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 5. matches Problem 7-1 p.163: Supplementary angles on straight line A ∈ BC with 35° to find X = 145°",
     "humanVerdict": "unreviewed"
@@ -296,8 +265,7 @@
       "5",
       "2",
       "4",
-      "2",
-      "20"
+      "2"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 7. matches Problem 8 p.165: Algebraic supplementary angles (5X+2)° and (4X-2)° to find X = 20°",
     "humanVerdict": "unreviewed"
@@ -312,8 +280,7 @@
     "expectedGivenNumbers": [
       "5",
       "3",
-      "2",
-      "18"
+      "2"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 8. matches Problem 11 p.165: Three adjacent angles on line 5X°, 3X°, 2X° to find X = 18°",
     "humanVerdict": "unreviewed"
@@ -329,8 +296,7 @@
       "2",
       "26",
       "3",
-      "21",
-      "47"
+      "21"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 9. matches Problem 13-5 p.164: Vertically opposite angles (2X+26)° = (3X-21)° to find X = 47°",
     "humanVerdict": "unreviewed"
@@ -343,8 +309,7 @@
     "geometryRaw": "الشعاع OM ينصف زاوية NOZ و O ∈ XN مستقيم وقياس YOX = 50° أوجد بالبرهان قياس زاوية MOX = 160°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "50",
-      "160"
+      "50"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 10. matches Problem 10 p.164: Straight line with bisected angle NOZ by OM with YOX = 50° to find MOX = 160°",
     "humanVerdict": "unreviewed"
@@ -361,8 +326,7 @@
       "4",
       "21",
       "6",
-      "1",
-      "11"
+      "1"
     ],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 11. matches Problem 15 p.165: Squash ball wall rebound at 50° and angles (4X+21)° and (6X-1)° to find X = 11",
     "humanVerdict": "unreviewed"
@@ -372,23 +336,10 @@
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
     "problemText": "12. matches general lesson keyword for prep grade 1 angle relationships",
-    "geometryRaw": "أنواع الزوايا والعلاقات بين الزوايا المتتامة والمتكاملة",
-    "expectedOutcome": "figure",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade1-angles-relationships-catalog.test.ts :: 12. matches general lesson keyword for prep grade 1 angle relationships",
-    "humanVerdict": "unreviewed"
-  },
-  {
-    "id": "prep-1-prep-grade1-angles-relationships-catalog-13",
-    "gradeId": "prep-1",
-    "branchId": "plane_geometry",
-    "problemText": "13. projects generated canonical IR figures cleanly to vector SVG markup",
-    "geometryRaw": "في الشكل المقابل AC ⊥ AB ، قياس زاوية DAB = 25° أوجد قيمة X",
-    "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "25"
-    ],
-    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 13. projects generated canonical IR figures cleanly to vector SVG markup",
     "humanVerdict": "unreviewed"
   },
   {
@@ -459,12 +410,7 @@
     "problemText": "5. matches numerical midpoint coordinates A(1, 2) and B(5, 6) -> M(3, 4)",
     "geometryRaw": "أوجد إحداثيي منتصف القطعة المستقيمة AB حيث A(1, 2) و B(5, 6)",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "1",
-      "2",
-      "5",
-      "6"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade1-coordinates-catalog.test.ts :: 5. matches numerical midpoint coordinates A(1, 2) and B(5, 6) -> M(3, 4)",
     "humanVerdict": "unreviewed"
   },
@@ -493,8 +439,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "70",
-      "120",
-      "130"
+      "120"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 1. matches Problem 10 p.194: AB // CD // EF with A = 70° and C = 120° to find AEC = 130°",
     "humanVerdict": "unreviewed"
@@ -525,7 +470,6 @@
       "30",
       "50",
       "6",
-      "40",
       "40"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 3. matches Problem 14-6 p.196: Broken zigzag reflex angle (6X+40)° with 30° and 50° to find X = 40°",
@@ -540,8 +484,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "90",
-      "40",
-      "50"
+      "40"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 4. matches Problem 14-3 p.196: Broken zigzag right angle 90° with 40° to find X = 50°",
     "humanVerdict": "unreviewed"
@@ -555,8 +498,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "40",
-      "55",
-      "95"
+      "55"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 5. matches Problem 5-1 p.192: Classic broken zigzag between parallel lines with 40° and 55° to find X = 95°",
     "humanVerdict": "unreviewed"
@@ -613,8 +555,7 @@
     "expectedGivenNumbers": [
       "3",
       "15",
-      "75",
-      "20"
+      "75"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 9. matches Problem 4-7 p.192: Algebraic alternate (3X+15)° = 75° to find X = 20°",
     "humanVerdict": "unreviewed"
@@ -630,8 +571,7 @@
       "9",
       "5",
       "5",
-      "15",
-      "5"
+      "15"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 10. matches Problem 4-8 p.192: Algebraic corresponding (9X-5)° = (5X+15)° to find X = 5°",
     "humanVerdict": "unreviewed"
@@ -644,8 +584,7 @@
     "geometryRaw": "مستقيمان متوازيان زاويتان داخلتان في جهة واحدة من القاطع تداخل 70° لإيجاد 110°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "70",
-      "110"
+      "70"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 11. matches Problem 3-2 p.191: Consecutive interior U shape with 70° to find 110°",
     "humanVerdict": "unreviewed"
@@ -658,7 +597,6 @@
     "geometryRaw": "مستقيمان متوازيان بحالة تبادل حرف Z مع زاوية 64° أوجد قيمة X = 64°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "64",
       "64"
     ],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 12. matches Problem 3-3 p.191: Alternate Z shape with 64° to find X = 64°",
@@ -682,25 +620,10 @@
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
     "problemText": "14. matches general lesson keyword for prep grade 1 parallelism",
-    "geometryRaw": "درس التوازي والمستقيمات المتوازية والقاطع",
-    "expectedOutcome": "figure",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade1-parallelism-catalog.test.ts :: 14. matches general lesson keyword for prep grade 1 parallelism",
-    "humanVerdict": "unreviewed"
-  },
-  {
-    "id": "prep-1-prep-grade1-parallelism-catalog-15",
-    "gradeId": "prep-1",
-    "branchId": "plane_geometry",
-    "problemText": "15. projects generated canonical IR figures cleanly to vector SVG markup",
-    "geometryRaw": "في الشكل المقابل AB // CD ، EF // CD وقياس A = 70° وقياس C = 120° أوجد بالبرهان قياس AEC = 130°",
-    "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "70",
-      "120",
-      "130"
-    ],
-    "source": "prep-grade1-parallelism-catalog.test.ts :: 15. projects generated canonical IR figures cleanly to vector SVG markup",
     "humanVerdict": "unreviewed"
   },
   {
@@ -710,9 +633,7 @@
     "problemText": "1. matches Problem 12 p.252: Regular hexagon ABCDEF with external right triangle to find angle H = 60°",
     "geometryRaw": "في الشكل المقابل ABCDEF سداسي منتظم ، أوجد بالبرهان قياس زاوية H = 60° حيث HG ⊥ AG",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "60"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade1-polygons-catalog.test.ts :: 1. matches Problem 12 p.252: Regular hexagon ABCDEF with external right triangle to find angle H = 60°",
     "humanVerdict": "unreviewed"
   },
@@ -818,8 +739,7 @@
     "expectedGivenNumbers": [
       "75",
       "35",
-      "70",
-      "110"
+      "70"
     ],
     "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 1. matches Problem 5 p.221: Parallelogram with external triangle EGB to find E = 110°",
     "humanVerdict": "unreviewed"
@@ -846,13 +766,7 @@
     "problemText": "3. matches Problem 11 p.222: Algebraic parameters a and b for parallelogram (a - 11 = 32 and 2b - 5 = b - 1)",
     "geometryRaw": "أوجد قيم a ، b التي تجعل الشكل ABCD متوازي أضلاع وفيه (a - 11)° = 32° و (2b - 5) = (b - 1)",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "11",
-      "32",
-      "2",
-      "5",
-      "1"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 3. matches Problem 11 p.222: Algebraic parameters a and b for parallelogram (a - 11 = 32 and 2b - 5 = b - 1)",
     "humanVerdict": "unreviewed"
   },
@@ -962,8 +876,7 @@
     "expectedGivenNumbers": [
       "120",
       "2",
-      "2",
-      "48"
+      "2"
     ],
     "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 10. matches Problem 1-1 p.220: Quadrilateral angles sum 120° and 2X°, 2X°, X° to find X = 48°",
     "humanVerdict": "unreviewed"
@@ -979,8 +892,7 @@
       "4",
       "70",
       "100",
-      "110",
-      "25"
+      "110"
     ],
     "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 11. matches Problem 1-4 p.220: Quadrilateral exterior angle 4X° with interior 70°, 100°, 110° to find X = 25°",
     "humanVerdict": "unreviewed"
@@ -995,8 +907,7 @@
     "expectedGivenNumbers": [
       "3",
       "55",
-      "2",
-      "70"
+      "2"
     ],
     "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 12. matches Problem 2-2 p.220: Isosceles trapezoid with (3X-55)° = 2X° to find D = 70°",
     "humanVerdict": "unreviewed"
@@ -1006,26 +917,10 @@
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
     "problemText": "13. matches general lesson keyword for prep grade 1 quadrilaterals",
-    "geometryRaw": "درس الأشكال الرباعية ومتوازي الأضلاع وخواص متوازي الأضلاع",
-    "expectedOutcome": "figure",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 13. matches general lesson keyword for prep grade 1 quadrilaterals",
-    "humanVerdict": "unreviewed"
-  },
-  {
-    "id": "prep-1-prep-grade1-quadrilaterals-catalog-14",
-    "gradeId": "prep-1",
-    "branchId": "plane_geometry",
-    "problemText": "14. projects generated canonical IR figures cleanly to vector SVG markup",
-    "geometryRaw": "في الشكل المقابل ABCD متوازي أضلاع فيه قياس D = 75° ومثلث خارجي EGB فيه قياس G = 35° وقياس GBA = 70° أوجد قياس زاوية E = 110°",
-    "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "75",
-      "35",
-      "70",
-      "110"
-    ],
-    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 14. projects generated canonical IR figures cleanly to vector SVG markup",
     "humanVerdict": "unreviewed"
   },
   {
@@ -1035,9 +930,7 @@
     "problemText": "1. matches Problem 6-1 p.234: Square attached to equilateral triangle DCE to find ACE = 105°",
     "geometryRaw": "في الشكل المقابل ABCD مربع ملتصق بمثلث متساوي الأضلاع DCE أوجد بالبرهان قياس زاوية ACE = 105°",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "105"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 1. matches Problem 6-1 p.234: Square attached to equilateral triangle DCE to find ACE = 105°",
     "humanVerdict": "unreviewed"
   },
@@ -1050,8 +943,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "46",
-      "44",
-      "88"
+      "44"
     ],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 2. matches Problem 8 p.234: Rectangle ABCD with AED = 46° and ECB = 44° to find CED = 88°",
     "humanVerdict": "unreviewed"
@@ -1064,8 +956,7 @@
     "geometryRaw": "مستطيل ABCD يحوي بداخله ABFE مربع وفيه قياس FDC = 52° أوجد بالبرهان قياس زاوية AFD = 97°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "52",
-      "97"
+      "52"
     ],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 3. matches Problem 12 p.235: Rectangle and square composite with FDC = 52° to find AFD = 97°",
     "humanVerdict": "unreviewed"
@@ -1089,8 +980,7 @@
     "geometryRaw": "في الشكل المقابل ABCD معين فيه قياس DBC = 62° أوجد بالبرهان قياس زاوية A = 56°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "62",
-      "56"
+      "62"
     ],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 5. matches Problem 9 p.235: Rhombus ABCD with DBC = 62° to find head angle A = 56°",
     "humanVerdict": "unreviewed"
@@ -1106,8 +996,7 @@
       "5",
       "4",
       "2",
-      "1",
-      "6"
+      "1"
     ],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 6. matches Problem 7 p.234: Square with BD = 5a - 4 and MC = 2a - 1 to find a = 2 and AC = 6",
     "humanVerdict": "unreviewed"
@@ -1123,8 +1012,7 @@
       "7",
       "11",
       "5",
-      "1",
-      "6"
+      "1"
     ],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 7. matches Problem 3-3 p.233: Rhombus equal sides 7X - 11 = 5X + 1 to find X = 6",
     "humanVerdict": "unreviewed"
@@ -1139,8 +1027,7 @@
     "expectedGivenNumbers": [
       "4",
       "5",
-      "3",
-      "5"
+      "3"
     ],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 8. matches Problem 3-2 p.233: Rectangle diagonals equal 4X - 5 = 3X to find X = 5",
     "humanVerdict": "unreviewed"
@@ -1150,23 +1037,10 @@
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
     "problemText": "9. matches general lesson keyword for prep grade 1 special quadrilaterals",
-    "geometryRaw": "تابع الأشكال الرباعية الخاصة والحالات الخاصة من متوازي الأضلاع المستطيل والمعين والمربع",
-    "expectedOutcome": "figure",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 9. matches general lesson keyword for prep grade 1 special quadrilaterals",
-    "humanVerdict": "unreviewed"
-  },
-  {
-    "id": "prep-1-prep-grade1-special-quads-followup-catalog-10",
-    "gradeId": "prep-1",
-    "branchId": "plane_geometry",
-    "problemText": "10. projects generated canonical IR figures cleanly to vector SVG markup",
-    "geometryRaw": "في الشكل المقابل ABCD مربع ملتصق بمثلث متساوي الأضلاع DCE أوجد بالبرهان قياس زاوية ACE = 105°",
-    "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "105"
-    ],
-    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 10. projects generated canonical IR figures cleanly to vector SVG markup",
     "humanVerdict": "unreviewed"
   },
   {
@@ -1177,8 +1051,7 @@
     "geometryRaw": "في المثلث ABC منصفا زاويتي القاعدة يتقاطعان بزاوية 126° أوجد قياس زاوية الرأس C = 72°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "126",
-      "72"
+      "126"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 1. matches Problem 14-7 p.210: Base angle bisectors intersecting at 126° to find C = 72°",
     "humanVerdict": "unreviewed"
@@ -1192,8 +1065,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "100",
-      "30",
-      "70"
+      "30"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 2. matches Problem 8 p.209: DE // CB with D = 100° and C = 30° to find BAC = 70°",
     "humanVerdict": "unreviewed"
@@ -1221,9 +1093,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "60",
-      "80",
-      "40",
-      "140"
+      "80"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 4. matches Problem 10 p.209: ABC triangle with B = 60°, A = 80° and ED // CB to find AED = 40° and DEC = 140°",
     "humanVerdict": "unreviewed"
@@ -1239,8 +1109,7 @@
       "3",
       "10",
       "60",
-      "70",
-      "40"
+      "70"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 5. matches Problem 14-1 p.210: Exterior angle (3X+10)° with interior 60° and 70° to find X = 40°",
     "humanVerdict": "unreviewed"
@@ -1257,8 +1126,7 @@
       "2",
       "3",
       "7",
-      "125",
-      "24"
+      "125"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 6. matches Problem 14-2 p.210: Exterior angle 125° with (2X-2)° and (3X+7)° to find X = 24°",
     "humanVerdict": "unreviewed"
@@ -1274,8 +1142,7 @@
       "2",
       "16",
       "1",
-      "80",
-      "65"
+      "80"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 7. matches Problem 14-3 p.210: Exterior angle (2X+16)° with (X+1)° and 80° to find X = 65°",
     "humanVerdict": "unreviewed"
@@ -1293,8 +1160,7 @@
       "3",
       "4",
       "4",
-      "8",
-      "76"
+      "8"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 8. matches Problem 14-4 p.210: Three algebraic interior angles (2X-5)°, (3X+4)°, (4X-8)° to find B = 76°",
     "humanVerdict": "unreviewed"
@@ -1308,8 +1174,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "3",
-      "5",
-      "20"
+      "5"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 9. matches Problem 2-3 p.207: Interior angles ratio a°, 3a°, 5a° to find a = 20°",
     "humanVerdict": "unreviewed"
@@ -1323,8 +1188,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "22",
-      "82",
-      "104"
+      "82"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 10. matches Problem 2-5 p.207: Exterior sum with 22° and 82° to find X = 104°",
     "humanVerdict": "unreviewed"
@@ -1351,8 +1215,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "110",
-      "104",
-      "34"
+      "104"
     ],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 12. matches Problem 2-9 p.207: Two exterior angles 110° and 104° to find head angle X = 34°",
     "humanVerdict": "unreviewed"
@@ -1362,24 +1225,487 @@
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
     "problemText": "13. matches general lesson keyword for prep grade 1 triangle angles",
-    "geometryRaw": "مجموع قياسات الزوايا الداخلة للمثلث والزاوية الخارجة للمثلث",
-    "expectedOutcome": "figure",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade1-triangle-angles-catalog.test.ts :: 13. matches general lesson keyword for prep grade 1 triangle angles",
     "humanVerdict": "unreviewed"
   },
   {
-    "id": "prep-1-prep-grade1-triangle-angles-catalog-14",
+    "id": "prep-1-angle-fan-01",
     "gradeId": "prep-1",
     "branchId": "plane_geometry",
-    "problemText": "14. projects generated canonical IR figures cleanly to vector SVG markup",
-    "geometryRaw": "في المثلث ABC منصفا زاويتي القاعدة يتقاطعان بزاوية 126° أوجد قياس زاوية الرأس C = 72°",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #1",
+    "geometryRaw": "الشعاع جـ أ ⊥ الشعاع جـ ب ; الشعاع جـ د شعاع بينهما ; ق(∠أ جـ د) = 50° ; ق(∠د جـ ب) = 2س°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "126",
-      "72"
+      "50",
+      "2"
     ],
-    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 14. projects generated canonical IR figures cleanly to vector SVG markup",
+    "source": "angle-fan-compositor.test.ts :: #1",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-02",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #2",
+    "geometryRaw": "الشعاع أ جـ ⊥ الشعاع أ ب ; الشعاع أ د ينصف المنطقة بينهما ; ق(∠د أ جـ) = (3س - 10)° ; ق(∠د أ ب) = (2س + 5)°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "10",
+      "2",
+      "5"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #2",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-03",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #3",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ ; الشعاع ب د يقطع المستقيم ; ق(∠أ ب د) = 120° ; ق(∠د ب جـ) = 3س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120",
+      "3"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-04",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #4",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ ; الشعاع ب د بينهما ; ق(∠أ ب د) = (4س + 8)° ; ق(∠د ب جـ) = (س + 2)°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "8",
+      "2"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #4",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-05",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #5",
+    "geometryRaw": "أ، ب، جـ نقط متتالية ; الشعاع ب د والشعاع ب هـ بينهما ; ق(∠أ ب د) = 35° ; ق(∠د ب هـ) = 90° ; ق(∠هـ ب جـ) = 55°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "35",
+      "90",
+      "55"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #5",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-06",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #6",
+    "geometryRaw": "أ ب جـ زاوية مقسمة لشعاعين ب د و ب هـ ; ق(∠أ ب د) = 32° ; ق(∠د ب هـ) = 39° ; ق(∠هـ ب جـ) = 19°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "32",
+      "39",
+      "19"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #6",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-07",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #7",
+    "geometryRaw": "جـ تنتمي للمستقيم أ ب ; الشعاع جـ د والشعاع جـ س بينهما ; ق(∠د جـ ب) = 40° ; ق(∠أ جـ س) = 100° ; الشعاع جـ هـ ينصف ∠د جـ س",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "40",
+      "100"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #7",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-08",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #8",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ ; الشعاع ب د يخرج من ب ; ق(∠أ ب د) = 65° ; الشعاع ب هـ ينصف ∠جـ ب د",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "65"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #8",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-09",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #9",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م ; ق(∠أ م د) = 140° ; ق(∠ب م جـ) = (3س + 20)° بالتقابل بالرأس",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "140",
+      "3",
+      "20"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #9",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #10",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م ; ق(∠أ م جـ) = (6س + 15)° ; ق(∠ب م د) = (2س + 75)° بالتقابل بالرأس",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "15",
+      "2",
+      "75"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #10",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-11",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #11",
+    "geometryRaw": "الزوايا متجمعة حول النقطة م ; الشعاع م أ متعامد على الشعاع م هـ (90°) ; ق(∠أ م ب) = 140° ; ق(∠ب م د) = 100°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "140",
+      "100"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #11",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-12",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #12",
+    "geometryRaw": "نقطة م حولها أربعة أشعة تصنع زوايا 2س°، 3س°، 4س°، 6س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3",
+      "4",
+      "6"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #12",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-13",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #13",
+    "geometryRaw": "تقاطع مستقيمين يمثلان ذراعي مقص ; الزاويتان المتقابلتان بالرأس هما (3س - 18)° و (2س + 12)°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "18",
+      "2",
+      "12"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #13",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-14",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #14",
+    "geometryRaw": "الشعاع جـ أ ⊥ الشعاع جـ ب;الشعاع جـ د بينهما;ق(∠أ جـ د)=(2س + 10)°;ق(∠د جـ ب)=40°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "10",
+      "40"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #14",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-15",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #15",
+    "geometryRaw": "الشعاع أ ب ⊥ الشعاع أ جـ;الشعاع أ د بينهما;ق(∠ب أ د)=3س°;ق(∠د أ جـ)=6س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "6"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #15",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-16",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #16",
+    "geometryRaw": "الشعاع ب أ ⊥ الشعاع ب جـ;الشعاع ب د بينهما;ق(∠أ ب د)=(س + 15)°;ق(∠د ب جـ)=(2س - 15)°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "15",
+      "2",
+      "15"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #16",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-17",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #17",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ;الشعاع ب د يقطع المستقيم;ق(∠أ ب د)=5س°;ق(∠د ب جـ)=80°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "80"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #17",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-18",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #18",
+    "geometryRaw": "د تنتمي للمستقيم س ص;الشعاع د هـ يقطع المستقيم;ق(∠س د هـ)=(3س - 10)°;ق(∠هـ د ص)=(2س + 10)°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "10",
+      "2",
+      "10"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #18",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-19",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #19",
+    "geometryRaw": "جـ تنتمي للمستقيم أ ب;الشعاع جـ د يخرج من جـ;ق(∠أ جـ د)=4س°;ق(∠د جـ ب)=2س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "2"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #19",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-20",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #20",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ;الشعاع ب د والشعاع ب هـ بينهما;ق(∠أ ب د)=2س°;ق(∠د ب هـ)=90°;ق(∠هـ ب جـ)=3س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "90",
+      "3"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #20",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-21",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #21",
+    "geometryRaw": "الزوايا متجاورة عند ب;ق(∠أ ب د)=40°;ق(∠د ب هـ)=25°;ق(∠هـ ب جـ)=25°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "40",
+      "25",
+      "25"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #21",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-22",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #22",
+    "geometryRaw": "أ، ب، جـ نقط متتالية;الشعاع ب د والشعاع ب هـ بينهما;ق(∠أ ب د)=52°;ق(∠د ب هـ)=68°;ق(∠هـ ب جـ)=60°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "52",
+      "68",
+      "60"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #22",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-23",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #23",
+    "geometryRaw": "النقاط أ، ب، جـ متتالية;الأشعة ب د و ب هـ بينهما;ق(∠أ ب د)=2س°;ق(∠د ب هـ)=3س°;ق(∠هـ ب جـ)=4س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3",
+      "4"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #23",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-24",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #24",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ;الشعاع ب هـ بينهما;ق(∠هـ ب جـ)=70°;الشعاع ب د ينصف ∠أ ب هـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "70"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #24",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-25",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #25",
+    "geometryRaw": "الشعاع ب أ ⊥ الشعاع ب جـ;الشعاع ب هـ بينهما;ق(∠هـ ب جـ)=30°;الشعاع ب د ينصف ∠أ ب هـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "30"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #25",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-26",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #26",
+    "geometryRaw": "ب تنتمي للمستقيم أ جـ;الشعاع ب هـ يخرج من ب;الشعاع ب د ينصف ∠أ ب هـ;الشعاع ب و ينصف ∠هـ ب جـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "angle-fan-compositor.test.ts :: #26",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-27",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #27",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م;ق(∠أ م جـ)=80°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "80"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #27",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-28",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #28",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م;ق(∠أ م جـ)=(2س + 10)°;ق(∠ب م د)=70°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "10",
+      "70"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #28",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-29",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #29",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م;ق(∠جـ م ب)=110°;الشعاع م هـ ينصف ∠أ م د",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "110"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #29",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-30",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #30",
+    "geometryRaw": "نقطة م حولها الأشعة م أ، م ب، م جـ;ق(∠أ م ب)=90°;ق(∠ب م جـ)=2س°;ق(∠جـ م أ)=3س°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "2",
+      "3"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #30",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-31",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #31",
+    "geometryRaw": "نقطة م حولها الأشعة م أ، م ب، م جـ، م د;م أ ⊥ م د;ق(∠أ م ب)=60°;ق(∠ب م جـ)=110°;ق(∠جـ م د)=(2س - 10)°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "60",
+      "110",
+      "2",
+      "10"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #31",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-32",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #32",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م;الشعاع م هـ ⊥ المستقيم أ ب;ق(∠د م هـ)=35°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "35"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #32",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-angle-fan-33",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "مذكرة الزوايا والعلاقات بينها (1ع) — مسألة #33",
+    "geometryRaw": "تقاطع المستقيم أ ب والمستقيم جـ د في م;الشعاع م و ينصف ∠جـ م ب;مجموع الزاويتين المتقابلتين بالرأس (∠أ م جـ و ∠ب م د) يساوي 140°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "140"
+    ],
+    "source": "angle-fan-compositor.test.ts :: #33",
     "humanVerdict": "unreviewed"
   }
 ]

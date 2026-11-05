@@ -66,7 +66,7 @@ export function buildGrade6BoxPlotSvgMarkup(
     );
     const labelText = formatNumeralsByModeSSOT(Math.round(v * 10) / 10, numMode);
     ticksAndLabels.push(
-      `<text x="${x.toFixed(1)}" y="${axisY + 16}" text-anchor="middle" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${labelText}</text>`
+      `<text data-furniture="1" x="${x.toFixed(1)}" y="${axisY + 16}" text-anchor="middle" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${labelText}</text>`
     );
   }
 
@@ -106,8 +106,9 @@ export function buildGrade6BoxPlotSvgMarkup(
   `;
 
   // مستطيل الصندوق وخط الوسيط
+  const summaryAttr = `data-given-values="${spec.minVal},${spec.q1Val},${spec.medianVal},${spec.q3Val},${spec.maxVal}"`;
   const boxRect = `
-    <rect x="${xQ1.toFixed(1)}" y="${boxTop}" width="${boxW.toFixed(1)}" height="${boxHeight}" rx="2" fill="#F8FAFC" stroke="${stroke}" stroke-width="1.8" />
+    <rect ${summaryAttr} x="${xQ1.toFixed(1)}" y="${boxTop}" width="${boxW.toFixed(1)}" height="${boxHeight}" rx="2" fill="#F8FAFC" stroke="${stroke}" stroke-width="1.8" />
     <!-- خط الوسيط -->
     <line x1="${xMed.toFixed(1)}" y1="${boxTop}" x2="${xMed.toFixed(1)}" y2="${boxTop + boxHeight}" stroke="${stroke}" stroke-width="2" />
   `;

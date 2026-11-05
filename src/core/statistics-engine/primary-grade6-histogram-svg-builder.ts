@@ -59,7 +59,7 @@ export function buildGrade6HistogramSvgMarkup(
     // رقم التدريج الرأسي
     const label = formatNumeralsByModeSSOT(yVal, numMode);
     gridAndYTicks.push(
-      `<text x="${(padLeft - 6).toFixed(1)}" y="${(yPx + 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="#64748B">${label}</text>`
+      `<text data-furniture="1" x="${(padLeft - 6).toFixed(1)}" y="${(yPx + 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="#64748B">${label}</text>`
     );
   }
 
@@ -77,7 +77,7 @@ export function buildGrade6HistogramSvgMarkup(
 
     if (interval.frequency > 0) {
       barsSvg.push(
-        `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" fill="${barFill}" stroke="${barStroke}" stroke-width="1.3" opacity="0.9" />`
+        `<rect data-given-values="${interval.frequency}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" fill="${barFill}" stroke="${barStroke}" stroke-width="1.3" opacity="0.9" />`
       );
     }
 
@@ -85,7 +85,7 @@ export function buildGrade6HistogramSvgMarkup(
     const midX = x + barWidth / 2;
     const cleanLabel = interval.intervalLabel.replace(/\s+/g, "");
     xLabelsSvg.push(
-      `<text x="${midX.toFixed(1)}" y="${(baselineY + 14).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${cleanLabel}</text>`
+      `<text data-given-values="${interval.frequency}" x="${midX.toFixed(1)}" y="${(baselineY + 14).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${cleanLabel}</text>`
     );
   });
 

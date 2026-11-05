@@ -62,7 +62,7 @@ export function buildGrade6BarChartSvgMarkup(
     );
     const label = formatNumeralsByModeSSOT(yVal, numMode);
     gridAndYTicks.push(
-      `<text x="${(padLeft - 6).toFixed(1)}" y="${(yPx + 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="#64748B">${label}</text>`
+      `<text data-furniture="1" x="${(padLeft - 6).toFixed(1)}" y="${(yPx + 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="700" font-family="system-ui, sans-serif" fill="#64748B">${label}</text>`
     );
   }
 
@@ -83,7 +83,7 @@ export function buildGrade6BarChartSvgMarkup(
 
     if (bar.frequency > 0) {
       barsSvg.push(
-        `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" stroke="${stroke}" stroke-width="1.2" rx="1.5" opacity="0.9" />`
+        `<rect data-given-values="${bar.frequency}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" stroke="${stroke}" stroke-width="1.2" rx="1.5" opacity="0.9" />`
       );
     }
 

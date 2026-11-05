@@ -12,36 +12,61 @@ function normalizeNumberToken(raw: string): string {
   return Number.isNaN(parsed) ? raw : String(parsed);
 }
 
-/** كل الأعداد الواردة في النص (بعد توحيد الأرقام المشرقية). */
+/** كل الأعداد الواردة في النص (بعد توحيد الأرقام المشرقية وإزالة فواصل الآلاف). */
 export function extractNumbersFromProblemText(text: string): Set<string> {
   const western = toWesternNumeralsSSOT(text).replace(/٫/g, ".").replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
   const found = western.match(/\d+(?:\.\d+)?/g) ?? [];
   return new Set(found.map(normalizeNumberToken));
 }
 
-/** الأعداد الصرفة المعروضة على الشكل (أطوال الأضلاع وقياسات الزوايا؛ التعبيرات الجبرية تُهمل). */
+/** الأعداد المعطاة في نص المسألة (مع استبعاد جملة المطلوب/الجواب مثل «أوجد قيمة X = 25°» حتى لا يُطالَب الشكل بتسريب الحل). */
+export function extractGivenNumbersFromProblemText(text: string): Set<string> {
+  const withoutAnswerTail = text.replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب)\s+[^؛;]*$/i, "");
+  return extractNumbersFromProblemText(withoutAnswerTail);
+}
+
+function addAllNumbersFromText(raw: string | number | undefined, into: Set<string>): void {
+  if (raw === undefined) return;
+  const clean = toWesternNumeralsSSOT(raw).replace(/٫/g, ".").replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
+  for (const n of clean.match(/\d+(?:\.\d+)?/g) ?? []) {
+    into.add(normalizeNumberToken(n));
+  }
+}
+
+/** الأعداد المعروضة على الشكل (أطوال، زوايا عددية أو جبرية، إحداثيات رؤوس، وعناصر SVG البيانية). */
 export function extractNumbersShownOnFigure(figure: CanonicalGeometryFigureIR): Set<string> {
   const shown = new Set<string>();
-  const addIfPureNumber = (raw: string | number | undefined): void => {
-    if (raw === undefined) return;
-    const clean = toWesternNumeralsSSOT(raw).replace(/[°\s]/g, "");
-    if (/^\d+(?:\.\d+)?$/.test(clean)) shown.add(normalizeNumberToken(clean));
-  };
-  for (const seg of figure.segments) addIfPureNumber(seg.lengthLabel?.value);
-  for (const ang of figure.angles) {
-    if (ang.degreesLabel !== undefined) addIfPureNumber(ang.degreesLabel);
-    else if (ang.degrees !== undefined && !ang.isRightAngle) addIfPureNumber(ang.degrees);
+  if (figure.rawSvgMarkup) {
+    addNumbersFromRawSvgText(figure.rawSvgMarkup, shown);
+    return shown;
   }
-  addNumbersFromRawSvgText(figure.rawSvgMarkup, shown);
+  for (const v of figure.vertices) {
+    // نستخرج فقط الإحداثيات الصريحة داخل أقواس مثل A(2, 3) ونتجاهل تسمية نقطة الأصل (0, 0) التلقائية
+    for (const coordMatch of v.label.matchAll(/\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/g)) {
+      const x = normalizeNumberToken(coordMatch[1].replace(/^-/, ""));
+      const y = normalizeNumberToken(coordMatch[2].replace(/^-/, ""));
+      if (x !== "0" || y !== "0") {
+        shown.add(x);
+        shown.add(y);
+      }
+    }
+  }
+  for (const seg of figure.segments) addAllNumbersFromText(seg.lengthLabel?.value, shown);
+  for (const ang of figure.angles) {
+    if (ang.degreesLabel !== undefined) addAllNumbersFromText(ang.degreesLabel, shown);
+    else if (ang.degrees !== undefined && !ang.isRightAngle) addAllNumbersFromText(ang.degrees, shown);
+  }
   return shown;
 }
 
-/** الأعداد المطبوعة داخل SVG جاهز (إحصاء/نماذج شريطية)، مع تجاهل أثاث الرسم الثابت (data-furniture) كأرقام قرص الساعة. */
+/** الأعداد المطبوعة أو الممثلة بيانياً داخل SVG جاهز، مع تجاهل أثاث المحاور الثابت (data-furniture). */
 function addNumbersFromRawSvgText(svg: string | undefined, into: Set<string>): void {
   if (!svg) return;
+  for (const m of svg.matchAll(/data-given-values="([^"]*)"/g)) {
+    addAllNumbersFromText(m[1], into);
+  }
   for (const m of svg.matchAll(/<text([^>]*)>([^<]*)<\/text>/g)) {
     if (m[1].includes("data-furniture")) continue;
-    const western = toWesternNumeralsSSOT(m[2]).replace(/,/g, "");
-    for (const n of western.match(/\d+(?:\.\d+)?/g) ?? []) into.add(normalizeNumberToken(n));
+    addAllNumbersFromText(m[2], into);
   }
 }

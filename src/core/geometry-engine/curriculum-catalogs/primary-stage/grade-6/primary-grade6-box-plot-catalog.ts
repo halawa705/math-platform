@@ -1,12 +1,14 @@
 /**
  * @file primary-grade6-box-plot-catalog.ts
- * @description منشئ نماذج مخطط الصندوق والطرفين (Box-and-Whisker Plot) للصف السادس الابتدائي.
+ * @description منشئ نماذج مخطط الصندوق والطرفين (Box-and-Whisker Plot) للصف السادس الابتدائي:
+ * يحلل القيم الخمس أو البيانات الخام من النص مباشرة، مع دعم نماذج كتاب الوزارة وسلاح التلميذ.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 120 سطراً).
  */
 
 import type { CanonicalGeometryFigureIR } from "../../../../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../../../../ssot/numeral-and-unit-ssot";
 import { buildGrade6BoxPlotSvgMarkup } from "../../../../statistics-engine/primary-grade6-box-plot-svg-builder";
+import { parseBoxPlotSpecFromText } from "./primary-grade6-statistics-fact-parser";
 
 export const MODULE_ID_PRIMARY_GRADE6_BOX_PLOT_CATALOG =
   "primary_grade6_box_plot_catalog" as const;
@@ -18,6 +20,29 @@ export function buildGrade6BoxPlotFigure(
 ): CanonicalGeometryFigureIR {
   const d = description.trim();
   const numMode = notationLanguage === "arabic" ? "eastern" : "western";
+
+  // 1. المحلل الديناميكي للقيم الخمس أو القائمة الخام
+  const parsed = parseBoxPlotSpecFromText(d);
+  if (parsed) {
+    const svgMarkup = buildGrade6BoxPlotSvgMarkup(parsed, { numeralMode: numMode });
+    return {
+      figureId,
+      familyId: "statistics_family",
+      branchId: "stats_boxplot_and_quartiles",
+      titleArabic: "مخطط الصندوق: الحد الأدنى، الأقصى والربيعيات",
+      notationLanguage,
+      vertices: [
+        { id: `${figureId}_min`, label: "Min", position: { x: parsed.minVal, y: 0 } },
+        { id: `${figureId}_q1`, label: "Q1", position: { x: parsed.q1Val, y: 0 } },
+        { id: `${figureId}_med`, label: "Med", position: { x: parsed.medianVal, y: 0 } },
+        { id: `${figureId}_q3`, label: "Q3", position: { x: parsed.q3Val, y: 0 } },
+        { id: `${figureId}_max`, label: "Max", position: { x: parsed.maxVal, y: 0 } },
+      ],
+      segments: [],
+      angles: [],
+      rawSvgMarkup: svgMarkup,
+    };
+  }
 
   let minVal = 10;
   let q1Val = 20;

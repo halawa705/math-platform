@@ -201,8 +201,7 @@
       "1",
       "2",
       "2",
-      "0",
-      "2"
+      "0"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 4. matches Problem 24: Perpendicular lines L1 ⊥ L2 with equation 2X - y + 2 = 0",
     "humanVerdict": "unreviewed"
@@ -302,6 +301,161 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 11. supports Arabic notation mode for coordinate labels",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-01",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: مثلثان \\Delta ABC و \\Delta DEF متطابقا الزوايا متناظراً، m(\\angle A) = 40^\\circ، m(\\angle B) = 65^\\circ] إذا كان \\Delta ABC \\sim \\Delta DEF وكان m(\\angle A) = 40^\\circ و m(\\angle B) = 65^\\circ، فإن m(\\angle F) = ........",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "40",
+      "65",
+      "40",
+      "65"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-01: Example 1-1 builds disjoint triangles with exact angles 40° and 65° and ZERO alien 2y or 100°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-02",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: مثلثان \\Delta ABC \\sim \\Delta DEF، أطوال أضلاع \\Delta ABC هي AB = 6 سم، BC = 8 سم، AC = 10 سم، وطول الضلع المناظر DE = 3 سم] إذا كان \\Delta ABC \\sim \\Delta DEF وكان AB = 6 سم، BC = 8 سم، AC = 10 سم، وطول DE = 3 سم",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8",
+      "10",
+      "3",
+      "6",
+      "8",
+      "10",
+      "3"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-01: Example 1-2 builds similar triangles with exact sides 6, 8, 10 and 3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-03",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: مثلثان متشابهان \\Delta ABC \\sim \\Delta XYZ، أطوال أضلاع \\Delta ABC هي 3 سم، 4 سم، 5 سم، ونسبة التشابه تساوي \\frac{2}{3}] إذا كان \\Delta ABC \\sim \\Delta XYZ",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "4",
+      "5",
+      "2",
+      "3"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-02: Example 2-1 builds triangles ABC and XYZ with sides 3, 4, 5 without alien butterfly 8, 12, 18",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-04",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: \\Delta ABC فيه D \\in AB، E \\in AC بحيث m(\\angle AED) = m(\\angle B)، AD = 4 سم، BD = 5 سم، AE = 3 سم، EC = 6 سم] في الشكل المقابل: \\Delta ABC فيه D ينتمي إلى AB و E ينتمي إلى AC",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "5",
+      "3",
+      "6"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-03: Example 3-1 builds antiparallel secant with lengths 4, 5, 3, 6 in triangle ABC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-05",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: \\Delta ABC فيه DE // BC، D \\in AB، E \\in AC، AD = 3 سم، DB = 6 سم، AE = 2 سم] في \\Delta ABC إذا كان DE // BC",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "6",
+      "2"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-04: Example 4-1 builds Thales parallel DE // BC with parallel arrows",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-06",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: AC \\cap BD = \\{E\\}، AB // CD، AE = 4 سم، EC = 6 سم، BE = 3 سم] في الشكل المقابل القطعتان AC و BD تتقاطعان في E",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "6",
+      "3"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-05: Example 5-1 builds hourglass intersection at E with sides 4, 6, 3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-07",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: \\Delta ABC قائم الزاوية في A، AD \\perp BC، BD = 9 سم، CD = 16 سم] في \\Delta ABC القائم الزاوية في A، AD عمودي على BC، فإذا كان BD = 9 سم و CD = 16 سم",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "9",
+      "16",
+      "9",
+      "16"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-11: Example 11-1 builds Euclid right triangle at A with altitude AD perp BC and lengths 9, 16",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-08",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "[رسم هندسي: \\Delta ABC قائم في A، AD \\perp BC، AD = 3.6 سم، BD = 6.4 سم] في المثلث ABC القائم في A سقط العمود AD على الوتر BC",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3.6",
+      "6.4"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-12: Example 12-1 builds Euclid altitude with AD = 3.6 and BD = 6.4",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-09",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "يقف رجل طوله 1.8 م أمام عمود إنارة، فإذا كان طول ظل الرجل 2.4 م، والمسافة بين الرجل وقاعدة العمود 2 م، أوجد ارتفاع عمود الإنارة.",
+    "geometryRaw": "",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1.8",
+      "2.4",
+      "2"
+    ],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-14: Example 14-1 builds applied shadow and height right triangles with 1.8 m, 2.4 m, 2 m",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-sim-notebooklm-10",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "إذا تشابه مضلعان فإن قياسات الزوايا المتناظرة تكون متساوية وأطوال الأضلاع المتناظرة تكون متناسبة.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: blocks diagrams on purely theoretical questions with zero geometry context",
     "humanVerdict": "unreviewed"
   }
 ]

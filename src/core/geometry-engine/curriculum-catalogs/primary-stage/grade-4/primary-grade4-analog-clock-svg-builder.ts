@@ -48,7 +48,7 @@ export function buildGrade4AnalogClockSvgMarkup(time: AnalogClockTime): string {
   const digital = `<rect x="40" y="136" width="60" height="22" rx="4" fill="#fff" stroke="#0F172A" stroke-width="1.4"/><text data-furniture="1" x="70" y="152" text-anchor="middle" font-size="14" font-weight="700" fill="#0F172A">:</text>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 162" width="140" height="162" direction="ltr">` +
     `<circle cx="${cx}" cy="${cy}" r="64" fill="#fff" stroke="#EA580C" stroke-width="4"/>${ticks.join("")}${numerals.join("")}` +
-    `<line x1="${cx}" y1="${cy}" x2="${hourTip.x}" y2="${hourTip.y}" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>` +
+    `<line data-given-values="${time.hour},${time.minute}" x1="${cx}" y1="${cy}" x2="${hourTip.x}" y2="${hourTip.y}" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>` +
     `<line x1="${cx}" y1="${cy}" x2="${minTip.x}" y2="${minTip.y}" stroke="#0D9488" stroke-width="2.4" stroke-linecap="round"/>` +
     `<circle cx="${cx}" cy="${cy}" r="3" fill="#0F172A"/>${digital}</svg>`;
 }

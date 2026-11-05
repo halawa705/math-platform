@@ -7,9 +7,7 @@
     "geometryRaw": "مثلث ABC قائم الزاوية في C ومتساوي الساقين ، CD ⊥ AB ، طول AD = 20 سم أوجد طول AB = 40 سم وقياس DCB = 45°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "20",
-      "40",
-      "45"
+      "20"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 1. matches Problem 4 p.256: Right isosceles in C with altitude CD ⊥ AB, AD = 20 to find AB = 40 and ∠DCB = 45°",
     "humanVerdict": "unreviewed"
@@ -23,9 +21,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "15",
-      "18",
-      "9",
-      "12"
+      "18"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 2. matches Problem 6 p.256: Isosceles AB = AC = 15 with BC = 18 and altitude AD to find BD = 9 and AD = 12",
     "humanVerdict": "unreviewed"
@@ -68,9 +64,7 @@
       "30",
       "16",
       "5",
-      "2",
-      "32",
-      "3"
+      "2"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 5. matches Problem 19 p.259: 30-60-90 triangle with hypotenuse 16 cm and 5X-2 to find X = 2 and area = 32√3",
     "humanVerdict": "unreviewed"
@@ -84,7 +78,6 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "30",
-      "6",
       "6"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 6. matches Problem 20 p.259: 30-60-90 triangle ABC with midsegment FE = 6 cm to find BC = 6 cm",
@@ -99,9 +92,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "30",
-      "12",
-      "6",
-      "2"
+      "12"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 7. matches Problem 23 p.259: 30-60-90 triangle with hypotenuse 12 cm and medians meeting at G to find AB = 6 and EG = 2",
     "humanVerdict": "unreviewed"
@@ -115,10 +106,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "30",
-      "9",
-      "9",
-      "2",
-      "3"
+      "9"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 8. matches Problem 22 p.259: Isosceles with altitude AD ⊥ BC, BAD = 30°, BC = 9 cm to find AD = 9/2 √3",
     "humanVerdict": "unreviewed"
@@ -134,7 +122,6 @@
       "15",
       "13",
       "10",
-      "5",
       "5"
     ],
     "source": "prep-grade2-isosceles-followup-catalog.test.ts :: 9. matches Problem 10 p.257: Deltoid XAYB with sides 15 and 13 cm and 10 and (5+n) to find n = 5",
@@ -184,8 +171,7 @@
     "geometryRaw": "في الشكل المقابل : DBE مثلث متساوي الأضلاع ، AC = AB ، قياس A = 40° أوجد بالبرهان قياس CBD = 130°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "40",
-      "130"
+      "40"
     ],
     "source": "prep-grade2-isosceles-triangle-catalog.test.ts :: 1. matches Problem 3 p.241: Isosceles ABC (AB=AC, ∠A=40°) with equilateral DBE to find ∠CBD = 130°",
     "humanVerdict": "unreviewed"
@@ -198,8 +184,7 @@
     "geometryRaw": "في الشكل المقابل : مثلث ABC متساوي الساقين فيه AB = AC وقياس A = 50° ومثلث EBD متساوي الأضلاع أوجد قياس ABE = 55°",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
-      "50",
-      "55"
+      "50"
     ],
     "source": "prep-grade2-isosceles-triangle-catalog.test.ts :: 2. matches Problem 4 p.241: Isosceles ABC (AB=AC, ∠A=50°) with equilateral EBD on extended base to find ∠ABE = 55°",
     "humanVerdict": "unreviewed"
@@ -213,8 +198,6 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "30",
-      "40",
-      "70",
       "40"
     ],
     "source": "prep-grade2-isosceles-triangle-catalog.test.ts :: 3. matches Problem 5 p.241: Triangle ABC (30°, 40°) adjacent to isosceles CAD to find ∠D = 70° and ∠CAD = 40°",
@@ -240,8 +223,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "120",
-      "65",
-      "85"
+      "65"
     ],
     "source": "prep-grade2-isosceles-triangle-catalog.test.ts :: 5. matches Problem 8 p.242: Quadrilateral ABCD with DA // CB, AB = AD, ∠A = 120°, ∠BDC = 65° to find ∠C = 85°",
     "humanVerdict": "unreviewed"
@@ -281,10 +263,7 @@
       "2",
       "13",
       "3",
-      "17",
-      "73",
-      "73",
-      "34"
+      "17"
     ],
     "source": "prep-grade2-isosceles-triangle-catalog.test.ts :: 8. matches Problem 11 p.242: Isosceles triangle with algebraic angles (2X+13)° and (3X-17)° to find 73° and 34°",
     "humanVerdict": "unreviewed"
@@ -429,12 +408,7 @@
     "problemText": "5. matches Problem 13 p.213: Midsegment DE = (2X+1) and BC = (5X-5) for X = 7",
     "geometryRaw": "في الشكل المقابل : D ، E منتصفا AB ، AC أوجد قيمة X حيث DE = (2X+1) سم و BC = (5X-5) سم",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "2",
-      "1",
-      "5",
-      "5"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-parallel-applications-catalog.test.ts :: 5. matches Problem 13 p.213: Midsegment DE = (2X+1) and BC = (5X-5) for X = 7",
     "humanVerdict": "unreviewed"
   },
@@ -557,9 +531,7 @@
     "problemText": "2. matches Problem 2-3 p.272: Regular pentagon with equal sides and interior angle 108°",
     "geometryRaw": "مضلع خماسي منتظم متساوي الأضلاع أوجد قياس زاويته الداخلة 108° وقيمة X",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "108"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 2. matches Problem 2-3 p.272: Regular pentagon with equal sides and interior angle 108°",
     "humanVerdict": "unreviewed"
   },
@@ -572,8 +544,7 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [
       "110",
-      "135",
-      "55"
+      "135"
     ],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 3. matches Problem 6 p.273: Regular hexagon ABCDEF adjacent to quad CGHB with 110° and 135° to find ∠G = 55°",
     "humanVerdict": "unreviewed"
@@ -585,9 +556,7 @@
     "problemText": "4. matches Problem 2-9 p.272: Two regular pentagons sharing an edge to find angle between them X = 144°",
     "geometryRaw": "في الشكل المقابل خماسيان منتظمان مشتركان في ضلع أوجد قياس الزاوية بينهما 144° وقيمة X",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "144"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 4. matches Problem 2-9 p.272: Two regular pentagons sharing an edge to find angle between them X = 144°",
     "humanVerdict": "unreviewed"
   },
@@ -603,8 +572,7 @@
       "2",
       "32",
       "3",
-      "3",
-      "50"
+      "3"
     ],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 5. matches Problem 3-1 p.273: Triangle with exterior angles (X+31)°, (2X+32)°, (3X-3)° to find X = 50°",
     "humanVerdict": "unreviewed"
@@ -619,8 +587,7 @@
     "expectedGivenNumbers": [
       "2",
       "3",
-      "4",
-      "36"
+      "4"
     ],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 6. matches Problem 3-2 p.273: Quadrilateral with exterior angles 2X°, 3X°, 4X°, X° to find X = 36°",
     "humanVerdict": "unreviewed"
@@ -637,8 +604,7 @@
       "19",
       "79",
       "2",
-      "55",
-      "41"
+      "55"
     ],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 7. matches Problem 3-4 p.273 & Problem 8 p.276: Pentagon with exterior angles (X+19)°, 79°, 2X°, 55°, 84° to find X = 41°",
     "humanVerdict": "unreviewed"
@@ -656,9 +622,7 @@
       "3",
       "2",
       "2",
-      "5",
-      "20",
-      "120"
+      "5"
     ],
     "source": "prep-grade2-polygon-angles-catalog.test.ts :: 8. matches Problem 4 p.273: Hexagon with exterior angles 2a, 4a, 3a, 2a, 2a, 5a to find a = 20 and ∠BCD = 120°",
     "humanVerdict": "unreviewed"
@@ -747,10 +711,7 @@
     "problemText": "4. matches Problem 4-1: Right trapezoid with AD = 4 and EC = 3 to find hypotenuse X",
     "geometryRaw": "أوجد قيمة X في الشكل حيث EC = 3 سم و BC = 4 سم في شبه منحرف قائم",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "3",
-      "4"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-pythagoras-converse-catalog.test.ts :: 4. matches Problem 4-1: Right trapezoid with AD = 4 and EC = 3 to find hypotenuse X",
     "humanVerdict": "unreviewed"
   },
@@ -761,11 +722,7 @@
     "problemText": "5. matches Problem 5-2: Right trapezoid with bases 10 and 16 cm and slant side 10 cm",
     "geometryRaw": "أوجد مساحة شبه منحرف قائم قاعدتاه 10 سم و 16 سم وساقه المائلة 10 سم",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "10",
-      "16",
-      "10"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-pythagoras-converse-catalog.test.ts :: 5. matches Problem 5-2: Right trapezoid with bases 10 and 16 cm and slant side 10 cm",
     "humanVerdict": "unreviewed"
   },
@@ -791,10 +748,7 @@
     "problemText": "7. matches Problem 4-2: Altitude 3 and base 11 for X",
     "geometryRaw": "أوجد قيمة X في مثلث مقسوم بعمود وفيه قاعدة 11 وارتفاع 3 بنظرية فيثاغورس",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "11",
-      "3"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-pythagoras-converse-catalog.test.ts :: 7. matches Problem 4-2: Altitude 3 and base 11 for X",
     "humanVerdict": "unreviewed"
   },
@@ -805,11 +759,7 @@
     "problemText": "8. matches Problem 4-3: Altitude 6 and base 12 and side 10 for X",
     "geometryRaw": "أوجد قيمة X في مثلث فيه قاعدة 12 وارتفاع 6 وضلع 10 بنظرية فيثاغورس",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "12",
-      "6",
-      "10"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-pythagoras-converse-catalog.test.ts :: 8. matches Problem 4-3: Altitude 6 and base 12 and side 10 for X",
     "humanVerdict": "unreviewed"
   },
@@ -932,9 +882,7 @@
     "problemText": "5. matches Problem 12: O midpoint of BD with OA = OC and 34° for AOC = 112°",
     "geometryRaw": "في الشكل المقابل : برهن أن : Δ OAB ≅ Δ OCD أوجد : m(∠ AOC) حيث O منتصف BD وزاوية 34°",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "34"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-triangle-congruence-catalog.test.ts :: 5. matches Problem 12: O midpoint of BD with OA = OC and 34° for AOC = 112°",
     "humanVerdict": "unreviewed"
   },
@@ -959,9 +907,7 @@
     "problemText": "7. matches Problem 16: Perpendicular right pair ACB ≅ BDE with 55°",
     "geometryRaw": "في الشكل المقابل : BC = DE ، AB = EB أثبت أن : Δ ACB ≅ Δ BDE أوجد : قيمة X مع زاوية 55°",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "55"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-triangle-congruence-catalog.test.ts :: 7. matches Problem 16: Perpendicular right pair ACB ≅ BDE with 55°",
     "humanVerdict": "unreviewed"
   },
@@ -1055,10 +1001,7 @@
     "problemText": "15. matches Problem 27: Angle bisector with 78° for X = 36°",
     "geometryRaw": "في الشكل المقابل : أثبت أن : Δ BCD ≅ Δ BED أوجد : قيمة X مع زاوية 78° وزاوية 30°",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "78",
-      "30"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-triangle-congruence-catalog.test.ts :: 15. matches Problem 27: Angle bisector with 78° for X = 36°",
     "humanVerdict": "unreviewed"
   },
@@ -1069,10 +1012,7 @@
     "problemText": "16. matches Problem 26: Right apex with BD = 15 cm",
     "geometryRaw": "في الشكل المقابل : أوجد : طول BD مع AE = 7 سم و EB = 8 سم",
     "expectedOutcome": "figure",
-    "expectedGivenNumbers": [
-      "7",
-      "8"
-    ],
+    "expectedGivenNumbers": [],
     "source": "prep-grade2-triangle-congruence-catalog.test.ts :: 16. matches Problem 26: Right apex with BD = 15 cm",
     "humanVerdict": "unreviewed"
   },

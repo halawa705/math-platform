@@ -10,7 +10,7 @@
       "6",
       "8"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -24,7 +24,7 @@
       "5",
       "6"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -37,7 +37,7 @@
     "expectedGivenNumbers": [
       "6"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -52,7 +52,7 @@
       "3",
       "10"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -63,7 +63,7 @@
     "geometryRaw": "مثلث أ ب جـ ; د منتصف أ ب ; هـ منتصف أ جـ ; د هـ // ب جـ",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -77,7 +77,7 @@
       "6",
       "8"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -92,7 +92,7 @@
       "9",
       "10"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -107,7 +107,7 @@
       "8",
       "9"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -118,7 +118,7 @@
     "geometryRaw": "مثلث أ ب جـ ; أ د متوسط ; ب هـ متوسط ; أ د ∩ ب هـ = {م}",
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -132,7 +132,7 @@
       "50",
       "60"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -150,7 +150,7 @@
       "3",
       "4"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -166,7 +166,7 @@
       "3",
       "2"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -180,7 +180,7 @@
       "8",
       "6"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -193,7 +193,7 @@
     "expectedGivenNumbers": [
       "5"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -207,7 +207,7 @@
       "6",
       "60"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -222,7 +222,7 @@
       "5",
       "65"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -236,7 +236,7 @@
       "10",
       "6"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -251,7 +251,7 @@
       "3",
       "40"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -264,7 +264,7 @@
     "expectedGivenNumbers": [
       "5"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -277,7 +277,7 @@
     "expectedGivenNumbers": [
       "5"
     ],
-    "source": "tests/geo-golden-descriptions.test.ts (بذرة أولية — تحتاج مراجعة بشرية)",
+    "source": "tests/geo-golden-descriptions.test.ts",
     "humanVerdict": "unreviewed"
   },
   {
@@ -288,7 +288,492 @@
     "geometryRaw": "",
     "expectedOutcome": "no_figure",
     "expectedGivenNumbers": [],
-    "source": "بذرة أولية — سؤال نظري",
+    "source": "سؤال نظري",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-01",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #1",
+    "geometryRaw": "مثلث $ABC$ قائم الزاوية في $B$ ، $AB = 6$ سم ، $BC = 8$ سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #1",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-02",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #2",
+    "geometryRaw": "$\\triangle ABC$ فيه $m(\\angle B) = 90^\\circ$ و $AB = 6$ cm و $BC = 8$ cm و $D$ منتصف $\\overline{AC}$",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "6",
+      "8"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #2",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-03",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #3",
+    "geometryRaw": "مثلث أ ب جـ متساوي الساقين فيه أ ب = أ جـ = 5 سم ، ب جـ = 6 سم ، د منتصف ب جـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "6"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-04",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #4",
+    "geometryRaw": "ABC مثلث ، D ∈ AB ، E ∈ AC ، DE // BC ، AD = 3 سم ، DB = 2 سم ، DE = 4 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "2",
+      "4"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #4",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-05",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #5",
+    "geometryRaw": "دائرة مركزها M ، AB وتر فيها ، AB = 8 سم ، نصف القطر = 5 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "5"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #5",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-06",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #6",
+    "geometryRaw": "ABCD متوازي أضلاع فيه m(∠A) = 65° و AB = 8 و AD = 5",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "65",
+      "8",
+      "5"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #6",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-07",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #7",
+    "geometryRaw": "مثلث ABC فيه AB = 7 و BC = 9 و AC = 5 والزاوية B = 40",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7",
+      "9",
+      "5",
+      "40"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #7",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-08",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #8",
+    "geometryRaw": "في الشكل المقابل: ABCD شبه منحرف فيه AB // DC ، AB = 10 ، DC = 6 ، AD = 5",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "10",
+      "6",
+      "5"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #8",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-09",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #9",
+    "geometryRaw": "مستطيل ABCD طوله 8 وعرضه 6 وقطراه يتقاطعان في M",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "6"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #9",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-10",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #10",
+    "geometryRaw": "مثلث ABC قائم في B ، BD ⊥ AC ، AD = 4 ، DC = 9",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "9"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #10",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-11",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #11",
+    "geometryRaw": "المثلث ABC قائم الزاوية في B حيث AB = 5 سم و BC = 12 سم ، أوجد AC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "12"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #11",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-12",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #12",
+    "geometryRaw": "في المثلث $ABC$ : $D$ منتصف $\\overline{AB}$ ، $E$ منتصف $\\overline{AC}$ ، $DE = 4$ cm",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #12",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-13",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #13",
+    "geometryRaw": "مثلث ABC فيه m(∠ A) = 70° ، m(∠ B) = 50° ، AB = 8 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "70",
+      "50",
+      "8"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #13",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-14",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #14",
+    "geometryRaw": "ABC مثلث متساوي الأضلاع طول ضلعه ٦ سم ، D منتصف BC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #14",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-15",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #15",
+    "geometryRaw": "مثلث ABC متساوي الساقين فيه AB = AC ، D منتصف BC ، AD ⊥ BC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #15",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-16",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #16",
+    "geometryRaw": "في المثلث ABC ، BD ينصف ∠ABC ويقطع AC في D ، AB = 6 ، BC = 9",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "9"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #16",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-17",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #17",
+    "geometryRaw": "مثلث ABC فيه AD متوسط ، AB = 7 ، AC = 9 ، BC = 8",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7",
+      "9",
+      "8"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #17",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-18",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #18",
+    "geometryRaw": "ABCD مستطيل فيه AB = 8 سم ، BC = 6 سم ، AC قطر",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "6"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #18",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-19",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #19",
+    "geometryRaw": "ABCD معين قطراه يتقاطعان في M ، AC = 8 ، BD = 6",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "6"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #19",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-20",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #20",
+    "geometryRaw": "ABCD مربع طول ضلعه 5 سم وقطراه يتقاطعان في M",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #20",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-21",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #21",
+    "geometryRaw": "ABCD شبه منحرف فيه AB // DC ، m(∠ A) = 90° ، AB = 9 ، DC = 5 ، AD = 4",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "9",
+      "5",
+      "4"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #21",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-22",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #22",
+    "geometryRaw": "ABCD متوازي أضلاع ، قطراه يتقاطعان في M ، m(∠ ABC) = 110°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "110"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #22",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-23",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #23",
+    "geometryRaw": "دائرة مركزها M ونصف قطرها 5 سم ، AB وتر فيها طوله 8 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "8"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #23",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-24",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #24",
+    "geometryRaw": "دائرة مركزها O ، AB قطر فيها ، C تنتمي إلى الدائرة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #24",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-25",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #25",
+    "geometryRaw": "دائرة مركزها M ، النقطة A على الدائرة ، AB مماس للدائرة عند A",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #25",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-26",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #26",
+    "geometryRaw": "مثلث ABC فيه D ∈ BC ، AD ⊥ BC ، AD = 4 ، BD = 3 ، DC = 6",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "3",
+      "6"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #26",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-27",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #27",
+    "geometryRaw": "$\\triangle ABC$ قائم الزاوية في $A$ و $AD \\perp BC$ حيث $D \\in BC$ ، $AB = 6$ ، $AC = 8$",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #27",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-28",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #28",
+    "geometryRaw": "مثلث أ ب جـ قائم الزاوية في ب ، د منتصف أ جـ ، ب د = 5 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #28",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-29",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #29",
+    "geometryRaw": "ΔABC فيه DE // BC حيث D ∈ AB و E ∈ AC ، AD = 4 ، DB = 6 ، AE = 3",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "6",
+      "3"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #29",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-30",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #30",
+    "geometryRaw": "مثلث ABC ، مدّ BC إلى D ، m(∠ ACD) = 120° ، m(∠ A) = 70°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120",
+      "70"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #30",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-31",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #31",
+    "geometryRaw": "في الشكل المقابل ABCD رباعي دائري ، m(∠ A) = 100°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "100"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #31",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-32",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #32",
+    "geometryRaw": "مثلث ABC فيه AB = AC = 10 ، BC = 12",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "10",
+      "12"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #32",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-33",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #33",
+    "geometryRaw": "المستقيم AB يقطع المستقيمين المتوازيين CD و EF في M و N ، m(∠ AMD) = 65°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "65"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #33",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-34",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #34",
+    "geometryRaw": "مثلثان ABC و DEF متشابهان ، AB = 6 ، DE = 9",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "9"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #34",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "intake-35",
+    "gradeId": "unassigned",
+    "branchId": "plane_geometry",
+    "problemText": "NotebookLM intake #35",
+    "geometryRaw": "ABCD مستطيل ، M نقطة تقاطع قطريه ، m(∠ AMB) = 60°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "60"
+    ],
+    "source": "geometry-notebooklm-intake-corpus.test.ts :: #35",
     "humanVerdict": "unreviewed"
   }
 ]

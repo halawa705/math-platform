@@ -7,12 +7,23 @@ import type { GoldenCorpusCase } from "./golden-corpus-case-types-ssot";
 import { combineProblemAndTagGeometryContext } from "../description-intake/problem-geometry-context-extractor";
 import { matchGeometryWithDiagnostics } from "../natural-arabic-geometry-matcher";
 import { verifyGeometryFigure } from "../verification/geometry-figure-verification-orchestrator";
-import { extractNumbersFromProblemText, extractNumbersShownOnFigure } from "./baseline-figure-number-extractor";
+import {
+  extractGivenNumbersFromProblemText,
+  extractNumbersFromProblemText,
+  extractNumbersShownOnFigure,
+} from "./baseline-figure-number-extractor";
 
 export const MODULE_ID_BASELINE_CASE_OUTCOME_CLASSIFIER = "baseline_case_outcome_classifier" as const;
 
 /** فروع تبني شكلها من حقائق النص نفسها (لا قوالب ثابتة)، فلا تُعلَّم «from_fixed_catalog». */
-const DATA_DRIVEN_BRANCH_IDS: ReadonlySet<string> = new Set(["primary_bar_model", "primary_analog_clock"]);
+const DATA_DRIVEN_BRANCH_IDS: ReadonlySet<string> = new Set([
+  "primary_bar_model",
+  "primary_analog_clock",
+  "stats_dot_plot",
+  "stats_bar_chart",
+  "stats_histogram_columns",
+  "stats_boxplot_and_quartiles",
+]);
 
 export type BaselineOutcomeKind =
   | "true_negative_no_figure"
@@ -46,7 +57,7 @@ function expectedNumbersOf(testCase: GoldenCorpusCase): Set<string> {
   if (testCase.expectedGivenNumbers.length > 0) {
     return extractNumbersFromProblemText(testCase.expectedGivenNumbers.join(" "));
   }
-  return extractNumbersFromProblemText(testCase.geometryRaw);
+  return extractGivenNumbersFromProblemText(testCase.geometryRaw);
 }
 
 function emptyResult(c: GoldenCorpusCase, outcome: BaselineOutcomeKind, flags: BaselineRiskFlag[], details: string[]): BaselineCaseResult {

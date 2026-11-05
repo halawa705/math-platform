@@ -1,13 +1,18 @@
 /**
  * @file primary-grade6-histogram-bar-catalog.ts
- * @description منشئ نماذج المدرج التكراري والأعمدة البيانية للصف السادس الابتدائي.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 220 سطراً).
+ * @description منشئ نماذج المدرج التكراري والأعمدة البيانية للصف السادس الابتدائي:
+ * يحلل الفترات والفئات والتكرارات من النص مباشرة أولاً، ثم يطابق نماذج الكتاب القياسية.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 230 سطراً).
  */
 
 import type { CanonicalGeometryFigureIR } from "../../../../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../../../../ssot/numeral-and-unit-ssot";
 import { buildGrade6HistogramSvgMarkup } from "../../../../statistics-engine/primary-grade6-histogram-svg-builder";
 import { buildGrade6BarChartSvgMarkup } from "../../../../statistics-engine/primary-grade6-bar-chart-svg-builder";
+import {
+  parseBarChartSpecFromText,
+  parseHistogramSpecFromText,
+} from "./primary-grade6-statistics-fact-parser";
 
 export const MODULE_ID_PRIMARY_GRADE6_HISTOGRAM_BAR_CATALOG =
   "primary_grade6_histogram_bar_catalog" as const;
@@ -20,7 +25,24 @@ export function buildGrade6HistogramFigure(
   const d = description.trim();
   const numMode = notationLanguage === "arabic" ? "eastern" : "western";
 
-  // نموذج أعمار بعض الأشخاص (فترة تكرارها صفر 31-37)
+  // 1. المحلل الديناميكي للفترات والتكرارات الصريحة في النص
+  const parsed = parseHistogramSpecFromText(d);
+  if (parsed) {
+    const svg = buildGrade6HistogramSvgMarkup(parsed, { numeralMode: numMode });
+    return {
+      figureId,
+      familyId: "statistics_family",
+      branchId: "stats_histogram_columns",
+      titleArabic: parsed.titleArabic,
+      notationLanguage,
+      vertices: [{ id: `${figureId}_v0`, label: "0", position: { x: 0, y: 0 } }],
+      segments: [],
+      angles: [],
+      rawSvgMarkup: svg,
+    };
+  }
+
+  // 2. نموذج أعمار بعض الأشخاص (فترة تكرارها صفر 31-37)
   if (/أعمار|اعمار|شخص|31\s*[-–]\s*37/i.test(d)) {
     const svg = buildGrade6HistogramSvgMarkup(
       {
@@ -52,7 +74,7 @@ export function buildGrade6HistogramFigure(
     };
   }
 
-  // نموذج ساعات المذاكرة
+  // 3. نموذج ساعات المذاكرة
   if (/ساعات|مذاكرة|يذاكر/i.test(d)) {
     const svg = buildGrade6HistogramSvgMarkup(
       {
@@ -83,18 +105,18 @@ export function buildGrade6HistogramFigure(
     };
   }
 
-  // الافتراضي القياسي: درجات الاختبار
+  // 4. الافتراضي القياسي: درجات الاختبار
   const svg = buildGrade6HistogramSvgMarkup(
     {
       titleArabic: "درجات الاختبار",
       xLabelArabic: "الدرجات",
       yLabelArabic: "عدد التلاميذ",
       intervals: [
-        { intervalLabel: "51-60", frequency: 4 },
-        { intervalLabel: "61-70", frequency: 3 },
-        { intervalLabel: "71-80", frequency: 9 },
-        { intervalLabel: "81-90", frequency: 6 },
-        { intervalLabel: "91-100", frequency: 5 },
+        { intervalLabel: "51-60", frequency: 2 },
+        { intervalLabel: "61-70", frequency: 4 },
+        { intervalLabel: "71-80", frequency: 10 },
+        { intervalLabel: "81-90", frequency: 8 },
+        { intervalLabel: "91-100", frequency: 6 },
       ],
       yMax: 10,
       yStep: 2,
@@ -123,12 +145,29 @@ export function buildGrade6BarChartFigure(
   const d = description.trim();
   const numMode = notationLanguage === "arabic" ? "eastern" : "western";
 
-  // نموذج وجبات الغذاء المشتراة
-  if (/وجبات|غذاء|أسبوع|اسبوع/i.test(d)) {
+  // 1. المحلل الديناميكي للفئات والتكرارات الصريحة في النص
+  const parsed = parseBarChartSpecFromText(d);
+  if (parsed) {
+    const svg = buildGrade6BarChartSvgMarkup(parsed, { numeralMode: numMode });
+    return {
+      figureId,
+      familyId: "statistics_family",
+      branchId: "stats_bar_chart",
+      titleArabic: parsed.titleArabic,
+      notationLanguage,
+      vertices: [{ id: `${figureId}_v0`, label: "0", position: { x: 0, y: 0 } }],
+      segments: [],
+      angles: [],
+      rawSvgMarkup: svg,
+    };
+  }
+
+  // 2. نموذج وجبات الغداء المشتراة
+  if (/وجبات|غذاء|غداء|أسبوع|اسبوع/i.test(d)) {
     const svg = buildGrade6BarChartSvgMarkup(
       {
-        titleArabic: "عدد وجبات الغذاء المشتراة لكل أسبوع",
-        xLabelArabic: "عدد وجبات الغذاء المشتراة",
+        titleArabic: "عدد وجبات الغداء المشتراة لكل أسبوع",
+        xLabelArabic: "عدد وجبات الغداء المشتراة",
         yLabelArabic: "عدد التلاميذ",
         bars: [
           { categoryLabel: "0", frequency: 3 },
@@ -147,7 +186,7 @@ export function buildGrade6BarChartFigure(
       figureId,
       familyId: "statistics_family",
       branchId: "stats_bar_chart",
-      titleArabic: "الأعمدة البيانية: وجبات الغذاء المشتراة",
+      titleArabic: "الأعمدة البيانية: وجبات الغداء المشتراة",
       notationLanguage,
       vertices: [{ id: `${figureId}_v0`, label: "0", position: { x: 0, y: 0 } }],
       segments: [],
@@ -156,7 +195,7 @@ export function buildGrade6BarChartFigure(
     };
   }
 
-  // الافتراضي القياسي: عروض التليفزيون المفضلة
+  // 3. الافتراضي القياسي: عروض التليفزيون المفضلة
   const svg = buildGrade6BarChartSvgMarkup(
     {
       titleArabic: "عروض التليفزيون المفضلة",

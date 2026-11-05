@@ -91,4 +91,21 @@ describe("Grade 6 Primary Statistics Visual Models", () => {
     expect(svgOut).toContain("<svg");
     expect(svgOut).toContain("مخطط الصندوق والطرفين");
   });
+
+  it("يبني المخططات الأربعة ديناميكياً من أرقام المسألة نفسها دون الاعتماد على قوالب ثابتة", () => {
+    const dot = buildGrade6DotPlotFigure("مخطط التمثيل بالنقاط: القيم 3 ، 4 ، 7 ؛ التكرار 2 ، 5 ، 1");
+    expect(dot.rawSvgMarkup).toContain('data-given-values="3,2"');
+    expect(dot.rawSvgMarkup).toContain('data-given-values="4,5"');
+
+    const bar = buildGrade6BarChartFigure("تمثيل بياني بالأعمدة: علوم 12 ؛ رياضيات 20 ؛ لغة عربية 9");
+    expect(bar.rawSvgMarkup).toContain(">علوم<");
+    expect(bar.rawSvgMarkup).toContain('data-given-values="20"');
+
+    const hist = buildGrade6HistogramFigure("مدرج تكراري: الفترات 0-9 ، 10-19 ، 20-29 ؛ التكرار 3 ، 8 ، 5");
+    expect(hist.rawSvgMarkup).toContain(">0-9<");
+    expect(hist.rawSvgMarkup).toContain('data-given-values="8"');
+
+    const boxRaw = buildGrade6BoxPlotFigure("مخطط الصندوق: البيانات: 5 ، 12 ، 8 ، 9 ، 7 ، 6 ، 11");
+    expect(boxRaw.rawSvgMarkup).toContain('data-given-values="5,6,8,11,12"');
+  });
 });
