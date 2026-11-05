@@ -1,0 +1,1385 @@
+[
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 8 p.176: Scissors angle problem (3X-18)° and (2X+12)° to find y = 26°",
+    "geometryRaw": "تفكير ناقد: إذا كان قياس الزاوية بين ذراعي المقص هما (3X-18)° و (2X+12)° وتم تقليلها أوجد قيمة y = 26°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "18",
+      "2",
+      "12",
+      "26"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 1. matches Problem 8 p.176: Scissors angle problem (3X-18)° and (2X+12)° to find y = 26°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 3 p.175: AC ∩ BD = {M} with CMD = 140° and MX bisecting AMB to find DMX = 110°",
+    "geometryRaw": "في الشكل المقابل AC ∩ BD = {M} وقياس CMD = 140° والشعاع MX ينصف AMB أوجد قياس DMX = 110°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "140",
+      "110"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 2. matches Problem 3 p.175: AC ∩ BD = {M} with CMD = 140° and MX bisecting AMB to find DMX = 110°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 7-3 p.176: Vertically opposite (5X+7)° and (3X+57)° to find X = 25°",
+    "geometryRaw": "في الشكل المقابل زاويتان متقابلتان بالرأس (5X+7)° و (3X+57)° أوجد قيمة X = 25°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "7",
+      "3",
+      "57",
+      "25"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 3. matches Problem 7-3 p.176: Vertically opposite (5X+7)° and (3X+57)° to find X = 25°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 1-1 p.174: AB ∩ CD = {M} with AMC = 80° and DMB = 2X° to find X = 40°",
+    "geometryRaw": "في الشكل المقابل AB ∩ CD = {M} وقياس AMC = 80° وقياس DMB = 2X° أوجد قيمة X",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "80",
+      "2"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 4. matches Problem 1-1 p.174: AB ∩ CD = {M} with AMC = 80° and DMB = 2X° to find X = 40°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 1-6 p.174: Concurrent angles 70°, 100°, 80°, 10X° to find X = 11°",
+    "geometryRaw": "زوايا متجمعة حول نقطة M قياساتها 70° و 100° و 80° و 10X° أوجد قيمة X = 11°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "70",
+      "100",
+      "80",
+      "10",
+      "11"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 5. matches Problem 1-6 p.174: Concurrent angles 70°, 100°, 80°, 10X° to find X = 11°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 1-8 p.174: Concurrent angles with 140° and two equal angles X° to find X = 110°",
+    "geometryRaw": "ثلاث زوايا متجمعة حول نقطة M إحداها 140° والأخريان متساويتان X° و X° أوجد قيمة X = 110°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "140",
+      "110"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 6. matches Problem 1-8 p.174: Concurrent angles with 140° and two equal angles X° to find X = 110°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 5 p.175: BMC = 2 AMB with AMB = 48° and DMC = 115° to find AMD = 101°",
+    "geometryRaw": "في الشكل المقابل BMC = 2 m(∠ AMB) وقياس DMC = 115° وقياس AMB = 48° أوجد قياس AMD = 101°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "115",
+      "48",
+      "101"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 7. matches Problem 5 p.175: BMC = 2 AMB with AMB = 48° and DMC = 115° to find AMD = 101°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 7-5 p.176: Concurrent angles with right angle 90° and (3X-5)°, (4X+2)°, (3X+63)° to find X = 21°",
+    "geometryRaw": "زوايا متجمعة حول نقطة فيها زاوية قائمة 90° وزوايا (3X-5)° و (4X+2)° و (3X+63)° أوجد قيمة X = 21°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "3",
+      "5",
+      "4",
+      "2",
+      "3",
+      "63",
+      "21"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 8. matches Problem 7-5 p.176: Concurrent angles with right angle 90° and (3X-5)°, (4X+2)°, (3X+63)° to find X = 21°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-9",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches Problem 6 p.175: Collinear ABCD with ABE = 56° and XY ∩ BD = {C} to find DCY = 124°",
+    "geometryRaw": "النقاط A ، B ، C ، D تقع على مستقيم واحد مع ABE = 56° وتقاطع XY مع BD في C أوجد قياس DCY = 124°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "56",
+      "124"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 9. matches Problem 6 p.175: Collinear ABCD with ABE = 56° and XY ∩ BD = {C} to find DCY = 124°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "10. matches Problem 4 p.175: CMX = 90° and AMY = 80° and XMB = 35° to find AMD = 125°",
+    "geometryRaw": "في الشكل المقابل CMX = 90° وقياس AMY = 80° وقياس XMB = 35° أوجد قياس زاوية AMD",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "80",
+      "35"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 10. matches Problem 4 p.175: CMX = 90° and AMY = 80° and XMB = 35° to find AMD = 125°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-11",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "11. matches Problem 1-2 p.174: AC ∩ BD = {M} with BMC = 120° and ME bisecting AMD to find EMD = 60°",
+    "geometryRaw": "في الشكل المقابل AC ∩ BD = {M} وقياس BMC = 120° والشعاع ME ينصف AMD أوجد قياس EMD = 60°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120",
+      "60"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 11. matches Problem 1-2 p.174: AC ∩ BD = {M} with BMC = 120° and ME bisecting AMD to find EMD = 60°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-12",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "12. matches general lesson keyword for prep grade 1 angles followup",
+    "geometryRaw": "تابع العلاقات بين الزوايا والزوايا المتجمعة حول نقطة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 12. matches general lesson keyword for prep grade 1 angles followup",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-13",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "13. projects generated canonical IR figures cleanly to vector SVG markup",
+    "geometryRaw": "تفكير ناقد: إذا كان قياس الزاوية بين ذراعي المقص هما (3X-18)° و (2X+12)° وتم تقليلها أوجد قيمة y = 26°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "18",
+      "2",
+      "12",
+      "26"
+    ],
+    "source": "prep-grade1-angles-followup-catalog.test.ts :: 13. projects generated canonical IR figures cleanly to vector SVG markup",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 6-1 p.163: Complementary angles AC ⊥ AB with 25° to find X = 65°",
+    "geometryRaw": "في الشكل المقابل AC ⊥ AB ، قياس زاوية DAB = 25° أوجد قيمة X",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "25"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 1. matches Problem 6-1 p.163: Complementary angles AC ⊥ AB with 25° to find X = 65°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 6-2 p.163: Right angle trisected into three equal angles to find EAD = 30°",
+    "geometryRaw": "في الشكل AC ⊥ AB زاوية قائمة مقسمة إلى ثلاث زوايا متساوية أوجد قياس زاوية EAD = 30°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "30"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 2. matches Problem 6-2 p.163: Right angle trisected into three equal angles to find EAD = 30°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 7 p.165: Algebraic complementary angles (2X+2)° and (X+1)° to find X = 29°",
+    "geometryRaw": "زاويتان متتامتان AC ⊥ AB قياسهما (2X+2)° و (X+1)° أوجد قيمة X = 29°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "2",
+      "1",
+      "29"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 3. matches Problem 7 p.165: Algebraic complementary angles (2X+2)° and (X+1)° to find X = 29°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 14 p.165: Crossing barrier gate at 42° and (3X+3)° to find X = 15",
+    "geometryRaw": "ذراع بوابة العبور يصنع زاوية 42° مع القائم وزاوية (3X+3)° مع الأفقي أوجد قيمة X = 15",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "42",
+      "3",
+      "3",
+      "15"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 4. matches Problem 14 p.165: Crossing barrier gate at 42° and (3X+3)° to find X = 15",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 7-1 p.163: Supplementary angles on straight line A ∈ BC with 35° to find X = 145°",
+    "geometryRaw": "في الشكل المقابل A ∈ BC مستقيم ، قياس زاوية DAB = 35° أوجد قيمة X = 145°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "35",
+      "145"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 5. matches Problem 7-1 p.163: Supplementary angles on straight line A ∈ BC with 35° to find X = 145°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 12-1 p.164: Collinear rays test OA and OB with 144° and 36° to check collinearity",
+    "geometryRaw": "في الشكل المقابل هل OA و OB على استقامة واحدة مع الزاويتين 144° و 36° ؟ ولماذا؟",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "144",
+      "36"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 6. matches Problem 12-1 p.164: Collinear rays test OA and OB with 144° and 36° to check collinearity",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 8 p.165: Algebraic supplementary angles (5X+2)° and (4X-2)° to find X = 20°",
+    "geometryRaw": "النقطة B ∈ AC مستقيم زاويتان متكاملتان قياسهما (5X+2)° و (4X-2)° أوجد قيمة X = 20°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "2",
+      "4",
+      "2",
+      "20"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 7. matches Problem 8 p.165: Algebraic supplementary angles (5X+2)° and (4X-2)° to find X = 20°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 11 p.165: Three adjacent angles on line 5X°, 3X°, 2X° to find X = 18°",
+    "geometryRaw": "النقطة A ∈ CB مستقيم عليه ثلاث زوايا متجاورة 5X و 3X و 2X أوجد قيمة X = 18°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "3",
+      "2",
+      "18"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 8. matches Problem 11 p.165: Three adjacent angles on line 5X°, 3X°, 2X° to find X = 18°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-9",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches Problem 13-5 p.164: Vertically opposite angles (2X+26)° = (3X-21)° to find X = 47°",
+    "geometryRaw": "زاويتان متقابلتان بالرأس قياسهما (2X+26)° و (3X-21)° أوجد قيمة X = 47°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "26",
+      "3",
+      "21",
+      "47"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 9. matches Problem 13-5 p.164: Vertically opposite angles (2X+26)° = (3X-21)° to find X = 47°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "10. matches Problem 10 p.164: Straight line with bisected angle NOZ by OM with YOX = 50° to find MOX = 160°",
+    "geometryRaw": "الشعاع OM ينصف زاوية NOZ و O ∈ XN مستقيم وقياس YOX = 50° أوجد بالبرهان قياس زاوية MOX = 160°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "50",
+      "160"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 10. matches Problem 10 p.164: Straight line with bisected angle NOZ by OM with YOX = 50° to find MOX = 160°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-11",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "11. matches Problem 15 p.165: Squash ball wall rebound at 50° and angles (4X+21)° and (6X-1)° to find X = 11",
+    "geometryRaw": "كرة إسكواش ارتطمت بالحائط بزاوية 50° مع زاويتي ارتداد (4X+21)° و (6X-1)° أوجد قيمة X = 11",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "50",
+      "4",
+      "21",
+      "6",
+      "1",
+      "11"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 11. matches Problem 15 p.165: Squash ball wall rebound at 50° and angles (4X+21)° and (6X-1)° to find X = 11",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-12",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "12. matches general lesson keyword for prep grade 1 angle relationships",
+    "geometryRaw": "أنواع الزوايا والعلاقات بين الزوايا المتتامة والمتكاملة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 12. matches general lesson keyword for prep grade 1 angle relationships",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-13",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "13. projects generated canonical IR figures cleanly to vector SVG markup",
+    "geometryRaw": "في الشكل المقابل AC ⊥ AB ، قياس زاوية DAB = 25° أوجد قيمة X",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "25"
+    ],
+    "source": "prep-grade1-angles-relationships-catalog.test.ts :: 13. projects generated canonical IR figures cleanly to vector SVG markup",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 1 p.253: Segment AB projection on X-axis with A(2, 3) and B(-4, -1) length = 6",
+    "geometryRaw": "نرسم AB في المستوى الإحداثي حيث A(2, 3) و B(-4, -1) ثم نوجد مسقط AB على محور X وطوله = 6 وحدات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3",
+      "4",
+      "1",
+      "6"
+    ],
+    "source": "prep-grade1-coordinates-catalog.test.ts :: 1. matches Problem 1 p.253: Segment AB projection on X-axis with A(2, 3) and B(-4, -1) length = 6",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 2 p.253: Segment CD projection on Y-axis with C(1, 4) and D(5, 1) length = 3",
+    "geometryRaw": "نرسم CD في المستوى الإحداثي حيث C(1, 4) و D(5, 1) ثم نوجد مسقط CD على محور y وطوله = 3 وحدات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1",
+      "4",
+      "5",
+      "1",
+      "3"
+    ],
+    "source": "prep-grade1-coordinates-catalog.test.ts :: 2. matches Problem 2 p.253: Segment CD projection on Y-axis with C(1, 4) and D(5, 1) length = 3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Try by yourself 2 p.253: Segment projections on both axes with A(3, -2) and B(-4, 4)",
+    "geometryRaw": "إذا كان A(3, -2) و B(-4, 4) ارسم AB في المستوى الإحداثي ثم أوجد طول مسقطها على المحور X والمحور y",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "2",
+      "4",
+      "4"
+    ],
+    "source": "prep-grade1-coordinates-catalog.test.ts :: 3. matches Try by yourself 2 p.253: Segment projections on both axes with A(3, -2) and B(-4, 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Midpoint coordinates general formula M = ((x1+x2)/2, (y1+y2)/2)",
+    "geometryRaw": "إحداثيا منتصف قطعة مستقيمة M هي نقطة تنتمي للمستقيمة وتكون على بعدين متساويين من طرفيها",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-coordinates-catalog.test.ts :: 4. matches Midpoint coordinates general formula M = ((x1+x2)/2, (y1+y2)/2)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches numerical midpoint coordinates A(1, 2) and B(5, 6) -> M(3, 4)",
+    "geometryRaw": "أوجد إحداثيي منتصف القطعة المستقيمة AB حيث A(1, 2) و B(5, 6)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1",
+      "2",
+      "5",
+      "6"
+    ],
+    "source": "prep-grade1-coordinates-catalog.test.ts :: 5. matches numerical midpoint coordinates A(1, 2) and B(5, 6) -> M(3, 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches with diagnostics cleanly",
+    "geometryRaw": "مسقط AB على محور X حيث A(2, 3) و B(-4, -1)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3",
+      "4",
+      "1"
+    ],
+    "source": "prep-grade1-coordinates-catalog.test.ts :: 7. matches with diagnostics cleanly",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 10 p.194: AB // CD // EF with A = 70° and C = 120° to find AEC = 130°",
+    "geometryRaw": "في الشكل المقابل AB // CD ، EF // CD وقياس A = 70° وقياس C = 120° أوجد بالبرهان قياس AEC = 130°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "70",
+      "120",
+      "130"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 1. matches Problem 10 p.194: AB // CD // EF with A = 70° and C = 120° to find AEC = 130°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 11 p.194: AB // EF with D = 100°, E = 115°, DAE = 35° to prove AB // DC",
+    "geometryRaw": "في الشكل المقابل AB // EF وفيه قياس D = 100° وقياس E = 115° وقياس DAE = 35° أثبت أن AB // DC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "100",
+      "115",
+      "35"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 2. matches Problem 11 p.194: AB // EF with D = 100°, E = 115°, DAE = 35° to prove AB // DC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 14-6 p.196: Broken zigzag reflex angle (6X+40)° with 30° and 50° to find X = 40°",
+    "geometryRaw": "تفكير إبداعي: مستقيمان متوازيان مع زاويتي 30° و 50° وزاوية منعكسة (6X+40)° أوجد قيمة X = 40°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "30",
+      "50",
+      "6",
+      "40",
+      "40"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 3. matches Problem 14-6 p.196: Broken zigzag reflex angle (6X+40)° with 30° and 50° to find X = 40°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 14-3 p.196: Broken zigzag right angle 90° with 40° to find X = 50°",
+    "geometryRaw": "شعاعان متوازيان وزاوية منكسرة قائمة 90° مع زاوية 40° أوجد قيمة X = 50°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90",
+      "40",
+      "50"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 4. matches Problem 14-3 p.196: Broken zigzag right angle 90° with 40° to find X = 50°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 5-1 p.192: Classic broken zigzag between parallel lines with 40° and 55° to find X = 95°",
+    "geometryRaw": "زاوية منكسرة بين مستقيمين متوازيين مع زاويتي 40° و 55° أوجد بالبرهان قيمة X = 95°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "40",
+      "55",
+      "95"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 5. matches Problem 5-1 p.192: Classic broken zigzag between parallel lines with 40° and 55° to find X = 95°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 7-1 p.193: Proof of AB // CD by consecutive interior angles 100° + 80° = 180°",
+    "geometryRaw": "بيّن لماذا يكون AB // CD مع الزاويتين الداخلتين 100° و 80° وفي جهة واحدة من القاطع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "100",
+      "80"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 6. matches Problem 7-1 p.193: Proof of AB // CD by consecutive interior angles 100° + 80° = 180°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 9 p.193: BA // CD with B = 80°, C = 2y°, D = X° to find y = 50° and X = 80°",
+    "geometryRaw": "في الشكل المقابل BA // CD وفيه قياس B = 80° وقياس C = 2y° وقياس D = X° أوجد قيمة X و y",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "80",
+      "2"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 7. matches Problem 9 p.193: BA // CD with B = 80°, C = 2y°, D = X° to find y = 50° and X = 80°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 6-1 p.193: Test if p // q with angles 57° and 122°",
+    "geometryRaw": "هل p // q أم لا ؟ ولماذا؟ مع الزاويتين 57° و 122°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "57",
+      "122"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 8. matches Problem 6-1 p.193: Test if p // q with angles 57° and 122°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-9",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches Problem 4-7 p.192: Algebraic alternate (3X+15)° = 75° to find X = 20°",
+    "geometryRaw": "توازي وتبادل جبري (3X+15)° = 75° أوجد قيمة X = 20°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "15",
+      "75",
+      "20"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 9. matches Problem 4-7 p.192: Algebraic alternate (3X+15)° = 75° to find X = 20°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "10. matches Problem 4-8 p.192: Algebraic corresponding (9X-5)° = (5X+15)° to find X = 5°",
+    "geometryRaw": "مستقيمان متوازيان بزوايا متناظرة (9X-5)° و (5X+15)° أوجد قيمة X = 5°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "9",
+      "5",
+      "5",
+      "15",
+      "5"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 10. matches Problem 4-8 p.192: Algebraic corresponding (9X-5)° = (5X+15)° to find X = 5°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-11",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "11. matches Problem 3-2 p.191: Consecutive interior U shape with 70° to find 110°",
+    "geometryRaw": "مستقيمان متوازيان زاويتان داخلتان في جهة واحدة من القاطع تداخل 70° لإيجاد 110°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "70",
+      "110"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 11. matches Problem 3-2 p.191: Consecutive interior U shape with 70° to find 110°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-12",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "12. matches Problem 3-3 p.191: Alternate Z shape with 64° to find X = 64°",
+    "geometryRaw": "مستقيمان متوازيان بحالة تبادل حرف Z مع زاوية 64° أوجد قيمة X = 64°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "64",
+      "64"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 12. matches Problem 3-3 p.191: Alternate Z shape with 64° to find X = 64°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-13",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "13. matches Problem 3-1 p.191: Corresponding F shape with 63°",
+    "geometryRaw": "مستقيمان متوازيان بحالة تناظر حرف F مع زاوية 63°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "63"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 13. matches Problem 3-1 p.191: Corresponding F shape with 63°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-14",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "14. matches general lesson keyword for prep grade 1 parallelism",
+    "geometryRaw": "درس التوازي والمستقيمات المتوازية والقاطع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 14. matches general lesson keyword for prep grade 1 parallelism",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-15",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "15. projects generated canonical IR figures cleanly to vector SVG markup",
+    "geometryRaw": "في الشكل المقابل AB // CD ، EF // CD وقياس A = 70° وقياس C = 120° أوجد بالبرهان قياس AEC = 130°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "70",
+      "120",
+      "130"
+    ],
+    "source": "prep-grade1-parallelism-catalog.test.ts :: 15. projects generated canonical IR figures cleanly to vector SVG markup",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 12 p.252: Regular hexagon ABCDEF with external right triangle to find angle H = 60°",
+    "geometryRaw": "في الشكل المقابل ABCDEF سداسي منتظم ، أوجد بالبرهان قياس زاوية H = 60° حيث HG ⊥ AG",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "60"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 1. matches Problem 12 p.252: Regular hexagon ABCDEF with external right triangle to find angle H = 60°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 14 p.252: Pentagon ABCDE with two right angles, EDC = 130°, EAB = 112° to find DEA = 118°",
+    "geometryRaw": "في الشكل المقابل ABCDE خماسي فيه CB ⊥ AB و BC ⊥ CD و EDC = 130° و EAB = 112° ، أوجد قياس زاوية DEA",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "130",
+      "112"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 2. matches Problem 14 p.252: Pentagon ABCDE with two right angles, EDC = 130°, EAB = 112° to find DEA = 118°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 13-5 p.252: Pentagon ABCDE with angles 100°, 110°, 120° and base bisectors meeting at F to find AFB = 75°",
+    "geometryRaw": "في الشكل المقابل خماسي ABCDE زواياه 100° و 110° و 120° ومنصفا زاويتي القاعدتين يلتقيان في F لإيجاد قيمة X",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "100",
+      "110",
+      "120"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 3. matches Problem 13-5 p.252: Pentagon ABCDE with angles 100°, 110°, 120° and base bisectors meeting at F to find AFB = 75°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 13-1 p.252: Hexagon with right angles and algebraic angles X and (X + 24)°",
+    "geometryRaw": "في الشكل المقابل سداسي بزوايا قائمة وزوايا جبرية X و (X + 24)° أوجد قيمة X",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "24"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 4. matches Problem 13-1 p.252: Hexagon with right angles and algebraic angles X and (X + 24)°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches regular pentagon symmetry axes (5 axes) p.247",
+    "geometryRaw": "الخماسي المنتظم محاور تماثل عددها 5 محاور",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 5. matches regular pentagon symmetry axes (5 axes) p.247",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches equilateral triangle symmetry axes (3 axes) p.247",
+    "geometryRaw": "مثلث متساوي الأضلاع عدد محاور تماثل 3",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 6. matches equilateral triangle symmetry axes (3 axes) p.247",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches regular hexagon symmetry axes (6 axes) p.247",
+    "geometryRaw": "سداسي منتظم عدد محاور تماثله 6 محاور",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6"
+    ],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 7. matches regular hexagon symmetry axes (6 axes) p.247",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches with diagnostics cleanly",
+    "geometryRaw": "في الشكل المقابل ABCDEF سداسي منتظم أوجد بالبرهان قياس زاوية H",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-polygons-catalog.test.ts :: 9. matches with diagnostics cleanly",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 5 p.221: Parallelogram with external triangle EGB to find E = 110°",
+    "geometryRaw": "في الشكل المقابل ABCD متوازي أضلاع فيه قياس D = 75° ومثلث خارجي EGB فيه قياس G = 35° وقياس GBA = 70° أوجد قياس زاوية E = 110°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "75",
+      "35",
+      "70",
+      "110"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 1. matches Problem 5 p.221: Parallelogram with external triangle EGB to find E = 110°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 7 p.222: Parallelogram proof by diagonals with ABD = 34°, DCA = 31°, CMB = 65°",
+    "geometryRaw": "شكل رباعي تقاطع قطراه في M وفيه قياس ABD = 34° وقياس DCA = 31° وقياس CMB = 65° أثبت أن الشكل متوازي أضلاع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "34",
+      "31",
+      "65"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 2. matches Problem 7 p.222: Parallelogram proof by diagonals with ABD = 34°, DCA = 31°, CMB = 65°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 11 p.222: Algebraic parameters a and b for parallelogram (a - 11 = 32 and 2b - 5 = b - 1)",
+    "geometryRaw": "أوجد قيم a ، b التي تجعل الشكل ABCD متوازي أضلاع وفيه (a - 11)° = 32° و (2b - 5) = (b - 1)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "11",
+      "32",
+      "2",
+      "5",
+      "1"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 3. matches Problem 11 p.222: Algebraic parameters a and b for parallelogram (a - 11 = 32 and 2b - 5 = b - 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 10 p.222: Parallelogram proof by angles D = 65°, C = 115°, E = 70°, A = 45°",
+    "geometryRaw": "في الشكل المقابل قياس D = 65° وقياس C = 115° وقياس E = 70° و A = 45° أثبت أن ABCD متوازي أضلاع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "65",
+      "115",
+      "70",
+      "45"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 4. matches Problem 10 p.222: Parallelogram proof by angles D = 65°, C = 115°, E = 70°, A = 45°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 6 p.222: Quad with B = 60°, D = 130°, A = 110° and bisector CF to prove BA // CF",
+    "geometryRaw": "شكل رباعي ABCD فيه B = 60° و D = 130° و A = 110° والشعاع CF ينصف DCE أثبت أن BA // CF",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "60",
+      "130",
+      "110"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 5. matches Problem 6 p.222: Quad with B = 60°, D = 130°, A = 110° and bisector CF to prove BA // CF",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 3-4 p.221: Parallelogram equations 5X - 11 = 2X + 1 and (10y+1)° + (6y+3)° = 180°",
+    "geometryRaw": "متوازي أضلاع أضلاعه المتقابلة 5X - 11 و 2X + 1 وزواياه المتتالية (10y+1)° و (6y+3)° أوجد قيمة X و y",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "11",
+      "2",
+      "1",
+      "10",
+      "1",
+      "6",
+      "3"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 6. matches Problem 3-4 p.221: Parallelogram equations 5X - 11 = 2X + 1 and (10y+1)° + (6y+3)° = 180°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 3-3 p.221: Parallelogram diagonals bisecting 3y - 4 = 2y and X + y = 10",
+    "geometryRaw": "متوازي أضلاع قطراه ينصف كل منهما الآخر وفيه 3y - 4 = 2y و X + y = 10 أوجد قيمة X و y",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "4",
+      "2",
+      "10"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 7. matches Problem 3-3 p.221: Parallelogram diagonals bisecting 3y - 4 = 2y and X + y = 10",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 3-2 p.221: Parallelogram opposite sides X - 2 = 10 and 2y - 7 = y",
+    "geometryRaw": "متوازي أضلاع أضلاعه المتقابلة متساوية X - 2 = 10 و 2y - 7 = y أوجد قيمة X و y",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "10",
+      "2",
+      "7"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 8. matches Problem 3-2 p.221: Parallelogram opposite sides X - 2 = 10 and 2y - 7 = y",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-9",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches Problem 3-1 p.221: Parallelogram ABCD with A = 50° to find opposite and consecutive angles",
+    "geometryRaw": "متوازي أضلاع ABCD فيه قياس زاوية A = 50° أوجد قيمة X و y",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "50"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 9. matches Problem 3-1 p.221: Parallelogram ABCD with A = 50° to find opposite and consecutive angles",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "10. matches Problem 1-1 p.220: Quadrilateral angles sum 120° and 2X°, 2X°, X° to find X = 48°",
+    "geometryRaw": "شكل رباعي قياسات زواياه 120° و 2X و 2X و X أوجد قيمة X = 48°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120",
+      "2",
+      "2",
+      "48"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 10. matches Problem 1-1 p.220: Quadrilateral angles sum 120° and 2X°, 2X°, X° to find X = 48°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-11",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "11. matches Problem 1-4 p.220: Quadrilateral exterior angle 4X° with interior 70°, 100°, 110° to find X = 25°",
+    "geometryRaw": "شكل رباعي زاوية خارجة عنه 4X مع زوايا داخلة 70° و 100° و 110° أوجد قيمة X = 25°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "70",
+      "100",
+      "110",
+      "25"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 11. matches Problem 1-4 p.220: Quadrilateral exterior angle 4X° with interior 70°, 100°, 110° to find X = 25°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-12",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "12. matches Problem 2-2 p.220: Isosceles trapezoid with (3X-55)° = 2X° to find D = 70°",
+    "geometryRaw": "شبه منحرف متساوي الساقين زاويتا قاعدته (3X-55) و 2X أوجد قيمة زاوية D = 70°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "55",
+      "2",
+      "70"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 12. matches Problem 2-2 p.220: Isosceles trapezoid with (3X-55)° = 2X° to find D = 70°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-13",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "13. matches general lesson keyword for prep grade 1 quadrilaterals",
+    "geometryRaw": "درس الأشكال الرباعية ومتوازي الأضلاع وخواص متوازي الأضلاع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 13. matches general lesson keyword for prep grade 1 quadrilaterals",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-14",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "14. projects generated canonical IR figures cleanly to vector SVG markup",
+    "geometryRaw": "في الشكل المقابل ABCD متوازي أضلاع فيه قياس D = 75° ومثلث خارجي EGB فيه قياس G = 35° وقياس GBA = 70° أوجد قياس زاوية E = 110°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "75",
+      "35",
+      "70",
+      "110"
+    ],
+    "source": "prep-grade1-quadrilaterals-catalog.test.ts :: 14. projects generated canonical IR figures cleanly to vector SVG markup",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 6-1 p.234: Square attached to equilateral triangle DCE to find ACE = 105°",
+    "geometryRaw": "في الشكل المقابل ABCD مربع ملتصق بمثلث متساوي الأضلاع DCE أوجد بالبرهان قياس زاوية ACE = 105°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "105"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 1. matches Problem 6-1 p.234: Square attached to equilateral triangle DCE to find ACE = 105°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 8 p.234: Rectangle ABCD with AED = 46° and ECB = 44° to find CED = 88°",
+    "geometryRaw": "في الشكل المقابل ABCD مستطيل وفيه AED = 46° و ECB = 44° أوجد بالبرهان قياس زاوية CED = 88°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "46",
+      "44",
+      "88"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 2. matches Problem 8 p.234: Rectangle ABCD with AED = 46° and ECB = 44° to find CED = 88°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 12 p.235: Rectangle and square composite with FDC = 52° to find AFD = 97°",
+    "geometryRaw": "مستطيل ABCD يحوي بداخله ABFE مربع وفيه قياس FDC = 52° أوجد بالبرهان قياس زاوية AFD = 97°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "52",
+      "97"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 3. matches Problem 12 p.235: Rectangle and square composite with FDC = 52° to find AFD = 97°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 13 p.235: Square with inscribed rhombus on diagonal AC with EA = FC",
+    "geometryRaw": "ABCD مربع تقاطع قطراه في M والنقطتان E و F على AC بحيث EA = FC أثبت أن الشكل EBFD معين",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 4. matches Problem 13 p.235: Square with inscribed rhombus on diagonal AC with EA = FC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 9 p.235: Rhombus ABCD with DBC = 62° to find head angle A = 56°",
+    "geometryRaw": "في الشكل المقابل ABCD معين فيه قياس DBC = 62° أوجد بالبرهان قياس زاوية A = 56°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "62",
+      "56"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 5. matches Problem 9 p.235: Rhombus ABCD with DBC = 62° to find head angle A = 56°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 7 p.234: Square with BD = 5a - 4 and MC = 2a - 1 to find a = 2 and AC = 6",
+    "geometryRaw": "مربع ABCD فيه قطراه BD = 5a - 4 و MC = 2a - 1 أوجد قيمة a وطول AC = 6",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "4",
+      "2",
+      "1",
+      "6"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 6. matches Problem 7 p.234: Square with BD = 5a - 4 and MC = 2a - 1 to find a = 2 and AC = 6",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 3-3 p.233: Rhombus equal sides 7X - 11 = 5X + 1 to find X = 6",
+    "geometryRaw": "معين ABCD أضلاعه متساوية 7X - 11 و 5X + 1 أوجد قيمة X = 6",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7",
+      "11",
+      "5",
+      "1",
+      "6"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 7. matches Problem 3-3 p.233: Rhombus equal sides 7X - 11 = 5X + 1 to find X = 6",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 3-2 p.233: Rectangle diagonals equal 4X - 5 = 3X to find X = 5",
+    "geometryRaw": "مستطيل ABCD قطراه متساويان 4X - 5 و 3X أوجد قيمة X = 5",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "5",
+      "3",
+      "5"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 8. matches Problem 3-2 p.233: Rectangle diagonals equal 4X - 5 = 3X to find X = 5",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-9",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches general lesson keyword for prep grade 1 special quadrilaterals",
+    "geometryRaw": "تابع الأشكال الرباعية الخاصة والحالات الخاصة من متوازي الأضلاع المستطيل والمعين والمربع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 9. matches general lesson keyword for prep grade 1 special quadrilaterals",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "10. projects generated canonical IR figures cleanly to vector SVG markup",
+    "geometryRaw": "في الشكل المقابل ABCD مربع ملتصق بمثلث متساوي الأضلاع DCE أوجد بالبرهان قياس زاوية ACE = 105°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "105"
+    ],
+    "source": "prep-grade1-special-quads-followup-catalog.test.ts :: 10. projects generated canonical IR figures cleanly to vector SVG markup",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-1",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 14-7 p.210: Base angle bisectors intersecting at 126° to find C = 72°",
+    "geometryRaw": "في المثلث ABC منصفا زاويتي القاعدة يتقاطعان بزاوية 126° أوجد قياس زاوية الرأس C = 72°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "126",
+      "72"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 1. matches Problem 14-7 p.210: Base angle bisectors intersecting at 126° to find C = 72°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-2",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 8 p.209: DE // CB with D = 100° and C = 30° to find BAC = 70°",
+    "geometryRaw": "في الشكل المقابل DE // CB وفيه قياس D = 100° وقياس C = 30° أوجد قياس زاوية BAC = 70°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "100",
+      "30",
+      "70"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 2. matches Problem 8 p.209: DE // CB with D = 100° and C = 30° to find BAC = 70°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-3",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 9 p.209: DE // FX // CB with F = 135° and D = 120° to find angles of ABC",
+    "geometryRaw": "في الشكل المقابل DE // FX // CB وقياس F = 135° وقياس D = 120° احسب قياسات زوايا المثلث ABC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "135",
+      "120"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 3. matches Problem 9 p.209: DE // FX // CB with F = 135° and D = 120° to find angles of ABC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-4",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 10 p.209: ABC triangle with B = 60°, A = 80° and ED // CB to find AED = 40° and DEC = 140°",
+    "geometryRaw": "مثلث ABC فيه B = 60° و A = 80° والقطعة ED // CB أوجد قياس AED = 40° و DEC = 140°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "60",
+      "80",
+      "40",
+      "140"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 4. matches Problem 10 p.209: ABC triangle with B = 60°, A = 80° and ED // CB to find AED = 40° and DEC = 140°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-5",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 14-1 p.210: Exterior angle (3X+10)° with interior 60° and 70° to find X = 40°",
+    "geometryRaw": "زاوية خارجة للمثلث قياسها (3X+10)° والزاويتان الداخلتان 60° و 70° أوجد قيمة X = 40°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "10",
+      "60",
+      "70",
+      "40"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 5. matches Problem 14-1 p.210: Exterior angle (3X+10)° with interior 60° and 70° to find X = 40°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-6",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 14-2 p.210: Exterior angle 125° with (2X-2)° and (3X+7)° to find X = 24°",
+    "geometryRaw": "مثلث زاويتاه الداخلتان (2X-2)° و (3X+7)° والزاوية الخارجة 125° أوجد قيمة X = 24°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "2",
+      "3",
+      "7",
+      "125",
+      "24"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 6. matches Problem 14-2 p.210: Exterior angle 125° with (2X-2)° and (3X+7)° to find X = 24°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-7",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 14-3 p.210: Exterior angle (2X+16)° with (X+1)° and 80° to find X = 65°",
+    "geometryRaw": "زاوية خارجة للمثلث قياسها (2X+16)° مع زاويتين داخلتين (X+1)° و 80° أوجد قيمة X = 65°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "16",
+      "1",
+      "80",
+      "65"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 7. matches Problem 14-3 p.210: Exterior angle (2X+16)° with (X+1)° and 80° to find X = 65°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-8",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 14-4 p.210: Three algebraic interior angles (2X-5)°, (3X+4)°, (4X-8)° to find B = 76°",
+    "geometryRaw": "مثلث زواياه الداخلة (2X-5)° و (3X+4)° و (4X-8)° أوجد قياس زاوية B = 76°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "5",
+      "3",
+      "4",
+      "4",
+      "8",
+      "76"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 8. matches Problem 14-4 p.210: Three algebraic interior angles (2X-5)°, (3X+4)°, (4X-8)° to find B = 76°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-9",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches Problem 2-3 p.207: Interior angles ratio a°, 3a°, 5a° to find a = 20°",
+    "geometryRaw": "مثلث زواياه الداخلة a° و 3a° و 5a° أوجد قيمة a = 20°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "5",
+      "20"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 9. matches Problem 2-3 p.207: Interior angles ratio a°, 3a°, 5a° to find a = 20°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-10",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "10. matches Problem 2-5 p.207: Exterior sum with 22° and 82° to find X = 104°",
+    "geometryRaw": "زاوية خارجة لمثلث مع زاويتين داخلتين 22° و 82° أوجد قيمة X = 104°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "22",
+      "82",
+      "104"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 10. matches Problem 2-5 p.207: Exterior sum with 22° and 82° to find X = 104°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-11",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "11. matches Problem 2-7 p.207: Equilateral triangle exterior angle = 120°",
+    "geometryRaw": "مثلث متساوي الأضلاع والزاوية الخارجة عنه تساوي 120°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 11. matches Problem 2-7 p.207: Equilateral triangle exterior angle = 120°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-12",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "12. matches Problem 2-9 p.207: Two exterior angles 110° and 104° to find head angle X = 34°",
+    "geometryRaw": "مثلث بزاويتين خارجتين 110° و 104° أوجد قياس زاوية الرأس X = 34°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "110",
+      "104",
+      "34"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 12. matches Problem 2-9 p.207: Two exterior angles 110° and 104° to find head angle X = 34°",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-13",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "13. matches general lesson keyword for prep grade 1 triangle angles",
+    "geometryRaw": "مجموع قياسات الزوايا الداخلة للمثلث والزاوية الخارجة للمثلث",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 13. matches general lesson keyword for prep grade 1 triangle angles",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-14",
+    "gradeId": "prep-1",
+    "branchId": "plane_geometry",
+    "problemText": "14. projects generated canonical IR figures cleanly to vector SVG markup",
+    "geometryRaw": "في المثلث ABC منصفا زاويتي القاعدة يتقاطعان بزاوية 126° أوجد قياس زاوية الرأس C = 72°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "126",
+      "72"
+    ],
+    "source": "prep-grade1-triangle-angles-catalog.test.ts :: 14. projects generated canonical IR figures cleanly to vector SVG markup",
+    "humanVerdict": "unreviewed"
+  }
+]

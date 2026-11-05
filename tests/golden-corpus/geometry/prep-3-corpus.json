@@ -1,0 +1,307 @@
+[
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-1",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Example 2 from textbook images (quads with radicals and specific angles)",
+    "geometryRaw": "مضلعان رباعيان متشابهان ABCD ~ EFGH أطوال الأول AB = 6.5 سم و DA = 1.5√3 سم وزاوية C = 60° وزاوية H = 150°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6.5",
+      "1.5",
+      "3",
+      "60",
+      "150"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Example 2 from textbook images (quads with radicals and specific angles)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-2",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Try-by-yourself 2 from textbook images (obtuse 120° and 45° with 10√3)",
+    "geometryRaw": "مضلعان رباعيان متشابهان فيهما زاوية 120° وزاوية 45° وأطوال 10√3 سم و 10√2 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120",
+      "45",
+      "10",
+      "3",
+      "10",
+      "2"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Try-by-yourself 2 from textbook images (obtuse 120° and 45° with 10√3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-3",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Right Trapezoids with algebraic variables (X - 3) and (Y + 1)",
+    "geometryRaw": "شبه منحرف قائم الزاوية متشابه بمجاهيل أطوال قاعدتيه X - 3 و Y + 1",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "1"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Right Trapezoids with algebraic variables (X - 3) and (Y + 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-4",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches House-shaped Pentagons ABCDE ~ KFGHJ (Try-by-yourself 3)",
+    "geometryRaw": "مضلعان خماسيان متشابهان ABCDE ~ KFGHJ على شكل منزل قاعدة 6 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches House-shaped Pentagons ABCDE ~ KFGHJ (Try-by-yourself 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-5",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Collinear Base quads intersecting at O (Example 3)",
+    "geometryRaw": "مضلعان على خط قاعدة مشتركة H-E-A-D يتقاطعان في نقطة O",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Collinear Base quads intersecting at O (Example 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-6",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Deltoid/Kites similarity with 92° angles",
+    "geometryRaw": "طائرتان ورقيتان دالتون متشابهتان ABCD ~ HLKJ قياس الزاوية 92°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "92"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Deltoid/Kites similarity with 92° angles",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-7",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Grade 3 Prep Triangle Similarity: Butterfly/Cross ΔABC ~ ΔADE",
+    "geometryRaw": "تشابه مثلثين متقابلين بالرأس عند A شكل مقص ΔABC ~ ΔADE وأطوال 10 سم و 12 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "10",
+      "12"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Butterfly/Cross ΔABC ~ ΔADE",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-8",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Grade 3 Prep Triangle Similarity: Nested with Common Angle B",
+    "geometryRaw": "تشابه مثلثين بزاوية مشتركة B وقاطع داخلي ΔABC ~ ΔDBA",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Nested with Common Angle B",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-9",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Grade 3 Prep Triangle Similarity: Thales Parallel Line XY || BC",
+    "geometryRaw": "تشابه مثلثين بتوازي طاليس XY // BC و AXY ~ ABC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Thales Parallel Line XY || BC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-10",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Grade 3 Prep Triangle Similarity: Euclid Altitude Similarity in Right Triangle",
+    "geometryRaw": "تشابه المثلثات القائمة بإسقاط عمود BD ⊥ AC من رأس القائمة ونظرية إقليدس ADB ~ BDC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Euclid Altitude Similarity in Right Triangle",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-11",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "matches Grade 3 Prep Triangle Similarity: Separate with 120° Angle",
+    "geometryRaw": "تشابه مثلثين منفصلين بزاوية 120° ΔABC ~ ΔDEF",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120"
+    ],
+    "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Separate with 120° Angle",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-1",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "1. matches Problem 21: Equal intercepts passing through (2, 3)",
+    "geometryRaw": "الشكل المقابل يمثل AB الذي معادلته y = k X + c ويقطع من محوري الإحداثيات جزأين متساويين في الطول ويمر بالنقطة (2 , 3)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "3"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 1. matches Problem 21: Equal intercepts passing through (2, 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-2",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "2. matches Problem 22: Equilateral triangle ABO with midpoint C of AB",
+    "geometryRaw": "في الشكل المقابل : ABO مثلث متساوي الأضلاع ، C منتصف AB أوجد معادلة OC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 2. matches Problem 22: Equilateral triangle ABO with midpoint C of AB",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-3",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "3. matches Problem 23: Rhombus OADB with A(2,6) and B(6,2) and D(8,8)",
+    "geometryRaw": "في الشكل المقابل : النقط O(0,0) ، A(2,6) ، B(6,2) ، D رؤوس معين . أوجد إحداثيي النقطة D ومعادلة OD و m(∠ DOH)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "0",
+      "0",
+      "2",
+      "6",
+      "6",
+      "2"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 3. matches Problem 23: Rhombus OADB with A(2,6) and B(6,2) and D(8,8)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-4",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "4. matches Problem 24: Perpendicular lines L1 ⊥ L2 with equation 2X - y + 2 = 0",
+    "geometryRaw": "إذا كان: L2 ⊥ L1 ومعادلة L1 هي 2X - y + 2 = 0 أوجد معادلة L2",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "1",
+      "1",
+      "2",
+      "2",
+      "0",
+      "2"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 4. matches Problem 24: Perpendicular lines L1 ⊥ L2 with equation 2X - y + 2 = 0",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-5",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "5. matches Problem 25: A(0,8) with tan(∠ ABO) = 4/3",
+    "geometryRaw": "في الشكل المقابل : AB يقطع محور y في النقطة A(0,8) ويقطع محور x في النقطة B فإذا كان: tan(∠ ABO) = 4/3",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "0",
+      "8",
+      "4",
+      "3"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 5. matches Problem 25: A(0,8) with tan(∠ ABO) = 4/3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-6",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "6. matches Problem 26: Right triangle with A(-4,-3) and B(2,3) and AB ⊥ BC",
+    "geometryRaw": "في الشكل المقابل : إذا كان: A(-4,-3) ، B(2,3) ، AB ⊥ BC أوجد إحداثيي النقطة C ومعادلة AC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "3",
+      "2",
+      "3"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 6. matches Problem 26: Right triangle with A(-4,-3) and B(2,3) and AB ⊥ BC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-7",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "7. matches Problem 35: Slope angle θ with equation 2y = X - 4",
+    "geometryRaw": "في الشكل المقابل : إذا كانت معادلة المستقيم l هي 2y = X - 4 فأي من النسب الآتية تساوي tan θ ؟",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "4"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 7. matches Problem 35: Slope angle θ with equation 2y = X - 4",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-8",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "8. matches Problem 36: Triangle AOB area is 9 units with A(0,6)",
+    "geometryRaw": "في الشكل المقابل : إذا كانت مساحة المثلث AOB تساوي 9 وحدات مربعة فما معادلة AB ؟",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "9"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 8. matches Problem 36: Triangle AOB area is 9 units with A(0,6)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-9",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "9. matches Problem 37: Square OABC side length 4 and diagonal AC",
+    "geometryRaw": "في الشكل المقابل : OABC مربع طول ضلعه 4 سم فما معادلة AC ؟",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 9. matches Problem 37: Square OABC side length 4 and diagonal AC",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-10",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "10. matches Problem 38: Right triangle OAB at A with BO = 6 and AB = 3",
+    "geometryRaw": "في الشكل المقابل : إذا كان: AB = 3 وحدات طول ، BO = 6 وحدات طول فما معادلة AO ؟",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "6"
+    ],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 10. matches Problem 38: Right triangle OAB at A with BO = 6 and AB = 3",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-11",
+    "gradeId": "prep-3",
+    "branchId": "plane_geometry",
+    "problemText": "11. supports Arabic notation mode for coordinate labels",
+    "geometryRaw": "ABO مثلث متساوي الأضلاع ، C منتصف AB أوجد معادلة OC",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "prep-grade3-line-equation-catalog.test.ts :: 11. supports Arabic notation mode for coordinate labels",
+    "humanVerdict": "unreviewed"
+  }
+]
