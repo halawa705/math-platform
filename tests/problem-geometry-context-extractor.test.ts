@@ -61,6 +61,16 @@ describe("المرحلة المحورية الثانية: جامع السياق 
 
       expect(unpacked).toEqual(["XY = 6 سم", "YZ = 8 سم", "XZ = 10 سم"]);
     });
+
+    it("يستخرج جميع الزوايا المتجمعة حول نقطة بما فيها 100° و 130° والتعامد بدقة دون ابتلاع المسافات", () => {
+      const q7 =
+        "في الشكل المقابل، أربعة أشعة تخرج من النقطة M. إذا كان \\vec{MA} \\perp \\vec{ME}. وكان m(\\angle BMC) = 100^\\circ و m(\\angle AMB) = 130^\\circ، فأوجد بالبرهان الهندسي m(\\angle CMD).";
+      const facts = extractGeometryFactsFromPrompt(q7);
+      expect(facts).toContain("ق(∠BMC) = 100°");
+      expect(facts).toContain("ق(∠AMB) = 130°");
+      expect(facts).toContain("MA ⊥ MD");
+      expect(facts).toContain("الزوايا متجمعة حول النقطة M");
+    });
   });
 
   describe("3. استخراج الحقائق الهندسية من متن السؤال (Prompt Extraction)", () => {

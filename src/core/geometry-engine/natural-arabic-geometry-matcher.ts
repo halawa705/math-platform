@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file natural-arabic-geometry-matcher.ts
  * @description المترجم الحتمي الموحد للوصف العربي الطبيعي (`[رسم هندسي: ...]`) إلى فروع السجل الهندسي القياسي (`CanonicalGeometryFigureIR`).
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
@@ -8,6 +8,7 @@ import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot"
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
 import { buildParametricSimilarityFigure } from "./similarity-family/similarity-parametric-builder-orchestrator";
 import { convertGeometryLatexToPlainText } from "./description-intake/geometry-latex-to-plain-normalizer";
+import { healFourRaysHallucination } from "../ingestion/notebooklm-citation-latex-sanitizer";
 import {
   isFigureFaithfulToPrompt,
   isPurelyTheoreticalNoDiagramProblem,
@@ -195,18 +196,19 @@ export function matchGeometryWithDiagnostics(
   readonly warnings: readonly string[];
   readonly source: "compositor" | "catalog" | "none";
 } {
-  if (isPurelyTheoreticalNoDiagramProblem(desc)) {
+  const cleanDesc = healFourRaysHallucination(desc);
+  if (isPurelyTheoreticalNoDiagramProblem(cleanDesc)) {
     return {
       warnings: ["المسألة نظرية لفظية عامة ولا تتطلب شكلاً هندسياً."],
       source: "none",
     };
   }
-  const composed = composeFigureFromGeometryDescription(desc, figureId, notation);
+  const composed = composeFigureFromGeometryDescription(cleanDesc, figureId, notation);
   if (composed.figure && composed.warnings.length === 0) {
     return { ...finalizeVerifiedFigure(composed.figure, []), source: "compositor" };
   }
-  const legacy = matchOptionalGeometryFigureFromArabicDescription(desc, figureId, notation);
-  if (legacy && isFigureFaithfulToPrompt(legacy, desc)) {
+  const legacy = matchOptionalGeometryFigureFromArabicDescription(cleanDesc, figureId, notation);
+  if (legacy && isFigureFaithfulToPrompt(legacy, cleanDesc)) {
     return { ...finalizeVerifiedFigure(legacy, composed.figure ? composed.warnings : []), source: "catalog" };
   }
   if (composed.figure) {

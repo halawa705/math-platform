@@ -59,7 +59,7 @@ export function splitAngleFanClauses(rawDescription: string): string[] {
       "؛"
     )
     .replace(
-      /\s+و(?=\s*(?:ق\s*\(|m\s*\(|∠))/g,
+      /(?:\s+|(?<=[°0-9٠-٩\)]))و(?=\s*(?:ق\s*\(|m\s*\(|∠))/g,
       " ؛ "
     );
 

@@ -122,23 +122,36 @@ export function sanitizeNotebookLMCitationsAndLatex(
 
 export function healFourRaysHallucination(text: string): string {
   if (!text) return "";
-  return text
+  let res = text
     .replace(
-      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([A-Za-z]|[أ-ي]ـ?)[\s\S]*?)(?:\\+vec\{([A-Za-z])E\}|([A-Za-z])E)\s*(?:⊥|\\+perp|عمودي\s*على)\s*(?:\\+vec\{([A-Za-z])A\}|([A-Za-z])A)/gi,
-      (m, prefix, v, r1a, r1b, r2a, r2b) => `${prefix}\\vec{${r1a || r1b}D} ⊥ \\vec{${r2a || r2b}A}`
+      /(?:(?:أربعة|اربعة|4|٤)?\s*أشعة\s+تخرج\s+من\s+(?:النقطة\s+)?([A-Za-z]|[أ-ي]ـ?)[\s\S]*?)?(?:\\+vec\{([A-Za-z])\s*E\}|([A-Za-z])\s*E)\s*(?:⊥|\\+perp|عمودي\s*على)\s*(?:\\+vec\{([A-Za-z])\s*A\}|([A-Za-z])\s*A)(?=[\s\S]*?(?:CMD|C\s*M\s*D|جـ\s*م\s*د))/gi,
+      (m, v, r1a, r1b, r2a, r2b) => {
+        const u = r1a || r1b;
+        const w = r2a || r2b;
+        const left = r1a ? `\\vec{${u}D}` : `${u}D`;
+        const right = r2a ? `\\vec{${w}A}` : `${w}A`;
+        return `${left} ⊥ ${right}`;
+      }
     )
     .replace(
-      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([A-Za-z]|[أ-ي]ـ?)[\s\S]*?)(?:\\+vec\{([A-Za-z])A\}|([A-Za-z])A)\s*(?:⊥|\\+perp|عمودي\s*على)\s*(?:\\+vec\{([A-Za-z])E\}|([A-Za-z])E)/gi,
-      (m, prefix, v, r1a, r1b, r2a, r2b) => `${prefix}\\vec{${r1a || r1b}A} ⊥ \\vec{${r2a || r2b}D}`
+      /(?:(?:أربعة|اربعة|4|٤)?\s*أشعة\s+تخرج\s+من\s+(?:النقطة\s+)?([A-Za-z]|[أ-ي]ـ?)[\s\S]*?)?(?:\\+vec\{([A-Za-z])\s*A\}|([A-Za-z])\s*A)\s*(?:⊥|\\+perp|عمودي\s*على)\s*(?:\\+vec\{([A-Za-z])\s*E\}|([A-Za-z])\s*E)(?=[\s\S]*?(?:CMD|C\s*M\s*D|جـ\s*م\s*د))/gi,
+      (m, v, r1a, r1b, r2a, r2b) => {
+        const u = r1a || r1b;
+        const w = r2a || r2b;
+        const left = r1a ? `\\vec{${u}A}` : `${u}A`;
+        const right = r2a ? `\\vec{${w}D}` : `${w}D`;
+        return `${left} ⊥ ${right}`;
+      }
     )
     .replace(
-      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([أ-ي]ـ?)[\s\S]*?)(?:الشعاع\s+)?([أ-ي]ـ?)\s*هـ\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(?:الشعاع\s+)?([أ-ي]ـ?)\s*أ/gi,
-      "$1الشعاع $3 د ⊥ الشعاع $4 أ"
+      /(?:الشعاع\s+)?([أ-ي]ـ?)\s*هـ\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(?:الشعاع\s+)?([أ-ي]ـ?)\s*أ(?=[\s\S]*?(?:CMD|C\s*M\s*D|جـ\s*م\s*د))/gi,
+      "الشعاع $1 د ⊥ الشعاع $2 أ"
     )
     .replace(
-      /(أربعة\s*أشعة\s*تخرج\s*من\s*النقطة\s*([أ-ي]ـ?)[\s\S]*?)(?:الشعاع\s+)?([أ-ي]ـ?)\s*أ\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(?:الشعاع\s+)?([أ-ي]ـ?)\s*هـ/gi,
-      "$1الشعاع $3 أ ⊥ الشعاع $4 د"
+      /(?:الشعاع\s+)?([أ-ي]ـ?)\s*أ\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(?:الشعاع\s+)?([أ-ي]ـ?)\s*هـ(?=[\s\S]*?(?:CMD|C\s*M\s*D|جـ\s*م\s*د))/gi,
+      "الشعاع $1 أ ⊥ الشعاع $2 د"
     );
+  return res;
 }
 
 /**

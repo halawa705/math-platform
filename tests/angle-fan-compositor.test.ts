@@ -191,12 +191,19 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
 
     // السؤال 7: أربعة أشعة تخرج من النقطة M + تعامد MA ⊥ ME + زاويتان 100° و 130° + المطلوب CMD (يجب عدم كتابة 40°)
     const q7 =
-      "في الشكل المقابل، أربعة أشعة تخرج من النقطة M. إذا كان MA ⊥ ME. وكان m(∠BMC) = 100° و m(∠AMB) = 130°، فأوجد بالبرهان الهندسي m(∠CMD).";
+      "في الشكل المقابل، أربعة أشعة تخرج من النقطة M. إذا كان \\vec{MA} \\perp \\vec{ME}. وكان m(\\angle BMC) = 100^\\circ و m(\\angle AMB) = 130^\\circ، فأوجد بالبرهان الهندسي m(\\angle CMD).";
     const d7 = matchGeometryWithDiagnostics(q7, "q7_test", "english");
     expect(d7.source).toBe("compositor");
     expect(d7.figure).toBeDefined();
-    expect(d7.figure!.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["M", "A", "E", "B", "C", "D"]));
-    expect(d7.figure!.segments.length).toBe(5);
+    expect(d7.figure!.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["M", "A", "D", "B", "C"]));
+    expect(d7.figure!.segments.length).toBe(4);
+    const angles = d7.figure!.angles;
+    expect(angles.length).toBe(3);
+    const rightAng = angles.find((a) => a.isRightAngle);
+    expect(rightAng).toBeDefined();
+    expect(angles.some((a) => a.degreesLabel === "100°")).toBe(true);
+    expect(angles.some((a) => a.degreesLabel === "130°")).toBe(true);
+    expect(angles.some((a) => a.degreesLabel === "40°")).toBe(false); // حجب الحل
     const svg7 = projectGeometryFigureToSVGMarkup(d7.figure!, { numeralMode: "western" });
     expect(svg7).toContain("<polygon");
     expect(svg7).toContain("100°");

@@ -150,7 +150,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠ب) = 65° أو ق(∠أ ب جـ) = 90°
   const angleMatches = clean.matchAll(
-    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9.xسصy+\-\s]+?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)]|$|\n)/gi
+    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9.xسصy+\-\s]+?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
