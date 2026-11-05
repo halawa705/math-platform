@@ -1,0 +1,542 @@
+[
+  {
+    "id": "p4-01",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "من النموذج الشريطي المقابل: قيمة a =",
+    "geometryRaw": "نموذج شريطي: الكل = a ؛ الجزء الأول = 214 ؛ الجزء الثاني = 250",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "214",
+      "250"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-02",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "من النموذج الشريطي المقابل: قيمة المجهول c =",
+    "geometryRaw": "نموذج شريطي: الكل = 900 ؛ الجزء الأول = 460 ؛ الجزء الثاني = c",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "900",
+      "460"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-03",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أي من المعادلات التالية تُعبّر عن النموذج الشريطي المقابل؟",
+    "geometryRaw": "نموذج شريطي: الكل = x ؛ الجزء الأول = 200 ؛ الجزء الثاني = 300",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "200",
+      "300"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-04",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "من النموذج الشريطي المقابل: قيمة المجهول b =",
+    "geometryRaw": "نموذج شريطي: الكل = 13,000 ؛ الجزء الأول = b ؛ الجزء الثاني = 5,300",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "13000",
+      "5300"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-05",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أوجد قيمة المجهول في النموذج الشريطي (1)",
+    "geometryRaw": "نموذج شريطي: الكل = 9,870 ؛ الجزء الأول = 5,100 ؛ الجزء الثاني = a",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "9870",
+      "5100"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-06",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أوجد قيمة المجهول في النموذج الشريطي (2)",
+    "geometryRaw": "نموذج شريطي: الكل = m ؛ الجزء الأول = 500 ؛ الجزء الثاني = 6,000",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "500",
+      "6000"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-07",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أوجد قيمة المجهول في النموذج الشريطي (3)",
+    "geometryRaw": "نموذج شريطي: الكل = 985 ؛ الجزء الأول = d ؛ الجزء الثاني = 285",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "985",
+      "285"
+    ],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-08",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قيمة الرمز c في المعادلة: 1,600 = 3,400 – c تساوي",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-09",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "إذا كان: 300 = 125 + y فإن قيمة y =",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-10",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "في المعادلة: 950 – a = 750 احسب قيمة a",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "أسئلة امتحانات الإدارات (صورة 1)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-11",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (أ)",
+    "geometryRaw": "نموذج شريطي: الكل = 340 سم ؛ الجزء الأول = ... م ؛ الجزء الثاني = ... سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "340"
+    ],
+    "source": "كتاب الصف الرابع — مثال 4 أطوال (صورة 2)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-12",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (ب)",
+    "geometryRaw": "نموذج شريطي: الكل = 5,816 م ؛ الجزء الأول = ... كم ؛ الجزء الثاني = ... م",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5816"
+    ],
+    "source": "كتاب الصف الرابع — مثال 4 أطوال (صورة 2)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-13",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (ج)",
+    "geometryRaw": "نموذج شريطي: الكل = ... سم ؛ الجزء الأول = 6 م ؛ الجزء الثاني = 75 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "75"
+    ],
+    "source": "كتاب الصف الرابع — مثال 4 أطوال (صورة 2)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-14",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (أ)",
+    "geometryRaw": "نموذج شريطي: الكل = 4,687 جم ؛ الجزء الأول = ... كجم ؛ الجزء الثاني = ... جم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4687"
+    ],
+    "source": "كتاب الصف الرابع — الوحدة 3 كتل (صورة 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-15",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (ب)",
+    "geometryRaw": "نموذج شريطي: الكل = 50,850 كجم ؛ الجزء الأول = ... طنًا ؛ الجزء الثاني = ... كجم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "50850"
+    ],
+    "source": "كتاب الصف الرابع — الوحدة 3 كتل (صورة 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-16",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (ج)",
+    "geometryRaw": "نموذج شريطي: الكل = ... جم ؛ الجزء الأول = 6 كجم ؛ الجزء الثاني = 313 جم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "313"
+    ],
+    "source": "كتاب الصف الرابع — الوحدة 3 كتل (صورة 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-17",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "إذا كان: 5,000 جم = 2 كجم + b أوجد قيمة b بالجرام",
+    "geometryRaw": "نموذج شريطي: الكل = 5,000 جم ؛ الجزء الأول = 2 كجم ؛ الجزء الثاني = b",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5000",
+      "2"
+    ],
+    "source": "كتاب الصف الرابع — الوحدة 3 كتل (صورة 3)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-18",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (أ)",
+    "geometryRaw": "نموذج شريطي: الكل = 7,209 ملل ؛ الجزء الأول = ... لترات ؛ الجزء الثاني = ... ملل",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7209"
+    ],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-19",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (ب)",
+    "geometryRaw": "نموذج شريطي: الكل = 30,517 ملل ؛ الجزء الأول = ... لترًا ؛ الجزء الثاني = ... ملل",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "30517"
+    ],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-20",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل باستخدام النماذج الشريطية (ج)",
+    "geometryRaw": "نموذج شريطي: الكل = ... ملل ؛ الجزء الأول = 8 لترات ؛ الجزء الثاني = 35 ملل",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "35"
+    ],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-21",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 9,425 ملل = ... لترات و ... ملل",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-22",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 18 لترًا + 22 ملل = ... ملل",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-23",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 15 لترًا ونصف = ... ملل",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-24",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 7 لترات – 2,600 ملل = ... ملل",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب الصف الرابع — المفهوم الأول الدرس 3 سعات (صورة 4)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-25",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 3 أسابيع = ... يومًا",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-26",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 10 دقائق = ... ثانية",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-27",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: يومان = ... ساعة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-28",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 6 ساعات = ... دقيقة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-29",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 3 ساعات = ... دقيقة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-30",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 7 دقائق = ... ثانية",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-31",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: أسبوعان = ... يومًا",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-32",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 10 أيام = ... ساعة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-33",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 48 ساعة = ... يوم",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-34",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 28 يومًا = ... أسابيع",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-35",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 120 دقيقة = ... ساعة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-36",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 180 ثانية = ... دقائق",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-37",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: أسبوع ويومان = ... أيام",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-38",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: ساعتان ونصف = ... دقيقة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-39",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: يوم و6 ساعات = ... ساعة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-40",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 5 أسابيع و3 أيام = ... يومًا",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-41",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "أكمل ما يلي: 8 ساعات و50 دقيقة = ... دقيقة",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-42",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 10 أيام ☐ أسبوعين",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-43",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 80 ساعة ☐ 3 أيام",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-44",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 100 دقيقة ☐ ساعتين",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p4-45",
+    "gradeId": "primary-4",
+    "branchId": "numbers",
+    "problemText": "قارن باستخدام (>) أو (<) أو (=): 84 ثانية ☐ دقيقتين",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "تدريبات سلاح التلميذ — الوقت (صورة 5)",
+    "humanVerdict": "unreviewed"
+  }
+]

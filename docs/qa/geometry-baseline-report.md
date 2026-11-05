@@ -1,30 +1,30 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية (المرحلة 0)
 
-> تاريخ التوليد: 2026-11-05T20:19:06.291Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-05T20:29:12.925Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر وليست حكماً نهائياً**. الدقة الحقيقية لا تُحسب إلا من خانة `humanVerdict` بعد المراجعة البشرية.
 
 ## الملخص
 
-- إجمالي الحالات: **225**
-- أنتج النظام شكلاً في: **199** (88.4%)
-- شكل بلا أي علامة خطر آلية: **21** (9.3%)
-- شكل بعلامات خطر: **178** (79.1%)
+- إجمالي الحالات: **274**
+- أنتج النظام شكلاً في: **220** (80.3%)
+- شكل بلا أي علامة خطر آلية: **38** (13.9%)
+- شكل بعلامات خطر: **182** (66.4%)
 - 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها: **0**
 - شكل مفقود لمسألة تستحق شكلاً: **25**
-- رفض صحيح (لا شكل): **1**
+- رفض صحيح (لا شكل): **29**
 - الدقة المُثبتة بشرياً: **لم تُراجَع أي حالة بعد**
 
 ## علامات الخطر
 
 | العلامة | العدد |
 |---|---|
-| `from_fixed_catalog` | 148 |
-| `missing_given_on_figure` | 115 |
+| `from_fixed_catalog` | 152 |
+| `missing_given_on_figure` | 119 |
 | `compositor_warnings` | 25 |
 | `verification_error` | 22 |
-| `leaked_number_not_in_text` | 6 |
+| `leaked_number_not_in_text` | 10 |
 
 ### حسب الصف
 
@@ -33,13 +33,17 @@
 | prep-1 | 93 | 1 | 82 | 0 | 10 | 0 |
 | prep-2 | 89 | 1 | 79 | 0 | 9 | 0 |
 | prep-3 | 23 | 4 | 12 | 0 | 6 | 1 |
+| primary-4 | 45 | 17 | 0 | 0 | 0 | 28 |
+| primary-6 | 4 | 0 | 4 | 0 | 0 | 0 |
 | unassigned | 20 | 15 | 5 | 0 | 0 | 0 |
 
 ### حسب الفرع
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
 |---|---|---|---|---|---|---|
+| numbers | 45 | 17 | 0 | 0 | 0 | 28 |
 | plane_geometry | 225 | 21 | 178 | 0 | 25 | 1 |
+| statistics_probability | 4 | 0 | 4 | 0 | 0 | 0 |
 
 ## الحالات التي تستحق الفحص أولاً
 
@@ -243,6 +247,10 @@
 | prep-3-prep-grade3-line-equation-catalog-8 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 9 | — |
 | prep-3-prep-grade3-line-equation-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-prep-grade3-line-equation-catalog-11 | figure_flagged | compositor_warnings، from_fixed_catalog | catalog | — | — |
+| p6-probe-dot | figure_flagged | missing_given_on_figure، leaked_number_not_in_text، from_fixed_catalog | catalog | 3، 4، 7، 2، 5، 1 | 0، 10، 20، 30، 40، 50، 60 |
+| p6-probe-bar | figure_flagged | missing_given_on_figure، leaked_number_not_in_text، from_fixed_catalog | catalog | 12، 20، 9 | 0، 1، 2، 3، 4، 5، 6 |
+| p6-probe-histogram | figure_flagged | missing_given_on_figure، leaked_number_not_in_text، from_fixed_catalog | catalog | 9، 19، 20، 29، 3، 5 | 2، 4، 6، 51، 60، 61، 70، 71، 80، 81، 90، 91، 100 |
+| p6-probe-boxplot | figure_flagged | missing_given_on_figure، leaked_number_not_in_text، from_fixed_catalog | catalog | 12، 26، 31 | 5، 10، 25، 30، 35، 40، 45، 50 |
 | seed-07-bisector | figure_flagged | missing_given_on_figure | compositor | 10 | — |
 | seed-08-median | figure_flagged | missing_given_on_figure | compositor | 8 | — |
 | seed-18-algebraic-angle | figure_flagged | missing_given_on_figure | compositor | 2، 3 | — |

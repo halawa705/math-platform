@@ -260,7 +260,8 @@ export function combineProblemAndTagGeometryContext(
 
   // إذا وُجد وسم رسم، ندمج فقراته غير المكررة بعد تنظيف الأقواس
   if (effectiveTag) {
-    const cleanTag = convertGeometryLatexToPlainText(effectiveTag);
+    // فواصل الآلاف (13,000) ليست فواصل حقائق: تُحمى قبل التقسيم وإلا تحوّل 13,000 إلى حقيقتين «13» و«000».
+    const cleanTag = convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
     const tagClauses = cleanTag
       .split(/\s*[;؛\n،,]+\s*/)
       .map((c) => c.replace(/[\[\]]/g, "").trim())

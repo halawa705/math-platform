@@ -11,6 +11,9 @@ import { extractNumbersFromProblemText, extractNumbersShownOnFigure } from "./ba
 
 export const MODULE_ID_BASELINE_CASE_OUTCOME_CLASSIFIER = "baseline_case_outcome_classifier" as const;
 
+/** فروع تبني شكلها من حقائق النص نفسها (لا قوالب ثابتة)، فلا تُعلَّم «from_fixed_catalog». */
+const DATA_DRIVEN_BRANCH_IDS: ReadonlySet<string> = new Set(["primary_bar_model", "primary_analog_clock"]);
+
 export type BaselineOutcomeKind =
   | "true_negative_no_figure"
   | "false_figure_on_no_figure_case"
@@ -76,7 +79,7 @@ export function classifyBaselineCase(testCase: GoldenCorpusCase): BaselineCaseRe
       details.push(...errors.map((e) => e.message));
     }
     if (diag.warnings.length > 0) flags.push("compositor_warnings");
-    if (diag.source === "catalog") flags.push("from_fixed_catalog");
+    if (diag.source === "catalog" && !DATA_DRIVEN_BRANCH_IDS.has(figure.branchId)) flags.push("from_fixed_catalog");
 
     const outcome: BaselineOutcomeKind =
       testCase.expectedOutcome === "no_figure" ? "false_figure_on_no_figure_case" : flags.length > 0 ? "figure_flagged" : "figure_clean";

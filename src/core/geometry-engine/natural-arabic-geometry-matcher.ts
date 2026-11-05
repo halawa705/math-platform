@@ -15,6 +15,7 @@ import {
 } from "./verification/geometry-figure-fidelity-gate";
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
+import { matchPrimaryGrade4VisualModelsFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-visual-models-catalog";
 import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
 import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog";
 import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog";
@@ -97,6 +98,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   }
 
   const stageRes =
+    matchPrimaryGrade4VisualModelsFigure(desc, figureId, notationLanguage) ??
     matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage) ??
     matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage) ??
     matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage) ??

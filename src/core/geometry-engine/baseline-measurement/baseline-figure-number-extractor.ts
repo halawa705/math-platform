@@ -14,7 +14,7 @@ function normalizeNumberToken(raw: string): string {
 
 /** كل الأعداد الواردة في النص (بعد توحيد الأرقام المشرقية). */
 export function extractNumbersFromProblemText(text: string): Set<string> {
-  const western = toWesternNumeralsSSOT(text).replace(/٫/g, ".");
+  const western = toWesternNumeralsSSOT(text).replace(/٫/g, ".").replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
   const found = western.match(/\d+(?:\.\d+)?/g) ?? [];
   return new Set(found.map(normalizeNumberToken));
 }
@@ -32,5 +32,16 @@ export function extractNumbersShownOnFigure(figure: CanonicalGeometryFigureIR): 
     if (ang.degreesLabel !== undefined) addIfPureNumber(ang.degreesLabel);
     else if (ang.degrees !== undefined && !ang.isRightAngle) addIfPureNumber(ang.degrees);
   }
+  addNumbersFromRawSvgText(figure.rawSvgMarkup, shown);
   return shown;
+}
+
+/** الأعداد المطبوعة داخل SVG جاهز (إحصاء/نماذج شريطية)، مع تجاهل أثاث الرسم الثابت (data-furniture) كأرقام قرص الساعة. */
+function addNumbersFromRawSvgText(svg: string | undefined, into: Set<string>): void {
+  if (!svg) return;
+  for (const m of svg.matchAll(/<text([^>]*)>([^<]*)<\/text>/g)) {
+    if (m[1].includes("data-furniture")) continue;
+    const western = toWesternNumeralsSSOT(m[2]).replace(/,/g, "");
+    for (const n of western.match(/\d+(?:\.\d+)?/g) ?? []) into.add(normalizeNumberToken(n));
+  }
 }

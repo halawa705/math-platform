@@ -1,0 +1,46 @@
+[
+  {
+    "id": "p6-probe-dot",
+    "gradeId": "primary-6",
+    "branchId": "statistics_probability",
+    "problemText": "المخطط التالي يمثل عدد الكتب التي قرأها تلاميذ الفصل.",
+    "geometryRaw": "مخطط التمثيل بالنقاط: القيم 3 ، 4 ، 7 ؛ التكرار 2 ، 5 ، 1",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": ["3", "4", "7", "2", "5", "1"],
+    "source": "حالة فحص مؤلفة (ليست من كتاب) لكشف القوالب الثابتة — بيانات غير موجودة في أي قالب",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p6-probe-bar",
+    "gradeId": "primary-6",
+    "branchId": "statistics_probability",
+    "problemText": "التمثيل البياني بالأعمدة يوضح عدد الكتب في المكتبة.",
+    "geometryRaw": "تمثيل بياني بالأعمدة: علوم 12 ؛ رياضيات 20 ؛ لغة عربية 9",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": ["12", "20", "9"],
+    "source": "حالة فحص مؤلفة (ليست من كتاب) لكشف القوالب الثابتة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p6-probe-histogram",
+    "gradeId": "primary-6",
+    "branchId": "statistics_probability",
+    "problemText": "المدرج التكراري يمثل درجات الاختبار.",
+    "geometryRaw": "مدرج تكراري: الفترات 0-9 ، 10-19 ، 20-29 ؛ التكرار 3 ، 8 ، 5",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": ["0", "9", "10", "19", "20", "29", "3", "8", "5"],
+    "source": "حالة فحص مؤلفة (ليست من كتاب) لكشف القوالب الثابتة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p6-probe-boxplot",
+    "gradeId": "primary-6",
+    "branchId": "statistics_probability",
+    "problemText": "مخطط الصندوق يمثل أطوال مجموعة من النباتات.",
+    "geometryRaw": "مخطط الصندوق: الحد الأدنى 12 ؛ الربيع الأول 15 ؛ الوسيط 20 ؛ الربيع الثالث 26 ؛ الحد الأقصى 31",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": ["12", "15", "20", "26", "31"],
+    "source": "حالة فحص مؤلفة (ليست من كتاب) لكشف القوالب الثابتة",
+    "humanVerdict": "unreviewed"
+  }
+]

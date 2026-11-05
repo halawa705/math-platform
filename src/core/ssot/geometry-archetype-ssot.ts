@@ -14,7 +14,8 @@ export type GeometryFamilyId =
   | "circle_family"
   | "analytic_coordinate_family"
   | "solid3d_mechanics_family"
-  | "statistics_family";
+  | "statistics_family"
+  | "primary_visual_models_family";
 
 export type TriangleDerivedBranchId =
   | "triangle_base_general"
@@ -56,7 +57,10 @@ export type StatisticsDerivedBranchId =
   | "stats_boxplot_and_quartiles"
   | "stats_bar_chart";
 
+export type PrimaryVisualModelsBranchId = "primary_bar_model" | "primary_analog_clock";
+
 export type GeometryCanonicalBranchId =
+  | PrimaryVisualModelsBranchId
   | TriangleDerivedBranchId
   | CircleDerivedBranchId
   | QuadrilateralDerivedBranchId
