@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file studio-visual-geometry-lab-tab.tsx
@@ -73,6 +73,51 @@ const CURRICULUM_QUICK_SAMPLES = [
     id: "line_eq_rhombus",
     label: "هندسة 3ع: معين OADB ومعادلة OD",
     sampleText: "النقط O(0,0) ، A(2,6) ، B(6,2) ، D رؤوس معين أوجد معادلة OD و m(∠ DOH)",
+  },
+  {
+    id: "g4_rect_area_perim",
+    label: "هندسة 4ب: مستطيل لحساب المساحة والمحيط",
+    sampleText: "مستطيل أبعاده 12 سم و 4 سم لحساب المحيط والمساحة",
+  },
+  {
+    id: "g4_square_rotated",
+    label: "هندسة 4ب: مربع مائل 8 سم",
+    sampleText: "مربع مائل طول ضلعه 8 سم لحساب المحيط",
+  },
+  {
+    id: "g4_unknown_rect_perimeter",
+    label: "هندسة 4ب: مجهول x بمحيط المستطيل 24 سم",
+    sampleText: "أوجد طول الضلع المجهول x في المستطيل الذي محيطه 24 سم وطوله 8 سم",
+  },
+  {
+    id: "g4_unknown_rect_area",
+    label: "هندسة 4ب: مجهول x بمساحة المستطيل 30 سم²",
+    sampleText: "أوجد طول الضلع المجهول x في المستطيل الذي مساحته 30 سم² وعرضه 5 سم",
+  },
+  {
+    id: "g4_unknown_square_perimeter",
+    label: "هندسة 4ب: مجهول y بمحيط المربع 28 سم",
+    sampleText: "أوجد طول الضلع المجهول y في المربع الذي محيطه 28 سم",
+  },
+  {
+    id: "g4_composite_l_shape",
+    label: "هندسة 4ب: شكل مركب حرف L بمجاهيل a و b",
+    sampleText: "شكل مركب حرف L أبعاده 8 سم و 9 سم و 3 سم و 1 سم والضلعان المجهولان a و b",
+  },
+  {
+    id: "g4_composite_t_shape",
+    label: "هندسة 4ب: شكل مركب حرف T (11 سم)",
+    sampleText: "شكل مركب حرف T عرضه العلوي 11 سم وارتفاع رأسه 2 سم وساقه 5 سم و 5 سم لحساب المحيط والمساحة",
+  },
+  {
+    id: "g4_composite_arch_u",
+    label: "هندسة 4ب: قوس مجوف U مقلوب (10 كم)",
+    sampleText: "شكل قوس مجوف U مقلوب عرضه العلوي 10 كم وارتفاعه 8 كم وتجويف وسطي مجهول b وقاعدتان 4 كم ومجهول a",
+  },
+  {
+    id: "g4_composite_adjacent_rects",
+    label: "هندسة 4ب: مستطيلان ملتصقان (شكل الدرج)",
+    sampleText: "شكل مركب من مستطيلين ملتصقين أبعادهما 5 سم و 5 سم و 3 سم و 3 سم لحساب المساحة والمحيط",
   },
 ] as const;
 

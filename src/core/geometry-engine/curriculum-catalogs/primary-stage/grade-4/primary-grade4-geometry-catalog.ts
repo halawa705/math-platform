@@ -3,19 +3,23 @@
  * @description السجل المركزي لأشكال ومفاهيم الهندسة القياسية للصف الرابع الابتدائي:
  * - الخطوط والقطع والأشعة (متوازية، متعامدة، متقاطعة).
  * - تصنيف الزوايا (حادة، قائمة، منفرجة، مستقيمة).
- * - تصنيف المثلثات والأشكال الرباعية وحساب المحيط والمساحة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 190 سطراً).
+ * - حساب المحيط والمساحة للمستطيل والمربع واستخراج الأبعاد الحقيقية والوحدات.
+ * - إيجاد البعد المجهول في المستطيل والمربع (بالمحيط أو المساحة).
+ * - تركيب الأشكال الهندسية والأشكال المركبة (L، T، U مقلوب، الدرج، والمقتطع).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
  */
 
 import type {
   CanonicalGeometryFigureIR,
-  CanonicalSegmentNode,
   CanonicalVertexNode,
 } from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
   type MathNotationLanguage,
 } from "../../../../ssot/numeral-and-unit-ssot";
+import { matchGrade4PerimeterAreaFigure } from "./primary-grade4-perimeter-area-builder";
+import { matchGrade4UnknownDimensionFigure } from "./primary-grade4-unknown-dimension-builder";
+import { matchGrade4CompositeFigure } from "./primary-grade4-composite-shapes-builder";
 
 export const MODULE_ID_PRIMARY_GRADE4_GEOMETRY_CATALOG =
   "primary_grade4_geometry_catalog" as const;
@@ -108,41 +112,6 @@ function buildGrade4AngleTypeFigure(
 }
 
 /**
- * مستطيل أو مربع لحساب المحيط والمساحة مع الأبعاد
- */
-function buildGrade4PerimeterAreaFigure(
-  shape: "rectangle" | "square",
-  opts: Grade4FigureBuildOptions
-): CanonicalGeometryFigureIR {
-  const notation = opts.notationLanguage || "english";
-  const w = shape === "rectangle" ? 8 : 6;
-  const h = shape === "rectangle" ? 5 : 6;
-
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 1, y: h + 1 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: w + 1, y: h + 1 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: w + 1, y: 1 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 1, y: 1 } };
-
-  const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: w, unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: h, unit: "سم" } },
-    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id },
-    { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
-  ];
-
-  return {
-    figureId: opts.figureId,
-    familyId: "quadrilateral_family",
-    branchId: "quad_rectangle_square_rhombus",
-    titleArabic: `${shape === "rectangle" ? "مستطيل" : "مربع"} لحساب المحيط والمساحة`,
-    notationLanguage: notation,
-    vertices: [vA, vB, vC, vD],
-    segments,
-    angles: [{ id: `${opts.figureId}_aD`, vertexId: vD.id, arm1VertexId: vA.id, arm2VertexId: vC.id, isRightAngle: true }],
-  };
-}
-
-/**
  * مطابقة الأسئلة والأوصاف الخاصة بالصف الرابع الابتدائي
  */
 export function matchPrimaryGrade4GeometryFigure(
@@ -153,12 +122,27 @@ export function matchPrimaryGrade4GeometryFigure(
   const d = description.trim();
   if (!d) return undefined;
 
+  // 1. الأشكال المركبة (L, T, U مقلوب، مستطيلان ملتصقان، مقتطع)
+  const compositeRes = matchGrade4CompositeFigure(d, { figureId, notationLanguage });
+  if (compositeRes) return compositeRes;
+
+  // 2. إيجاد البعد المجهول (بالمحيط أو المساحة)
+  const unknownRes = matchGrade4UnknownDimensionFigure(d, { figureId, notationLanguage });
+  if (unknownRes) return unknownRes;
+
+  // 3. المحيط والمساحة للمستطيل والمربع
+  const perimeterAreaRes = matchGrade4PerimeterAreaFigure(d, { figureId, notationLanguage });
+  if (perimeterAreaRes) return perimeterAreaRes;
+
+  // 4. الخطوط المتعامدة والمتوازية
   if (/متعامد|تعامد|قائمة/i.test(d) && /مستقيم|ضلع/i.test(d)) {
     return buildGrade4LinesRelationFigure("perpendicular", { figureId, notationLanguage });
   }
   if (/متوازي|توازي/i.test(d) && /مستقيم|خطين/i.test(d)) {
     return buildGrade4LinesRelationFigure("parallel", { figureId, notationLanguage });
   }
+
+  // 5. أنواع الزوايا
   if (/زاوية\s*حادة/i.test(d)) {
     return buildGrade4AngleTypeFigure("acute", { figureId, notationLanguage });
   }
@@ -167,12 +151,6 @@ export function matchPrimaryGrade4GeometryFigure(
   }
   if (/زاوية\s*قائمة/i.test(d)) {
     return buildGrade4AngleTypeFigure("right", { figureId, notationLanguage });
-  }
-  if (/محيط|مساحة/i.test(d) && /مستطيل/i.test(d)) {
-    return buildGrade4PerimeterAreaFigure("rectangle", { figureId, notationLanguage });
-  }
-  if (/محيط|مساحة/i.test(d) && /مربع/i.test(d)) {
-    return buildGrade4PerimeterAreaFigure("square", { figureId, notationLanguage });
   }
 
   return undefined;

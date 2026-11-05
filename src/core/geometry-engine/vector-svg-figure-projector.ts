@@ -192,6 +192,24 @@ export function projectGeometryFigureToSVGMarkup(
 
   const surfaceTintsSvg = projectGeometrySurfaceShadingSVGMarkup({ figure, vertexMap });
 
+  // شارات النصوص التوضيحية داخل مساحة الشكل (مثل: المحيط = 24 سم أو المساحة = 30 سم²)
+  let interiorBadgesSvg = "";
+  if (figure.interiorBadges && figure.interiorBadges.length > 0) {
+    interiorBadgesSvg = figure.interiorBadges
+      .map((b) => {
+        const { sx, sy } = toScreen(b.position.x, b.position.y);
+        const localizedText = localizeFigureLabelText(b.text, notation, numeralMode);
+        const badgeW = Math.max(localizedText.length * 6.2 + 14, 48);
+        const badgeH = 18;
+        const fontSz = b.fontSize ?? 8.5;
+        const strokeTint = b.badgeType === "area" ? "#0D9488" : b.badgeType === "perimeter" ? "#4F46E5" : "#64748B";
+        const bgTint = b.badgeType === "area" ? "#F0FDFA" : b.badgeType === "perimeter" ? "#EEF2FF" : "#F8FAFC";
+
+        return `<rect x="${(sx - badgeW / 2).toFixed(1)}" y="${(sy - badgeH / 2).toFixed(1)}" width="${badgeW.toFixed(1)}" height="${badgeH}" rx="4" fill="${bgTint}" stroke="${strokeTint}" stroke-width="0.8" opacity="0.95" /><text x="${sx.toFixed(1)}" y="${(sy + 3.2).toFixed(1)}" text-anchor="middle" font-size="${fontSz}" font-weight="700" font-family="system-ui, sans-serif" fill="${strokeTint}">${localizedText}</text>`;
+      })
+      .join("");
+  }
+
   const anglesSvg = projectGeometryAnglesSVGMarkup({
     angles: figure.angles,
     vertexMap,
@@ -211,10 +229,14 @@ export function projectGeometryFigureToSVGMarkup(
 
   const verticesSvg = Array.from(vertexMap.values())
     .map((v) => {
+      const cleanLabel = (v.label || "").trim();
+      const isRayTip = v.hideVertexDot || (arrowTipVertexIds.has(v.id) && (outgoingCount.get(v.id) ?? 0) <= 0);
+      if (v.hideVertexDot && !cleanLabel) {
+        return "";
+      }
       const vx = v.screen.sx - centerSx;
       const vy = v.screen.sy - centerSy;
       const vLen = Math.hypot(vx, vy) || 1;
-      const isRayTip = v.hideVertexDot || (arrowTipVertexIds.has(v.id) && (outgoingCount.get(v.id) ?? 0) <= 0);
       const labelOffset = isRayTip ? 11 : 9;
       const labelX = v.screen.sx + (vx / vLen) * labelOffset;
       const labelY = v.screen.sy + (vy / vLen) * labelOffset + 3;
@@ -223,10 +245,14 @@ export function projectGeometryFigureToSVGMarkup(
         ? ""
         : `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" /><circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" />`;
 
-      return `${dotsSvg}<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${localizeGeometricVertexLabelSSOT(v.label, notation)}</text>`;
+      const textSvg = cleanLabel
+        ? `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}">${localizeGeometricVertexLabelSSOT(cleanLabel, notation)}</text>`
+        : "";
+
+      return `${dotsSvg}${textSvg}`;
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${surfaceTintsSvg}${segmentsSvg}${anglesSvg}${verticesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${surfaceTintsSvg}${segmentsSvg}${interiorBadgesSvg}${anglesSvg}${verticesSvg}</svg>`;
 }
 

@@ -172,6 +172,7 @@ const TOPOLOGY_LOCKED_BRANCH_IDS: ReadonlySet<string> = new Set([
   "triangle_thales_parallel_line",
   "quad_hourglass_butterfly_similarity",
   "triangle_euclid_right_altitude",
+  "quad_composite_rectilinear_shape",
 ]);
 
 /** يصقل الشكل ليطابق معطياته ثم يضيف أي مخالفات متبقية كتحذيرات ظاهرة للمعلم (لا إخفاء صامت). */

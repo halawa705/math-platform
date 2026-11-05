@@ -40,7 +40,8 @@ export type QuadrilateralDerivedBranchId =
   | "quad_parallelogram_diagonals"
   | "quad_rectangle_square_rhombus"
   | "quad_trapezoid_with_altitudes"
-  | "quad_hourglass_butterfly_similarity";
+  | "quad_hourglass_butterfly_similarity"
+  | "quad_composite_rectilinear_shape";
 
 export type Solid3DDerivedBranchId =
   | "solid_cube_cuboid_prism"
@@ -92,6 +93,14 @@ export interface CanonicalAngleNode {
   readonly markSymbol?: "arc" | "dot" | "cross";
 }
 
+export interface CanonicalInteriorBadgeNode {
+  readonly id: string;
+  readonly text: string;
+  readonly position: Point2DCoordinate;
+  readonly badgeType?: "perimeter" | "area" | "generic";
+  readonly fontSize?: number;
+}
+
 export interface CanonicalGeometryFigureIR {
   readonly figureId: string;
   readonly familyId: GeometryFamilyId;
@@ -103,4 +112,6 @@ export interface CanonicalGeometryFigureIR {
   readonly angles: readonly CanonicalAngleNode[];
   /** مضلعات صريحة للتظليل (قوائم معرّفات رؤوس). إن غابت يُستعمل التخمين القديم حسب عدد الرؤوس. */
   readonly polygons?: readonly (readonly string[])[];
+  /** شارات ونصوص توضيحية داخل مساحة الشكل (مثل "المحيط = 24 سم" أو "المساحة = 30 سم²"). */
+  readonly interiorBadges?: readonly CanonicalInteriorBadgeNode[];
 }
