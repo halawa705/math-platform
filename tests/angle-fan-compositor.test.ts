@@ -13,6 +13,8 @@ import { verifyGeometryFigure } from "@/core/geometry-engine/verification/geomet
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import { sanitizeNotebookLMCitationsAndLatex } from "@/core/ingestion/notebooklm-citation-latex-sanitizer";
 import { mergeBookletThreeStagesRepliesToPrintableItems } from "@/core/ingestion/notebooklm-booklet-stages-merger";
+import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
+import { combineProblemAndTagGeometryContext } from "@/core/geometry-engine/description-intake/problem-geometry-context-extractor";
 
 const PREP1_ANGLES_ALL_33_DESCRIPTIONS: readonly string[] = [
   "الشعاع جـ أ ⊥ الشعاع جـ ب ; الشعاع جـ د شعاع بينهما ; ق(∠أ جـ د) = 50° ; ق(∠د جـ ب) = 2س°",
@@ -189,25 +191,37 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
     expect(svg6).toContain("130°");
     expect(svg6).not.toContain("65°"); // حجب الحل
 
-    // السؤال 7: أربعة أشعة تخرج من النقطة M + تعامد MA ⊥ ME + زاويتان 100° و 130° + المطلوب CMD (يجب عدم كتابة 40°)
-    const q7 =
-      "في الشكل المقابل، أربعة أشعة تخرج من النقطة M. إذا كان \\vec{MA} \\perp \\vec{ME}. وكان m(\\angle BMC) = 100^\\circ و m(\\angle AMB) = 130^\\circ، فأوجد بالبرهان الهندسي m(\\angle CMD).";
-    const d7 = matchGeometryWithDiagnostics(q7, "q7_test", "english");
-    expect(d7.source).toBe("compositor");
-    expect(d7.figure).toBeDefined();
-    expect(d7.figure!.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["M", "A", "D", "B", "C"]));
-    expect(d7.figure!.segments.length).toBe(4);
-    const angles = d7.figure!.angles;
-    expect(angles.length).toBe(3);
-    const rightAng = angles.find((a) => a.isRightAngle);
-    expect(rightAng).toBeDefined();
-    expect(angles.some((a) => a.degreesLabel === "100°")).toBe(true);
-    expect(angles.some((a) => a.degreesLabel === "130°")).toBe(true);
-    expect(angles.some((a) => a.degreesLabel === "40°")).toBe(false); // حجب الحل
-    const svg7 = projectGeometryFigureToSVGMarkup(d7.figure!, { numeralMode: "western" });
-    expect(svg7).toContain("<polygon");
-    expect(svg7).toContain("100°");
-    expect(svg7).toContain("130°");
-    expect(svg7).not.toContain("40°"); // حجب الحل
+    // اختبار النص الحقيقي الكامل للسؤال 13 كما أرسله المعلم:
+    const userQ13Block = `=== [QUESTION: 13] | النوع: PROOF | الدرس: تابع العلاقات بين الزوايا | الدرجة: 3 ===
+النص: في الشكل المقابل، أربعة أشعة تخرج من النقطة \\(M\\). إذا كان \\(\\vec{MA} \\perp \\vec{ME}\\)، وكان \\(m(\\angle AMB) = 130^\\circ\\) و \\(m(\\angle BMC) = 100^\\circ\\)، فأوجد بالبرهان الهندسي \\(m(\\angle CMD)\\).
+الرسم: [رسم هندسي: أشعة متجمعة حول النقطة M;MA ⊥ ME;m(∠AMB)=130°;m(∠BMC)=100°]
+إجابة_الصحيحة: \\(m(\\angle CMD) = 40^\\circ\\)
+البرهان_والخطوات: \\(\\because \\vec{MA} \\perp \\vec{ME} \\therefore m(\\angle AME) = 90^\\circ\\) | \\(\\because\\) مجموع قياسات الزوايا المتجمعة حول نقطة واحدة يساوي \\(360^\\circ\\) | \\(\\therefore m(\\angle CMD) = 360^\\circ - (90^\\circ + 130^\\circ + 100^\\circ) = 360^\\circ - 320^\\circ = 40^\\circ\\)
+`;
+    const parsedQ13 = parseNotebookLMExamQuestionsToIR({
+      rawText: userQ13Block,
+      branchId: "plane_geometry",
+      unitId: "u3",
+      lessonId: "l1",
+      lessonTitleArabic: "أنواع الزوايا والعلاقات بينها",
+    });
+    expect(parsedQ13.length).toBe(1);
+    const q13Item = parsedQ13[0];
+    expect(q13Item.attachedGeometryFigure).toBeDefined();
+    const fig13 = q13Item.attachedGeometryFigure!;
+    expect(fig13.vertices.map((v) => v.label)).toEqual(
+      expect.arrayContaining(["M", "A", "B", "C", "D"])
+    );
+    expect(fig13.segments.length).toBe(4);
+    expect(fig13.angles.some((a) => a.isRightAngle)).toBe(true);
+    expect(fig13.angles.some((a) => a.degreesLabel === "130°")).toBe(true);
+    expect(fig13.angles.some((a) => a.degreesLabel === "100°")).toBe(true);
+    expect(fig13.angles.some((a) => a.degreesLabel === "40°")).toBe(false);
+
+    const svg13 = projectGeometryFigureToSVGMarkup(fig13, { numeralMode: "western" });
+    expect(svg13).toContain("<polygon"); // أسهم الأشعة
+    expect(svg13).toContain("130°");
+    expect(svg13).toContain("100°");
+    expect(svg13).not.toContain("40°"); // حجب زاوية المطلوب
   });
 });

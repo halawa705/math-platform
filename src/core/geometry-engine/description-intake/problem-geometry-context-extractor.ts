@@ -232,7 +232,15 @@ export function combineProblemAndTagGeometryContext(
   promptText?: string
 ): string {
   let effectiveTag = tagDescription?.trim();
-  let effectivePrompt = promptText?.trim();
+  const effectivePrompt = promptText?.trim();
+
+  // إزالة وسم [رسم هندسي: ...] المحيط بالوسم لمنع تكوين وسوم مكسورة لاحقاً
+  if (effectiveTag) {
+    effectiveTag = effectiveTag
+      .replace(/^\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*/i, "")
+      .replace(/\s*\]\s*$/i, "")
+      .trim();
+  }
 
   // إذا لم يُمرر وسم رسم مستقل وكان نص المسألة يحتوي على وسم [رسم هندسي: ...]
   if (!effectiveTag && effectivePrompt) {
@@ -250,10 +258,13 @@ export function combineProblemAndTagGeometryContext(
     parts.push(...promptFacts);
   }
 
-  // إذا وُجد وسم رسم، ندمج فقراته غير المكررة
+  // إذا وُجد وسم رسم، ندمج فقراته غير المكررة بعد تنظيف الأقواس
   if (effectiveTag) {
     const cleanTag = convertGeometryLatexToPlainText(effectiveTag);
-    const tagClauses = cleanTag.split(/\s*[;؛\n،,]+\s*/).map((c) => c.trim()).filter(Boolean);
+    const tagClauses = cleanTag
+      .split(/\s*[;؛\n،,]+\s*/)
+      .map((c) => c.replace(/[\[\]]/g, "").trim())
+      .filter(Boolean);
     for (const clause of tagClauses) {
       const normClause = clause.replace(/\s+/g, "");
       const isDuplicate = parts.some((p) => {
@@ -266,13 +277,15 @@ export function combineProblemAndTagGeometryContext(
     }
   }
 
-  if (parts.length === 0) {
-    return effectiveTag || effectivePrompt || "";
+  // تنظيف شامل لأي أقواس معقوفة لمنع وسوم مشوهة
+  const sanitized = parts.map((p) => p.replace(/[\[\]]/g, "").trim()).filter(Boolean);
+  if (sanitized.length === 0) {
+    return (effectiveTag || effectivePrompt || "").replace(/[\[\]]/g, "").trim();
   }
 
   // ترتيب الحقائق: التشابه/التطابق أولاً، ثم النقاط والخطوط، ثم الأطوال، ثم الزوايا
-  const simFacts = parts.filter((p) => p.includes("~") || p.includes("≅") || p.includes("تشابه"));
-  const otherFacts = parts.filter((p) => !simFacts.includes(p));
+  const simFacts = sanitized.filter((p) => p.includes("~") || p.includes("≅") || p.includes("تشابه"));
+  const otherFacts = sanitized.filter((p) => !simFacts.includes(p));
 
   const deduplicated = Array.from(new Set([...simFacts, ...otherFacts]));
   return deduplicated.join(" ؛ ");
