@@ -13,6 +13,8 @@ import {
   unpackSequentialSideLengths,
 } from "@/core/geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseGeoFactString } from "@/core/geometry-engine/fact-compositor/geo-fact-parser";
+import { convertGeometryLatexToPlainText } from "@/core/geometry-engine/description-intake/geometry-latex-to-plain-normalizer";
+import { healFourRaysHallucination } from "@/core/ingestion/notebooklm-citation-latex-sanitizer";
 
 describe("المرحلة المحورية الثانية: جامع السياق الهندسي الموحد", () => {
   describe("1. استخراج علاقات التشابه والتطابق وترتيب الرؤوس المتناظرة", () => {

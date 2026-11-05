@@ -3,12 +3,15 @@
  * @description المرحلة 1 من استقبال وصف NotebookLM: يحوّل لغة LaTeX المختلطة بالعربية (`$\triangle ABC$`, `m(\angle B)=90^\circ`,
  * `\overline{AB}`, `\parallel`...) إلى نص رمزي بسيط يفهمه محلل الحقائق (مثلث ABC، ق(∠ B) = 90°، AB، //).
  */
+import { healFourRaysHallucination } from "@/core/ingestion/notebooklm-citation-latex-sanitizer";
+
 export const MODULE_ID_GEOMETRY_LATEX_TO_PLAIN_NORMALIZER = "geometry_latex_to_plain_normalizer" as const;
 
 const WRAPPER_COMMANDS = /\\(?:overline|overrightarrow|overleftrightarrow|overleftarrow|vec|bar|underline|text|textbf|mathrm|mathit|mathbf|operatorname)\s*\{([^{}]*)\}/g;
 
 export function convertGeometryLatexToPlainText(raw: string): string {
-  let t = String(raw ?? "").replace(/[\u064B-\u0652\u0670]/g, "");
+  const healed = healFourRaysHallucination(String(raw ?? ""));
+  let t = healed.replace(/[\u064B-\u0652\u0670]/g, "");
   t = t
     .replace(/\\(?:left|right|displaystyle)\b/g, "")
     .replace(/\\[,;:! ]/g, " ")
@@ -20,7 +23,8 @@ export function convertGeometryLatexToPlainText(raw: string): string {
     .replace(/\\(?:widehat|hat)\s*\{([^{}]*)\}/g, "∠$1")
     .replace(/\\(?:bigtriangleup|triangle|Delta)\b|[Δ▲△]/g, " مثلث ")
     .replace(/\\(?:measuredangle|angle)\b/g, " ∠ ")
-    .replace(/\^\s*\{?\s*\\circ\s*\}?|\\circ|°/g, "°")
+    .replace(/\^\s*(?:\{\s*\\circ\s*\}|\\circ)\b|\\circ\b|°/g, "°")
+    .replace(/°(?=[^\s،,;؛|.)])/g, "° ")
     .replace(/\\(?:parallel|mid)\b|[∥⫽]/g, " // ")
     .replace(/\\perp\b/g, " ⊥ ")
     .replace(/\\in\b/g, " ∈ ")
