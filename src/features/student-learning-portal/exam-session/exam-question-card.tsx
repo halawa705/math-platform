@@ -6,6 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 190 سطراً).
  */
 
+import { useState } from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudentVirtualMathKeypad from "@/features/electronic-exams-hub/student-virtual-math-keypad";
 import { renderQuestionFigureSvg } from "@/core/pdf-layout-engine/question-figure-svg-renderer";
@@ -37,6 +38,12 @@ export default function ExamQuestionCard({
   onChangeAnswer,
   onToggleFlag,
 }: ExamQuestionCardProps) {
+  const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
+
+  const hasFigure = Boolean(
+    question.attachedGeometryFigure || question.graphSpec
+  );
+
   const isMcq =
     (question.answerMode === "mcq" || question.patternKind === "mcq") &&
     Array.isArray(question.mcqChoicesArabic) &&
@@ -50,6 +57,26 @@ export default function ExamQuestionCard({
     : resultState?.isCorrect
       ? "border-2 border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/15"
       : "border-2 border-rose-500 bg-rose-50/20 dark:bg-rose-950/15";
+
+  const cardSvg = hasFigure
+    ? renderQuestionFigureSvg(question, {
+        widthPx: 290,
+        heightPx: 190,
+        numeralMode: "western",
+        strokeColorHex: "#0F172A",
+        accentColorHex: "#0D9488",
+      })
+    : null;
+
+  const modalSvg = hasFigure
+    ? renderQuestionFigureSvg(question, {
+        widthPx: 460,
+        heightPx: 310,
+        numeralMode: "western",
+        strokeColorHex: "#0F172A",
+        accentColorHex: "#0D9488",
+      })
+    : null;
 
   return (
     <div key={question.questionId} className={`exam-pop p-5 rounded-3xl bg-white dark:bg-[#111827] border ${borderClass} shadow-sm space-y-4`}>
@@ -89,19 +116,73 @@ export default function ExamQuestionCard({
         </div>
       </div>
 
-      <div className={question.attachedGeometryFigure || question.graphSpec ? "grid grid-cols-1 sm:grid-cols-12 gap-3 items-center" : "block"}>
-        <div className="sm:col-span-7 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100">
+      <div className={hasFigure ? "grid grid-cols-1 sm:grid-cols-12 gap-3 items-center" : "block"}>
+        <div className={hasFigure ? "sm:col-span-7 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100" : "text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100"}>
           <SafeKaTeXBiDiMathRenderer text={question.promptArabic} />
         </div>
-        {(question.attachedGeometryFigure || question.graphSpec) && (
-          <div
-            className="sm:col-span-5 max-w-full overflow-hidden p-2 rounded-xl bg-white border border-slate-200 flex justify-center"
-            dangerouslySetInnerHTML={{
-              __html: renderQuestionFigureSvg(question, { widthPx: 230, heightPx: 155, numeralMode: "eastern" }) || "",
-            }}
-          />
+        {hasFigure && cardSvg && (
+          <div className="sm:col-span-5 max-w-full flex flex-col items-center">
+            <div
+              onClick={() => setIsZoomModalOpen(true)}
+              className="w-full max-w-full overflow-hidden p-2 rounded-2xl bg-white dark:bg-slate-950 border-2 border-indigo-200 dark:border-indigo-900/70 flex justify-center cursor-pointer shadow-xs hover:border-indigo-400 transition"
+              title="انقر لتكبير الرسم وعرضه بدقة عالية"
+              dangerouslySetInnerHTML={{ __html: cardSvg }}
+            />
+            <button
+              type="button"
+              onClick={() => setIsZoomModalOpen(true)}
+              className="mt-1.5 text-[11px] font-black text-indigo-700 dark:text-teal-300 flex items-center gap-1 cursor-pointer hover:underline"
+            >
+              <span>🔍</span>
+              <span>تكبير الرسم الهندسي / البياني</span>
+            </button>
+          </div>
         )}
       </div>
+
+      {/* نافذة التكبير المنبثقة للرسم الهندسي والبياني في الاختبار الإلكتروني */}
+      {isZoomModalOpen && modalSvg && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5"
+          onClick={() => setIsZoomModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📐</span>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                  رسم توضيحي — السؤال {question.displayOrderNumber}
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsZoomModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black text-xs flex items-center justify-center hover:bg-slate-200 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              className="p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-x-auto min-h-[260px]"
+              dangerouslySetInnerHTML={{ __html: modalSvg }}
+            />
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsZoomModalOpen(false)}
+                className="w-full min-h-[44px] rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black cursor-pointer shadow-sm"
+              >
+                ✓ العودة لحل السؤال
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isMcq && question.mcqChoicesArabic ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

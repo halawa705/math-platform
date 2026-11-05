@@ -9,6 +9,7 @@
 import { useState } from "react";
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
+import { renderQuestionFigureSvg } from "@/core/pdf-layout-engine/question-figure-svg-renderer";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioExamQuestionsShuffleBar from "./studio-exam-questions-shuffle-bar";
 import StudioQuestionSolutionLinesController from "./studio-question-solution-lines-controller";
@@ -233,6 +234,18 @@ export default function StudioExamQuestionsInspectorCard({
                   <div className="font-extrabold text-slate-900 dark:text-slate-100 leading-relaxed">
                     <SafeKaTeXBiDiMathRenderer text={q.promptArabic} />
                   </div>
+
+                  {(q.attachedGeometryFigure || q.graphSpec) && (
+                    <div className="my-1.5 p-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center">
+                      <div
+                        className="max-w-full overflow-x-auto flex justify-center"
+                        dangerouslySetInnerHTML={{
+                          __html: renderQuestionFigureSvg(q, { widthPx: 250, heightPx: 165, strokeColorHex: "#0F172A", accentColorHex: "#0D9488" }) || "",
+                        }}
+                      />
+                      <span className="text-[10px] text-slate-500 font-bold mt-0.5">📐 رسم السؤال المعتمد</span>
+                    </div>
+                  )}
 
                   {q.patternKind !== "mcq" && (
                     <StudioQuestionSolutionLinesController

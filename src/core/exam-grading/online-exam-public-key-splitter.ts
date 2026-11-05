@@ -84,8 +84,15 @@ export function splitExamIntoPublicAndKey(questions: readonly QuestionAssessment
     }
     const explicit = (q.acceptedAnswersArabic ?? []).map((s) => s.trim()).filter(Boolean);
     const finalAns = (q.finalCanonicalAnswerArabic || "").trim();
-    const accepted = explicit.length > 0 ? explicit : finalAns && finalAns.length <= MAX_AUTO_FINAL_ANSWER_CHARS ? [finalAns] : [];
-    const isShortKind = q.patternKind === "completion" || q.patternKind === "direct_answer";
+    const isProseProof = /بما\s*أن|إذن|البرهان|المثلثان\s*فيهما/i.test(finalAns);
+    // استخراج ناتج رقمي قصير من الإجابة النهائية (مثل 40° أو 5 سم) إن لم تكن برهاناً إنشائياً طويلاً
+    let cleanShortAns = finalAns;
+    const matchVal = finalAns.match(/(?:=\s*|^)\s*([0-9.]+\s*°?|[0-9.]+\s*(?:سم|درجة)?)\s*$/);
+    if (matchVal) {
+      cleanShortAns = matchVal[1].trim();
+    }
+    const accepted = explicit.length > 0 ? explicit : (!isProseProof && cleanShortAns && cleanShortAns.length <= MAX_AUTO_FINAL_ANSWER_CHARS) ? [cleanShortAns] : [];
+    const isShortKind = q.patternKind === "completion" || q.patternKind === "direct_answer" || (q.patternKind === "proof_reasoning" && !isProseProof);
     if (isShortKind && accepted.length > 0) {
       publicQuestions.push({ ...base, answerMode: "short_answer" });
       answerKey.push({ ...keyBase, answerMode: "short_answer", acceptedAnswers: accepted });
