@@ -593,5 +593,52 @@
     ],
     "source": "حالات فحص ديناميكية للتأكد من عدم الاعتماد على قوالب ثابتة",
     "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "p6-geom-30-circle-radius",
+    "gradeId": "primary-6",
+    "branchId": "plane_geometry",
+    "problemText": "دائرة م نصف قطرها 7 سم أوجد مساحتها",
+    "geometryRaw": "دائرة مركزها م ; نصف القطر م أ = 7 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7"
+    ],
+    "source": "كتاب المدرسة 6ب - مساحة الدائرة",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "م",
+        "أ"
+      ],
+      "displayedLengths": [
+        "7"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
+  },
+  {
+    "id": "p6-geom-31-circle-diameter",
+    "gradeId": "primary-6",
+    "branchId": "plane_geometry",
+    "problemText": "دائرة قطرها 14 سم احسب محيطها ومساحة سطحها",
+    "geometryRaw": "دائرة مركزها م ; القطر أ ب = 14 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "14"
+    ],
+    "source": "سلاح التلميذ 6ب - محيط ومساحة الدائرة",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "م",
+        "أ",
+        "ب"
+      ],
+      "displayedLengths": [
+        "14"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   }
 ]

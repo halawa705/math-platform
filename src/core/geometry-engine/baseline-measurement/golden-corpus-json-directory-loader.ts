@@ -1,6 +1,7 @@
 /**
  * @file golden-corpus-json-directory-loader.ts
- * @description يحمّل كل ملفات المجموعة الذهبية (*.json) من tests/golden-corpus/geometry ويتحقق من سلامة مخططها.
+ * @description يحمّل كل ملفات المجموعة الذهبية (*.json) من tests/golden-corpus/geometry ويتحقق من سلامة مخططها ومواصفات الأشكال المتوقعة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 60 سطراً).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -17,7 +18,8 @@ function validateCaseShape(value: unknown, file: string): GoldenCorpusCase {
     typeof c.problemText === "string" && typeof c.geometryRaw === "string" &&
     (c.expectedOutcome === "figure" || c.expectedOutcome === "no_figure") &&
     Array.isArray(c.expectedGivenNumbers) && typeof c.source === "string" &&
-    (c.humanVerdict === "correct" || c.humanVerdict === "wrong" || c.humanVerdict === "unreviewed");
+    (c.humanVerdict === "correct" || c.humanVerdict === "wrong" || c.humanVerdict === "unreviewed") &&
+    (c.expectedFigureSpec === undefined || (typeof c.expectedFigureSpec === "object" && c.expectedFigureSpec !== null));
   if (!ok) throw new Error(`حالة ذهبية غير صالحة في ${file}: ${JSON.stringify(value).slice(0, 120)}`);
   return c as GoldenCorpusCase;
 }

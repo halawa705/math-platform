@@ -1,0 +1,472 @@
+[
+  {
+    "id": "prim3-frac-01",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "ظلل ربع النموذج الشريطي الموضح",
+    "geometryRaw": "نموذج شريطي مقسم إلى 4 أجزاء متساوية ; جزء مظلل",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "1"
+    ],
+    "source": "كتاب المدرسة 3ب - الكسور",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "4"
+      ],
+      "expectedFamilyId": "primary_visual_models_family"
+    }
+  },
+  {
+    "id": "prim3-frac-02",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "اكتب الكسر الذي يمثل الجزء المظلل في النموذج الموضح",
+    "geometryRaw": "نموذج شريطي مقسم إلى 6 أجزاء متساوية ; 2 جزء مظلل",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "2"
+    ],
+    "source": "كتاب المدرسة 3ب - الكسور",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "6"
+      ],
+      "expectedFamilyId": "primary_visual_models_family"
+    }
+  },
+  {
+    "id": "prim3-frac-03",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "أي النماذج التالية يمثل ثلاثة أرباع الشكل؟",
+    "geometryRaw": "نموذج شريطي مقسم إلى 4 أجزاء ; 3 أجزاء مظللة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "3"
+    ],
+    "source": "سلاح التلميذ 3ب - الكسور",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-frac-04",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "الكسر المكافئ للنصف في النموذج المقسم إلى 8 أجزاء",
+    "geometryRaw": "نموذج شريطي مقسم إلى 8 أجزاء ; 4 أجزاء مظللة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "4"
+    ],
+    "source": "كتاب المدرسة 3ب - الكسور المتكافئة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-frac-05",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "قسم الشريط التالي إلى 5 أجزاء متساوية",
+    "geometryRaw": "نموذج شريطي مقسم إلى 5 أجزاء متساوية",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "الأضواء 3ب - الكسور",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-grid-01",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "أوجد مساحة المستطيل المرسوم على شبكة المربعات",
+    "geometryRaw": "مستطيل على شبكة مربعات أبعاده 5 وحدات و 3 وحدات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "3"
+    ],
+    "source": "كتاب المدرسة 3ب - المساحة بالمصفوفات",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "5",
+        "3"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
+  },
+  {
+    "id": "prim3-grid-02",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "احسب محيط المربع الموضح على الشبكة التربيعية",
+    "geometryRaw": "مربع على شبكة مربعات طول ضلعه 4 وحدات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4"
+    ],
+    "source": "كتاب المدرسة 3ب - المحيط",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "4"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
+  },
+  {
+    "id": "prim3-grid-03",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "مستطيل طوله 6 وحدات وعرضه وحدتان، ما محيطه ومساحته؟",
+    "geometryRaw": "مستطيل أبعاده 6 وحدات و 2 وحدة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "2"
+    ],
+    "source": "سلاح التلميذ 3ب - المحيط والمساحة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-grid-04",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "احسب مساحة الشكل المظلل على شبكة الوحدات المربعة",
+    "geometryRaw": "مستطيل على شبكة مربعات طوله 7 وحدات وعرضه 3 وحدات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "7",
+      "3"
+    ],
+    "source": "الأضواء 3ب - المساحة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-grid-05",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "أوجد محيط الشكل المقابل المكون من مصفوفة مربعات",
+    "geometryRaw": "مستطيل أبعاده 4 وحدات و 4 وحدات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4"
+    ],
+    "source": "كتاب المدرسة 3ب - المساحة والمحيط",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-geom-01",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "حدد نوع الزاوية في الشكل المقابل",
+    "geometryRaw": "زاوية قائمة قياسها 90°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "90"
+    ],
+    "source": "كتاب المدرسة 3ب - الزوايا",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
+  },
+  {
+    "id": "prim3-geom-02",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "أي من الزوايا التالية زاوية حادة؟",
+    "geometryRaw": "زاوية حادة قياسها 45°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "45"
+    ],
+    "source": "كتاب المدرسة 3ب - الزوايا",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedAngles": [
+        "45"
+      ]
+    }
+  },
+  {
+    "id": "prim3-geom-03",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "حدد الزاوية المنفرجة من الأشكال الموضحة",
+    "geometryRaw": "زاوية منفرجة قياسها 120°",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "120"
+    ],
+    "source": "سلاح التلميذ 3ب - الزوايا",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedAngles": [
+        "120"
+      ]
+    }
+  },
+  {
+    "id": "prim3-geom-04",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث متساوي الأضلاع أطوال أضلاعه 5 سم",
+    "geometryRaw": "مثلث أ ب جـ متساوي الأضلاع ; أ ب = 5 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5"
+    ],
+    "source": "كتاب المدرسة 3ب - المضلعات",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ"
+      ],
+      "displayedLengths": [
+        "5"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
+  },
+  {
+    "id": "prim3-geom-05",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "شبه منحرف متساوي الساقين",
+    "geometryRaw": "شبه منحرف أ ب جـ د متساوي الساقين ; أ د // ب جـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "الأضواء 3ب - الأشكال الرباعية",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ",
+        "د"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
+  },
+  {
+    "id": "prim3-clock-01",
+    "gradeId": "primary-3",
+    "branchId": "primary_visual_models",
+    "problemText": "ما هو الوقت الذي تشير إليه الساعة الموضحة؟",
+    "geometryRaw": "ساعة عقارب تشير إلى الساعة 3:00 تماماً",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "00"
+    ],
+    "source": "كتاب المدرسة 3ب - الوقت",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "expectedFamilyId": "primary_visual_models_family"
+    }
+  },
+  {
+    "id": "prim3-clock-02",
+    "gradeId": "primary-3",
+    "branchId": "primary_visual_models",
+    "problemText": "ارسم عقارب الساعة لتشير إلى الرابعة والنصف",
+    "geometryRaw": "ساعة عقارب تشير إلى 4:30",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "30"
+    ],
+    "source": "سلاح التلميذ 3ب - قراءة الساعة",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "expectedFamilyId": "primary_visual_models_family"
+    }
+  },
+  {
+    "id": "prim3-clock-03",
+    "gradeId": "primary-3",
+    "branchId": "primary_visual_models",
+    "problemText": "الساعة تشير إلى السادسة والربع",
+    "geometryRaw": "ساعة عقارب تشير إلى 6:15",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "15"
+    ],
+    "source": "الأضواء 3ب - الوقت",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-clock-04",
+    "gradeId": "primary-3",
+    "branchId": "primary_visual_models",
+    "problemText": "الساعة تشير إلى التاسعة إلا ربعاً",
+    "geometryRaw": "ساعة عقارب تشير إلى 8:45",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "45"
+    ],
+    "source": "كتاب المدرسة 3ب - الوقت المنقضي",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-stat-01",
+    "gradeId": "primary-3",
+    "branchId": "statistics_probability",
+    "problemText": "التمثيل البياني بالأعمدة الموضح يعرض عدد الساعات الدراسية",
+    "geometryRaw": "تمثيل بياني بالأعمدة : الأحد = 4 ، الإثنين = 6 ، الثلاثاء = 5",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4",
+      "6",
+      "5"
+    ],
+    "source": "كتاب المدرسة 3ب - البيانات",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-stat-02",
+    "gradeId": "primary-3",
+    "branchId": "statistics_probability",
+    "problemText": "أوجد اليوم الأكثر قراءة للقصص من التمثيل البياني المقابل",
+    "geometryRaw": "تمثيل بياني بالأعمدة يوضح عدد القصص المقروءة أسبوعياً",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "سلاح التلميذ 3ب - التمثيل البياني",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-stat-03",
+    "gradeId": "primary-3",
+    "branchId": "statistics_probability",
+    "problemText": "مخطط التمثيل بالنقاط لدرجات التلاميذ في الرياضيات",
+    "geometryRaw": "مخطط تمثيل بالنقاط لدرجات التلاميذ من 1 إلى 5",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1",
+      "5"
+    ],
+    "source": "الأضواء 3ب - تمثيل النقاط",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-01",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "مع أحمد 125 جنيهاً واشترى لعبة بمبلغ 45 جنيهاً، فكم جنيهاً تبقى معه؟",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "125",
+      "45"
+    ],
+    "source": "كتاب المدرسة 3ب - مسائل كلامية",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-02",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "إذا كان ثمن القلم الواحد 4 جنيهات، فما ثمن 6 أقلام من نفس النوع؟",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "4",
+      "6"
+    ],
+    "source": "سلاح التلميذ 3ب - مسائل الضرب",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-03",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "أوجد ناتج جمع: 432 + 256",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "432",
+      "256"
+    ],
+    "source": "الأضواء 3ب - الجمع",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-04",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "المربع هو شكل رباعي أضلاعه الأربعة متساوية في الطول وجميع زواياه قائمة.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب المدرسة 3ب - خواص الأشكال",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-05",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "الكسر الذي بسطه 3 ومقامه 5 يكتب بالصيغة: 3/5",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "3",
+      "5"
+    ],
+    "source": "سلاح التلميذ 3ب - قراءة الكسور",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-06",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "محيط المربع يساوي طول الضلع مضروباً في 4.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "4"
+    ],
+    "source": "الأضواء 3ب - قوانين المحيط",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-07",
+    "gradeId": "primary-3",
+    "branchId": "numbers",
+    "problemText": "وزع أب مبلغ 40 جنيهاً بالتساوي على أبنائه الأربعة، فكم نصيب كل ابن؟",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "40",
+      "4"
+    ],
+    "source": "كتاب المدرسة 3ب - القسمة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim3-theory-08",
+    "gradeId": "primary-3",
+    "branchId": "plane_geometry",
+    "problemText": "المثلث هو مضلع له 3 أضلاع و 3 رؤوس و 3 زوايا.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "3"
+    ],
+    "source": "كتاب المدرسة 3ب - تصنيف المضلعات",
+    "humanVerdict": "unreviewed"
+  }
+]

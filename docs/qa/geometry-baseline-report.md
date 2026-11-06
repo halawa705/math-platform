@@ -1,48 +1,55 @@
-# تقرير خط الأساس لدقة الأشكال الهندسية (المرحلة 0)
+# تقرير خط الأساس لدقة الأشكال الهندسية والرسوم (لوحة القياس v2 - المرحلة 0)
 
-> تاريخ التوليد: 2026-11-06T18:07:26.950Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-06T18:39:34.531Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
-> العلامات الآلية **مؤشرات خطر وليست حكماً نهائياً**. الدقة الحقيقية لا تُحسب إلا من خانة `humanVerdict` بعد المراجعة البشرية.
+> العلامات الآلية **مؤشرات خطر ونظافة وليست حكماً نهائياً**. الدقة الحقيقية تُحسب فقط من خانة `humanVerdict` بعد المراجعة البشرية الصريحة.
 
-## الملخص
+## 1. الملخص التنفيذي ومؤشرات الدقة
 
-- إجمالي الحالات: **375**
-- أنتج النظام شكلاً في: **275** (73.3%)
-- شكل بلا أي علامة خطر آلية: **164** (43.7%)
-- شكل بعلامات خطر: **111** (29.6%)
-- 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها: **0**
-- شكل مفقود لمسألة تستحق شكلاً: **60**
-- رفض صحيح (لا شكل): **40**
-- الدقة المُثبتة بشرياً: **لم تُراجَع أي حالة بعد**
+- إجمالي الحالات في المجموعة الذهبية: **437** حالة (تغطي ابتدائي 3–6 وإعدادي 1–3)
+- أنتج النظام شكلاً في: **311** (71.2%)
+- شكل بلا أي علامة خطر آلية: **172** (39.4%)
+- شكل بعلامات خطر آلية: **132** (30.2%)
+- 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها (هلوسة زائدة): **7**
+- شكل مفقود لمسألة تستحق شكلاً: **75**
+- رفض صحيح لمسائل نظرية (لا شكل): **51**
+- **الدقة المُثبتة بالمراجعة البشرية (Human Accuracy):** **لم تُراجَع أي حالة بعد**
+- **مطابقة المواصفة المرجعية الآلية (expectedFigureSpec):** **72/111** (64.9%)
 
-## علامات الخطر
+## 2. مؤشرات وعلامات الخطر الآلية
 
-| العلامة | العدد |
+| العلامة الآلية | العدد |
 |---|---|
-| `from_fixed_catalog` | 109 |
-| `missing_given_on_figure` | 8 |
+| `from_fixed_catalog` | 132 |
+| `missing_given_on_figure` | 16 |
+| `leaked_number_not_in_text` | 5 |
 
-### حسب الصف
+### لوحة التغطية والدقة حسب الصف الدراسي
 
-| المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
-|---|---|---|---|---|---|---|
-| prep-1 | 120 | 35 | 60 | 0 | 19 | 6 |
-| prep-2 | 89 | 14 | 43 | 0 | 32 | 0 |
-| prep-3 | 33 | 15 | 7 | 0 | 9 | 2 |
-| primary-4 | 49 | 21 | 0 | 0 | 0 | 28 |
-| primary-6 | 29 | 25 | 0 | 0 | 0 | 4 |
-| unassigned | 55 | 54 | 1 | 0 | 0 | 0 |
+| المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح | معتمد بشرياً | دقة مثبتة |
+|---|---|---|---|---|---|---|---|---|
+| prep-1 | 120 | 35 | 60 | 0 | 19 | 6 | 0/0 | — |
+| prep-2 | 89 | 14 | 43 | 0 | 32 | 0 | 0/0 | — |
+| prep-3 | 33 | 15 | 7 | 0 | 9 | 2 | 0/0 | — |
+| primary-3 | 30 | 7 | 10 | 2 | 5 | 6 | 0/0 | — |
+| primary-4 | 49 | 21 | 0 | 0 | 0 | 28 | 0/0 | — |
+| primary-5 | 30 | 1 | 11 | 5 | 8 | 5 | 0/0 | — |
+| primary-6 | 31 | 25 | 0 | 0 | 2 | 4 | 0/0 | — |
+| unassigned | 55 | 54 | 1 | 0 | 0 | 0 | 0/0 | — |
 
-### حسب الفرع
+### لوحة التغطية حسب الفرع الرياضي
 
-| المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
-|---|---|---|---|---|---|---|
-| numbers | 49 | 21 | 0 | 0 | 0 | 28 |
-| plane_geometry | 297 | 118 | 111 | 0 | 60 | 8 |
-| statistics_probability | 29 | 25 | 0 | 0 | 0 | 4 |
+| المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح | معتمد بشرياً | دقة مثبتة |
+|---|---|---|---|---|---|---|---|---|
+| analytic_geometry | 3 | 0 | 2 | 0 | 1 | 0 | 0/0 | — |
+| numbers | 67 | 21 | 3 | 4 | 5 | 34 | 0/0 | — |
+| plane_geometry | 324 | 121 | 122 | 2 | 67 | 12 | 0/0 | — |
+| primary_visual_models | 4 | 4 | 0 | 0 | 0 | 0 | 0/0 | — |
+| solid_geometry | 5 | 0 | 2 | 1 | 1 | 1 | 0/0 | — |
+| statistics_probability | 34 | 26 | 3 | 0 | 1 | 4 | 0/0 | — |
 
-## الحالات التي تستحق الفحص أولاً
+## 3. أبرز الحالات التي تستحق الفحص والتحسين
 
 | الحالة | النتيجة | العلامات | المصدر | أرقام ناقصة | أرقام مسرّبة |
 |---|---|---|---|---|---|
@@ -146,74 +153,3 @@
 | prep-2-prep-grade2-isosceles-triangle-catalog-8 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-10 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-isosceles-triangle-catalog-12 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-isosceles-triangle-catalog-13 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-1 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-2 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 2، 3 | — |
-| prep-2-prep-grade2-parallel-applications-catalog-3 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-6 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-7 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-8 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 90 | — |
-| prep-2-prep-grade2-parallel-applications-catalog-9 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-10 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-11 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-parallel-applications-catalog-12 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-3 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-8 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-9 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-polygon-angles-catalog-10 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-5 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-7 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-8 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-11 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-pythagoras-converse-catalog-12 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-7 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-8 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-13 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-16 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-1 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-2 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-8 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-10 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-11 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-medians-catalog-13 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-1 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-2 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-3 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-4 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-5 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-6 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-7 | missed_figure | — | none | — | — |
-| prep-3-geometry-similarity-catalogs-and-smart-prompt-11 | missed_figure | — | none | — | — |
-| prep-3-prep-grade3-line-equation-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-prep-grade3-line-equation-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-prep-grade3-line-equation-catalog-4 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 1 | — |
-| prep-3-prep-grade3-line-equation-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-prep-grade3-line-equation-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-prep-grade3-line-equation-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-prep-grade3-line-equation-catalog-8 | missed_figure | — | none | — | — |
-| prep-3-prep-grade3-line-equation-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| intake-09 | figure_flagged | from_fixed_catalog | catalog | — | — |

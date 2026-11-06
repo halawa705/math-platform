@@ -14,7 +14,29 @@
       "150"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Example 2 from textbook images (quads with radicals and specific angles)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "C",
+        "H",
+        "A",
+        "B",
+        "D",
+        "E",
+        "F",
+        "G"
+      ],
+      "displayedLengths": [
+        "6.5",
+        "1.5",
+        "3"
+      ],
+      "displayedAngles": [
+        "60",
+        "150"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-2",
@@ -32,7 +54,20 @@
       "2"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Try-by-yourself 2 from textbook images (obtuse 120° and 45° with 10√3)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "10",
+        "3",
+        "10",
+        "2"
+      ],
+      "displayedAngles": [
+        "120",
+        "45"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-3",
@@ -46,7 +81,21 @@
       "1"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Right Trapezoids with algebraic variables (X - 3) and (Y + 1)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "X",
+        "Y"
+      ],
+      "displayedLengths": [
+        "3",
+        "1"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-4",
@@ -59,7 +108,13 @@
       "6"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches House-shaped Pentagons ABCDE ~ KFGHJ (Try-by-yourself 3)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-5",
@@ -70,7 +125,16 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Collinear Base quads intersecting at O (Example 3)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "O",
+        "H",
+        "E",
+        "A",
+        "D"
+      ]
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-6",
@@ -83,7 +147,23 @@
       "92"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Deltoid/Kites similarity with 92° angles",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "H",
+        "L",
+        "K",
+        "J"
+      ],
+      "displayedAngles": [
+        "92"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-7",
@@ -97,7 +177,21 @@
       "12"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Butterfly/Cross ΔABC ~ ΔADE",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "displayedLengths": [
+        "10",
+        "12"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-8",
@@ -108,7 +202,16 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Nested with Common Angle B",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "A",
+        "C",
+        "D"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-9",
@@ -119,7 +222,17 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Thales Parallel Line XY || BC",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "X",
+        "Y",
+        "B",
+        "C",
+        "A"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-10",
@@ -130,7 +243,19 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Euclid Altitude Similarity in Right Triangle",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "D",
+        "A",
+        "C"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-geometry-similarity-catalogs-and-smart-prompt-11",
@@ -143,7 +268,21 @@
       "120"
     ],
     "source": "geometry-similarity-catalogs-and-smart-prompt.test.ts :: matches Grade 3 Prep Triangle Similarity: Separate with 120° Angle",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "displayedAngles": [
+        "120"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-1",
@@ -157,7 +296,18 @@
       "3"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 1. matches Problem 21: Equal intercepts passing through (2, 3)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "X",
+        "A",
+        "B"
+      ],
+      "displayedLengths": [
+        "2",
+        "3"
+      ]
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-2",
@@ -168,7 +318,16 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 2. matches Problem 22: Equilateral triangle ABO with midpoint C of AB",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "C",
+        "A",
+        "B",
+        "O"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-3",
@@ -186,7 +345,25 @@
       "2"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 3. matches Problem 23: Rhombus OADB with A(2,6) and B(6,2) and D(8,8)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "D",
+        "O",
+        "H"
+      ],
+      "displayedLengths": [
+        "0",
+        "0",
+        "2",
+        "6",
+        "6",
+        "2"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-4",
@@ -204,7 +381,20 @@
       "0"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 4. matches Problem 24: Perpendicular lines L1 ⊥ L2 with equation 2X - y + 2 = 0",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "2",
+        "1",
+        "1",
+        "2",
+        "2",
+        "0"
+      ],
+      "displayedAngles": [
+        "90"
+      ]
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-5",
@@ -220,7 +410,20 @@
       "3"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 5. matches Problem 25: A(0,8) with tan(∠ ABO) = 4/3",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "O"
+      ],
+      "displayedLengths": [
+        "0",
+        "8",
+        "4",
+        "3"
+      ]
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-6",
@@ -236,7 +439,23 @@
       "3"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 6. matches Problem 26: Right triangle with A(-4,-3) and B(2,3) and AB ⊥ BC",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "4",
+        "3",
+        "2",
+        "3"
+      ],
+      "displayedAngles": [
+        "90"
+      ]
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-7",
@@ -250,7 +469,16 @@
       "4"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 7. matches Problem 35: Slope angle θ with equation 2y = X - 4",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "X"
+      ],
+      "displayedLengths": [
+        "2",
+        "4"
+      ]
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-8",
@@ -263,7 +491,18 @@
       "9"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 8. matches Problem 36: Triangle AOB area is 9 units with A(0,6)",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "O",
+        "B"
+      ],
+      "displayedLengths": [
+        "9"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-9",
@@ -276,7 +515,19 @@
       "4"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 9. matches Problem 37: Square OABC side length 4 and diagonal AC",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "O",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "4"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-10",
@@ -290,7 +541,18 @@
       "6"
     ],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 10. matches Problem 38: Right triangle OAB at A with BO = 6 and AB = 3",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "O",
+        "B"
+      ],
+      "displayedLengths": [
+        "3",
+        "6"
+      ]
+    }
   },
   {
     "id": "prep-3-prep-grade3-line-equation-catalog-11",
@@ -301,7 +563,16 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "prep-grade3-line-equation-catalog.test.ts :: 11. supports Arabic notation mode for coordinate labels",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "C",
+        "A",
+        "B",
+        "O"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-01",
@@ -317,7 +588,24 @@
       "65"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-01: Example 1-1 builds disjoint triangles with exact angles 40° and 65° and ZERO alien 2y or 100°",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "F",
+        "C",
+        "D",
+        "E"
+      ],
+      "displayedLengths": [
+        "40",
+        "65",
+        "40",
+        "65"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-02",
@@ -337,7 +625,28 @@
       "3"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-01: Example 1-2 builds similar triangles with exact sides 6, 8, 10 and 3",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "displayedLengths": [
+        "6",
+        "8",
+        "10",
+        "3",
+        "6",
+        "8",
+        "10",
+        "3"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-03",
@@ -354,7 +663,25 @@
       "3"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-02: Example 2-1 builds triangles ABC and XYZ with sides 3, 4, 5 without alien butterfly 8, 12, 18",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "X",
+        "Y",
+        "Z"
+      ],
+      "displayedLengths": [
+        "3",
+        "4",
+        "5",
+        "2",
+        "3"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-04",
@@ -370,7 +697,23 @@
       "6"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-03: Example 3-1 builds antiparallel secant with lengths 4, 5, 3, 6 in triangle ABC",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "E",
+        "B",
+        "A",
+        "C"
+      ],
+      "displayedLengths": [
+        "4",
+        "5",
+        "3",
+        "6"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-05",
@@ -385,7 +728,22 @@
       "2"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-04: Example 4-1 builds Thales parallel DE // BC with parallel arrows",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "E",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "3",
+        "6",
+        "2"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-06",
@@ -400,7 +758,21 @@
       "3"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-05: Example 5-1 builds hourglass intersection at E with sides 4, 6, 3",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "E",
+        "A",
+        "C",
+        "B",
+        "D"
+      ],
+      "displayedLengths": [
+        "4",
+        "6",
+        "3"
+      ]
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-07",
@@ -416,7 +788,25 @@
       "16"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-11: Example 11-1 builds Euclid right triangle at A with altitude AD perp BC and lengths 9, 16",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "9",
+        "16",
+        "9",
+        "16"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-08",
@@ -430,7 +820,23 @@
       "6.4"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-12: Example 12-1 builds Euclid altitude with AD = 3.6 and BD = 6.4",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "3.6",
+        "6.4"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-09",
@@ -445,7 +851,14 @@
       "2"
     ],
     "source": "prep-grade3-similarity-full-notebooklm-response.test.ts :: idea-14: Example 14-1 builds applied shadow and height right triangles with 1.8 m, 2.4 m, 2 m",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "1.8",
+        "2.4",
+        "2"
+      ]
+    }
   },
   {
     "id": "prep-3-sim-notebooklm-10",

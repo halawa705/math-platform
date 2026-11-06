@@ -11,7 +11,22 @@
       "8"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "6",
+        "8"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-02-iso-tri",
@@ -25,7 +40,19 @@
       "6"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "5",
+        "6"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-03-equi-tri",
@@ -38,7 +65,18 @@
       "6"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "6"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-04-thales",
@@ -53,7 +91,20 @@
       "10"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "2",
+        "3",
+        "10"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-05-midsegment",
@@ -64,7 +115,15 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-06-euclid",
@@ -78,7 +137,22 @@
       "8"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "6",
+        "8"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-07-bisector",
@@ -93,7 +167,20 @@
       "10"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "6",
+        "9",
+        "10"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-08-median",
@@ -108,7 +195,20 @@
       "9"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "7",
+        "8",
+        "9"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-09-two-medians",
@@ -119,7 +219,15 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-10-ext-angle",
@@ -133,7 +241,19 @@
       "60"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedAngles": [
+        "50",
+        "60"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-11-sim-triangles",
@@ -151,7 +271,26 @@
       "4"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "displayedLengths": [
+        "4",
+        "6",
+        "8",
+        "2",
+        "3",
+        "4"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-12-sim-quads",
@@ -167,7 +306,16 @@
       "2"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "6",
+        "4",
+        "3",
+        "2"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "seed-13-rectangle-diag",
@@ -181,7 +329,14 @@
       "6"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "8",
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "seed-14-square-diag",
@@ -194,7 +349,13 @@
       "5"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "5"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "seed-15-rhombus",
@@ -208,7 +369,16 @@
       "60"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "6"
+      ],
+      "displayedAngles": [
+        "60"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "seed-16-parallelogram",
@@ -223,7 +393,17 @@
       "65"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "8",
+        "5"
+      ],
+      "displayedAngles": [
+        "65"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "seed-17-trapezoid",
@@ -237,7 +417,14 @@
       "6"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "10",
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "seed-18-algebraic-angle",
@@ -252,7 +439,22 @@
       "40"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "2",
+        "3"
+      ],
+      "displayedAngles": [
+        "40"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "seed-19-circle-chord",
@@ -265,7 +467,16 @@
       "5"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "5"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "seed-20-circle-tangent",
@@ -278,7 +489,13 @@
       "5"
     ],
     "source": "tests/geo-golden-descriptions.test.ts",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "5"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "seed-theory-01",
@@ -303,7 +520,22 @@
       "8"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #1",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "A",
+        "C"
+      ],
+      "displayedLengths": [
+        "6",
+        "8"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-02",
@@ -318,7 +550,23 @@
       "8"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #2",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "D",
+        "A",
+        "C"
+      ],
+      "displayedLengths": [
+        "6",
+        "8"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-03",
@@ -332,7 +580,19 @@
       "6"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #3",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "5",
+        "6"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-04",
@@ -347,7 +607,22 @@
       "4"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #4",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "E",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "3",
+        "2",
+        "4"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-05",
@@ -361,7 +636,19 @@
       "5"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #5",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B"
+      ],
+      "displayedLengths": [
+        "8",
+        "5"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "intake-06",
@@ -376,7 +663,23 @@
       "5"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #6",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "8",
+        "5"
+      ],
+      "displayedAngles": [
+        "65"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-07",
@@ -392,7 +695,21 @@
       "40"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #7",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "A",
+        "C"
+      ],
+      "displayedLengths": [
+        "7",
+        "9",
+        "5",
+        "40"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-08",
@@ -407,7 +724,21 @@
       "5"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #8",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "10",
+        "6",
+        "5"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-09",
@@ -421,7 +752,21 @@
       "6"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #9",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "8",
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-10",
@@ -435,7 +780,23 @@
       "9"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #10",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "A",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "4",
+        "9"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-11",
@@ -449,7 +810,22 @@
       "12"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #11",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "B",
+        "A",
+        "C"
+      ],
+      "displayedLengths": [
+        "5",
+        "12"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-12",
@@ -462,7 +838,20 @@
       "4"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #12",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "E",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "4"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-13",
@@ -477,7 +866,22 @@
       "8"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #13",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "8"
+      ],
+      "displayedAngles": [
+        "70",
+        "50"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-14",
@@ -490,7 +894,19 @@
       "6"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #14",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "6"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-15",
@@ -501,7 +917,19 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #15",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-16",
@@ -515,7 +943,20 @@
       "9"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #16",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "6",
+        "9"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-17",
@@ -530,7 +971,21 @@
       "8"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #17",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "7",
+        "9",
+        "8"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-18",
@@ -544,7 +999,20 @@
       "6"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #18",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "8",
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-19",
@@ -558,7 +1026,21 @@
       "6"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #19",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "8",
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-20",
@@ -571,7 +1053,20 @@
       "5"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #20",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "5"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-21",
@@ -587,7 +1082,24 @@
       "4"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #21",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedLengths": [
+        "9",
+        "5",
+        "4"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-22",
@@ -600,7 +1112,20 @@
       "110"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #22",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedAngles": [
+        "110"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-23",
@@ -614,7 +1139,19 @@
       "8"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #23",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B"
+      ],
+      "displayedLengths": [
+        "5",
+        "8"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "intake-24",
@@ -625,7 +1162,16 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #24",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "O",
+        "C",
+        "A",
+        "B"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "intake-25",
@@ -636,7 +1182,15 @@
     "expectedOutcome": "figure",
     "expectedGivenNumbers": [],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #25",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B"
+      ],
+      "expectedFamilyId": "circle_family"
+    }
   },
   {
     "id": "intake-26",
@@ -651,7 +1205,24 @@
       "6"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #26",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "4",
+        "3",
+        "6"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-27",
@@ -665,7 +1236,23 @@
       "8"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #27",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "D",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "6",
+        "8"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-28",
@@ -678,7 +1265,21 @@
       "5"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #28",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "ج"
+      ],
+      "displayedLengths": [
+        "5"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-29",
@@ -693,7 +1294,22 @@
       "3"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #29",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "E",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "4",
+        "6",
+        "3"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-30",
@@ -707,7 +1323,20 @@
       "70"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #30",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedAngles": [
+        "120",
+        "70"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-31",
@@ -720,7 +1349,19 @@
       "100"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #31",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedAngles": [
+        "100"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   },
   {
     "id": "intake-32",
@@ -734,7 +1375,19 @@
       "12"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #32",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C"
+      ],
+      "displayedLengths": [
+        "10",
+        "12"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-33",
@@ -747,7 +1400,22 @@
       "65"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #33",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "N",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "displayedAngles": [
+        "65"
+      ]
+    }
   },
   {
     "id": "intake-34",
@@ -761,7 +1429,22 @@
       "9"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #34",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "displayedLengths": [
+        "6",
+        "9"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
   },
   {
     "id": "intake-35",
@@ -774,6 +1457,19 @@
       "60"
     ],
     "source": "geometry-notebooklm-intake-corpus.test.ts :: #35",
-    "humanVerdict": "unreviewed"
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "M",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "displayedAngles": [
+        "60"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
   }
 ]

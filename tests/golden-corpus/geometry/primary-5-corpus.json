@@ -1,0 +1,530 @@
+[
+  {
+    "id": "prim5-tri-01",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "أوجد مساحة المثلث أ ب جـ في الشكل المقابل",
+    "geometryRaw": "مثلث أ ب جـ ; القاعدة ب جـ = 8 سم ; الارتفاع أ د = 6 سم ; أ د ⊥ ب جـ",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "6"
+    ],
+    "source": "كتاب المدرسة 5ب - مساحة المثلث",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ",
+        "د"
+      ],
+      "displayedLengths": [
+        "8",
+        "6"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
+  },
+  {
+    "id": "prim5-tri-02",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "احسب مساحة المثلث القائم الزاوية في الشكل المقابل",
+    "geometryRaw": "مثلث أ ب جـ قائم في ب ; أ ب = 5 سم ; ب جـ = 12 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "12"
+    ],
+    "source": "سلاح التلميذ 5ب - مساحة المثلث القائم",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ"
+      ],
+      "displayedLengths": [
+        "5",
+        "12"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
+  },
+  {
+    "id": "prim5-tri-03",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث قاعدته 10 سم وارتفاعه المناظر 7 سم أوجد مساحته",
+    "geometryRaw": "مثلث قاعدته = 10 سم ; ارتفاعه المناظر = 7 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "10",
+      "7"
+    ],
+    "source": "الأضواء 5ب - المساحات",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "10",
+        "7"
+      ],
+      "expectedFamilyId": "triangle_family"
+    }
+  },
+  {
+    "id": "prim5-tri-04",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "أوجد طول الارتفاع أ د في المثلث أ ب جـ الذي مساحته 24 سم² وقاعدته 8 سم",
+    "geometryRaw": "مثلث أ ب جـ ; ب جـ = 8 سم ; مساحته = 24 سم²",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "8",
+      "24"
+    ],
+    "source": "كتاب المدرسة 5ب - تدريبات المساحة",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ"
+      ],
+      "displayedLengths": [
+        "8"
+      ],
+      "questionMarkTarget": "الارتفاع",
+      "expectedFamilyId": "triangle_family"
+    }
+  },
+  {
+    "id": "prim5-tri-05",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "مثلث منفرج الزاوية ارتفاعه الساقط على امتداد القاعدة 4 سم وطول قاعدته 6 سم",
+    "geometryRaw": "مثلث أ ب جـ ; ب جـ = 6 سم ; الارتفاع أ د = 4 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "4"
+    ],
+    "source": "سلاح التلميذ 5ب - الارتفاع الخارجي",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-para-01",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "احسب مساحة متوازي الأضلاع أ ب جـ د الموضح بالشكل",
+    "geometryRaw": "متوازي أضلاع أ ب جـ د ; ب جـ = 10 سم ; الارتفاع أ هـ = 5 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "10",
+      "5"
+    ],
+    "source": "كتاب المدرسة 5ب - مساحة متوازي الأضلاع",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ",
+        "د"
+      ],
+      "displayedLengths": [
+        "10",
+        "5"
+      ],
+      "displayedAngles": [
+        "90"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
+  },
+  {
+    "id": "prim5-para-02",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "متوازي أضلاع طول قاعدته 12 سم وارتفاعه المناظر 8 سم أوجد مساحته",
+    "geometryRaw": "متوازي أضلاع قاعدته = 12 سم ; ارتفاعه = 8 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "12",
+      "8"
+    ],
+    "source": "الأضواء 5ب - مساحة متوازي الأضلاع",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "12",
+        "8"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
+  },
+  {
+    "id": "prim5-para-03",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "متوازي أضلاع مساحته 48 سم² وقاعدته 6 سم احسب ارتفاعه المناظر",
+    "geometryRaw": "متوازي أضلاع مساحته = 48 سم² ; قاعدته = 6 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "48",
+      "6"
+    ],
+    "source": "سلاح التلميذ 5ب - مسائل المساحة",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "6"
+      ],
+      "expectedFamilyId": "quadrilateral_family"
+    }
+  },
+  {
+    "id": "prim5-para-04",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "متوازي أضلاع أ ب جـ د أطوال أضلاعه 6 سم و 8 سم وارتفاعه الأصغر 3 سم",
+    "geometryRaw": "متوازي أضلاع أ ب جـ د ; أ ب = 6 سم ; ب جـ = 8 سم ; الارتفاع = 3 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8",
+      "3"
+    ],
+    "source": "كتاب المدرسة 5ب - الارتفاع الأصغر والأكبر",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-coord-01",
+    "gradeId": "primary-5",
+    "branchId": "analytic_geometry",
+    "problemText": "عين النقطة أ(3 ، 5) على شبكة الإحداثيات الموضحة",
+    "geometryRaw": "مستوى إحداثي الربع الأول ; النقطة أ(3 ، 5)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "5"
+    ],
+    "source": "كتاب المدرسة 5ب - المستوى الإحداثي",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "3",
+        "5"
+      ]
+    }
+  },
+  {
+    "id": "prim5-coord-02",
+    "gradeId": "primary-5",
+    "branchId": "analytic_geometry",
+    "problemText": "مثل المثلث أ ب جـ على الشبكة التربيعية حيث أ(1،1) ، ب(5،1) ، جـ(3،4)",
+    "geometryRaw": "مستوى إحداثي ; أ(1 ، 1) ; ب(5 ، 1) ; جـ(3 ، 4)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1",
+      "5",
+      "3",
+      "4"
+    ],
+    "source": "سلاح التلميذ 5ب - رسم المضلعات إحداثياً",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ"
+      ]
+    }
+  },
+  {
+    "id": "prim5-coord-03",
+    "gradeId": "primary-5",
+    "branchId": "analytic_geometry",
+    "problemText": "عين إحداثيات رؤوس المستطيل أ ب جـ د من الشكل المقابل",
+    "geometryRaw": "مستوى إحداثي الربع الأول ; مستطيل أ(2،2) ب(6،2) جـ(6،5) د(2،5)",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "2",
+      "6",
+      "5"
+    ],
+    "source": "الأضواء 5ب - الإحداثيات",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "vertices": [
+        "أ",
+        "ب",
+        "جـ",
+        "د"
+      ]
+    }
+  },
+  {
+    "id": "prim5-solid-01",
+    "gradeId": "primary-5",
+    "branchId": "solid_geometry",
+    "problemText": "احسب حجم متوازي المستطيلات الموضح في الشكل بأبعاده الثلاثة",
+    "geometryRaw": "متوازي مستطيلات أبعاده 5 سم ، 4 سم ، 3 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "5",
+      "4",
+      "3"
+    ],
+    "source": "كتاب المدرسة 5ب - الحجوم",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "5",
+        "4",
+        "3"
+      ],
+      "expectedFamilyId": "solid3d_mechanics_family"
+    }
+  },
+  {
+    "id": "prim5-solid-02",
+    "gradeId": "primary-5",
+    "branchId": "solid_geometry",
+    "problemText": "مكعب طول حرفه 4 سم أوجد حجمه",
+    "geometryRaw": "مكعب طول حرفه = 4 سم",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "4"
+    ],
+    "source": "سلاح التلميذ 5ب - حجم المكعب",
+    "humanVerdict": "unreviewed",
+    "expectedFigureSpec": {
+      "displayedLengths": [
+        "4"
+      ],
+      "expectedFamilyId": "solid3d_mechanics_family"
+    }
+  },
+  {
+    "id": "prim5-solid-03",
+    "gradeId": "primary-5",
+    "branchId": "solid_geometry",
+    "problemText": "أوجد حجم المجسم المكون من مكعبات الوحدة بالسنتيمتر المكعب",
+    "geometryRaw": "مجسم مكون من طبقات مكعبات وحدة 3 في 2 في 4",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "3",
+      "2",
+      "4"
+    ],
+    "source": "الأضواء 5ب - مكعبات الوحدة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-numline-01",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "حدد موضع العدد 0.5 على خط الأعداد الموضح",
+    "geometryRaw": "خط الأعداد من 0 إلى 1 مقسم إلى أجزاء من عشرة",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "0",
+      "1",
+      "0.5"
+    ],
+    "source": "كتاب المدرسة 5ب - الكسور العشرية",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-numline-02",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "أي الحروف الموضحة على خط الأعداد تمثل 1.75؟",
+    "geometryRaw": "خط الأعداد من 1 إلى 2 مقسم إلى أرباع",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "1",
+      "2"
+    ],
+    "source": "سلاح التلميذ 5ب - تمثيل الأعداد",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-numline-03",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "عين النقطة التي تمثل 3/4 على خط الأعداد التالي",
+    "geometryRaw": "خط الأعداد مقسم إلى أرباع من 0 إلى 2",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "0",
+      "2"
+    ],
+    "source": "الأضواء 5ب - خط الأعداد",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-stat-01",
+    "gradeId": "primary-5",
+    "branchId": "statistics_probability",
+    "problemText": "التمثيل البياني بالأعمدة المزدوجة يوضح درجات الطلاب في مادتي العلوم والرياضيات",
+    "geometryRaw": "تمثيل بياني بالأعمدة المزدوجة لمقارنة مجموعتين من البيانات",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب المدرسة 5ب - الأعمدة المزدوجة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-stat-02",
+    "gradeId": "primary-5",
+    "branchId": "statistics_probability",
+    "problemText": "القطاع الدائري يوضح توزيع الأنشطة المدرسية المفضلة",
+    "geometryRaw": "قطاع دائري مقسم بنسب 50% رياضي و 25% فني و 25% ثقافي",
+    "expectedOutcome": "figure",
+    "expectedGivenNumbers": [
+      "50",
+      "25"
+    ],
+    "source": "سلاح التلميذ 5ب - القطاعات الدائرية",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-01",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "أوجد ناتج ضرب: 2.5 × 1.4",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "2.5",
+      "1.4"
+    ],
+    "source": "كتاب المدرسة 5ب - ضرب الكسور العشرية",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-02",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "إذا كانت كتلة صندوق التفاح 15.75 كجم فما كتلة 10 صناديق متماثلة؟",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "15.75",
+      "10"
+    ],
+    "source": "سلاح التلميذ 5ب - مسائل لفظية",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-03",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "مساحة متوازي الأضلاع تساوي طول القاعدة مضروباً في الارتفاع المناظر لها.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "الأضواء 5ب - القوانين",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-04",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "مساحة المثلث تساوي نصف حاصل ضرب طول قاعدته في ارتفاعه المناظر.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "كتاب المدرسة 5ب - قوانين المساحة",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-05",
+    "gradeId": "primary-5",
+    "branchId": "solid_geometry",
+    "problemText": "حجم متوازي المستطيلات يساوي حاصل ضرب أبعاده الثلاثة (الطول × العرض × الارتفاع).",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [],
+    "source": "سلاح التلميذ 5ب - قوانين الحجم",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-06",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "أوجد العامل المشترك الأكبر (ع.م.أ) للعددين 18 و 24.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "18",
+      "24"
+    ],
+    "source": "كتاب المدرسة 5ب - العوامل والمضاعفات",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-07",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "أوجد المضاعف المشترك الأصغر (م.م.أ) للعددين 6 و 8.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "6",
+      "8"
+    ],
+    "source": "الأضواء 5ب - المضاعفات",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-08",
+    "gradeId": "primary-5",
+    "branchId": "plane_geometry",
+    "problemText": "الزاوية المحصورة بين ضلعي القائمة في المثلث القائم الزاوية قياسها 90 درجة دائماً.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "90"
+    ],
+    "source": "كتاب المدرسة 5ب - المثلث القائم",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-09",
+    "gradeId": "primary-5",
+    "branchId": "solid_geometry",
+    "problemText": "المكعب له 6 أوجه مربعة متطابقة و 12 حرفاً متساوياً في الطول و 8 رؤوس.",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "6",
+      "12",
+      "8"
+    ],
+    "source": "سلاح التلميذ 5ب - خواص المكعب",
+    "humanVerdict": "unreviewed"
+  },
+  {
+    "id": "prim5-theory-10",
+    "gradeId": "primary-5",
+    "branchId": "numbers",
+    "problemText": "اشترى محمد 3.5 متر من القماش بسعر 80 جنيهاً للمتر، فما إجمالي المبلغ المدفوع؟",
+    "geometryRaw": "",
+    "expectedOutcome": "no_figure",
+    "expectedGivenNumbers": [
+      "3.5",
+      "80"
+    ],
+    "source": "الأضواء 5ب - مسائل الشراء",
+    "humanVerdict": "unreviewed"
+  }
+]
