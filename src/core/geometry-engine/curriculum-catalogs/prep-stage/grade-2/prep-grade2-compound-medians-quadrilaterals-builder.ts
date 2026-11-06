@@ -87,12 +87,12 @@ export function buildTwoRightTrianglesMediansDMACFigure(
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
     { id: `${opts.figureId}_sDC`, fromVertexId: vD.id, toVertexId: vC.id },
-    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: 18, unit: "سم" } },
+    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sCB`, fromVertexId: vC.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: { value: 9, unit: "سم" } },
     { id: `${opts.figureId}_sDG`, fromVertexId: vD.id, toVertexId: vG.id },
-    { id: `${opts.figureId}_sDM`, fromVertexId: vD.id, toVertexId: vM.id, lengthLabel: { value: 6, unit: "سم" } },
+    { id: `${opts.figureId}_sDM`, fromVertexId: vD.id, toVertexId: vM.id },
   ];
 
   return {

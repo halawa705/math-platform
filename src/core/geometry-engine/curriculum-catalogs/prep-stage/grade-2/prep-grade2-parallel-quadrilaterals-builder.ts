@@ -45,8 +45,8 @@ export function buildParallelQuadMidpointsZYDCFigure(
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: notation === "english" ? "Y" : "ص", position: { x: 3.5, y: 4.75 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 10, unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: 6, unit: "سم" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, parallelArrows: 1 },
     { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
     { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id },
@@ -117,11 +117,11 @@ export function buildParallelogramTrisectionACFigure(
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1, y: 2 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 7, y: 2 } };
 
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 6, y: 8 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "هـ", position: { x: 4, y: 2 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 6, y: 8 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 4, y: 2 } };
 
-  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "ي", position: { x: 4.33, y: 6 } };
-  const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: notation === "english" ? "H" : "ك", position: { x: 5.67, y: 4 } };
+  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: localizeGeometricVertexLabelSSOT("G", notation), position: { x: 4.33, y: 6 } };
+  const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: localizeGeometricVertexLabelSSOT("H", notation), position: { x: 5.67, y: 4 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id },

@@ -23,6 +23,7 @@ export const MODULE_ID_PREP_GRADE3_TRIANGLE_SEPARATE_SIMILARITY_BUILDER =
 export interface TriangleSeparateSimilarityOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeLengths?: boolean;
 }
 
 /**
@@ -44,12 +45,12 @@ export function buildTwoSeparateSimilarTrianglesWithAngle120Figure(
   const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 16, y: 4 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: "7.5", unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: "4.5", unit: "سم" } },
-    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: "10.5", unit: "سم" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.includeLengths ? { value: "7.5", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.includeLengths ? { value: "4.5", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: opts.includeLengths ? { value: "10.5", unit: "سم" } : undefined },
 
-    { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id, lengthLabel: { value: 5, unit: "سم" } },
-    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: { value: 3, unit: "سم" } },
+    { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id, lengthLabel: opts.includeLengths ? { value: 5, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: opts.includeLengths ? { value: 3, unit: "سم" } : undefined },
     { id: `${opts.figureId}_sDF`, fromVertexId: vD.id, toVertexId: vF.id },
   ];
 

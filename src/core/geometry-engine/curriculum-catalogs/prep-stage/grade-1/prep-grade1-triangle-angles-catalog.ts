@@ -85,7 +85,11 @@ export function matchPrepGrade1TriangleAnglesFigure(
 
   // 11. مسألة 2-7 ص 207: مثلث متساوي الأضلاع والزاوية الخارجة عنه = 120°
   if (/متساوي\s*الأضلاع.*(?:ال)?خارج(?:ي)?ة|(?:ال)?خارج(?:ي)?ة.*متساوي\s*الأضلاع/i.test(d)) {
-    return buildTriangleEquilateralExterior120Figure({ figureId, notationLanguage });
+    return buildTriangleEquilateralExterior120Figure({
+      figureId,
+      notationLanguage,
+      include120: /120/.test(d),
+    });
   }
 
   // 12. مسألة 2-9 ص 207: زاويتان خارجتان 110° و 104° لحساب زاوية الرأس X = 34°

@@ -117,7 +117,7 @@ export function buildConcurrentAnglesDoubleAngle101Figure(opts: PrepGrade1Concur
     segments,
     angles: [
       { id: `${opts.figureId}_angAMB`, vertexId: vM.id, arm1VertexId: vA.id, arm2VertexId: vB.id, degrees: 48, degreesLabel: "48°" },
-      { id: `${opts.figureId}_angBMC`, vertexId: vM.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: 96, degreesLabel: "2×48°" },
+      { id: `${opts.figureId}_angBMC`, vertexId: vM.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: 96, degreesLabel: "2 m(∠AMB)" },
       { id: `${opts.figureId}_angDMC`, vertexId: vM.id, arm1VertexId: vC.id, arm2VertexId: vD.id, degrees: 115, degreesLabel: "115°" },
       { id: `${opts.figureId}_angAMD`, vertexId: vM.id, arm1VertexId: vD.id, arm2VertexId: vA.id, degreesLabel: "؟" },
     ],

@@ -22,6 +22,7 @@ export const MODULE_ID_PREP_SIMILARITY_GENERAL_QUADS_BUILDER =
 export interface SimilarityGeneralQuadsOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeExtraTextbookValues?: boolean;
 }
 
 /**
@@ -46,14 +47,14 @@ export function buildSimilarQuadsWithRadicalsAndAnglesFigure(
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: "6.5", unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: "8", unit: "سم" } },
-    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: { value: "5", unit: "سم" } },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "8", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "5", unit: "سم" } : undefined },
     { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id, lengthLabel: { value: "1.5√3", unit: "سم" } },
 
-    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: { value: "(y - 1/3)", unit: "سم" } },
-    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: { value: "z", unit: "سم" } },
+    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "(y - 1/3)", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "z", unit: "سم" } : undefined },
     { id: `${opts.figureId}_sGH`, fromVertexId: vG.id, toVertexId: vH.id },
-    { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id, lengthLabel: { value: "√3", unit: "سم" } },
+    { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "√3", unit: "سم" } : undefined },
   ];
 
   const angles: CanonicalAngleNode[] = [
@@ -93,16 +94,16 @@ export function buildSimilarQuadsWithObtuseAngleFigure(
   const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "هـ", position: { x: 1, y: 4.5 } };
   const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 2.5, y: 1 } };
   const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "ع", position: { x: 8, y: 1 } };
-  const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: notation === "english" ? "H" : "ح", position: { x: 4.5, y: 6 } };
+  const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: notation === "english" ? "H" : "ح", position: { x: 3.45, y: 5.55 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: "10√3", unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: "20", unit: "سم" } },
-    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: { value: "z", unit: "سم" } },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "20", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "z", unit: "سم" } : undefined },
     { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
 
-    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: { value: "5√3", unit: "سم" } },
-    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: { value: "y", unit: "سم" } },
+    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "5√3", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: opts.includeExtraTextbookValues ? { value: "y", unit: "سم" } : undefined },
     { id: `${opts.figureId}_sGH`, fromVertexId: vG.id, toVertexId: vH.id, lengthLabel: { value: "10√2", unit: "سم" } },
     { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id },
   ];

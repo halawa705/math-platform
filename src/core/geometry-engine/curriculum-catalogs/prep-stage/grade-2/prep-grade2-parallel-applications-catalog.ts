@@ -64,7 +64,11 @@ export function matchPrepGrade2ParallelApplicationsFigure(
 
   // 4. مثلث متوسط FED منصفات أضلاع 6 و 8 و 10 سم ومحيطه 12 سم وقائم (مسألة 8 ص 212)
   if (/منتصفات.*AB.*BC.*AC.*محيط\s*المثلث\s*FED|محيط\s*المثلث\s*FED.*12|6\s*سم.*8\s*سم.*10\s*سم.*منتصف/i.test(d)) {
-    return buildTriangleMidsegmentsPerimeter12Figure({ figureId, notationLanguage });
+    return buildTriangleMidsegmentsPerimeter12Figure({
+      figureId,
+      notationLanguage,
+      includeLengths: /6|8|10/.test(d),
+    });
   }
 
   // 5. قطعة واصلة بين منتصفين DE = 2X+1 و BC = 5X-5 لإيجاد X = 7 (مسألة 13 ص 213)

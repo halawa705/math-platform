@@ -69,7 +69,11 @@ export function matchPrepGrade2TriangleMediansFigure(
 
   // 8. متوسطان متقاطعان مع قطعة واصلة DE وأطوال BC = 12 و BE = 9 (مسألة 3 و 4 ص 226)
   if (/BE\s*=\s*9.*BC\s*=\s*12|MC\s*=\s*8.*BE\s*=\s*9|LZ\s*=\s*15.*YM\s*=\s*18/i.test(d)) {
-    return buildMediansCentroidMidsegmentPerimeterFigure({ figureId, notationLanguage });
+    return buildMediansCentroidMidsegmentPerimeterFigure({
+      figureId,
+      notationLanguage,
+      includeMC8: /MC\s*=\s*8|8\s*سم/i.test(d),
+    });
   }
 
   // 9. مثلث قائم ABC في B بمتوسط BH وشكل رباعي بقطعة واصلة EF لإثبات BH = EF (مسألة 12 ص 228)
@@ -94,7 +98,11 @@ export function matchPrepGrade2TriangleMediansFigure(
 
   // 13. مطابقة عامة لدرس متوسطات المثلث في 2 إعدادي
   if (/متوسطات\s*المثلث|نقطة\s*تلاقي\s*المتوسطات|مركز\s*المتوسطات/i.test(d)) {
-    return buildMediansCentroidMidsegmentPerimeterFigure({ figureId, notationLanguage });
+    return buildMediansCentroidMidsegmentPerimeterFigure({
+      figureId,
+      notationLanguage,
+      includeMC8: false,
+    });
   }
 
   return undefined;

@@ -22,6 +22,7 @@ export const MODULE_ID_PREP_SIMILARITY_COMPOSITE_FIGURES_BUILDER =
 export interface SimilarityCompositeFiguresOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeTextbookLengths?: boolean;
 }
 
 /**
@@ -46,17 +47,17 @@ export function buildCollinearBaseQuadsIntersectingAtOFigure(
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_cbC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9.5, y: 6.8 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id, lengthLabel: { value: 2, unit: "سم" } },
-    { id: `${opts.figureId}_sEA`, fromVertexId: vE.id, toVertexId: vA.id, lengthLabel: { value: "x", unit: "سم" } },
-    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id, lengthLabel: { value: 4, unit: "سم" } },
+    { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id, lengthLabel: opts.includeTextbookLengths ? { value: 2, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sEA`, fromVertexId: vE.id, toVertexId: vA.id, lengthLabel: opts.includeTextbookLengths ? { value: "x", unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id, lengthLabel: opts.includeTextbookLengths ? { value: 4, unit: "سم" } : undefined },
 
-    { id: `${opts.figureId}_sHG`, fromVertexId: vH.id, toVertexId: vG.id, lengthLabel: { value: 3, unit: "سم" } },
+    { id: `${opts.figureId}_sHG`, fromVertexId: vH.id, toVertexId: vG.id, lengthLabel: opts.includeTextbookLengths ? { value: 3, unit: "سم" } : undefined },
     { id: `${opts.figureId}_sGF`, fromVertexId: vG.id, toVertexId: vF.id },
     { id: `${opts.figureId}_sFE`, fromVertexId: vF.id, toVertexId: vE.id },
 
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
-    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: { value: 4.5, unit: "سم" } },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: opts.includeTextbookLengths ? { value: 4.5, unit: "سم" } : undefined },
 
     // خطوط التقاطع المتجهة إلى O
     { id: `${opts.figureId}_sEO`, fromVertexId: vE.id, toVertexId: vO.id, strokeStyle: "dashed" },
@@ -106,11 +107,11 @@ export function buildSimilarHousePentagonsFigure(
     { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id },
     { id: `${opts.figureId}_sEA`, fromVertexId: vE.id, toVertexId: vA.id },
 
-    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: { value: 15, unit: "سم" } },
-    { id: `${opts.figureId}_sGH`, fromVertexId: vG.id, toVertexId: vH.id, lengthLabel: { value: 12, unit: "سم" } },
-    { id: `${opts.figureId}_sHJ`, fromVertexId: vH.id, toVertexId: vJ.id, lengthLabel: { value: 9, unit: "سم" } },
-    { id: `${opts.figureId}_sJK`, fromVertexId: vJ.id, toVertexId: vK.id, lengthLabel: { value: 15, unit: "سم" } },
-    { id: `${opts.figureId}_sKF`, fromVertexId: vK.id, toVertexId: vF.id, lengthLabel: { value: 18, unit: "سم" } },
+    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: opts.includeTextbookLengths ? { value: 15, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sGH`, fromVertexId: vG.id, toVertexId: vH.id, lengthLabel: opts.includeTextbookLengths ? { value: 12, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sHJ`, fromVertexId: vH.id, toVertexId: vJ.id, lengthLabel: opts.includeTextbookLengths ? { value: 9, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sJK`, fromVertexId: vJ.id, toVertexId: vK.id, lengthLabel: opts.includeTextbookLengths ? { value: 15, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sKF`, fromVertexId: vK.id, toVertexId: vF.id, lengthLabel: opts.includeTextbookLengths ? { value: 18, unit: "سم" } : undefined },
   ];
 
   return {

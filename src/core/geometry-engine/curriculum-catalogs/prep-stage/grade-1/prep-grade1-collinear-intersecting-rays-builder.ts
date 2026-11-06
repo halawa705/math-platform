@@ -29,7 +29,7 @@ export function buildCollinearABCDIntersectingXYFigure(opts: PrepGrade1Collinear
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 6.5, y: 5 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 3.5, y: 5 } };
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.2, y: 5 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 7.8, y: 8 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 8.46, y: 7.90 } };
   const vX: CanonicalVertexNode = { id: `${opts.figureId}_vX`, label: localizeGeometricVertexLabelSSOT("X", notation), position: { x: 1.8, y: 8 } };
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: localizeGeometricVertexLabelSSOT("Y", notation), position: { x: 5.2, y: 2 } };
 
@@ -65,10 +65,10 @@ export function buildIntersectingLinesWithMultipleRaysFigure(opts: PrepGrade1Col
   const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: localizeGeometricVertexLabelSSOT("M", notation), position: { x: 5, y: 5 } };
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 8.5, y: 5 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 1.5, y: 5 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 7.5, y: 8 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 2.5, y: 2 } };
-  const vX: CanonicalVertexNode = { id: `${opts.figureId}_vX`, label: localizeGeometricVertexLabelSSOT("X", notation), position: { x: 2.2, y: 7.8 } };
-  const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: localizeGeometricVertexLabelSSOT("Y", notation), position: { x: 5.8, y: 1.8 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 7.06, y: 7.95 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 2.94, y: 2.05 } };
+  const vX: CanonicalVertexNode = { id: `${opts.figureId}_vX`, label: localizeGeometricVertexLabelSSOT("X", notation), position: { x: 2.05, y: 7.06 } };
+  const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: localizeGeometricVertexLabelSSOT("Y", notation), position: { x: 5.52, y: 2.05 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vB.id, toVertexId: vA.id },
@@ -89,7 +89,7 @@ export function buildIntersectingLinesWithMultipleRaysFigure(opts: PrepGrade1Col
       { id: `${opts.figureId}_angCMX`, vertexId: vM.id, arm1VertexId: vC.id, arm2VertexId: vX.id, degrees: 90, degreesLabel: "90°" },
       { id: `${opts.figureId}_angXMB`, vertexId: vM.id, arm1VertexId: vX.id, arm2VertexId: vB.id, degrees: 35, degreesLabel: "35°" },
       { id: `${opts.figureId}_angAMY`, vertexId: vM.id, arm1VertexId: vA.id, arm2VertexId: vY.id, degrees: 80, degreesLabel: "80°" },
-      { id: `${opts.figureId}_angAMD`, vertexId: vM.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 125, degreesLabel: "125°" },
+      { id: `${opts.figureId}_angAMD`, vertexId: vM.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 125, degreesLabel: "؟" },
     ],
   };
 }

@@ -137,8 +137,8 @@ export function buildSquareDiagonalsRelationFigure(opts: PrepGrade1SpecialQuadsO
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, tickMarks: 1 },
     { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, tickMarks: 1 },
     { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id, tickMarks: 1 },
-    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id },
-    { id: `${opts.figureId}_sBD`, fromVertexId: vB.id, toVertexId: vD.id },
+    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: "2a - 1" } },
+    { id: `${opts.figureId}_sBD`, fromVertexId: vB.id, toVertexId: vD.id, lengthLabel: { value: "5a - 4" } },
   ];
 
   return {

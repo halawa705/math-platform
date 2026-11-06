@@ -79,7 +79,11 @@ export function matchPrepGrade2PythagorasConverseFigure(
 
   // 7. مثلث مقسوم بعمود ارتفاعه 3 وقاعدة 11 سم (مسألة 4-2)
   if (/قاعدة.*11.*ارتفاع.*3|3.*11.*فيثاغورس/i.test(d)) {
-    return buildPythagorasAltitude3Base11Figure({ figureId, notationLanguage });
+    return buildPythagorasAltitude3Base11Figure({
+      figureId,
+      notationLanguage,
+      includeLeft5: /5/.test(d),
+    });
   }
 
   // 8. مثلث مقسوم بعمود ارتفاعه 6 وقاعدة 12 ووتر 10 (مسألة 4-3)

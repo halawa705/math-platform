@@ -80,7 +80,7 @@ export function buildRightTriangleMedianWithCentroidGFigure(
     { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: 18, unit: "سم" } },
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id },
-    { id: `${opts.figureId}_sAG`, fromVertexId: vA.id, toVertexId: vG.id, lengthLabel: { value: 10, unit: "سم" } },
+    { id: `${opts.figureId}_sAG`, fromVertexId: vA.id, toVertexId: vG.id },
   ];
 
   return {
@@ -154,7 +154,7 @@ export function buildRightTriangleMedianWithPerpendicularMEFigure(
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
-    { id: `${opts.figureId}_sCB`, fromVertexId: vC.id, toVertexId: vB.id, lengthLabel: { value: 30, unit: "سم" } },
+    { id: `${opts.figureId}_sCB`, fromVertexId: vC.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id },
     { id: `${opts.figureId}_sME`, fromVertexId: vM.id, toVertexId: vE.id, lengthLabel: { value: 4, unit: "سم" } },
     { id: `${opts.figureId}_sED`, fromVertexId: vE.id, toVertexId: vD.id, lengthLabel: { value: 3, unit: "سم" } },

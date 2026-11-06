@@ -116,7 +116,7 @@ describe("Prep Grade 3 Straight Line Equation Geometry Catalog", () => {
 
     expect(fig).toBeDefined();
     expect(fig?.titleArabic).toContain("مساحة المثلث AOB تساوي 9");
-    expect(fig?.vertices.some((v) => v.label === "A(0,6)")).toBe(true);
+    expect(fig?.vertices.some((v) => v.label === "A")).toBe(true);
 
     const svg = projectGeometryFigureToSVGMarkup(fig!, { numeralMode: "western" });
     expect(svg).toContain("<svg");

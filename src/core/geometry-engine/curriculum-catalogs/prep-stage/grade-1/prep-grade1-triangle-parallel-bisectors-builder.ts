@@ -25,11 +25,11 @@ export interface PrepGrade1TriangleParallelOptions {
 export function buildTriangleParallelDE100Figure(opts: PrepGrade1TriangleParallelOptions): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 5, y: 8.8 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 1.5, y: 8.8 } };
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 5.5, y: 6.8 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 6, y: 2.2 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 2, y: 2.2 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 6.5, y: 7.87 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 2.5, y: 7.87 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 7.0, y: 5.04 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 7.5, y: 2.2 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 2.1, y: 2.2 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id, parallelArrows: 1 },
@@ -137,11 +137,11 @@ export function buildTriangleBaseAngleBisectors126Figure(opts: PrepGrade1Triangl
 export function buildTriangleMidParallelEDFigure(opts: PrepGrade1TriangleParallelOptions): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 5, y: 8.5 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 2.2 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 1.5, y: 2.2 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 6.8, y: 5.4 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 3.2, y: 5.4 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 6.04, y: 5.59 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.0, y: 2.2 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 2.0, y: 2.2 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 7.02, y: 3.90 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 4.02, y: 3.90 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
@@ -161,8 +161,8 @@ export function buildTriangleMidParallelEDFigure(opts: PrepGrade1TriangleParalle
     angles: [
       { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vC.id, arm2VertexId: vB.id, degrees: 80, degreesLabel: "80°" },
       { id: `${opts.figureId}_angB`, vertexId: vB.id, arm1VertexId: vC.id, arm2VertexId: vA.id, degrees: 60, degreesLabel: "60°" },
-      { id: `${opts.figureId}_angAED`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 40, degreesLabel: "40°" },
-      { id: `${opts.figureId}_angDEC`, vertexId: vE.id, arm1VertexId: vC.id, arm2VertexId: vD.id, degrees: 140, degreesLabel: "140°" },
+      { id: `${opts.figureId}_angAED`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 40, degreesLabel: "؟" },
+      { id: `${opts.figureId}_angDEC`, vertexId: vE.id, arm1VertexId: vC.id, arm2VertexId: vD.id, degrees: 140, degreesLabel: "؟" },
     ],
   };
 }

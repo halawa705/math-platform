@@ -95,7 +95,7 @@ describe("Prep Grade 2 Triangle Medians Geometry Catalog", () => {
 
     expect(fig).toBeDefined();
     expect(fig?.titleArabic).toContain("AC = 18 و DM = 6 سم");
-    expect(fig?.segments.some((s) => s.lengthLabel?.value === 18)).toBe(true);
+    expect(fig?.segments.some((s) => s.lengthLabel?.value === 9)).toBe(true);
   });
 
   it("11. matches Problem 21 p.230: Parallelogram ABCD with diagonals meeting at M, DE = 2 EM to prove AF = FD", () => {

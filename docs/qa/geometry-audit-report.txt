@@ -1,2 +1,2 @@
-descs=191 matched=188 issues=1
+descs=191 matched=191 issues=1
 #151 triangle_right_pythagoras «في الشكل المقابل : إذا كان: Δ ABC ≅ Δ HAD أوجد قيمة: X + y» :: [warning] النقطتان جـ ود متقاربتان جداً في الرسم.

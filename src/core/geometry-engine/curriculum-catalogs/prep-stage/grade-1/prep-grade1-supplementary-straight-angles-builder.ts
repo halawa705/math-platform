@@ -59,10 +59,10 @@ export function buildCollinearRaysTest144Figure(
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: localizeGeometricVertexLabelSSOT("و", notation), position: { x: 5, y: 2 } };
+  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: notation === "english" ? "O" : "و", position: { x: 5, y: 2 } };
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 9, y: 2 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1, y: 2 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 8, y: 6 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: "", position: { x: 8, y: 6 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sOB`, fromVertexId: vO.id, toVertexId: vB.id },
@@ -129,8 +129,8 @@ export function buildThreeAnglesOnStraightLineFigure(
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 5, y: 2 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 1, y: 2 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 9, y: 2 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "هـ", position: { x: 5, y: 8 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 7.5, y: 6.5 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: "", position: { x: 5, y: 8 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: "", position: { x: 7.5, y: 6.5 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sCB`, fromVertexId: vC.id, toVertexId: vB.id },

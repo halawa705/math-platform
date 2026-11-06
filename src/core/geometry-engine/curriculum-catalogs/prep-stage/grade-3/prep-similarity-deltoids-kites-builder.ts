@@ -21,6 +21,7 @@ export const MODULE_ID_PREP_SIMILARITY_DELTOIDS_KITES_BUILDER =
 export interface SimilarityDeltoidsKitesOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeLengths?: boolean;
 }
 
 /**
@@ -42,15 +43,15 @@ export function buildSimilarKitesDeltoidsFigure(
   const vJ: CanonicalVertexNode = { id: `${opts.figureId}_ktJ`, label: notation === "english" ? "J" : "ن", position: { x: 8, y: 5 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 5, unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: 2.5, unit: "سم" } },
-    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: { value: 2.5, unit: "سم" } },
-    { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id, lengthLabel: { value: 5, unit: "سم" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.includeLengths ? { value: 5, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.includeLengths ? { value: 2.5, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: opts.includeLengths ? { value: 2.5, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id, lengthLabel: opts.includeLengths ? { value: 5, unit: "سم" } : undefined },
 
-    { id: `${opts.figureId}_sHL`, fromVertexId: vH.id, toVertexId: vL.id, lengthLabel: { value: 10, unit: "سم" } },
-    { id: `${opts.figureId}_sLK`, fromVertexId: vL.id, toVertexId: vK.id, lengthLabel: { value: 5, unit: "سم" } },
-    { id: `${opts.figureId}_sKJ`, fromVertexId: vK.id, toVertexId: vJ.id, lengthLabel: { value: 5, unit: "سم" } },
-    { id: `${opts.figureId}_sJH`, fromVertexId: vJ.id, toVertexId: vH.id, lengthLabel: { value: 10, unit: "سم" } },
+    { id: `${opts.figureId}_sHL`, fromVertexId: vH.id, toVertexId: vL.id, lengthLabel: opts.includeLengths ? { value: 10, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sLK`, fromVertexId: vL.id, toVertexId: vK.id, lengthLabel: opts.includeLengths ? { value: 5, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sKJ`, fromVertexId: vK.id, toVertexId: vJ.id, lengthLabel: opts.includeLengths ? { value: 5, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sJH`, fromVertexId: vJ.id, toVertexId: vH.id, lengthLabel: opts.includeLengths ? { value: 10, unit: "سم" } : undefined },
   ];
 
   const angles: CanonicalAngleNode[] = [

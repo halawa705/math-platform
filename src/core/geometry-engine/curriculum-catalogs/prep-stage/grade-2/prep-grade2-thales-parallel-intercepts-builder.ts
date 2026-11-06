@@ -37,12 +37,12 @@ export function buildThalesFourParallelsXE6Figure(
   const vX: CanonicalVertexNode = { id: `${opts.figureId}_vX`, label: notation === "english" ? "X" : "س", position: { x: 3, y: 9.5 } };
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: notation === "english" ? "Y" : "ص", position: { x: 2.3, y: 7 } };
   const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "هـ", position: { x: 1.6, y: 4.5 } };
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 1, y: 1 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 0.9, y: 2 } };
 
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 7, y: 9.5 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 7.6, y: 7 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 8.3, y: 4.5 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 9, y: 1 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 7.7, y: 7 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 8.4, y: 4.5 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 9.1, y: 2 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sXA`, fromVertexId: vX.id, toVertexId: vA.id, parallelArrows: 1 },
@@ -133,11 +133,11 @@ export function buildThalesMultipleParallelsGK8Figure(
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1, y: 1 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 8.5, y: 1 } };
 
-  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "و", position: { x: 2.7, y: 6.7 } };
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "هـ", position: { x: 1.8, y: 3.8 } };
+  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "و", position: { x: 2.67, y: 6.67 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "هـ", position: { x: 1.83, y: 3.83 } };
 
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 3.5, y: 1 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "ي", position: { x: 5.5, y: 1 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "ي", position: { x: 6.0, y: 1 } };
   const vK: CanonicalVertexNode = { id: `${opts.figureId}_vK`, label: notation === "english" ? "K" : "ك", position: { x: 3.5, y: 7.2 } };
 
   const segments: CanonicalSegmentNode[] = [

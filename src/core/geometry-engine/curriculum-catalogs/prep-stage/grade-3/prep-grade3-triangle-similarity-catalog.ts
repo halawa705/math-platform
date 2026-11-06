@@ -43,7 +43,11 @@ export function matchPrepGrade3TriangleSimilarityFigure(
     return buildParallelogramSecantButterflyFigure({ figureId, notationLanguage });
   }
   if (/متقابل.*بالرأس|فراشة|مقص|ABC\s*~\s*ADE|ADE|علامة\s*\*/i.test(d) && /مثلث/i.test(d)) {
-    return buildTriangleButterflyAtApexAFigure({ figureId, notationLanguage });
+    return buildTriangleButterflyAtApexAFigure({
+      figureId,
+      notationLanguage,
+      includeExtraLengths: /(?:^|\D)(?:8|18)\s*سم/.test(d),
+    });
   }
 
   // 2. تشابه المثلثات القائمة وإسقاط عمود من رأس القائمة (إقليدس)
@@ -72,8 +76,16 @@ export function matchPrepGrade3TriangleSimilarityFigure(
   }
 
   // 7. مثلثان منفصلان بزاوية 120° (مثال 6)
-  if (/120°|120\s*درجة/i.test(d) && (/تشابه|متشابه|منفصل/i.test(d) || /DEF/i.test(d))) {
-    return buildTwoSeparateSimilarTrianglesWithAngle120Figure({ figureId, notationLanguage });
+  if (
+    /120°|120\s*درجة/i.test(d) &&
+    !/رباعي|خماسي|شبه\s*منحرف|ABCD.*EFGH/i.test(d) &&
+    (/تشابه|متشابه|منفصل/i.test(d) || /DEF/i.test(d))
+  ) {
+    return buildTwoSeparateSimilarTrianglesWithAngle120Figure({
+      figureId,
+      notationLanguage,
+      includeLengths: /(?:^|\D)(?:7\.5|4\.5|10\.5|5|3)\s*سم/.test(d),
+    });
   }
 
   return undefined;

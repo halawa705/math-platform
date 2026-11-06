@@ -85,7 +85,7 @@ export function buildLineTriangleAreaAOBFigure(
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: notation === "english" ? "y" : "ص", position: { x: 0, y: 8 } };
   const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 0, y: -1.5 } };
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: notation === "english" ? "A(0,6)" : "أ(٠، ٦)", position: { x: 0, y: 6 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 0, y: 6 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 3, y: 0 } };
   const vTop: CanonicalVertexNode = { id: `${opts.figureId}_vTop`, label: "", position: { x: -0.6, y: 7.2 } };
   const vBottom: CanonicalVertexNode = { id: `${opts.figureId}_vBottom`, label: "", position: { x: 4, y: -2 } };

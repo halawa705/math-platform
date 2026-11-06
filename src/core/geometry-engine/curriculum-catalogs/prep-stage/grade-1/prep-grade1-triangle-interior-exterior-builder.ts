@@ -17,6 +17,7 @@ import {
 export interface PrepGrade1TriangleOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly include120?: boolean;
 }
 
 /**
@@ -115,7 +116,7 @@ export function buildTriangleEquilateralExterior120Figure(opts: PrepGrade1Triang
       { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degreesLabel: "*" },
       { id: `${opts.figureId}_angB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vC.id, degreesLabel: "*" },
       { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vB.id, degreesLabel: "*" },
-      { id: `${opts.figureId}_angExt`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 120, degreesLabel: "X°" },
+      { id: `${opts.figureId}_angExt`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 120, degreesLabel: opts.include120 ? "120°" : "X°" },
     ],
   };
 }

@@ -22,6 +22,7 @@ export const MODULE_ID_PREP_SIMILARITY_SPECIAL_QUADS_BUILDER =
 export interface SimilaritySpecialQuadsOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeTextbookLengths?: boolean;
 }
 
 /**
@@ -45,15 +46,15 @@ export function buildSimilarRightTrapezoidsWithVariablesFigure(
   const vH: CanonicalVertexNode = { id: `${opts.figureId}_rtH`, label: notation === "english" ? "H" : "ح", position: { x: 9, y: 7 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 16, unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: 10, unit: "سم" } },
-    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: { value: 10, unit: "سم" } },
-    { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id, lengthLabel: { value: 8, unit: "سم" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.includeTextbookLengths ? { value: 16, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.includeTextbookLengths ? { value: 10, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, lengthLabel: opts.includeTextbookLengths ? { value: 10, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id, lengthLabel: opts.includeTextbookLengths ? { value: 8, unit: "سم" } : undefined },
 
     { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, lengthLabel: { value: "(X - 3)", unit: "سم" } },
-    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id, lengthLabel: { value: "(1 + Y)", unit: "سم" } },
+    { id: `${opts.figureId}_sFG`, fromVertexId: vF.id, toVertexId: vG.id },
     { id: `${opts.figureId}_sGH`, fromVertexId: vG.id, toVertexId: vH.id, lengthLabel: { value: "(Y + 1)", unit: "سم" } },
-    { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id, lengthLabel: { value: 12, unit: "سم" } },
+    { id: `${opts.figureId}_sHE`, fromVertexId: vH.id, toVertexId: vE.id, lengthLabel: opts.includeTextbookLengths ? { value: 12, unit: "سم" } : undefined },
   ];
 
   const angles: CanonicalAngleNode[] = [

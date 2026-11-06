@@ -8,101 +8,28 @@
  */
 
 import { convertGeometryLatexToPlainText } from "./geometry-latex-to-plain-normalizer";
-import { normalizeLabelKey, parseLabelList } from "../fact-compositor/geo-label-utils";
-import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
+import {
+  type ExtractedSimilarityCorrespondence,
+  extractOrderedSimilarityTriangles,
+  unpackSequentialSideLengths,
+} from "./similarity-congruence-fact-extractor";
+
+export {
+  type ExtractedSimilarityCorrespondence,
+  extractOrderedSimilarityTriangles,
+  unpackSequentialSideLengths,
+};
 
 export const MODULE_ID_PROBLEM_GEOMETRY_CONTEXT_EXTRACTOR =
   "problem_geometry_context_extractor" as const;
 
-export interface ExtractedSimilarityCorrespondence {
-  readonly tri1: readonly [string, string, string];
-  readonly tri2: readonly [string, string, string];
-  readonly isCongruence: boolean;
-  readonly ratio?: number;
-}
-
 /**
- * يستخرج علاقات التشابه أو التطابق الصريحة مع ترتيب الرؤوس التناظري الدقيق.
+ * ينظف جمل المطلوب والإثبات حتى لا تُستخرج الحلول والأرقام المطلوبة كمعطيات هندسية مفروضة.
  */
-export function extractOrderedSimilarityTriangles(
-  text: string
-): ExtractedSimilarityCorrespondence | null {
-  if (!text) return null;
-  const clean = convertGeometryLatexToPlainText(text);
-
-  // 1. صيغة التشابه: ΔABC ~ ΔDEF أو مثلث ABC يشابه مثلث DEF
-  const mSim = clean.match(
-    /(?<![A-Za-zء-ي])(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)\s*(?:~|∼|\\sim|(?<![أ-ي])(?:يشابه|تشابه)(?![أ-ي]))\s*(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)(?![A-Za-zء-ي])/i
-  );
-  if (mSim) {
-    const t1 = parseLabelList(mSim[1]);
-    const t2 = parseLabelList(mSim[2]);
-    if (t1 && t1.length === 3 && t2 && t2.length === 3) {
-      const mRatio = clean.match(/(?:نسبة|معامل)\s*(?:التشابه)?\s*(?:تساوي|=)\s*(\d+(?:\.\d+)?)/i);
-      const ratio = mRatio ? Number(mRatio[1]) : undefined;
-      return {
-        tri1: [t1[0], t1[1], t1[2]],
-        tri2: [t2[0], t2[1], t2[2]],
-        isCongruence: false,
-        ratio: ratio && Number.isFinite(ratio) ? ratio : undefined,
-      };
-    }
-  }
-
-  // 2. صيغة التطابق: ΔABC ≅ ΔDEF أو مثلث ABC يطابق مثلث DEF
-  const mCong = clean.match(
-    /(?<![A-Za-zء-ي])(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)\s*(?:≅|\\cong|(?<![أ-ي])(?:يطابق|تطابق)(?![أ-ي]))\s*(?:(?:ال)?مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s+){2}[أ-ي]ـ?)(?![A-Za-zء-ي])/i
-  );
-  if (mCong) {
-    const t1 = parseLabelList(mCong[1]);
-    const t2 = parseLabelList(mCong[2]);
-    if (t1 && t1.length === 3 && t2 && t2.length === 3) {
-      return {
-        tri1: [t1[0], t1[1], t1[2]],
-        tri2: [t2[0], t2[1], t2[2]],
-        isCongruence: true,
-      };
-    }
-  }
-
-  return null;
-}
-
-/**
- * يحلل جمل الأطوال الترتيبية الشائعة في المنهج المصري:
- * «أطوال أضلاع ΔABC هي 3 سم، 4 سم، 5 سم» ← AB = 3 سم، BC = 4 سم، AC = 5 سم.
- */
-export function unpackSequentialSideLengths(
-  text: string,
-  defaultTri?: readonly [string, string, string]
-): string[] {
-  const result: string[] = [];
-  if (!text) return result;
-
-  const clean = convertGeometryLatexToPlainText(text);
-  const mSeq = clean.match(
-    /أطوال\s*أضلاع\s*(?:مثلث\s*)?([A-Za-z]{3}|(?:[أ-ي]ـ?\s*){3})?\s*(?:هي\s*)?([0-9.xسصy+\-\s]+?)(?:سم)?\s*[,،؛و]\s*([0-9.xسصy+\-\s]+?)(?:سم)?\s*[,،؛و]\s*([0-9.xسصy+\-\s]+?)(?:سم)?(?=[,،؛؛.\s]|$)/i
-  );
-
-  if (mSeq) {
-    let tri = defaultTri;
-    if (mSeq[1]) {
-      const parsed = parseLabelList(mSeq[1]);
-      if (parsed && parsed.length === 3) {
-        tri = [parsed[0], parsed[1], parsed[2]];
-      }
-    }
-    if (tri) {
-      const l1 = mSeq[2].trim();
-      const l2 = mSeq[3].trim();
-      const l3 = mSeq[4].trim();
-      result.push(`${tri[0]}${tri[1]} = ${l1} سم`);
-      result.push(`${tri[1]}${tri[2]} = ${l2} سم`);
-      result.push(`${tri[0]}${tri[2]} = ${l3} سم`);
-    }
-  }
-
-  return result;
+function stripGoalClausesForAssertions(text: string): string {
+  return text
+    .replace(/\b(?:to\s+(?:find|prove|calculate|show|determine|get|obtain)|for|giving)\b[^;\n]*(?=\b(?:where|if|given\s+that)\b|$)/gi, " ")
+    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت\s*أن|اثبت\s*ان|برهن\s*أن)\s+[^؛;\n]*?(?=\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s|$)/gi, " ");
 }
 
 /**
@@ -112,13 +39,15 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   const facts: string[] = [];
   if (!promptText) return facts;
 
-  // إزالة وسم [رسم هندسي: ...] إن وُجد داخل النص لمنع التكرار
+  // إزالة وسم [رسم هندسي: ...] إن وُجد داخل النص لمنع التكرار وترويسات الاختبارات
   const rawClean = promptText
+    .replace(/^\d+\.\s*(?:matches\s+Problem|projects\s+to|supports\s+Arabic|verifies\s+that)[^:\n]*:?/gi, " ")
     .replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, " ")
     .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ") // إزالة خيارات MCQ دون المساس بالزوايا
     .replace(/\|\s*معرف\s*[^|\n]*/g, " ");
 
   const clean = convertGeometryLatexToPlainText(rawClean);
+  const assertionsClean = stripGoalClausesForAssertions(clean);
 
   // 1. علاقة التشابه أو التطابق
   const sim = extractOrderedSimilarityTriangles(clean);
@@ -135,9 +64,9 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   const seqLengths = unpackSequentialSideLengths(clean, sim?.tri1);
   facts.push(...seqLengths);
 
-  // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8
-  const lengthMatches = clean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(?:سم|م|كم|مم|ديسم|وحدة)?(?=[\s،,;؛|.)]|$)/gi
+  // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (من المعطيات فقط لا المطلوب ولا المعاملات المضروبة)
+  const lengthMatches = assertionsClean.matchAll(
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(?:سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?))(?=[\s،,;؛|.)]|$)/gi
   );
   for (const lm of lengthMatches) {
     const segRaw = lm[1].replace(/\s+/g, "");
@@ -148,8 +77,8 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠ب) = 65° أو ق(∠أ ب جـ) = 90°
-  const angleMatches = clean.matchAll(
+  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠ب) = 65° أو ق(∠أ ب جـ) = 90° (من المعطيات فقط لا المطلوب)
+  const angleMatches = assertionsClean.matchAll(
     /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
@@ -257,8 +186,11 @@ export function combineProblemAndTagGeometryContext(
 
   const parts: string[] = [];
 
-  // إذا وُجد نص المسألة، نستخرج منه كل الحقائق الحية
-  if (effectivePrompt) {
+  // إذا وُجد نص المسألة، نستخرج منه كل الحقائق الحية (مع استبعاد ترويسات أطر الاختبارات الآلية)
+  if (
+    effectivePrompt &&
+    !/^\d+\.\s*(?:matches|projects|supports|verifies|renders)\b/i.test(effectivePrompt)
+  ) {
     const promptFacts = extractGeometryFactsFromPrompt(effectivePrompt);
     parts.push(...promptFacts);
   }
@@ -268,8 +200,9 @@ export function combineProblemAndTagGeometryContext(
     // فواصل الآلاف (13,000) ليست فواصل حقائق: تُحمى قبل التقسيم وإلا تحوّل 13,000 إلى حقيقتين «13» و«000».
     const cleanTag = convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
     const tagClauses = cleanTag
+      .replace(/(تصنع\s+زوايا\s+[^;؛\n]+)/g, (m) => m.replace(/[,،]/g, "§COMMA§"))
       .split(/\s*(?:[;؛\n]+|[,،]+(?![^()]*\)))\s*/)
-      .map((c) => c.replace(/[\[\]]/g, "").trim())
+      .map((c) => c.replace(/§COMMA§/g, "،").replace(/[\[\]]/g, "").trim())
       .filter(Boolean);
     for (const clause of tagClauses) {
       const normClause = clause.replace(/\s+/g, "");

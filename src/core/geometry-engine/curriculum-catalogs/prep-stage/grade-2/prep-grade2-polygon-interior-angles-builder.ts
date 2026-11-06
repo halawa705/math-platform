@@ -16,6 +16,7 @@ import {
 export interface PrepGrade2PolygonInteriorOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeAngles?: boolean;
 }
 
 /**
@@ -48,7 +49,7 @@ export function buildConvexPentagonInteriorAnglesFigure(
     notationLanguage: notation,
     vertices: [v1, v2, v3, v4, v5],
     segments,
-    angles: [
+    angles: opts.includeAngles === false ? [] : [
       { id: `${opts.figureId}_a1`, vertexId: v1.id, arm1VertexId: v5.id, arm2VertexId: v2.id, degrees: 120, degreesLabel: "120°" },
       { id: `${opts.figureId}_a2`, vertexId: v2.id, arm1VertexId: v1.id, arm2VertexId: v3.id, degrees: 95, degreesLabel: "95°" },
       { id: `${opts.figureId}_a3`, vertexId: v3.id, arm1VertexId: v2.id, arm2VertexId: v4.id, degrees: 96, degreesLabel: "96°" },

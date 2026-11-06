@@ -51,8 +51,8 @@ export function splitGivensAndAskedTail(rawPrompt: string): {
     return { givensPart: rawPrompt, askedTail: "" };
   }
   const tailRaw = match[0];
-  // إذا كان فعل «احسب/أوجد» متبوعاً بـ «حيث / إذا كان / علماً بأن»، فما بعد «حيث» هو معطيات وليس إجابة مسربة
-  const whereMatch = tailRaw.match(/\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s+([\s\S]*)$/i);
+  // إذا كان فعل «احسب/أوجد» متبوعاً بكلمات إدخال المعطيات، فما بعدها هو معطيات وليس إجابة مسربة
+  const whereMatch = tailRaw.match(/\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه|فيه|قاعدتاه|قاعدته|أطواله|أبعاده|بأبعاد|مع|ضلعاه|وتره)\s+([\s\S]*)$/i);
   const pureAskedTail = whereMatch && whereMatch.index !== undefined ? tailRaw.slice(0, whereMatch.index) : tailRaw;
   const embeddedGivens = whereMatch ? whereMatch[1] : "";
   const givensPart =

@@ -29,8 +29,10 @@ export function buildParallelCorrespondingAnglesFigure(opts: PrepGrade1ParallelO
   const vB1: CanonicalVertexNode = { id: `${opts.figureId}_vB1`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 7 } };
   const vA2: CanonicalVertexNode = { id: `${opts.figureId}_vA2`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 1.5, y: 3.5 } };
   const vB2: CanonicalVertexNode = { id: `${opts.figureId}_vB2`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 8.5, y: 3.5 } };
-  const vTTop: CanonicalVertexNode = { id: `${opts.figureId}_vTTop`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 7.2, y: 8.8 } };
-  const vTBot: CanonicalVertexNode = { id: `${opts.figureId}_vTBot`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 4, y: 1.8 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 6.5, y: 7 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 4.72, y: 3.5 } };
+  const vTTop: CanonicalVertexNode = { id: `${opts.figureId}_vTTop`, label: "", position: { x: 6.91, y: 7.80 } };
+  const vTBot: CanonicalVertexNode = { id: `${opts.figureId}_vTBot`, label: "", position: { x: 4.31, y: 2.70 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sL1`, fromVertexId: vA1.id, toVertexId: vB1.id, parallelArrows: 1 },
@@ -44,11 +46,11 @@ export function buildParallelCorrespondingAnglesFigure(opts: PrepGrade1ParallelO
     branchId: "triangle_thales_parallel_line",
     titleArabic: "مستقيمان متوازيان وقاطع بحالة التناظر (حرف F) بزاوية 63° لإيجاد الزاوية المتناظرة 63°",
     notationLanguage: notation,
-    vertices: [vA1, vB1, vA2, vB2, vTTop, vTBot],
+    vertices: [vA1, vB1, vA2, vB2, vE, vF, vTTop, vTBot],
     segments,
     angles: [
-      { id: `${opts.figureId}_angTop`, vertexId: vTTop.id, arm1VertexId: vTBot.id, arm2VertexId: vB1.id, degrees: 63, degreesLabel: "63°" },
-      { id: `${opts.figureId}_angBot`, vertexId: vTBot.id, arm1VertexId: vTTop.id, arm2VertexId: vB2.id, degrees: 63, degreesLabel: "؟" },
+      { id: `${opts.figureId}_angTop`, vertexId: vE.id, arm1VertexId: vTTop.id, arm2VertexId: vB1.id, degrees: 63, degreesLabel: "63°" },
+      { id: `${opts.figureId}_angBot`, vertexId: vF.id, arm1VertexId: vE.id, arm2VertexId: vB2.id, degrees: 63, degreesLabel: "؟" },
     ],
   };
 }

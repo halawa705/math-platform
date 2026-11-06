@@ -29,8 +29,8 @@ export function buildParallelProofTransversalZFigure(opts: PrepGrade1ParallelPro
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.8, y: 2.2 } };
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 5.2, y: 7.8 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 8.8, y: 7.8 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 3.5, y: 5 } };
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 1.2, y: 5 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 3.16, y: 4.95 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 1.2, y: 4.95 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, parallelArrows: 1 },
@@ -66,8 +66,10 @@ export function buildParallelProofConsecutiveInteriorFigure(opts: PrepGrade1Para
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 1.5, y: 7.2 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 8.5, y: 3.2 } };
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.5, y: 3.2 } };
-  const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: localizeGeometricVertexLabelSSOT("M", notation), position: { x: 5.8, y: 8.8 } };
-  const vN: CanonicalVertexNode = { id: `${opts.figureId}_vN`, label: localizeGeometricVertexLabelSSOT("N", notation), position: { x: 4.5, y: 1.5 } };
+  const vP1: CanonicalVertexNode = { id: `${opts.figureId}_vP1`, label: "", position: { x: 5.5, y: 7.2 } };
+  const vP2: CanonicalVertexNode = { id: `${opts.figureId}_vP2`, label: "", position: { x: 6.21, y: 3.2 } };
+  const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: localizeGeometricVertexLabelSSOT("M", notation), position: { x: 5.32, y: 8.2 } };
+  const vN: CanonicalVertexNode = { id: `${opts.figureId}_vN`, label: localizeGeometricVertexLabelSSOT("N", notation), position: { x: 6.39, y: 2.2 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vB.id, toVertexId: vA.id },
@@ -81,11 +83,11 @@ export function buildParallelProofConsecutiveInteriorFigure(opts: PrepGrade1Para
     branchId: "triangle_thales_parallel_line",
     titleArabic: "إثبات AB // CD بزاويتين داخلتين وفي جهة واحدة من القاطع مجموعهما 100° + 80° = 180°",
     notationLanguage: notation,
-    vertices: [vA, vB, vC, vD, vM, vN],
+    vertices: [vA, vB, vC, vD, vP1, vP2, vM, vN],
     segments,
     angles: [
-      { id: `${opts.figureId}_angTop`, vertexId: vM.id, arm1VertexId: vN.id, arm2VertexId: vB.id, degrees: 100, degreesLabel: "100°" },
-      { id: `${opts.figureId}_angBot`, vertexId: vN.id, arm1VertexId: vM.id, arm2VertexId: vD.id, degrees: 80, degreesLabel: "80°" },
+      { id: `${opts.figureId}_angTop`, vertexId: vP1.id, arm1VertexId: vP2.id, arm2VertexId: vB.id, degrees: 100, degreesLabel: "100°" },
+      { id: `${opts.figureId}_angBot`, vertexId: vP2.id, arm1VertexId: vP1.id, arm2VertexId: vD.id, degrees: 80, degreesLabel: "80°" },
     ],
   };
 }
@@ -135,8 +137,10 @@ export function buildParallelNonParallelCheckFigure(opts: PrepGrade1ParallelProo
   const vP2: CanonicalVertexNode = { id: `${opts.figureId}_vP2`, label: localizeGeometricVertexLabelSSOT("P2", notation), position: { x: 8.5, y: 6.8 } };
   const vQ1: CanonicalVertexNode = { id: `${opts.figureId}_vQ1`, label: localizeGeometricVertexLabelSSOT("Q1", notation), position: { x: 1.5, y: 3.2 } };
   const vQ2: CanonicalVertexNode = { id: `${opts.figureId}_vQ2`, label: localizeGeometricVertexLabelSSOT("Q2", notation), position: { x: 8.5, y: 3.2 } };
-  const vNTop: CanonicalVertexNode = { id: `${opts.figureId}_vNTop`, label: localizeGeometricVertexLabelSSOT("N1", notation), position: { x: 7.2, y: 8.8 } };
-  const vNBot: CanonicalVertexNode = { id: `${opts.figureId}_vNBot`, label: localizeGeometricVertexLabelSSOT("N2", notation), position: { x: 3.5, y: 1.2 } };
+  const vI1: CanonicalVertexNode = { id: `${opts.figureId}_vI1`, label: "", position: { x: 6.0, y: 6.8 } };
+  const vI2: CanonicalVertexNode = { id: `${opts.figureId}_vI2`, label: "", position: { x: 3.75, y: 3.2 } };
+  const vNTop: CanonicalVertexNode = { id: `${opts.figureId}_vNTop`, label: localizeGeometricVertexLabelSSOT("N1", notation), position: { x: 6.6, y: 7.76 } };
+  const vNBot: CanonicalVertexNode = { id: `${opts.figureId}_vNBot`, label: localizeGeometricVertexLabelSSOT("N2", notation), position: { x: 3.15, y: 2.24 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sLineP`, fromVertexId: vP1.id, toVertexId: vP2.id },
@@ -150,11 +154,11 @@ export function buildParallelNonParallelCheckFigure(opts: PrepGrade1ParallelProo
     branchId: "triangle_thales_parallel_line",
     titleArabic: "اختبار هل p // q مع زاويتين 57° و 122° (غير متوازيين لأن مجموعهما 179° ≠ 180°)",
     notationLanguage: notation,
-    vertices: [vP1, vP2, vQ1, vQ2, vNTop, vNBot],
+    vertices: [vP1, vP2, vQ1, vQ2, vI1, vI2, vNTop, vNBot],
     segments,
     angles: [
-      { id: `${opts.figureId}_ang57`, vertexId: vNTop.id, arm1VertexId: vNBot.id, arm2VertexId: vP2.id, degrees: 57, degreesLabel: "57°" },
-      { id: `${opts.figureId}_ang122`, vertexId: vNBot.id, arm1VertexId: vNTop.id, arm2VertexId: vQ2.id, degrees: 122, degreesLabel: "122°" },
+      { id: `${opts.figureId}_ang57`, vertexId: vI1.id, arm1VertexId: vI2.id, arm2VertexId: vP1.id, degrees: 57, degreesLabel: "57°" },
+      { id: `${opts.figureId}_ang122`, vertexId: vI2.id, arm1VertexId: vI1.id, arm2VertexId: vQ1.id, degrees: 122, degreesLabel: "122°" },
     ],
   };
 }

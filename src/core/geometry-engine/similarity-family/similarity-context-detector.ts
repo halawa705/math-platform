@@ -60,6 +60,7 @@ export function isSimilarityGeometryContext(description: string): boolean {
 
   if (
     isRightTriangle &&
+    (description.includes("مثلث") || description.includes("Δ")) &&
     description.includes("⊥") &&
     !description.includes("مربع") &&
     !description.includes("مستطيل") &&

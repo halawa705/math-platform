@@ -84,9 +84,9 @@ export function buildRightAngleTrisectedFigure(
     segments,
     angles: [
       { id: `${opts.figureId}_angBAC`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, isRightAngle: true },
-      { id: `${opts.figureId}_angBAD`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vD.id, degrees: 30, degreesLabel: "30°" },
-      { id: `${opts.figureId}_angDAE`, vertexId: vA.id, arm1VertexId: vD.id, arm2VertexId: vE.id, degrees: 30, degreesLabel: "30°" },
-      { id: `${opts.figureId}_angEAC`, vertexId: vA.id, arm1VertexId: vE.id, arm2VertexId: vC.id, degrees: 30, degreesLabel: "30°" },
+      { id: `${opts.figureId}_angBAD`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vD.id, degrees: 30, degreesLabel: "*" },
+      { id: `${opts.figureId}_angDAE`, vertexId: vA.id, arm1VertexId: vD.id, arm2VertexId: vE.id, degrees: 30, degreesLabel: "*" },
+      { id: `${opts.figureId}_angEAC`, vertexId: vA.id, arm1VertexId: vE.id, arm2VertexId: vC.id, degrees: 30, degreesLabel: "*" },
     ],
   };
 }

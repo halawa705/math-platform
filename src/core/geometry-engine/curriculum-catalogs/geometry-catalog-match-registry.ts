@@ -116,8 +116,13 @@ export function matchFromCatalogRegistry(
       continue;
     }
 
-    // حماية: كتالوج التطابق لا يعمل في سياق التشابه الصريح
-    if (isSimilarityContext && entry.id === "prep-2-triangle-congruence") {
+    // حماية: كتالوجات الصف الأول والتطابق لا تعمل في سياق تشابه المثلثات والمضلعات الصريح (3ع)
+    if (
+      isSimilarityContext &&
+      (entry.id === "prep-2-triangle-congruence" ||
+        entry.id === "prep-1-angles-followup" ||
+        entry.id === "prep-1-angles-relationships")
+    ) {
       continue;
     }
 

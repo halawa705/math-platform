@@ -16,6 +16,7 @@ import {
 export interface PrepGrade2MediansCentroidOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeMC8?: boolean;
 }
 
 /**
@@ -44,8 +45,9 @@ export function buildMediansCentroidMidsegmentPerimeterFigure(
     // المتوسطان BE و CD
     { id: `${opts.figureId}_sBE`, fromVertexId: vB.id, toVertexId: vE.id, lengthLabel: { value: 9, unit: "سم" } },
     { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id },
+    { id: `${opts.figureId}_sMC`, fromVertexId: vM.id, toVertexId: vC.id, lengthLabel: opts.includeMC8 !== false ? { value: 8, unit: "سم" } : undefined },
     // القطعة الواصلة بين منتصفي ضلعين DE
-    { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id, lengthLabel: { value: 6, unit: "سم" } },
+    { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id },
   ];
 
   return {
@@ -73,12 +75,12 @@ export function buildThreeMediansCentroidGFigure(
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9.5, y: 1 } };
 
   // المنتصفات: P منتصف BC، Q منتصف AB، R منتصف AC
-  const vP: CanonicalVertexNode = { id: `${opts.figureId}_vP`, label: notation === "english" ? "P" : "د", position: { x: 5.25, y: 1 } };
-  const vQ: CanonicalVertexNode = { id: `${opts.figureId}_vQ`, label: notation === "english" ? "Q" : "و", position: { x: 3.25, y: 4.75 } };
-  const vR: CanonicalVertexNode = { id: `${opts.figureId}_vR`, label: notation === "english" ? "R" : "هـ", position: { x: 7.5, y: 4.75 } };
+  const vP: CanonicalVertexNode = { id: `${opts.figureId}_vP`, label: localizeGeometricVertexLabelSSOT("P", notation), position: { x: 5.25, y: 1 } };
+  const vQ: CanonicalVertexNode = { id: `${opts.figureId}_vQ`, label: localizeGeometricVertexLabelSSOT("Q", notation), position: { x: 3.25, y: 4.75 } };
+  const vR: CanonicalVertexNode = { id: `${opts.figureId}_vR`, label: localizeGeometricVertexLabelSSOT("R", notation), position: { x: 7.5, y: 4.75 } };
 
   // نقطة التلاقي G
-  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "م", position: { x: 5.33, y: 3.5 } };
+  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: localizeGeometricVertexLabelSSOT("G", notation), position: { x: 5.33, y: 3.5 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
@@ -87,6 +89,7 @@ export function buildThreeMediansCentroidGFigure(
     // المتوسطات الثلاثة
     { id: `${opts.figureId}_sAP`, fromVertexId: vA.id, toVertexId: vP.id, lengthLabel: { value: 21, unit: "سم" } },
     { id: `${opts.figureId}_sBQ`, fromVertexId: vB.id, toVertexId: vQ.id },
+    { id: `${opts.figureId}_sGQ`, fromVertexId: vG.id, toVertexId: vQ.id, lengthLabel: { value: 5, unit: "سم" } },
     { id: `${opts.figureId}_sCR`, fromVertexId: vC.id, toVertexId: vR.id },
     // جزء من المتوسط BG = 16
     { id: `${opts.figureId}_sBG`, fromVertexId: vB.id, toVertexId: vG.id, lengthLabel: { value: 16, unit: "سم" } },

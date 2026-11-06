@@ -26,6 +26,7 @@ export const MODULE_ID_PREP_GRADE2_TRIANGLE_MIDSEGMENTS_BUILDER =
 export interface PrepGrade2MidsegmentsOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeLengths?: boolean;
 }
 
 /**
@@ -40,14 +41,14 @@ export function buildTriangleMidsegmentsPerimeter12Figure(
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 1, y: 1 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 9, y: 1 } };
 
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 3, y: 4.75 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 3, y: 4.75 } };
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 7, y: 4.75 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "هـ", position: { x: 5, y: 1 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5, y: 1 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: 8, unit: "سم" } },
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 6, unit: "سم" } },
-    { id: `${opts.figureId}_sCB`, fromVertexId: vC.id, toVertexId: vB.id, lengthLabel: { value: 10, unit: "سم" } },
+    { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: opts.includeLengths ? { value: 8, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.includeLengths ? { value: 6, unit: "سم" } : undefined },
+    { id: `${opts.figureId}_sCB`, fromVertexId: vC.id, toVertexId: vB.id, lengthLabel: opts.includeLengths ? { value: 10, unit: "سم" } : undefined },
     { id: `${opts.figureId}_sFD`, fromVertexId: vF.id, toVertexId: vD.id },
     { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id },
     { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id },
@@ -156,11 +157,11 @@ export function buildDoubleMidsegmentQuadGHFigure(
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9, y: 4 } };
 
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 3, y: 6.75 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: notation === "english" ? "E" : "هـ", position: { x: 7, y: 6.75 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 7, y: 6.75 } };
 
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: notation === "english" ? "F" : "و", position: { x: 5, y: 1 } };
-  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "ي", position: { x: 4, y: 3.8 } };
-  const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: notation === "english" ? "H" : "ك", position: { x: 6, y: 3.8 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 5, y: 1 } };
+  const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: localizeGeometricVertexLabelSSOT("G", notation), position: { x: 4, y: 3.8 } };
+  const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: localizeGeometricVertexLabelSSOT("H", notation), position: { x: 6, y: 3.8 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },

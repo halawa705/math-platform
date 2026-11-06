@@ -39,10 +39,17 @@ export function matchPrepSimilarityGeometryFigure(
 ): CanonicalGeometryFigureIR | undefined {
   const d = description.trim();
   if (!d) return undefined;
+  if (/(?:مثلثان|مثلثين|Δ)/i.test(d) && !/رباعي|خماسي|شبه\s*منحرف|منزل|دالتون|طائرة\s*ورقية|ABCD.*EFGH|ABCD.*EBGF/i.test(d)) {
+    return undefined;
+  }
 
   // 1. الأشكال المركبة (قاعدة مشتركة تتقاطع في O، أو مثلث مقطوع بقاطع)
   if ((/قاعدة\s*مشتركة/i.test(d) && (/O|HEAD|OAE|تشابه/i.test(d))) || /يتقاطعان\s*في\s*O|HEAD|OAE|OA\s*=\s*OE/i.test(d)) {
-    return buildCollinearBaseQuadsIntersectingAtOFigure({ figureId, notationLanguage });
+    return buildCollinearBaseQuadsIntersectingAtOFigure({
+      figureId,
+      notationLanguage,
+      includeTextbookLengths: /(?:^|\D)(?:2|3|4|4\.5)\s*سم/.test(d),
+    });
   }
   if (/ABCD\s*~\s*EBGF|مثلث.*مقطوع|EBGF/i.test(d)) {
     return buildTriangleSecantSimilarQuadsFigure({ figureId, notationLanguage });
@@ -50,12 +57,20 @@ export function matchPrepSimilarityGeometryFigure(
 
   // 2. طائرة ورقية / دالتون
   if (/طائرة\s*ورقية|دالتون|HLKJ|92°|92\s*درجة/i.test(d)) {
-    return buildSimilarKitesDeltoidsFigure({ figureId, notationLanguage });
+    return buildSimilarKitesDeltoidsFigure({
+      figureId,
+      notationLanguage,
+      includeLengths: /(?:^|\D)(?:2\.5|5|10)\s*سم/.test(d),
+    });
   }
 
   // 3. شبه منحرف قائم الزاوية مع مجاهيل جبرية (X - 3) و (Y + 1)
   if (/شبه\s*منحرف/i.test(d) && (/تشابه|متشابه/i.test(d) || /مجاهيل/i.test(d) || /X\s*-\s*3|Y\s*\+\s*1/i.test(d))) {
-    return buildSimilarRightTrapezoidsWithVariablesFigure({ figureId, notationLanguage });
+    return buildSimilarRightTrapezoidsWithVariablesFigure({
+      figureId,
+      notationLanguage,
+      includeTextbookLengths: /(?:^|\D)(?:16|10|8|12)\s*سم/.test(d),
+    });
   }
 
   // 4. متوازيا أضلاع متشابهان (110° أو 120°)
@@ -70,17 +85,29 @@ export function matchPrepSimilarityGeometryFigure(
 
   // 6. مضلعان خماسيان (شكل منزل ABCDE ~ KFGHJ)
   if (/خماسي/i.test(d) && (/تشابه|متشابه|منزل|KFGHJ/i.test(d))) {
-    return buildSimilarHousePentagonsFigure({ figureId, notationLanguage });
+    return buildSimilarHousePentagonsFigure({
+      figureId,
+      notationLanguage,
+      includeTextbookLengths: /(?:^|\D)(?:15|12|9|18)\s*سم/.test(d),
+    });
   }
 
   // 7. مضلعان بزوايا 120° و 45° وجذور 10√3 و 10√2 (حاول بنفسك 2)
   if ((/120°|45°/i.test(d) && /10√3|10√2/i.test(d)) || ((/120°|10√3|10√2|45°/i.test(d)) && (/تشابه|متشابه|EFGH/i.test(d)))) {
-    return buildSimilarQuadsWithObtuseAngleFigure({ figureId, notationLanguage });
+    return buildSimilarQuadsWithObtuseAngleFigure({
+      figureId,
+      notationLanguage,
+      includeExtraTextbookValues: /(?:^|\D)(?:20|5√3)\s*سم/.test(d),
+    });
   }
 
   // 8. مضلعان بهما جذور وزوايا خاصة (60° و 150° وجذور 1.5√3 و √3 - مثال 2)
   if (/1\.5√3|150°|y\s*-\s*1\/3/i.test(d) || (/(?:^|[^\d])√3/i.test(d) && (/تشابه|متشابه|EFGH|مثال\s*2/i.test(d)))) {
-    return buildSimilarQuadsWithRadicalsAndAnglesFigure({ figureId, notationLanguage });
+    return buildSimilarQuadsWithRadicalsAndAnglesFigure({
+      figureId,
+      notationLanguage,
+      includeExtraTextbookValues: /(?<![\d.])(?:8|5)(?!\d)\s*سم|y\s*-\s*1\/3/.test(d),
+    });
   }
 
   // 9. مضلعان بهما علامات زوايا متطابقة × و • (حاول بنفسك 1)

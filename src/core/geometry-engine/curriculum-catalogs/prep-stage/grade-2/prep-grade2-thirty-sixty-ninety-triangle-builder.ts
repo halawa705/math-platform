@@ -16,6 +16,7 @@ import {
 export interface PrepGrade2ThirtySixtyOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeAlgebraic?: boolean;
 }
 
 /**
@@ -31,7 +32,7 @@ export function buildThirtySixtyNinetyAlgebraicHypotenuseFigure(
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9.5, y: 2 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: "5X - 2" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.includeAlgebraic ? { value: "5X - 2" } : undefined },
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: 16, unit: "سم" } },
   ];
@@ -111,12 +112,12 @@ export function buildThirtySixtyNinetyMediansGFigure(
   const vG: CanonicalVertexNode = { id: `${opts.figureId}_vG`, label: notation === "english" ? "G" : "م", position: { x: 5.83, y: 4 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 6, unit: "سم" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: 12, unit: "سم" } },
     { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id },
     { id: `${opts.figureId}_sBE`, fromVertexId: vB.id, toVertexId: vE.id },
-    { id: `${opts.figureId}_sEG`, fromVertexId: vE.id, toVertexId: vG.id, lengthLabel: { value: 2, unit: "سم" } },
+    { id: `${opts.figureId}_sEG`, fromVertexId: vE.id, toVertexId: vG.id },
   ];
 
   return {

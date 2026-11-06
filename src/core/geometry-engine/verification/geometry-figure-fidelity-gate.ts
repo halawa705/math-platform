@@ -3,7 +3,7 @@
  * @description بوابة الصدق البصري الصارمة: تتحقق من أن الشكل الهندسي المولد يطابق مسألته تماماً،
  * وترفض أي شكل يحتوي على رؤوس أو أرقام أو زوايا دخيلة غير مذكورة في المسألة،
  * وتحجب الرسم في المسائل النظرية اللفظية العامة التي لا تتطلب شكلاً هندسياً.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 250 سطراً).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 220 سطراً).
  */
 
 import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ssot";
@@ -11,6 +11,16 @@ import { normalizeLabelKey } from "../fact-compositor/geo-label-utils";
 import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
 import { findMissingDimensionalGivensOnFigure } from "./geometry-figure-completeness-checker";
 import { verifyNoSolutionLeakOnFigure } from "./geometry-solution-leak-guard";
+import {
+  isPurelyTheoreticalNoDiagramProblem,
+  THEORETICAL_PROMPT_PATTERNS,
+} from "./geometry-theoretical-prompt-detector";
+import {
+  extractAllNumbersFromText,
+  extractAllVerticesFromText,
+} from "./geometry-fidelity-text-token-extractor";
+
+export { isPurelyTheoreticalNoDiagramProblem, THEORETICAL_PROMPT_PATTERNS };
 
 export const MODULE_ID_GEOMETRY_FIGURE_FIDELITY_GATE =
   "geometry_figure_fidelity_gate" as const;
@@ -24,129 +34,6 @@ export interface FigureFidelityCheckResult {
   readonly reasons: readonly string[];
 }
 
-const THEORETICAL_PROMPT_PATTERNS: readonly RegExp[] = [
-  /معامل\s*التشابه\s*بينهما\s*يساوي/i,
-  /النسبة\s*بين\s*محيطي\s*مثلثين/i,
-  /النسبة\s*بين\s*طولي\s*ضلعين\s*متناظرين/i,
-  /إذا\s*(?:كان\s*)?المثلثان\s*متشابهين\s*فإن/i,
-  /إذا\s*تشابه\s*مثلثان\s*فإن/i,
-  /فإن\s*(?:قياسات\s*)?الزوايا\s*المتناظرة\s*تكون/i,
-  /فإن\s*المثلث\s*الثاني\s*يكون\s*:\s*\([أ-دABCD]\)/i,
-  /أطوال\s*أضلاع\s*مثلثين\s*متداخلين\s*تتناسب/i,
-  /أطوال\s*أضلاع\s*مثلثين\s*معطاة\s*بالكامل/i,
-  /زاوية\s*متطابقة\s*وتناسب\s*ضلعين\s*حاويين\s*لها/i,
-  /مستقيم\s*يوازي\s*ضلعاً.*تكون\s*النسبة\s*بين/i,
-  /شاشة\s*تلفاز|نماذج\s*تماثل\s*هندسي/i,
-  /إذا\s*كان\s*المثلثان\s*متطابقين/i,
-  /إذا\s*تناسبت\s*أطوال\s*أضلاع\s*مثلثين/i,
-  /إذا\s*كان\s*معامل\s*تشابه/i,
-  /فإن\s*معامل\s*تشابه.*يساوي/i,
-  /فإن\s*نسبة\s*تشابه.*تساوي/i,
-  /محيط\s*(?:مثلث|Δ)[^\n]*[\/:]\s*محيط/i,
-  /فإن\s*محيط\s*(?:مثلث|Δ)/i,
-  /يكون\s*المثلث.*قائماً\s*في\s*:/i,
-  /أطوال\s*أضلاع\s*مثلث\s*هي\s*[0-9٠-٩]+.*ومحيط\s*مثلث\s*آخر/i,
-  /مثلثان\s*متشابهان\s*معامل\s*التشابه\s*بينهما/i,
-];
-
-/**
- * يتحقق مما إذا كانت المسألة نظرية لفظية عامة أو حسابية مباشرة لا تتطلب شكلاً هندسياً،
- * ما لم يرد في السؤال صراحة وسم رسم هندسي أو إحالة للشكل المقابل.
- */
-export function isPurelyTheoreticalNoDiagramProblem(text: string): boolean {
-  if (!text) return true;
-
-  // إذا ورد صراحة وسم رسم هندسي أو إحالة بصرية للشكل المقابل فهو ليس نظرياً
-  const hasExplicitFigureRequest =
-    /\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:/i.test(text) ||
-    /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(text);
-
-  if (hasExplicitFigureRequest) {
-    return false;
-  }
-
-  const clean = toWesternNumeralsSSOT(text);
-  for (const pat of THEORETICAL_PROMPT_PATTERNS) {
-    if (pat.test(clean)) return true;
-  }
-  return false;
-}
-
-/**
- * يستخرج جميع الأرقام والمصطلحات الجبرية من نص المسألة.
- */
-function extractAllNumbersFromText(text: string): Set<string> {
-  const norm = toWesternNumeralsSSOT(text);
-  const result = new Set<string>();
-
-  // أرقام عادية
-  const numMatches = norm.match(/(?<![0-9.])\d+(?:\.\d+)?(?![0-9.])/g);
-  if (numMatches) {
-    for (const n of numMatches) {
-      result.add(n);
-      const parsed = parseFloat(n);
-      if (!Number.isNaN(parsed)) {
-        result.add(String(parsed));
-      }
-    }
-  }
-
-  // حدود جبرية مثل 2y, 3x, 4s, 2س
-  const algMatches = norm.match(/\d+[a-zA-Zسصع]/g);
-  if (algMatches) {
-    for (const a of algMatches) {
-      result.add(a.toLowerCase());
-      result.add(toWesternNumeralsSSOT(a).toLowerCase());
-    }
-  }
-
-  return result;
-}
-
-/**
- * يستخرج جميع حروف الرؤوس الهندسية المذكورة في نص المسألة (عربية أو لاتينية).
- */
-function extractAllVerticesFromText(text: string): Set<string> {
-  const result = new Set<string>();
-  if (!text) return result;
-
-  // 1. متتاليات لاتينية مثل ABC, DEF, XYZ, AB, CD
-  const latinMatches = text.match(/\b[A-Za-z]{1,5}\b/g);
-  if (latinMatches) {
-    for (const m of latinMatches) {
-      if (/^(sin|cos|tan|cot|sec|csc|cm|mm|km|deg|lim|log|ln)$/i.test(m)) continue;
-      for (const char of m) {
-        result.add(normalizeLabelKey(char));
-      }
-    }
-  }
-
-  // 2. حروف الرؤوس داخل صيغ LaTeX
-  const latexMatches = text.matchAll(/\\(?:vec|overleftrightarrow|overline|angle)\{?([أ-يA-Za-z\sـ]+)\}?/g);
-  for (const lm of latexMatches) {
-    const innerChars = lm[1].match(/[A-Za-z]|[أإابجدهوزحطيكلمنصعفقرشتثخذضظغ]/g);
-    if (innerChars) {
-      for (const ch of innerChars) result.add(normalizeLabelKey(ch));
-    }
-  }
-  const setMatches = text.matchAll(/\\\{\s*([أ-يA-Za-z]ـ?)\s*\\\}/g);
-  for (const sm of setMatches) {
-    result.add(normalizeLabelKey(sm[1]));
-  }
-
-  // 3. حروف الرؤوس المنفردة في السياق العربي
-  const isolatedArabic = text.matchAll(
-    /(?<=^|[\s،,;؛()[\]{}<>=+\-*\/\\$])([أإابجدهوزحطيكلمنصعفقرشتثخذضظغ]ـ?)(?=$|[\s،,;؛()[\]{}<>=+\-*\/\\$])/g
-  );
-  for (const m of isolatedArabic) {
-    const ch = m[1].replace(/ـ/g, "");
-    if (ch === "و" || ch === "ف") continue;
-    result.add(normalizeLabelKey(ch));
-  }
-
-  return result;
-}
-
 /**
  * يفحص صدق الشكل الهندسي مقابل نص المسألة ووصفها.
  */
@@ -158,7 +45,6 @@ export function checkFigureFidelityToPrompt(
   const alienVertices: string[] = [];
   const alienNumbers: string[] = [];
 
-  // 1. إذا كان الشكل من عائلة الإحصاء أو يحتوي على SVG متجهي نقي مخصص
   if (figure.familyId === "statistics_family" || Boolean(figure.rawSvgMarkup)) {
     return {
       passed: true,
@@ -170,7 +56,6 @@ export function checkFigureFidelityToPrompt(
     };
   }
 
-  // 2. إذا كانت المسألة نظرية لفظية بحتة
   if (isPurelyTheoreticalNoDiagramProblem(rawPromptOrDescription)) {
     return {
       passed: false,
@@ -185,26 +70,31 @@ export function checkFigureFidelityToPrompt(
   const promptNumbers = extractAllNumbersFromText(rawPromptOrDescription);
   const promptVertices = extractAllVerticesFromText(rawPromptOrDescription);
   const normPrompt = toWesternNumeralsSSOT(rawPromptOrDescription).toLowerCase();
+  const normPromptUnifiedVars = normPrompt
+    .replace(/س/g, "x")
+    .replace(/ص/g, "y")
+    .replace(/ع/g, "z");
 
-  // 2. فحص الرؤوس: إذا كانت المسألة تذكر رؤوساً صريحة
+  // فحص الرؤوس
   if (promptVertices.size >= 3) {
+    const isNamedPolygon = /(?:سداسي|خماسي|مضلع|شبه\s*منحرف|متوازي\s*أضلاع)/i.test(rawPromptOrDescription);
     for (const v of figure.vertices) {
       if (!v.label) continue;
       const baseChar = v.label.match(/[A-Za-z]|[أإابجدهوزحخيكلمنفقرشطتثغسصع]/)?.[0] ?? "";
       const vKey = normalizeLabelKey(baseChar);
-      // محاور الإحداثيات (X, Y, O) ونقاط الأصل أو المنتصف مقبولة
       if (
         !promptVertices.has(vKey) &&
         vKey !== "M" &&
         vKey !== "O" &&
         vKey !== "X" &&
-        vKey !== "Y"
+        vKey !== "Y" &&
+        vKey !== "Z" &&
+        !(isNamedPolygon && /^[A-F]$/.test(vKey) && figure.vertices.length <= 6)
       ) {
         alienVertices.push(v.label);
       }
     }
 
-    // إذا كان 35% أو أكثر من رؤوس الشكل دخيلة وغير موجودة في السؤال، فهذا شكل خاطئ
     if (alienVertices.length > 0 && figure.vertices.length > 0) {
       const alienRatio = alienVertices.length / figure.vertices.length;
       if (alienRatio >= 0.35) {
@@ -218,20 +108,28 @@ export function checkFigureFidelityToPrompt(
   const stripUnits = (s: string) =>
     s.replace(/(?:سم²|م²|سم|مم|كم|ديسم|متر|م|وحدات\s*طول|وحدة\s*طول|وحدات|وحدة|درجة|°)/gi, "").trim();
 
-  // 3. فحص الأرقام المكتوبة على الأضلاع (صفر تسامح مع أي رقم دخيل أو مسرب)
+  // فحص الأرقام المكتوبة على الأضلاع
   for (const seg of figure.segments) {
     if (!seg.lengthLabel) continue;
     const rawVal = String(seg.lengthLabel.value);
     const cleanNum = stripUnits(toWesternNumeralsSSOT(rawVal));
     if (!cleanNum || cleanNum === "؟" || cleanNum === "?") continue;
-    // إذا كانت البطاقة تعبيراً جبرياً وارد بالنص (مثل 2y - 7 أو x + 2 أو X)
+
+    const normVal = cleanNum.toLowerCase().replace(/\s+/g, "");
+    const normValUnified = normVal.replace(/س/g, "x").replace(/ص/g, "y").replace(/ع/g, "z");
+    if (normVal && (normPrompt.includes(normVal) || normPromptUnifiedVars.includes(normValUnified))) {
+      continue;
+    }
+
     if (/[a-zA-Zسصع]/.test(cleanNum)) {
-      const varChar = cleanNum.match(/[a-zA-Zسصع]/)?.[0]?.toLowerCase();
-      if (varChar && !normPrompt.includes(varChar)) {
+      const varChar = cleanNum.match(/[a-zA-Zسصع]/)?.[0]?.toLowerCase() ?? "";
+      const varCharUnified = varChar === "س" ? "x" : varChar === "ص" ? "y" : varChar === "ع" ? "z" : varChar;
+      if (!normPromptUnifiedVars.includes(varCharUnified)) {
         alienNumbers.push(rawVal);
       }
       continue;
     }
+
     const pureDigits = cleanNum.replace(/[^0-9.]/g, "");
     if (pureDigits && !promptNumbers.has(pureDigits)) {
       const parsed = parseFloat(pureDigits);
@@ -241,19 +139,27 @@ export function checkFigureFidelityToPrompt(
     }
   }
 
-  // 4. فحص قياسات الزوايا المكتوبة (صفر تسامح مع أي قياس زاوية دخيل أو مسرب)
+  // فحص قياسات الزوايا المكتوبة
   for (const ang of figure.angles) {
     if (ang.degreesLabel) {
       const labelText = stripUnits(toWesternNumeralsSSOT(ang.degreesLabel));
       if (!labelText || labelText === "؟" || labelText === "?") continue;
-      // إذا كان تعبيراً جبرياً مثل (2س + 5)° أو (2y)° أو 3س
+
+      const normLabel = labelText.toLowerCase().replace(/\s+/g, "");
+      const normLabelUnified = normLabel.replace(/س/g, "x").replace(/ص/g, "y").replace(/ع/g, "z");
+      if (normLabel && (normPrompt.includes(normLabel) || normPromptUnifiedVars.includes(normLabelUnified))) {
+        continue;
+      }
+
       if (/[a-zA-Zسصع]/.test(labelText)) {
-        const varChar = labelText.match(/[a-zA-Zسصع]/)?.[0]?.toLowerCase();
-        if (varChar && !normPrompt.includes(varChar)) {
+        const varChar = labelText.match(/[a-zA-Zسصع]/)?.[0]?.toLowerCase() ?? "";
+        const varCharUnified = varChar === "س" ? "x" : varChar === "ص" ? "y" : varChar === "ع" ? "z" : varChar;
+        if (!normPromptUnifiedVars.includes(varCharUnified)) {
           alienNumbers.push(ang.degreesLabel);
         }
         continue;
       }
+
       const pureDigits = labelText.replace(/[^0-9.]/g, "");
       if (pureDigits && pureDigits !== "90" && !promptNumbers.has(pureDigits)) {
         alienNumbers.push(ang.degreesLabel);
@@ -261,20 +167,19 @@ export function checkFigureFidelityToPrompt(
     }
   }
 
-  // المرحلة 1 و 2: رفض الشكل فوراً عند وجود أي رقم دخيل أو مسرب للحل (alienNumbers.length >= 1)
   const solutionLeak = verifyNoSolutionLeakOnFigure(figure, rawPromptOrDescription);
   for (const leakedVal of solutionLeak.leakedSolutionValues) {
     if (!alienNumbers.includes(leakedVal)) {
       alienNumbers.push(leakedVal);
     }
   }
+
   if (alienNumbers.length >= 1) {
     reasons.push(
       `الشكل يحتوي على أرقام أو أبعاد دخيلة أو مسربة للحل غير واردة في معطيات المسألة: (${alienNumbers.join("، ")})`
     );
   }
 
-  // المرحلة 1: فحص الاكتمال الصارم (كل معطى بُعدي في النص يجب أن يظهر على الشكل)
   const missingNumbers = findMissingDimensionalGivensOnFigure(figure, rawPromptOrDescription);
   if (missingNumbers.length >= 1) {
     reasons.push(

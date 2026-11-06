@@ -53,7 +53,7 @@ export function matchPrepGrade2IsoscelesFollowupFigure(
 
   // 5. مثلث ثلاثيني ستيني بوتر 16 سم وضلع مقابل 5X-2 لحساب X = 2 ومساحة 32√3 سم² (مسألة 19 ص 259)
   if (/5X\s*-\s*2.*16\s*سم|32√3|ثلاثيني\s*ستيني.*5X\s*-\s*2/i.test(d)) {
-    return buildThirtySixtyNinetyAlgebraicHypotenuseFigure({ figureId, notationLanguage });
+    return buildThirtySixtyNinetyAlgebraicHypotenuseFigure({ figureId, notationLanguage, includeAlgebraic: true });
   }
 
   // 6. مثلث ثلاثيني ستيني ABC مع مثلث ADC وقطعة FE = 6 سم لحساب BC = 6 سم (مسألة 20 ص 259)
@@ -88,7 +88,11 @@ export function matchPrepGrade2IsoscelesFollowupFigure(
 
   // 12. مطابقة عامة للمثلث الثلاثيني الستيني أو تابع المتساوي الساقين
   if (/(?:المثلث\s*)?ثلاثيني\s*ستيني|30°.*60°.*90°|محور\s*تماثل\s*المثلث\s*المتساوي\s*الساقين/i.test(d)) {
-    return buildThirtySixtyNinetyAlgebraicHypotenuseFigure({ figureId, notationLanguage });
+    return buildThirtySixtyNinetyAlgebraicHypotenuseFigure({
+      figureId,
+      notationLanguage,
+      includeAlgebraic: /5X|5س/i.test(d),
+    });
   }
 
   return undefined;

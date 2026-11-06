@@ -71,9 +71,10 @@ export function buildIsoscelesAltitudePythagoras12Figure(
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 15, unit: "سم" }, tickMarks: 1 },
     { id: `${opts.figureId}_sAC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: { value: 15, unit: "سم" }, tickMarks: 1 },
-    { id: `${opts.figureId}_sBD`, fromVertexId: vB.id, toVertexId: vD.id, lengthLabel: { value: 9, unit: "سم" } },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: 18, unit: "سم" } },
+    { id: `${opts.figureId}_sBD`, fromVertexId: vB.id, toVertexId: vD.id },
     { id: `${opts.figureId}_sDC`, fromVertexId: vD.id, toVertexId: vC.id },
-    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id, lengthLabel: { value: 12, unit: "سم" } },
+    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id },
     { id: `${opts.figureId}_sEB`, fromVertexId: vE.id, toVertexId: vB.id, tickMarks: 2 },
     { id: `${opts.figureId}_sEC`, fromVertexId: vE.id, toVertexId: vC.id, tickMarks: 2 },
   ];
@@ -123,6 +124,8 @@ export function buildTowerSymmetricCablesFigure(
     segments,
     angles: [
       { id: `${opts.figureId}_angMast`, vertexId: vD.id, arm1VertexId: vTop.id, arm2VertexId: vA.id, isRightAngle: true },
+      { id: `${opts.figureId}_ang50`, vertexId: vTop.id, arm1VertexId: vB.id, arm2VertexId: vD.id, degrees: 50, degreesLabel: "50°" },
+      { id: `${opts.figureId}_angY`, vertexId: vTop.id, arm1VertexId: vD.id, arm2VertexId: vA.id, degreesLabel: notation === "english" ? "y°" : "ص°" },
     ],
   };
 }

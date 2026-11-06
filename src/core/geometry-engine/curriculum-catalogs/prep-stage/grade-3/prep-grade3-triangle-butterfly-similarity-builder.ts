@@ -23,6 +23,7 @@ export const MODULE_ID_PREP_GRADE3_TRIANGLE_BUTTERFLY_SIMILARITY_BUILDER =
 export interface TriangleButterflySimilarityOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeExtraLengths?: boolean;
 }
 
 /**
@@ -46,12 +47,12 @@ export function buildTriangleButterflyAtApexAFigure(
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 10, unit: "سم" } },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: 8, unit: "سم" } },
+    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.includeExtraLengths ? { value: 8, unit: "سم" } : undefined },
     { id: `${opts.figureId}_sCA`, fromVertexId: vC.id, toVertexId: vA.id, lengthLabel: { value: 12, unit: "سم" } },
 
-    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id, lengthLabel: { value: 8, unit: "سم" } },
+    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id, lengthLabel: opts.includeExtraLengths ? { value: 8, unit: "سم" } : undefined },
     { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id, lengthLabel: { value: 12, unit: "سم" } },
-    { id: `${opts.figureId}_sEA`, fromVertexId: vE.id, toVertexId: vA.id, lengthLabel: { value: 18, unit: "سم" } },
+    { id: `${opts.figureId}_sEA`, fromVertexId: vE.id, toVertexId: vA.id, lengthLabel: opts.includeExtraLengths ? { value: 18, unit: "سم" } : undefined },
   ];
 
   const angles: CanonicalAngleNode[] = [

@@ -25,6 +25,7 @@ export const MODULE_ID_PREP_GRADE2_PYTHAGORAS_TRIANGLES_ALTITUDE_BUILDER =
 export interface PrepGrade2AltitudeTriangleOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly includeLeft5?: boolean;
 }
 
 /**
@@ -77,7 +78,7 @@ export function buildPythagorasAltitude3Base11Figure(
   const vFoot: CanonicalVertexNode = { id: `${opts.figureId}_vFoot`, label: "", position: { x: 4, y: 1 } };
 
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sLeft`, fromVertexId: vLeft.id, toVertexId: vApex.id, lengthLabel: { value: 5 } },
+    { id: `${opts.figureId}_sLeft`, fromVertexId: vLeft.id, toVertexId: vApex.id, lengthLabel: opts.includeLeft5 ? { value: 5 } : undefined },
     { id: `${opts.figureId}_sRight`, fromVertexId: vApex.id, toVertexId: vRight.id, lengthLabel: { value: "X" } },
     { id: `${opts.figureId}_sBase`, fromVertexId: vLeft.id, toVertexId: vRight.id, lengthLabel: { value: 11 } },
     { id: `${opts.figureId}_sAlt`, fromVertexId: vApex.id, toVertexId: vFoot.id, lengthLabel: { value: 3 } },

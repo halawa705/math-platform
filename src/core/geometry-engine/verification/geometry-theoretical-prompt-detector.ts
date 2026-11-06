@@ -1,0 +1,58 @@
+/**
+ * @file geometry-theoretical-prompt-detector.ts
+ * @description كاشف المسائل النظرية اللفظية العامة التي لا تتطلب شكلاً هندسياً في المنهج المصري.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطراً).
+ */
+
+import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
+
+export const MODULE_ID_GEOMETRY_THEORETICAL_PROMPT_DETECTOR =
+  "geometry_theoretical_prompt_detector" as const;
+
+export const THEORETICAL_PROMPT_PATTERNS: readonly RegExp[] = [
+  /معامل\s*التشابه\s*بينهما\s*يساوي/i,
+  /النسبة\s*بين\s*محيطي\s*مثلثين/i,
+  /النسبة\s*بين\s*طولي\s*ضلعين\s*متناظرين/i,
+  /إذا\s*(?:كان\s*)?المثلثان\s*متشابهين\s*فإن/i,
+  /إذا\s*تشابه\s*مثلثان\s*فإن/i,
+  /فإن\s*(?:قياسات\s*)?الزوايا\s*المتناظرة\s*تكون/i,
+  /فإن\s*المثلث\s*الثاني\s*يكون\s*:\s*\([أ-دABCD]\)/i,
+  /أطوال\s*أضلاع\s*مثلثين\s*متداخلين\s*تتناسب/i,
+  /أطوال\s*أضلاع\s*مثلثين\s*معطاة\s*بالكامل/i,
+  /زاوية\s*متطابقة\s*وتناسب\s*ضلعين\s*حاويين\s*لها/i,
+  /مستقيم\s*يوازي\s*ضلعاً.*تكون\s*النسبة\s*بين/i,
+  /شاشة\s*تلفاز|نماذج\s*تماثل\s*هندسي/i,
+  /إذا\s*كان\s*المثلثان\s*متطابقين/i,
+  /إذا\s*تناسبت\s*أطوال\s*أضلاع\s*مثلثين/i,
+  /إذا\s*كان\s*معامل\s*تشابه/i,
+  /فإن\s*معامل\s*تشابه.*يساوي/i,
+  /فإن\s*نسبة\s*تشابه.*تساوي/i,
+  /محيط\s*(?:مثلث|Δ)[^\n]*[\/:]\s*محيط/i,
+  /فإن\s*محيط\s*(?:مثلث|Δ)/i,
+  /يكون\s*المثلث.*قائماً\s*في\s*:/i,
+  /أطوال\s*أضلاع\s*مثلث\s*هي\s*[0-9٠-٩]+.*ومحيط\s*مثلث\s*آخر/i,
+  /مثلثان\s*متشابهان\s*معامل\s*التشابه\s*بينهما/i,
+];
+
+/**
+ * يتحقق مما إذا كانت المسألة نظرية لفظية عامة أو حسابية مباشرة لا تتطلب شكلاً هندسياً،
+ * ما لم يرد في السؤال صراحة وسم رسم هندسي أو إحالة للشكل المقابل.
+ */
+export function isPurelyTheoreticalNoDiagramProblem(text: string): boolean {
+  if (!text) return true;
+
+  // إذا ورد صراحة وسم رسم هندسي أو إحالة بصرية للشكل المقابل فهو ليس نظرياً
+  const hasExplicitFigureRequest =
+    /\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*/i.test(text) ||
+    /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(text);
+
+  if (hasExplicitFigureRequest) {
+    return false;
+  }
+
+  const clean = toWesternNumeralsSSOT(text);
+  for (const pat of THEORETICAL_PROMPT_PATTERNS) {
+    if (pat.test(clean)) return true;
+  }
+  return false;
+}

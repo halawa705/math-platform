@@ -68,7 +68,11 @@ export function matchPrepGrade2PolygonAnglesFigure(
 
   // 9. مطابقة عامة لدرس الزوايا الداخلة والخارجة للمضلعات
   if (/الزوايا\s*الداخلة\s*والخارجة\s*للمضلعات|الزوايا\s*الداخلة.*للمضلع|الزوايا\s*الخارجة.*للمضلع/i.test(d)) {
-    return buildConvexPentagonInteriorAnglesFigure({ figureId, notationLanguage });
+    return buildConvexPentagonInteriorAnglesFigure({
+      figureId,
+      notationLanguage,
+      includeAngles: false,
+    });
   }
 
   return undefined;
