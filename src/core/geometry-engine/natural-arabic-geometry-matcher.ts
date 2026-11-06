@@ -20,34 +20,12 @@ import { verifyProblemSpecMathematicalConsistency } from "./verification/geometr
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
 import { verifyGeometryFigure } from "./verification/geometry-figure-verification-orchestrator";
-import { matchPrimaryGrade4VisualModelsFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-visual-models-catalog";
-import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
-import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog";
-import { matchPrimaryGrade6GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-6/primary-grade6-geometry-catalog";
-import { matchPrepGrade1GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-congruence-catalog";
-import { matchPrepGrade1AnglesRelationshipsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-angles-relationships-catalog";
-import { matchPrepGrade1AnglesFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-angles-followup-catalog";
-import { matchPrepGrade1ParallelismFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
-import { matchPrepGrade1TriangleAnglesFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-triangle-angles-catalog";
-import { matchPrepGrade1QuadrilateralsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-quadrilaterals-catalog";
-import { matchPrepGrade1SpecialQuadsFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-special-quads-followup-catalog";
-import { matchPrepGrade1PolygonsFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-polygons-catalog";
-import { matchPrepGrade1CoordinatesFigure } from "./curriculum-catalogs/prep-stage/grade-1/prep-grade1-coordinates-catalog";
-import { matchPrepGrade2GeometryFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-euclid-areas-catalog";
-import { matchPrepGrade2TriangleCongruenceFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-congruence-catalog";
-import { matchPrepGrade2PythagorasConverseFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-pythagoras-converse-catalog";
-import { matchPrepGrade2ParallelApplicationsFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-parallel-applications-catalog";
-import { matchPrepGrade2TriangleMediansFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-triangle-medians-catalog";
-import { matchPrepGrade2IsoscelesTriangleFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-isosceles-triangle-catalog";
-import { matchPrepGrade2IsoscelesFollowupFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-isosceles-followup-catalog";
-import { matchPrepGrade2PolygonAnglesFigure } from "./curriculum-catalogs/prep-stage/grade-2/prep-grade2-polygon-angles-catalog";
-import { matchPrepSimilarityGeometryFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
-import { matchPrepGrade3TriangleSimilarityFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
-import { matchPrepGrade3LineEquationFigure } from "./curriculum-catalogs/prep-stage/grade-3/prep-grade3-line-equation-catalog";
+import { matchFromCatalogRegistry } from "./curriculum-catalogs/geometry-catalog-match-registry";
 import { buildTriangleMidsegmentFigure } from "./triangle-family/triangle-midsegment-branch";
 import { buildTriangleThalesParallelFigure } from "./triangle-family/triangle-thales-parallel-branch";
 import { buildTriangleMediansCentroidFigure } from "./triangle-family/triangle-medians-centroid-branch";
 import { buildTriangleEuclidAltitudeFigure } from "./triangle-family/triangle-euclid-altitude-branch";
+import { isSimilarityGeometryContext } from "./similarity-family/similarity-context-detector";
 import { buildTriangleAngleBisectorFigure } from "./triangle-family/triangle-angle-bisector-branch";
 import { buildTriangleExteriorAngleFigure } from "./triangle-family/triangle-exterior-angle-branch";
 import { buildCircleChordBisectorFigure } from "./circle-family/circle-chord-bisector-branch";
@@ -80,16 +58,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (isPurelyTheoreticalNoDiagramProblem(desc)) return undefined;
 
   const cleanDesc = convertGeometryLatexToPlainText(desc);
-  const isAnalyticCoord = /محور|إحداثي|احداثي|معادلة|ميل|\(\s*-?\d+\s*[,،]\s*-?\d+\s*\)/i.test(cleanDesc);
-  const isSimilarity =
-    !isAnalyticCoord &&
-    (/[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|زوايا\s*متطابقة|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|رجل\s*طوله|إقليدس/i.test(
-      cleanDesc
-    ) ||
-      /AED.*=.*B|ADE.*=.*C/i.test(cleanDesc) ||
-      (cleanDesc.includes("قائم") && cleanDesc.includes("⊥") && !cleanDesc.includes("مربع") && !cleanDesc.includes("مستطيل") && !cleanDesc.includes("متساوي الساقين") && !cleanDesc.includes("متوسط")) ||
-      (cleanDesc.includes("∩") && !cleanDesc.includes("∠") && !cleanDesc.includes("°") && (cleanDesc.includes("//") || cleanDesc.includes("يوازي") || cleanDesc.includes("تشابه") || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i.test(cleanDesc))) ||
-      (cleanDesc.includes("∈") && cleanDesc.includes("//") && (cleanDesc.includes("مثلث") || cleanDesc.includes("Δ")) && !cleanDesc.includes("متوسط")));
+  const isSimilarity = isSimilarityGeometryContext(cleanDesc);
 
   if (isSimilarity) {
     const parametricSim = buildParametricSimilarityFigure(desc, figureId, notationLanguage);
@@ -98,39 +67,13 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     }
   }
 
-  if (!isSimilarity && /≅|\\cong|تطابق|متطابق|صورة.*بالانعكاس/i.test(desc)) {
-    const prep2Congruence = matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage);
-    if (prep2Congruence) return prep2Congruence;
-    const prep1Congruence = matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage);
-    if (prep1Congruence) return prep1Congruence;
+  const stageRes = matchFromCatalogRegistry(desc, figureId, notationLanguage, isSimilarity);
+  if (stageRes.ambiguity) {
+    return undefined;
   }
-
-  const stageRes =
-    matchPrimaryGrade4VisualModelsFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade3TriangleSimilarityFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade3LineEquationFigure(desc, figureId, notationLanguage) ??
-    matchPrepSimilarityGeometryFigure(desc, figureId, notationLanguage) ??
-    (!isSimilarity ? matchPrepGrade2TriangleCongruenceFigure(desc, figureId, notationLanguage) : undefined) ??
-    matchPrepGrade2PythagorasConverseFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2ParallelApplicationsFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2TriangleMediansFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2IsoscelesTriangleFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2IsoscelesFollowupFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2PolygonAnglesFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade2GeometryFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1AnglesFollowupFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1AnglesRelationshipsFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1ParallelismFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1TriangleAnglesFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1QuadrilateralsFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1SpecialQuadsFollowupFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1PolygonsFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1CoordinatesFigure(desc, figureId, notationLanguage) ??
-    matchPrepGrade1GeometryFigure(desc, figureId, notationLanguage) ??
-    matchPrimaryGrade6GeometryFigure(desc, figureId, notationLanguage) ??
-    matchPrimaryGrade5GeometryFigure(desc, figureId, notationLanguage) ??
-    matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
-  if (stageRes) return stageRes;
+  if (stageRes.figure) {
+    return stageRes.figure;
+  }
 
   if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage, description: desc });
   if (/خط\s*الأعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage, description: desc });
@@ -139,7 +82,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     if (coordPoly) return coordPoly;
   }
 
-  if (/شاشة|كمبيوتر|تلفاز|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|سباعي|ثماني|مستوى\s*إحداثي|رسم\s*بياني|إحداثيات|نقطة\s*الأصل|خريطة|مجهر|حشرة|ظل/i.test(desc)) {
+  // مراجعة قائمة الحجب: تم استبعاد الظل والعمود والشجرة والسارية لعدم حجب مسائل التشابه التطبيقية (المهمة 2.6)
+  if (/شاشة|كمبيوتر|تلفاز|حديقة|ملعب|سباعي|ثماني|مستوى\s*إحداثي|رسم\s*بياني|إحداثيات|نقطة\s*الأصل|خريطة|مجهر|حشرة/i.test(desc)) {
     return undefined;
   }
 

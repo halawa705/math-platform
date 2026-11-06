@@ -173,7 +173,11 @@ export function matchGrade4PerimeterAreaFigure(
     return buildGrade4SquareFigure(side, unit, opts, isRotated, labelAll);
   }
 
-  if (/مستطيل|أوجد\s*محيط|أوجد\s*مساحة|المحيط\s*=|المساحة\s*=/i.test(d)) {
+  const isNonRectangleShape =
+    /شبه\s*(?:ال)?منحرف|مثلث|دائرة|متوازي\s*(?:ال)?أضلاع|معين|هرم|مخروط|أسطوانة|اسطوانة/i.test(
+      d
+    );
+  if (!isNonRectangleShape && (/مستطيل/i.test(d) || /أوجد\s*محيط|أوجد\s*مساحة|المحيط\s*=|المساحة\s*=/i.test(d))) {
     let width = 8;
     let height = 5;
     if (nums.length >= 2) {

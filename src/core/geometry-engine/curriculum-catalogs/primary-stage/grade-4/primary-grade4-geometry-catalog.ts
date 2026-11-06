@@ -189,6 +189,9 @@ export function matchPrimaryGrade4GeometryFigure(
 ): CanonicalGeometryFigureIR | undefined {
   const d = toWesternNumeralsSSOT(description.trim());
   if (!d) return undefined;
+  if (/(?:معادلة|إحداثي|احداثي|ميل|متوسط|فيثاغورس|إقليدس|اقليدس|طاليس|تشابه|تطابق|محيطية|مركزية|مماس|قاطع|وتر|رباعي\s*دائري|قطراه|أقطار|قطرا\s*(?:المتوازي|المستطيل|المربع|المعين|الشكل)|زاويتا\s*قاعدت|(?:ال)?خارج(?:ي)?ة|محاور|تماثل|استقامة\s*واحدة|تناظر|تبادل|تداخل|حرف\s*[ZFUE]|[A-Z]{2,4}|\b[a-zA-Z]\b\s*=|(?:\d+[a-zA-Z]))/i.test(d)) {
+    return undefined;
+  }
 
   // 1. الأشكال المركبة (L, T, U مقلوب، مستطيلان ملتصقان، مقتطع)
   const compositeRes = matchGrade4CompositeFigure(d, { figureId, notationLanguage });

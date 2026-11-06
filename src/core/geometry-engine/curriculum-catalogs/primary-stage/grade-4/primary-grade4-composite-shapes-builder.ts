@@ -36,6 +36,7 @@ export function matchGrade4CompositeFigure(
   opts: Grade4CompositeShapesOptions
 ): CanonicalGeometryFigureIR | undefined {
   const d = description.trim();
+  if (/مدرج|تكرار|إحصاء|احصاء|بيانات|مخطط/i.test(d)) return undefined;
   const western = toWesternNumeralsSSOT(d);
   const unit = extractGrade4Unit(d);
 

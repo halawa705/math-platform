@@ -73,32 +73,58 @@ export function buildNestedThalesAntiparallelFigure(
     r2 = lenACut2 && lenCut2B2 ? Math.max(0.22, Math.min(0.78, lenACut2 / (lenACut2 + lenCut2B2))) : 0.65;
   }
 
-  // ضبط عرض القاعدة ليتناسب مع طول الضلع عند توفر DE أو BC مع ضلع جانبي
-  const sideTotal = (lenACut1 && lenCut1B1 ? lenACut1 + lenCut1B1 : lenAB1) || (lenACut2 && lenCut2B2 ? lenACut2 + lenCut2B2 : lenAB2);
-  const drawnSideLen = 6.95; // طول الضلع المرسوم تقريباً من (4.5, 7) إلى (1, 1)
-  let halfBase = 3.5;
-  if (!opts.isAntiparallel && sideTotal && (lenCut || lenBase)) {
-    const targetBaseNum = lenBase || (lenCut ? lenCut / r1 : undefined);
-    if (targetBaseNum) {
-      const scaledBase = (targetBaseNum / sideTotal) * drawnSideLen;
-      halfBase = Math.max(2.0, Math.min(4.2, scaledBase / 2));
+  let pA = { x: 4.5, y: 7.0 };
+  let pB1 = { x: 1.0, y: 1.0 };
+  let pB2 = { x: 8.0, y: 1.0 };
+
+  if (!opts.isAntiparallel) {
+    let c = (lenACut1 && lenCut1B1 ? lenACut1 + lenCut1B1 : lenAB1) || (lenACut1 && r1 ? lenACut1 / r1 : undefined);
+    let b = (lenACut2 && lenCut2B2 ? lenACut2 + lenCut2B2 : lenAB2) || (lenACut2 && r2 ? lenACut2 / r2 : undefined);
+    let a = lenBase || (lenCut && r1 ? lenCut / r1 : undefined);
+
+    if (c || b || a) {
+      if (!c && b) c = b;
+      if (!b && c) b = c;
+      if (!c && !b) { c = 6; b = 6; }
+      if (!a) a = (c! + b!) / 2;
+
+      const minA = Math.abs(b! - c!) + 0.1;
+      const maxA = b! + c! - 0.1;
+      a = Math.max(minA, Math.min(maxA, a));
+
+      const xA = (c! * c! + a * a - b! * b!) / (2 * a);
+      const yA = Math.sqrt(Math.max(0.1, c! * c! - xA * xA));
+
+      const minX = Math.min(0, a, xA);
+      const maxX = Math.max(0, a, xA);
+      const triW = maxX - minX;
+      const triH = yA;
+
+      const targetW = 7.6;
+      const targetH = 5.6;
+      const scale = Math.min(targetW / triW, targetH / triH);
+
+      const offsetX = 5.0 - ((maxX + minX) / 2) * scale;
+      pB1 = { x: Number((offsetX + (0 - minX) * scale).toFixed(2)), y: 1.0 };
+      pB2 = { x: Number((offsetX + (a - minX) * scale).toFixed(2)), y: 1.0 };
+      pA = { x: Number((offsetX + (xA - minX) * scale).toFixed(2)), y: Number((1.0 + yA * scale).toFixed(2)) };
     }
   }
 
   const vApex: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${apex}`,
     label: localizeGeometricVertexLabelSSOT(apex, notation),
-    position: { x: 4.5, y: 7.0 },
+    position: pA,
   };
   const vB1: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${base1}`,
     label: localizeGeometricVertexLabelSSOT(base1, notation),
-    position: { x: Number((4.5 - halfBase).toFixed(2)), y: 1.0 },
+    position: pB1,
   };
   const vB2: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${base2}`,
     label: localizeGeometricVertexLabelSSOT(base2, notation),
-    position: { x: Number((4.5 + halfBase).toFixed(2)), y: 1.0 },
+    position: pB2,
   };
 
   // النقطة D على الضلع Apex-B1: position = Apex + r1 * (B1 - Apex)

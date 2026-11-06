@@ -1,0 +1,998 @@
+[
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-1",
+    "grade": "prep-1",
+    "text": "تفكير ناقد: إذا كان قياس الزاوية بين ذراعي المقص هما (3X-18)° و (2X+12)° وتم تقل",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-3",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل زاويتان متقابلتان بالرأس (5X+7)° و (3X+57)° أوجد قيمة X = 25°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-5",
+    "grade": "prep-1",
+    "text": "زوايا متجمعة حول نقطة M قياساتها 70° و 100° و 80° و 10X° أوجد قيمة X = 11°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-6",
+    "grade": "prep-1",
+    "text": "ثلاث زوايا متجمعة حول نقطة M إحداها 140° والأخريان متساويتان X° و X° أوجد قيمة X",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-followup-catalog-11",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل AC ∩ BD = {M} وقياس BMC = 120° والشعاع ME ينصف AMD أوجد قياس EM",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-1",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل AC ⊥ AB ، قياس زاوية DAB = 25° أوجد قيمة X",
+    "compCanHandle": true
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-3",
+    "grade": "prep-1",
+    "text": "زاويتان متتامتان AC ⊥ AB قياسهما (2X+2)° و (X+1)° أوجد قيمة X = 29°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-4",
+    "grade": "prep-1",
+    "text": "ذراع بوابة العبور يصنع زاوية 42° مع القائم وزاوية (3X+3)° مع الأفقي أوجد قيمة X ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-5",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل A ∈ BC مستقيم ، قياس زاوية DAB = 35° أوجد قيمة X = 145°",
+    "compCanHandle": true
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-7",
+    "grade": "prep-1",
+    "text": "النقطة B ∈ AC مستقيم زاويتان متكاملتان قياسهما (5X+2)° و (4X-2)° أوجد قيمة X = 2",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-9",
+    "grade": "prep-1",
+    "text": "زاويتان متقابلتان بالرأس قياسهما (2X+26)° و (3X-21)° أوجد قيمة X = 47°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-10",
+    "grade": "prep-1",
+    "text": "الشعاع OM ينصف زاوية NOZ و O ∈ XN مستقيم وقياس YOX = 50° أوجد بالبرهان قياس زاوي",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-angles-relationships-catalog-11",
+    "grade": "prep-1",
+    "text": "كرة إسكواش ارتطمت بالحائط بزاوية 50° مع زاويتي ارتداد (4X+21)° و (6X-1)° أوجد قي",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-1",
+    "grade": "prep-1",
+    "text": "نرسم AB في المستوى الإحداثي حيث A(2, 3) و B(-4, -1) ثم نوجد مسقط AB على محور X و",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-2",
+    "grade": "prep-1",
+    "text": "نرسم CD في المستوى الإحداثي حيث C(1, 4) و D(5, 1) ثم نوجد مسقط CD على محور y وطو",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-3",
+    "grade": "prep-1",
+    "text": "إذا كان A(3, -2) و B(-4, 4) ارسم AB في المستوى الإحداثي ثم أوجد طول مسقطها على ا",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-4",
+    "grade": "prep-1",
+    "text": "إحداثيا منتصف قطعة مستقيمة M هي نقطة تنتمي للمستقيمة وتكون على بعدين متساويين من",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-5",
+    "grade": "prep-1",
+    "text": "أوجد إحداثيي منتصف القطعة المستقيمة AB حيث A(1, 2) و B(5, 6)",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-coordinates-catalog-6",
+    "grade": "prep-1",
+    "text": "مسقط AB على محور X حيث A(2, 3) و B(-4, -1)",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-1",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل AB // CD ، EF // CD وقياس A = 70° وقياس C = 120° أوجد بالبرهان ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-4",
+    "grade": "prep-1",
+    "text": "شعاعان متوازيان وزاوية منكسرة قائمة 90° مع زاوية 40° أوجد قيمة X = 50°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-7",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل BA // CD وفيه قياس B = 80° وقياس C = 2y° وقياس D = X° أوجد قيمة",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-parallelism-catalog-9",
+    "grade": "prep-1",
+    "text": "توازي وتبادل جبري (3X+15)° = 75° أوجد قيمة X = 20°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-2",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل ABCDE خماسي فيه CB ⊥ AB و BC ⊥ CD و EDC = 130° و EAB = 112° ، أ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-3",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل خماسي ABCDE زواياه 100° و 110° و 120° ومنصفا زاويتي القاعدتين ي",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-4",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل سداسي بزوايا قائمة وزوايا جبرية X و (X + 24)° أوجد قيمة X",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-5",
+    "grade": "prep-1",
+    "text": "الخماسي المنتظم محاور تماثل عددها 5 محاور",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-7",
+    "grade": "prep-1",
+    "text": "سداسي منتظم عدد محاور تماثله 6 محاور",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-polygons-catalog-8",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل ABCDEF سداسي منتظم أوجد بالبرهان قياس زاوية H",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-1",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل ABCD متوازي أضلاع فيه قياس D = 75° ومثلث خارجي EGB فيه قياس G =",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-2",
+    "grade": "prep-1",
+    "text": "شكل رباعي تقاطع قطراه في M وفيه قياس ABD = 34° وقياس DCA = 31° وقياس CMB = 65° أ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-3",
+    "grade": "prep-1",
+    "text": "أوجد قيم a ، b التي تجعل الشكل ABCD متوازي أضلاع وفيه (a - 11)° = 32° و (2b - 5)",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-4",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل قياس D = 65° وقياس C = 115° وقياس E = 70° و A = 45° أثبت أن ABC",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-5",
+    "grade": "prep-1",
+    "text": "شكل رباعي ABCD فيه B = 60° و D = 130° و A = 110° والشعاع CF ينصف DCE أثبت أن BA ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-6",
+    "grade": "prep-1",
+    "text": "متوازي أضلاع أضلاعه المتقابلة 5X - 11 و 2X + 1 وزواياه المتتالية (10y+1)° و (6y+",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-7",
+    "grade": "prep-1",
+    "text": "متوازي أضلاع قطراه ينصف كل منهما الآخر وفيه 3y - 4 = 2y و X + y = 10 أوجد قيمة X",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-8",
+    "grade": "prep-1",
+    "text": "متوازي أضلاع أضلاعه المتقابلة متساوية X - 2 = 10 و 2y - 7 = y أوجد قيمة X و y",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-10",
+    "grade": "prep-1",
+    "text": "شكل رباعي قياسات زواياه 120° و 2X و 2X و X أوجد قيمة X = 48°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-11",
+    "grade": "prep-1",
+    "text": "شكل رباعي زاوية خارجة عنه 4X مع زوايا داخلة 70° و 100° و 110° أوجد قيمة X = 25°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-quadrilaterals-catalog-12",
+    "grade": "prep-1",
+    "text": "شبه منحرف متساوي الساقين زاويتا قاعدته (3X-55) و 2X أوجد قيمة زاوية D = 70°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-special-quads-followup-catalog-5",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل ABCD معين فيه قياس DBC = 62° أوجد بالبرهان قياس زاوية A = 56°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-1",
+    "grade": "prep-1",
+    "text": "في المثلث ABC منصفا زاويتي القاعدة يتقاطعان بزاوية 126° أوجد قياس زاوية الرأس C ",
+    "compCanHandle": true
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-3",
+    "grade": "prep-1",
+    "text": "في الشكل المقابل DE // FX // CB وقياس F = 135° وقياس D = 120° احسب قياسات زوايا ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-5",
+    "grade": "prep-1",
+    "text": "زاوية خارجة للمثلث قياسها (3X+10)° والزاويتان الداخلتان 60° و 70° أوجد قيمة X = ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-6",
+    "grade": "prep-1",
+    "text": "مثلث زاويتاه الداخلتان (2X-2)° و (3X+7)° والزاوية الخارجة 125° أوجد قيمة X = 24°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-7",
+    "grade": "prep-1",
+    "text": "زاوية خارجة للمثلث قياسها (2X+16)° مع زاويتين داخلتين (X+1)° و 80° أوجد قيمة X =",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-8",
+    "grade": "prep-1",
+    "text": "مثلث زواياه الداخلة (2X-5)° و (3X+4)° و (4X-8)° أوجد قياس زاوية B = 76°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-9",
+    "grade": "prep-1",
+    "text": "مثلث زواياه الداخلة a° و 3a° و 5a° أوجد قيمة a = 20°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-10",
+    "grade": "prep-1",
+    "text": "زاوية خارجة لمثلث مع زاويتين داخلتين 22° و 82° أوجد قيمة X = 104°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-1-prep-grade1-triangle-angles-catalog-12",
+    "grade": "prep-1",
+    "text": "مثلث بزاويتين خارجتين 110° و 104° أوجد قياس زاوية الرأس X = 34°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-followup-catalog-1",
+    "grade": "prep-2",
+    "text": "مثلث ABC قائم الزاوية في C ومتساوي الساقين ، CD ⊥ AB ، طول AD = 20 سم أوجد طول A",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-followup-catalog-4",
+    "grade": "prep-2",
+    "text": "شكل رباعي فيه MB = MC و AD // BC أثبت أن محور تماثل AMD هو نفسه محور تماثل BMC",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-followup-catalog-6",
+    "grade": "prep-2",
+    "text": "مثلث ثلاثيني ستيني فيه قياس CAB = 30° وقطعة FE = 6 سم واصلة بين منتصفي ضلعين أوج",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-followup-catalog-9",
+    "grade": "prep-2",
+    "text": "شكل دلتون XAYB بأضلاع 15 سم و 13 سم ومحور تماثل بأجزاء 10 سم و 5 + n سم لإيجاد ق",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-followup-catalog-10",
+    "grade": "prep-2",
+    "text": "مثلثان متساويا الساقين ABC و DBC بقاعدة مشتركة BC فيهما AB = AC وقياس ABD = قياس",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-2",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : مثلث ABC متساوي الساقين فيه AB = AC وقياس A = 50° ومثلث EBD م",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-3",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل قياس BAC = 30° وقياس B = 40° و AC = AD أوجد بالبرهان قياس D = 7",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-5",
+    "grade": "prep-2",
+    "text": "شكل رباعي فيه DA // CB ، AB = AD ، قياس A = 120° وقياس BDC = 65° أوجد قياس زاوية",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-6",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل AB = AC و A ينتمي للشعاع BD و AE // BC أثبت أن AE ينصف الزاوية ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-7",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل BD = DC و AB = AD أثبت أن قياس ABC = 3 قياس C",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-11",
+    "grade": "prep-2",
+    "text": "مثلث ABC فيه AB = AC وقياس A = 72° والشعاع BD ينصف زاوية B والشعاع CD ينصف زاوية",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-isosceles-triangle-catalog-12",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل قياس ACB = قياس ADB = 90° و E منتصف الوتر المشترك AB أثبت أن ال",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-parallel-applications-catalog-2",
+    "grade": "prep-2",
+    "text": "في كل من الشكلين الآتيين : l1 // l2 // l3 // l4 ، قاطعان لهم مع أجزاء 4X سم و 8 ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-parallel-applications-catalog-4",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : D ، E ، F منتصفات AB ، BC ، AC على الترتيب ، أطوال الأضلاع 6 ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-parallel-applications-catalog-5",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : D ، E منتصفا AB ، AC أوجد قيمة X حيث DE = (2X+1) سم و BC = (5",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-parallel-applications-catalog-8",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : E منتصف BC ، F منتصف AB ، FE = 10 سم ، DC = 16 سم ، AD = 12 س",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-parallel-applications-catalog-9",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : ABCD متوازي أضلاع إذا كانت : E ، F منتصفي BC ، AD على الترتيب",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-parallel-applications-catalog-10",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : إذا كانت D منتصف AB ، E منتصف AC ، G منتصف DF برهن أن : BC = ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-1",
+    "grade": "prep-2",
+    "text": "مضلع خماسي قياسات زواياه الداخلة هي 120° و 120° و 95° و 96° أوجد قياس الزاوية ال",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-2",
+    "grade": "prep-2",
+    "text": "مضلع خماسي منتظم متساوي الأضلاع أوجد قياس زاويته الداخلة 108° وقيمة X",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-4",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل خماسيان منتظمان مشتركان في ضلع أوجد قياس الزاوية بينهما 144° وق",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-5",
+    "grade": "prep-2",
+    "text": "مثلث قياسات زواياه الخارجة هي (X+31)° و (2X+32)° و (3X-3)° أوجد قيمة X = 50°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-6",
+    "grade": "prep-2",
+    "text": "شكل رباعي قياسات زواياه الخارجة هي 2X° و 3X° و 4X° و X° أوجد قيمة X = 36°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-7",
+    "grade": "prep-2",
+    "text": "مضلع خماسي زواياه الخارجة هي 84° و (X+19)° و 79° و (2X)° و 55° أوجد قيمة X = 41°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-polygon-angles-catalog-8",
+    "grade": "prep-2",
+    "text": "مضلع سداسي زواياه الخارجة هي 2a و 4a و 3a و 2a و 2a و 5a أوجد قيمة a = 20 وقياس ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-pythagoras-converse-catalog-2",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : ABCD شكل رباعي فيه m(∠ B) = 90° ، AB = 7 سم ، BC = 24 سم ، CD",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-pythagoras-converse-catalog-3",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : ABCD شكل رباعي فيه m(∠ B) = 90° ، AB = 9 سم ، BC = 12 سم ، AD",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-pythagoras-converse-catalog-6",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : إذا كانت AB // DC ، AD = 13 سم ، AB = 5 سم ، DC = 35 سم أوجد ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-pythagoras-converse-catalog-9",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : AD ⊥ BC ، AD = 2 سم ، BD = 1 سم ، DC = 4 سم أثبت أن : m(∠ BAC",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-pythagoras-converse-catalog-10",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : XD = DZ ، CX = 6 سم ، CD = 6.5 سم ، m(∠ Y) = 90° ، XY = 3 سم ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-pythagoras-converse-catalog-11",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : ABCD شكل رباعي فيه m(∠ B) = 90° ، AB = 32 سم ، BC = 24 سم ، C",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-congruence-catalog-5",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : برهن أن : Δ OAB ≅ Δ OCD أوجد : m(∠ AOC) حيث O منتصف BD وزاوية",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-congruence-catalog-6",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : AB = 3.6 سم ، AC ينصف ∠ BAD ، CD = 2.4 سم برهن أن : Δ ACB ≅ Δ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-congruence-catalog-13",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل : متوازي أضلاع برهن أن : AB // CD و DF = BE مع DE ⊥ AC و BF ⊥ A",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-medians-catalog-3",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل AD ⊥ BE و CE = 15 سم و BG = 18 سم أوجد بالبرهان طول AD",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-medians-catalog-5",
+    "grade": "prep-2",
+    "text": "المثلث ABC قائم الزاوية في A ، فيه AD متوسط وطوله 7 سم ، BD = 2X - 3 و CD = 3X -",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-medians-catalog-7",
+    "grade": "prep-2",
+    "text": "في المثلث ABC إذا كان AD متوسط وطوله 17 سم وكان BC = 34 سم و AB = 16 سم أثبت أن ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-2-prep-grade2-triangle-medians-catalog-9",
+    "grade": "prep-2",
+    "text": "في الشكل المقابل BH متوسط في المثلث ABC القائم الزاوية في B و E و F منتصفا AD و ",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-1",
+    "grade": "prep-3",
+    "text": "الشكل المقابل يمثل AB الذي معادلته y = k X + c ويقطع من محوري الإحداثيات جزأين م",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-3",
+    "grade": "prep-3",
+    "text": "في الشكل المقابل : النقط O(0,0) ، A(2,6) ، B(6,2) ، D رؤوس معين . أوجد إحداثيي ا",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-4",
+    "grade": "prep-3",
+    "text": "إذا كان: L2 ⊥ L1 ومعادلة L1 هي 2X - y + 2 = 0 أوجد معادلة L2",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-5",
+    "grade": "prep-3",
+    "text": "في الشكل المقابل : AB يقطع محور y في النقطة A(0,8) ويقطع محور x في النقطة B فإذا",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-3-prep-grade3-line-equation-catalog-6",
+    "grade": "prep-3",
+    "text": "في الشكل المقابل : إذا كان: A(-4,-3) ، B(2,3) ، AB ⊥ BC أوجد إحداثيي النقطة C وم",
+    "compCanHandle": false
+  },
+  {
+    "id": "prep-3-sim-notebooklm-06",
+    "grade": "prep-3",
+    "text": "[رسم هندسي: AC \\cap BD = \\{E\\}، AB // CD، AE = 4 سم، EC = 6 سم، BE = 3 سم] في ال",
+    "compCanHandle": true
+  },
+  {
+    "id": "prim3-grid-01",
+    "grade": "primary-3",
+    "text": "مستطيل على شبكة مربعات أبعاده 5 وحدات و 3 وحدات",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-grid-02",
+    "grade": "primary-3",
+    "text": "مربع على شبكة مربعات طول ضلعه 4 وحدات",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-grid-03",
+    "grade": "primary-3",
+    "text": "مستطيل أبعاده 6 وحدات و 2 وحدة",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-grid-04",
+    "grade": "primary-3",
+    "text": "مستطيل على شبكة مربعات طوله 7 وحدات وعرضه 3 وحدات",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-grid-05",
+    "grade": "primary-3",
+    "text": "مستطيل أبعاده 4 وحدات و 4 وحدات",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-geom-01",
+    "grade": "primary-3",
+    "text": "زاوية قائمة قياسها 90°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-geom-02",
+    "grade": "primary-3",
+    "text": "زاوية حادة قياسها 45°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-geom-03",
+    "grade": "primary-3",
+    "text": "زاوية منفرجة قياسها 120°",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-clock-01",
+    "grade": "primary-3",
+    "text": "ساعة عقارب تشير إلى الساعة 3:00 تماماً",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-clock-02",
+    "grade": "primary-3",
+    "text": "ساعة عقارب تشير إلى 4:30",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-clock-03",
+    "grade": "primary-3",
+    "text": "ساعة عقارب تشير إلى 6:15",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-clock-04",
+    "grade": "primary-3",
+    "text": "ساعة عقارب تشير إلى 8:45",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-stat-01",
+    "grade": "primary-3",
+    "text": "تمثيل بياني بالأعمدة : الأحد = 4 ، الإثنين = 6 ، الثلاثاء = 5",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-stat-02",
+    "grade": "primary-3",
+    "text": "تمثيل بياني بالأعمدة يوضح عدد القصص المقروءة أسبوعياً",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-theory-01",
+    "grade": "primary-3",
+    "text": "مع أحمد 125 جنيهاً واشترى لعبة بمبلغ 45 جنيهاً، فكم جنيهاً تبقى معه؟",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim3-theory-02",
+    "grade": "primary-3",
+    "text": "إذا كان ثمن القلم الواحد 4 جنيهات، فما ثمن 6 أقلام من نفس النوع؟",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-01",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = a ؛ الجزء الأول = 214 ؛ الجزء الثاني = 250",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-02",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 900 ؛ الجزء الأول = 460 ؛ الجزء الثاني = c",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-03",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = x ؛ الجزء الأول = 200 ؛ الجزء الثاني = 300",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-04",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 13,000 ؛ الجزء الأول = b ؛ الجزء الثاني = 5,300",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-05",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 9,870 ؛ الجزء الأول = 5,100 ؛ الجزء الثاني = a",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-06",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = m ؛ الجزء الأول = 500 ؛ الجزء الثاني = 6,000",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-07",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 985 ؛ الجزء الأول = d ؛ الجزء الثاني = 285",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-11",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 340 سم ؛ الجزء الأول = ... م ؛ الجزء الثاني = ... سم",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-12",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 5,816 م ؛ الجزء الأول = ... كم ؛ الجزء الثاني = ... م",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-13",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = ... سم ؛ الجزء الأول = 6 م ؛ الجزء الثاني = 75 سم",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-14",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 4,687 جم ؛ الجزء الأول = ... كجم ؛ الجزء الثاني = ... جم",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-15",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 50,850 كجم ؛ الجزء الأول = ... طنًا ؛ الجزء الثاني = ... كجم",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-16",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = ... جم ؛ الجزء الأول = 6 كجم ؛ الجزء الثاني = 313 جم",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-17",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 5,000 جم ؛ الجزء الأول = 2 كجم ؛ الجزء الثاني = b",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-18",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 7,209 ملل ؛ الجزء الأول = ... لترات ؛ الجزء الثاني = ... ملل",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-19",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = 30,517 ملل ؛ الجزء الأول = ... لترًا ؛ الجزء الثاني = ... مل",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-20",
+    "grade": "primary-4",
+    "text": "نموذج شريطي: الكل = ... ملل ؛ الجزء الأول = 8 لترات ؛ الجزء الثاني = 35 ملل",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-25",
+    "grade": "primary-4",
+    "text": "ساعة عقارب: 1:35",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-26",
+    "grade": "primary-4",
+    "text": "ساعة عقارب: 6:30",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-27",
+    "grade": "primary-4",
+    "text": "ساعة عقارب: 9:45",
+    "compCanHandle": false
+  },
+  {
+    "id": "p4-28",
+    "grade": "primary-4",
+    "text": "ساعة عقارب: 4:50",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-tri-03",
+    "grade": "primary-5",
+    "text": "مثلث قاعدته = 10 سم ; ارتفاعه المناظر = 7 سم",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-para-02",
+    "grade": "primary-5",
+    "text": "متوازي أضلاع قاعدته = 12 سم ; ارتفاعه = 8 سم",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-para-03",
+    "grade": "primary-5",
+    "text": "متوازي أضلاع مساحته = 48 سم² ; قاعدته = 6 سم",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-coord-01",
+    "grade": "primary-5",
+    "text": "مستوى إحداثي الربع الأول ; النقطة أ(3 ، 5)",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-solid-02",
+    "grade": "primary-5",
+    "text": "مكعب طول حرفه = 4 سم",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-solid-03",
+    "grade": "primary-5",
+    "text": "مجسم مكون من طبقات مكعبات وحدة 3 في 2 في 4",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-numline-01",
+    "grade": "primary-5",
+    "text": "خط الأعداد من 0 إلى 1 مقسم إلى أجزاء من عشرة",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-numline-02",
+    "grade": "primary-5",
+    "text": "خط الأعداد من 1 إلى 2 مقسم إلى أرباع",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-numline-03",
+    "grade": "primary-5",
+    "text": "خط الأعداد مقسم إلى أرباع من 0 إلى 2",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-stat-01",
+    "grade": "primary-5",
+    "text": "تمثيل بياني بالأعمدة المزدوجة لمقارنة مجموعتين من البيانات",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-theory-02",
+    "grade": "primary-5",
+    "text": "إذا كانت كتلة صندوق التفاح 15.75 كجم فما كتلة 10 صناديق متماثلة؟",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-theory-03",
+    "grade": "primary-5",
+    "text": "مساحة متوازي الأضلاع تساوي طول القاعدة مضروباً في الارتفاع المناظر لها.",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-theory-04",
+    "grade": "primary-5",
+    "text": "مساحة المثلث تساوي نصف حاصل ضرب طول قاعدته في ارتفاعه المناظر.",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-theory-09",
+    "grade": "primary-5",
+    "text": "المكعب له 6 أوجه مربعة متطابقة و 12 حرفاً متساوياً في الطول و 8 رؤوس.",
+    "compCanHandle": false
+  },
+  {
+    "id": "prim5-theory-10",
+    "grade": "primary-5",
+    "text": "اشترى محمد 3.5 متر من القماش بسعر 80 جنيهاً للمتر، فما إجمالي المبلغ المدفوع؟",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-01",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 10 (2) ، 20 (3) ، 30 (5) ، 40 (4) ، 50 (3) ، 60 (2)",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-02",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 0 (4) ، 1 (5) ، 2 (4) ، 3 (2) ، 4 (1) ، 10 (1)",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-03",
+    "grade": "primary-6",
+    "text": "تمثيل بياني بالأعمدة: برامج الألعاب 6 ؛ برامج المنوعات 4 ؛ البرامج الرياضية 3 ؛ ",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-04",
+    "grade": "primary-6",
+    "text": "تمثيل بياني بالأعمدة: 0: 3 ؛ 1: 6 ؛ 2: 4 ؛ 3: 2 ؛ 4: 2 ؛ 5: 1",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-08",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 1 (2) ، 2 (3) ، 3 (3) ، 4 (5) ، 5 (2) ، 6 (1) ، 7 (2) ، 10",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-09",
+    "grade": "primary-6",
+    "text": "تمثيل بياني بالأعمدة: كرة القدم 25 ؛ كرة السلة 15 ؛ الكرة الطائرة 10 ؛ السباحة 2",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-12",
+    "grade": "primary-6",
+    "text": "مخطط الصندوق: الحد الأدنى 10 ؛ الربع الأول 20 ؛ الوسيط 25 ؛ الربع الثالث 40 ؛ ال",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-13",
+    "grade": "primary-6",
+    "text": "مخطط الصندوق: الحد الأدنى 1 ؛ الربع الأول 2 ؛ الوسيط 4 ؛ الربع الثالث 8 ؛ الحد ا",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-14",
+    "grade": "primary-6",
+    "text": "مخطط الصندوق: الحد الأدنى 1 ؛ الربع الأول 3 ؛ الوسيط 5.5 ؛ الربع الثالث 7 ؛ الحد",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-15",
+    "grade": "primary-6",
+    "text": "مخطط الصندوق: الحد الأدنى 2 ؛ الربع الأول 5 ؛ الوسيط 7 ؛ الربع الثالث 8 ؛ الحد ا",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-16",
+    "grade": "primary-6",
+    "text": "مخطط الصندوق: البيانات: 5 ، 12 ، 8 ، 9 ، 7 ، 6 ، 11",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-21",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 140 (2) ، 146 (3) ، 148 (2) ، 150 (4) ، 152 (3) ، 154 (2) ",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-22",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 5 (1) ، 20 (1) ، 30 (7) ، 35 (5) ، 40 (5) ، 45 (3) ، 50 (4",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-23",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 2 (5) ، 14 (7) ، 15 (9) ، 16 (8) ، 17 (9) ، 18 (9) ، 19 (1",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-24",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 10 (1) ، 16 (3) ، 17 (2) ، 18 (1) ، 19 (2) ، 20 (2)",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-25",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: 6 (2) ، 7 (4) ، 8 (2) ، 9 (1) ، 13 (1)",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-26",
+    "grade": "primary-6",
+    "text": "مخطط التمثيل بالنقاط: القيم 3 ، 4 ، 7 ؛ التكرار 2 ، 5 ، 1",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-27",
+    "grade": "primary-6",
+    "text": "تمثيل بياني بالأعمدة: علوم 12 ؛ رياضيات 20 ؛ لغة عربية 9",
+    "compCanHandle": false
+  },
+  {
+    "id": "p6-stat-29",
+    "grade": "primary-6",
+    "text": "مخطط الصندوق: الحد الأدنى 12 ؛ الربيع الأول 15 ؛ الوسيط 20 ؛ الربيع الثالث 26 ؛ ",
+    "compCanHandle": false
+  },
+  {
+    "id": "intake-09",
+    "grade": "unassigned",
+    "text": "مستطيل ABCD طوله 8 وعرضه 6 وقطراه يتقاطعان في M",
+    "compCanHandle": true
+  }
+]

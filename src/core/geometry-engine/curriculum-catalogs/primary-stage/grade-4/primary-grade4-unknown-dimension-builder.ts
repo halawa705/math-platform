@@ -172,6 +172,9 @@ export function matchGrade4UnknownDimensionFigure(
   const d = description.trim();
   const western = toWesternNumeralsSSOT(d);
 
+  // يجب أن يخص المستطيل أو المربع أو محيط/مساحة صريحة
+  if (!/(?:مستطيل|مربع|محيط|مساحة)/i.test(d)) return undefined;
+
   // الكشف عن سياق المجهول: x, y, ؟, ?, مجهول, الضلع المجهول, البعد المجهول
   const hasUnknownContext =
     /مجهول|[؟?]|(?:طول\s*الضلع|البعد)\s*[xxyyسص]/i.test(d) ||

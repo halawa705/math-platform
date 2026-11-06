@@ -84,7 +84,7 @@ export function matchPrepGrade1TriangleAnglesFigure(
   }
 
   // 11. مسألة 2-7 ص 207: مثلث متساوي الأضلاع والزاوية الخارجة عنه = 120°
-  if (/متساوي\s*الأضلاع.*خارجة.*120|خارجة.*متساوي\s*الأضلاع/i.test(d)) {
+  if (/متساوي\s*الأضلاع.*(?:ال)?خارج(?:ي)?ة|(?:ال)?خارج(?:ي)?ة.*متساوي\s*الأضلاع/i.test(d)) {
     return buildTriangleEquilateralExterior120Figure({ figureId, notationLanguage });
   }
 

@@ -30,7 +30,7 @@ function dimensionFacts(shapeHead: string, labelsRaw: string, tail: string): str
   if (len) extra.push(`${k[0]}${k[1]} = ${len[1]}`);
   if (wid) extra.push(`${k[1]}${k[2]} = ${wid[1]}`);
   if (side) extra.push(`${k[0]}${k[1]} = ${side[1]}`);
-  const rest = tail.replace(/(?:طوله|طولها|بعداه|الطول|عرضه|عرضها|العرض|ضلعه|ضلعها|طول\s*ضلعه)\s*=?\s*\d+(?:\.\d+)?\s*(?:سم|م)?/g, " ").replace(/\sو\s*$|\sو\s+(?=قطرا)/g, " ");
+  const rest = tail.replace(/(?:و\s*)?(?:طوله|طولها|بعداه|الطول|عرضه|عرضها|العرض|ضلعه|ضلعها|طول\s*ضلعه)\s*=?\s*\d+(?:\.\d+)?\s*(?:سم|م)?/g, " ").replace(/\sو\s*$|\sو\s+(?=قطرا)/g, " ");
   return [shapeHead + rest, ...extra].join(SEP);
 }
 
@@ -48,11 +48,11 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(/\s(?:فيه|فيها|حيث|بحيث|وكان|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s/g, SEP)
     .replace(/[:：]/g, SEP)
     .replace(/\sو(?=\s*نصف\s*قطرها)/g, " ")
-    .replace(new RegExp(`(${LABELS_ONE_SEG})\\s*(?:ال)?(?:مستقيم|قطعة\\s*مستقيمة)?\\s*(?:و?يقطع)\\s*(${LABELS_ONE_SEG})\\s*في\\s*([A-Z]|${AR})`, "g"), "$1 ؛ $3 ∈ $2")
+    .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s*(?:ال)?(?:مستقيم|قطعة\\s*مستقيمة)?\\s*(?:و?يقطع)\\s*\\b(${LABELS_ONE_SEG})\\b\\s*في\\s*([A-Z]|${AR})`, "g"), "$1 ؛ $3 ∈ $2")
     .replace(/(?:ال)?نقطة\s+(?=[A-Z]\b)/g, " ")
     .replace(new RegExp(`(?:ال)?نقطة\\s+(${AR})(?=\\s+(?:على|∈|منتصف|تنتمي))`, "g"), "$1")
     .replace(/([A-Z]|[أ-ي]ـ?)\s*(?:هي\s*)?نقطة\s*تقاطع\s*(?:ال)?قطر(?:يه|يها|ي|ان|اه)\s*/g, " قطراه يتقاطعان في $1 ")
-    .replace(new RegExp(`(${LABELS_ONE_SEG})\\s+([^؛;]*?)(?:طوله|طولها)\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم)?`, "g"), "$1 $2 ؛ $1 = $3 سم ")
+    .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+([^؛;]*?)(?:طوله|طولها)\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم)?`, "g"), "$1 $2 ؛ $1 = $3 سم ")
     .replace(new RegExp(`\\sو(?:\\s*)(?=${FACT_START})`, "g"), SEP)
     .replace(/\sو(?=(?:ال)?زاوية|قياس)/g, SEP)
     .replace(/\sو(?=نصف)/g, " ")

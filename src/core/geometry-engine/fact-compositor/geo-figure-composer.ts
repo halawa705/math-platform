@@ -11,6 +11,7 @@ import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
+import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
@@ -31,16 +32,7 @@ export function composeFigureFromGeometryDescription(description: string, figure
   }
 
   // 1. فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية أولاً على كامل النص المدمج
-  const normDesc = splitDescriptionIntoFactStrings(description).join(" ؛ ");
-  const isAnalyticCoordinate = /محور|إحداثي|احداثي|معادلة|ميل|\(\s*-?\d+\s*[,،]\s*-?\d+\s*\)/i.test(normDesc);
-  const isSimilarityContext =
-    !isAnalyticCoordinate &&
-    (/[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|اقليدس/i.test(
-      description
-    ) ||
-      /AED.*=.*B|ADE.*=.*C/i.test(normDesc) ||
-      (normDesc.includes("∩") && !normDesc.includes("∠") && !normDesc.includes("°") && (/يوازي|\/\/|تشابه|~/.test(normDesc) || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i.test(normDesc))) ||
-      ((normDesc.includes("قائم") || /ق\s*\(\s*∠\s*[A-Z]\s*\)\s*=\s*90/i.test(normDesc)) && normDesc.includes("⊥") && !normDesc.includes("مربع") && !normDesc.includes("مستطيل") && !normDesc.includes("متساوي الساقين") && !normDesc.includes("متوسط")));
+  const isSimilarityContext = isSimilarityGeometryContext(description);
 
   if (isSimilarityContext) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);

@@ -86,8 +86,11 @@ export function matchPrepGrade1AnglesRelationshipsFigure(
     return buildSquashBallWallReboundFigure({ figureId, notationLanguage });
   }
 
-  // 12. مطابقة عامة لدرس أنواع الزوايا والعلاقات بينها في 1 إعدادي
-  if (/أنواع\s*الزوايا|العلاقات\s*بين\s*الزوايا|الزاويتان\s*المتتامتان|الزاويتان\s*المتكاملتان/i.test(d)) {
+  // 12. مطابقة عامة لدرس أنواع الزوايا والعلاقات بينها في 1 إعدادي (مع استثناء درس التابع للزوايا المتجمعة)
+  if (
+    (/أنواع\s*الزوايا|العلاقات\s*بين\s*الزوايا|الزاويتان\s*المتتامتان|الزاويتان\s*المتكاملتان/i.test(d)) &&
+    !/تابع|متجمع/i.test(d)
+  ) {
     return buildComplementaryTwoAngles25Figure({ figureId, notationLanguage });
   }
 
