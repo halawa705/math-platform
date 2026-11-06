@@ -111,8 +111,8 @@ describe("Phase 2 Task 2.2: Unified Similarity Context Detector", () => {
 });
 
 describe("Phase 2 Task 2.3: Geometry Catalog Match Registry", () => {
-  it("registry contains all 24 curriculum catalogs across primary and prep", () => {
-    expect(GEOMETRY_CATALOG_MATCHERS.length).toBe(24);
+  it("registry contains all curriculum catalogs across primary (including Grade 3) and prep", () => {
+    expect(GEOMETRY_CATALOG_MATCHERS.length).toBe(25);
     const stages = new Set(GEOMETRY_CATALOG_MATCHERS.map((c) => c.stage));
     expect(stages.has("primary")).toBe(true);
     expect(stages.has("preparatory")).toBe(true);

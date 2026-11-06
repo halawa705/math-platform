@@ -9,6 +9,7 @@
 import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../../ssot/numeral-and-unit-ssot";
 
+import { matchPrimaryGrade3GeometryFigure } from "./primary-stage/grade-3/primary-grade3-geometry-catalog";
 import { matchPrimaryGrade4VisualModelsFigure } from "./primary-stage/grade-4/primary-grade4-visual-models-catalog";
 import { matchPrimaryGrade4GeometryFigure } from "./primary-stage/grade-4/primary-grade4-geometry-catalog";
 import { matchPrimaryGrade5GeometryFigure } from "./primary-stage/grade-5/primary-grade5-geometry-catalog";
@@ -60,6 +61,7 @@ export interface CatalogRegistryMatchResult {
 
 export const GEOMETRY_CATALOG_MATCHERS: readonly CatalogMatcherDescriptor[] = [
   // المرحلة الابتدائية
+  { id: "primary-3-geometry", gradeId: "prim_grade_3", stage: "primary", match: matchPrimaryGrade3GeometryFigure },
   { id: "primary-4-visual-models", gradeId: "prim_grade_4", stage: "primary", match: matchPrimaryGrade4VisualModelsFigure },
   { id: "primary-4-geometry", gradeId: "prim_grade_4", stage: "primary", match: matchPrimaryGrade4GeometryFigure },
   { id: "primary-5-geometry", gradeId: "prim_grade_5", stage: "primary", match: matchPrimaryGrade5GeometryFigure },
