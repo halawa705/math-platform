@@ -33,6 +33,10 @@ export type FlowItem =
       readonly sectionLocalNumber?: number;
       /** شريحة من خطوات الحل لبطاقة مقسومة بين صفحتين (غير معرّفة = البطاقة كاملة). الخطوة لا تُجزَّأ أبداً. */
       readonly solutionSlice?: FlowSolutionSlice;
+      /** إخفاء الحل حتى لو كانت النسخة مع الإجابات (تستخدم لنسخة الطالب أولاً). */
+      readonly forceHideSolution?: boolean;
+      /** بطاقة حل منفصلة في نهاية المذكرة (تظهر شارة إجابة سؤال X). */
+      readonly isAnswerCard?: boolean;
     }
   | { readonly id: string; readonly kind: "idea_divider"; readonly span: "full"; readonly ideaIndex: number }
   | {
@@ -44,6 +48,13 @@ export type FlowItem =
       readonly questionsCount: number;
     }
   | { readonly id: string; readonly kind: "exam_wish_banner"; readonly span: "full" }
+  | {
+      readonly id: string;
+      readonly kind: "answer_section_banner";
+      readonly span: "full";
+      readonly titleArabic: string;
+      readonly subtitleArabic?: string;
+    }
   | { readonly id: string; readonly kind: "mcq_answer_key"; readonly span: "full" }
   | { readonly id: string; readonly kind: "accreditation_footer"; readonly span: "full" };
 
@@ -87,6 +98,7 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
     case "idea_divider": return 22;
     case "exam_section_banner": return 38;
     case "exam_wish_banner": return 32;
+    case "answer_section_banner": return 48;
     case "mcq_answer_key": return 180;
     case "accreditation_footer": return 95;
     default: return 190;

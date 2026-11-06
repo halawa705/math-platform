@@ -34,12 +34,18 @@ export interface SideBySideDiagramDockerProps {
   readonly settings: PDFPrintSettingsStateSSOT;
   /** عند تقسيم حل المثال بين صفحتين: الشريحة المعروضة من الخطوات (from = 0 رأس البطاقة، from > 0 ذيلها). */
   readonly solutionSlice?: FlowSolutionSlice;
+  /** إخفاء الحل حتى لو كانت النسخة مع الإجابات (لنسخة الطالب). */
+  readonly forceHideSolution?: boolean;
+  /** بطاقة حل معتمدة في نهاية المذكرة (تظهر شارة إجابة سؤال X). */
+  readonly isAnswerCard?: boolean;
 }
 
 export default function SideBySideDiagramDocker({
   question,
   settings,
   solutionSlice,
+  forceHideSolution = false,
+  isAnswerCard = false,
 }: SideBySideDiagramDockerProps) {
   const isContinuation = solutionSlice !== undefined && solutionSlice.from > 0;
   const palette = resolvePrintThemePalette(settings.colorThemeId);
@@ -53,14 +59,19 @@ export default function SideBySideDiagramDocker({
     (question.id.startsWith("booklet-s1-") && !isBookletDrill);
   const isBookletHomework = question.id.includes("-hw-") || question.id.startsWith("booklet-s2-");
   const isBookletDrillOrHomework = isBookletDrill || isBookletHomework;
+  const isAnswerCardMode = Boolean(isAnswerCard);
   const isSolvedMode =
-    isBookletSolvedExample ||
-    (!isBookletDrillOrHomework &&
-      (settings.answerVisibilityMode === "questions_with_answers" ||
-        settings.answerVisibilityMode === "answer_key_only")) ||
-    (isBookletDrillOrHomework && settings.answerVisibilityMode === "answer_key_only");
+    !forceHideSolution &&
+    (isAnswerCardMode ||
+      (!isAnswerCardMode &&
+        (isBookletSolvedExample ||
+          (!isBookletDrillOrHomework &&
+            (settings.answerVisibilityMode === "questions_with_answers" ||
+              settings.answerVisibilityMode === "answer_key_only")) ||
+          (isBookletDrillOrHomework && settings.answerVisibilityMode === "answer_key_only"))));
 
   const isAnswerKeyOnlyMode = settings.answerVisibilityMode === "answer_key_only";
+  const isEffectiveAnswerCard = isAnswerCardMode || isAnswerKeyOnlyMode;
   const isOddQuestion = question.questionNumber % 2 === 1;
   const { cardSurfaceBgHex, cardBorderColorHex, badgeBgColorHex, exampleRoleLabel } =
     resolveQuestionCardColorScheme({
@@ -69,7 +80,7 @@ export default function SideBySideDiagramDocker({
       isBookletHomework,
       isOddQuestion,
       palette,
-      isAnswerCard: isAnswerKeyOnlyMode,
+      isAnswerCard: isEffectiveAnswerCard,
     });
 
   const mcqCols = resolveAdaptiveMCQColumnsCount(
@@ -100,7 +111,7 @@ export default function SideBySideDiagramDocker({
           isBookletSolvedExample={isBookletSolvedExample}
           isBookletDrill={isBookletDrill}
           isBookletHomework={isBookletHomework}
-          isAnswerCard={isAnswerKeyOnlyMode}
+          isAnswerCard={isEffectiveAnswerCard}
           formattedQNum={formattedQNum}
           formattedMarks={formatNumeralsByModeSSOT(question.marks, settings.numeralMode)}
           exampleRoleLabel={exampleRoleLabel}
@@ -111,7 +122,7 @@ export default function SideBySideDiagramDocker({
           formattedIdeaIndex={formattedIdeaIndex}
         />
 
-        {settings.answerVisibilityMode !== "answer_key_only" && !isContinuation && (
+        {(!isAnswerKeyOnlyMode || isAnswerCardMode) && !isContinuation && (
           <div className="min-w-0" style={{ breakAfter: "avoid" }}>
             <div
               className={
@@ -198,7 +209,8 @@ export default function SideBySideDiagramDocker({
         )}
       </div>
 
-      {(settings.answerVisibilityMode === "questions_only" || isBookletDrillOrHomework) && !isBookletSolvedExample && (
+      {!isAnswerCardMode &&
+        (forceHideSolution || settings.answerVisibilityMode === "questions_only" || isBookletDrillOrHomework) && (
         <StudentAnswerSpaceDocker
           isBookletDrill={isBookletDrill}
           isBookletHomework={isBookletHomework}

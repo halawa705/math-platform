@@ -92,8 +92,9 @@ export default function TwoColumnNewspaperPacker({
         includeAnswerKey: isSolvedMode,
         includeAccreditation: !effSettings.hideAccreditation && !isSchoolExam,
         paperTemplateId: effSettings.paperTemplateId,
+        answerVisibilityMode: effSettings.answerVisibilityMode,
       }),
-    [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId]
+    [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
   const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`, measureStamp);

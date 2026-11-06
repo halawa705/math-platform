@@ -17,6 +17,7 @@ import { SovereignDocumentAccreditationBox } from "./sovereign-a4-page-chrome-el
 import { OfficialSchoolExamQuestionRow } from "./official-school-exam-question-row";
 import { OfficialSchoolExamSectionBanner } from "./official-school-exam-section-banner";
 import { OfficialSchoolEndWishBanner } from "./official-school-exam-page-chrome";
+import { AnswerSectionBanner } from "./answer-section-banner";
 
 export const MODULE_ID_FLOW_ITEM_RENDERER = "flow_item_renderer" as const;
 
@@ -44,6 +45,14 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
       );
     case "exam_wish_banner":
       return <OfficialSchoolEndWishBanner />;
+    case "answer_section_banner":
+      return (
+        <AnswerSectionBanner
+          titleArabic={item.titleArabic}
+          subtitleArabic={item.subtitleArabic}
+          palette={palette}
+        />
+      );
     case "idea_capsule":
       return (
         <PedagogicalIdeaAndRuleCapsule
@@ -63,10 +72,16 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
               sectionLocalNumber={item.sectionLocalNumber}
               settings={settings}
               palette={palette}
-              isSolvedMode={isSolvedMode}
+              isSolvedMode={item.forceHideSolution ? false : item.isAnswerCard ? true : isSolvedMode}
             />
           ) : (
-            <SideBySideDiagramDocker question={item.question} settings={settings} solutionSlice={item.solutionSlice} />
+            <SideBySideDiagramDocker
+              question={item.question}
+              settings={settings}
+              solutionSlice={item.solutionSlice}
+              forceHideSolution={item.forceHideSolution}
+              isAnswerCard={item.isAnswerCard}
+            />
           )}
         </div>
       );

@@ -71,11 +71,12 @@ export default function MultiFormNewspaperPacker({
           includeAnswerKey: isSolvedMode,
           includeAccreditation: !settings.hideAccreditation && !isSchoolExam,
           paperTemplateId: settings.paperTemplateId,
+          answerVisibilityMode: settings.answerVisibilityMode,
         });
         const totalMarks = f.questions.reduce((sum, q) => sum + q.marks, 0);
         return { form: f, items, totalIdeasCount, totalMarks };
       }),
-    [forms, effectiveColumnsCount, isSolvedMode, settings.hideAccreditation, isSchoolExam, settings.paperTemplateId]
+    [forms, effectiveColumnsCount, isSolvedMode, settings.hideAccreditation, isSchoolExam, settings.paperTemplateId, settings.answerVisibilityMode]
   );
 
   // دمج كائنات القياس للمنصة الخفية
