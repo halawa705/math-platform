@@ -1,6 +1,6 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية (المرحلة 0)
 
-> تاريخ التوليد: 2026-11-06T09:46:49.488Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-06T10:35:56.893Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر وليست حكماً نهائياً**. الدقة الحقيقية لا تُحسب إلا من خانة `humanVerdict` بعد المراجعة البشرية.
@@ -8,11 +8,11 @@
 ## الملخص
 
 - إجمالي الحالات: **375**
-- أنتج النظام شكلاً في: **263** (70.1%)
-- شكل بلا أي علامة خطر آلية: **151** (40.3%)
-- شكل بعلامات خطر: **112** (29.9%)
+- أنتج النظام شكلاً في: **268** (71.5%)
+- شكل بلا أي علامة خطر آلية: **164** (43.7%)
+- شكل بعلامات خطر: **104** (27.7%)
 - 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها: **0**
-- شكل مفقود لمسألة تستحق شكلاً: **72**
+- شكل مفقود لمسألة تستحق شكلاً: **67**
 - رفض صحيح (لا شكل): **40**
 - الدقة المُثبتة بشرياً: **لم تُراجَع أي حالة بعد**
 
@@ -20,17 +20,16 @@
 
 | العلامة | العدد |
 |---|---|
-| `from_fixed_catalog` | 106 |
-| `missing_given_on_figure` | 12 |
-| `verification_error` | 2 |
+| `from_fixed_catalog` | 101 |
+| `missing_given_on_figure` | 9 |
 
 ### حسب الصف
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
 |---|---|---|---|---|---|---|
 | prep-1 | 120 | 35 | 53 | 0 | 26 | 6 |
-| prep-2 | 89 | 4 | 50 | 0 | 35 | 0 |
-| prep-3 | 33 | 12 | 8 | 0 | 11 | 2 |
+| prep-2 | 89 | 14 | 43 | 0 | 32 | 0 |
+| prep-3 | 33 | 15 | 7 | 0 | 9 | 2 |
 | primary-4 | 49 | 21 | 0 | 0 | 0 | 28 |
 | primary-6 | 29 | 25 | 0 | 0 | 0 | 4 |
 | unassigned | 55 | 54 | 1 | 0 | 0 | 0 |
@@ -40,7 +39,7 @@
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
 |---|---|---|---|---|---|---|
 | numbers | 49 | 21 | 0 | 0 | 0 | 28 |
-| plane_geometry | 297 | 105 | 112 | 0 | 72 | 8 |
+| plane_geometry | 297 | 118 | 104 | 0 | 67 | 8 |
 | statistics_probability | 29 | 25 | 0 | 0 | 0 | 4 |
 
 ## الحالات التي تستحق الفحص أولاً
@@ -183,22 +182,12 @@
 | prep-2-prep-grade2-pythagoras-converse-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-pythagoras-converse-catalog-11 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-pythagoras-converse-catalog-12 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-2 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-triangle-congruence-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-triangle-congruence-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-triangle-congruence-catalog-7 | missed_figure | — | none | — | — |
 | prep-2-prep-grade2-triangle-congruence-catalog-8 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-11 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-12 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-triangle-congruence-catalog-13 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-14 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-15 | missed_figure | — | none | — | — |
 | prep-2-prep-grade2-triangle-congruence-catalog-16 | missed_figure | — | none | — | — |
-| prep-2-prep-grade2-triangle-congruence-catalog-17 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-triangle-medians-catalog-1 | missed_figure | — | none | — | — |
 | prep-2-prep-grade2-triangle-medians-catalog-2 | missed_figure | — | none | — | — |
 | prep-2-prep-grade2-triangle-medians-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
@@ -219,15 +208,12 @@
 | prep-3-geometry-similarity-catalogs-and-smart-prompt-6 | missed_figure | — | none | — | — |
 | prep-3-geometry-similarity-catalogs-and-smart-prompt-7 | missed_figure | — | none | — | — |
 | prep-3-geometry-similarity-catalogs-and-smart-prompt-11 | missed_figure | — | none | — | — |
-| prep-3-prep-grade3-line-equation-catalog-1 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 2، 3 | — |
-| prep-3-prep-grade3-line-equation-catalog-3 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 0، 2، 6 | — |
-| prep-3-prep-grade3-line-equation-catalog-4 | missed_figure | — | none | — | — |
-| prep-3-prep-grade3-line-equation-catalog-5 | missed_figure | — | none | — | — |
+| prep-3-prep-grade3-line-equation-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-3-prep-grade3-line-equation-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-3-prep-grade3-line-equation-catalog-4 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 1 | — |
+| prep-3-prep-grade3-line-equation-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-prep-grade3-line-equation-catalog-6 | figure_flagged | missing_given_on_figure | compositor | 4، 3، 2 | — |
-| prep-3-prep-grade3-line-equation-catalog-7 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 2، 4 | — |
+| prep-3-prep-grade3-line-equation-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-prep-grade3-line-equation-catalog-8 | missed_figure | — | none | — | — |
 | prep-3-prep-grade3-line-equation-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-sim-notebooklm-03 | figure_flagged | missing_given_on_figure | compositor | 2 | — |
-| prep-3-sim-notebooklm-06 | figure_flagged | verification_error | compositor | — | — |
-| prep-3-sim-notebooklm-08 | figure_flagged | verification_error | compositor | — | — |
 | intake-09 | figure_flagged | from_fixed_catalog | catalog | — | — |

@@ -40,7 +40,7 @@ export function buildPerpendicularLinesAtYAxisFigure(
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: notation === "english" ? "y" : "ص", position: { x: 0, y: 5 } };
   const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 0, y: -1.5 } };
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 0, y: 2 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: notation === "english" ? "A(0,2)" : "أ(٠، ٢)", position: { x: 0, y: 2 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: -1, y: 0 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 4, y: 0 } };
 
@@ -69,6 +69,15 @@ export function buildPerpendicularLinesAtYAxisFigure(
     vertices: [vXneg, vB, vO, vC, vX, vYneg, vA, vY, vL1Top, vL1Bot, vL2Top, vL2Bot],
     segments,
     angles,
+    interiorBadges: [
+      {
+        id: `${opts.figureId}_badge_eq`,
+        text: "2X - y + 2 = 0",
+        position: { x: 1.8, y: 3.2 },
+        badgeType: "generic",
+        labelKind: "given",
+      },
+    ],
   };
 }
 

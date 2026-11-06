@@ -41,10 +41,11 @@ export function buildLineEqualInterceptsAOBFigure(
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: notation === "english" ? "y" : "ص", position: { x: 0, y: 8 } };
   const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 0, y: -2 } };
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 0, y: 5.5 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 5.5, y: 0 } };
-  const vLineTop: CanonicalVertexNode = { id: `${opts.figureId}_vTop`, label: "", position: { x: -1, y: 6.5 } };
-  const vLineBottom: CanonicalVertexNode = { id: `${opts.figureId}_vBottom`, label: "", position: { x: 6.8, y: -1.3 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 0, y: 5 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 5, y: 0 } };
+  const vP: CanonicalVertexNode = { id: `${opts.figureId}_vP`, label: notation === "english" ? "(2, 3)" : "(٢، ٣)", position: { x: 2, y: 3 } };
+  const vLineTop: CanonicalVertexNode = { id: `${opts.figureId}_vTop`, label: "", position: { x: -1, y: 6 } };
+  const vLineBottom: CanonicalVertexNode = { id: `${opts.figureId}_vBottom`, label: "", position: { x: 6.3, y: -1.3 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sX`, fromVertexId: vXneg.id, toVertexId: vX.id, strokeStyle: "dashed" },
@@ -64,7 +65,7 @@ export function buildLineEqualInterceptsAOBFigure(
     branchId: "triangle_base_general",
     titleArabic: "مستقيم يقطع من المحورين جزأين متساويين ويمر بالنقطة (2، 3)",
     notationLanguage: notation,
-    vertices: [vXneg, vO, vB, vX, vYneg, vA, vY, vLineTop, vLineBottom],
+    vertices: [vXneg, vO, vB, vX, vYneg, vA, vY, vP, vLineTop, vLineBottom],
     segments,
     angles,
   };
@@ -106,6 +107,15 @@ export function buildLineTriangleAreaAOBFigure(
     angles: [
       { id: `${opts.figureId}_aO`, vertexId: vO.id, arm1VertexId: vA.id, arm2VertexId: vB.id, isRightAngle: true },
     ],
+    interiorBadges: [
+      {
+        id: `${opts.figureId}_badge_area9`,
+        text: "9 وحدات²",
+        position: { x: 1, y: 2 },
+        badgeType: "area",
+        labelKind: "given",
+      },
+    ],
   };
 }
 
@@ -125,7 +135,7 @@ export function buildLineAngleThetaFigure(
 
   const vInterceptX: CanonicalVertexNode = { id: `${opts.figureId}_vIntX`, label: "", position: { x: 4, y: 0 } };
   const vInterceptY: CanonicalVertexNode = { id: `${opts.figureId}_vIntY`, label: "", position: { x: 0, y: -2 } };
-  const vLineStart: CanonicalVertexNode = { id: `${opts.figureId}_vL1`, label: notation === "english" ? "L" : "ل", position: { x: 6, y: 1 } };
+  const vLineStart: CanonicalVertexNode = { id: `${opts.figureId}_vL1`, label: notation === "english" ? "2y = X - 4" : "٢ص = س - ٤", position: { x: 6, y: 1 } };
   const vLineEnd: CanonicalVertexNode = { id: `${opts.figureId}_vL2`, label: "", position: { x: -1.5, y: -2.75 } };
 
   const segments: CanonicalSegmentNode[] = [
@@ -185,7 +195,7 @@ export function buildLineTangentAngleABOFigure(
     segments,
     angles: [
       { id: `${opts.figureId}_aO`, vertexId: vO.id, arm1VertexId: vA.id, arm2VertexId: vB.id, isRightAngle: true },
-      { id: `${opts.figureId}_aB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vO.id, markSymbol: "arc" },
+      { id: `${opts.figureId}_aB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vO.id, degreesLabel: "tan = 4/3", markSymbol: "arc" },
     ],
   };
 }

@@ -115,6 +115,70 @@ export interface GeometryAskedTargetSpec {
  */
 export type FigureTriStateDecision = "green" | "yellow" | "red";
 
+/**
+ * الكائنات الهندسية في مواصفة المسألة المهيكلة (`Problem Spec` — المرحلة 3.1).
+ */
+export type ProblemSpecObjectKind =
+  | "point"
+  | "segment"
+  | "ray"
+  | "line"
+  | "triangle"
+  | "quadrilateral"
+  | "polygon"
+  | "circle"
+  | "arc";
+
+export interface ProblemSpecObjectNode {
+  readonly kind: ProblemSpecObjectKind;
+  readonly id: string;
+  readonly vertices?: readonly string[];
+  readonly center?: string;
+  readonly subtype?: string;
+}
+
+/**
+ * العلاقات الهندسية في مواصفة المسألة المهيكلة (`Problem Spec` — المرحلة 3.1).
+ */
+export type ProblemSpecRelationKind =
+  | "right_angle"
+  | "parallel"
+  | "perpendicular"
+  | "equal_length"
+  | "midpoint"
+  | "point_on"
+  | "bisector"
+  | "median"
+  | "tangent"
+  | "on_circle"
+  | "intersect"
+  | "similarity"
+  | "congruence";
+
+export interface ProblemSpecRelationNode {
+  readonly kind: ProblemSpecRelationKind;
+  readonly at?: string;
+  readonly targets: readonly string[];
+}
+
+export interface ProblemSpecGivenNode {
+  readonly target: string;
+  readonly value: string;
+  readonly numericValue?: number;
+  readonly unit?: ArabicMathUnit | string;
+}
+
+/**
+ * مواصفة المسألة المهيكلة الكاملة (`GeometryProblemSpec` — المرحلة 3.1):
+ * مخطط JSON ثابت يُستخرج من نص المسألة ووسم الرسم بالتوازي (Zero-DSL).
+ */
+export interface GeometryProblemSpec {
+  readonly objects: readonly ProblemSpecObjectNode[];
+  readonly relations: readonly ProblemSpecRelationNode[];
+  readonly givens: readonly ProblemSpecGivenNode[];
+  readonly asked?: GeometryAskedTargetSpec;
+}
+
 export interface CanonicalCircleNode {
   readonly id: string;
   readonly centerVertexId: string;

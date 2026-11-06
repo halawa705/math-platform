@@ -37,14 +37,18 @@ export function placeDeclaredShapes(
   const polygons: PlacedPolygon[] = [];
   let cursorX = 0;
 
-  // دعم تشابه المضلعات الرباعية والمستطيلات المعلنة عبر حقيقة التشابه
+  // دعم تشابه وتطابق المضلعات والمثلثات المعلنة عبر حقيقة التشابه أو التطابق
   const effectiveFacts: GeoFact[] = [...facts];
   const hasShape = facts.some((f) => f.k === "triangle" || f.k === "quad");
   if (!hasShape) {
-    const simQuad = facts.find((f) => f.k === "similarity" && f.tri1.length === 4 && f.tri2.length === 4);
-    if (simQuad && simQuad.k === "similarity") {
-      effectiveFacts.push({ k: "quad", kind: "rectangle", labels: [simQuad.tri1[0], simQuad.tri1[1], simQuad.tri1[2], simQuad.tri1[3]] });
-      effectiveFacts.push({ k: "quad", kind: "rectangle", labels: [simQuad.tri2[0], simQuad.tri2[1], simQuad.tri2[2], simQuad.tri2[3]] });
+    for (const f of facts) {
+      if ((f.k === "similarity" || f.k === "congruence") && f.tri1.length === 4 && f.tri2.length === 4) {
+        effectiveFacts.push({ k: "quad", kind: "rectangle", labels: [f.tri1[0], f.tri1[1], f.tri1[2], f.tri1[3]] });
+        effectiveFacts.push({ k: "quad", kind: "rectangle", labels: [f.tri2[0], f.tri2[1], f.tri2[2], f.tri2[3]] });
+      } else if ((f.k === "similarity" || f.k === "congruence") && f.tri1.length === 3 && f.tri2.length === 3) {
+        effectiveFacts.push({ k: "triangle", labels: [f.tri1[0], f.tri1[1], f.tri1[2]] });
+        effectiveFacts.push({ k: "triangle", labels: [f.tri2[0], f.tri2[1], f.tri2[2]] });
+      }
     }
   }
 
@@ -98,6 +102,31 @@ export function placeDeclaredShapes(
         local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: o + top, y: h }, { x: o, y: h }];
       }
       else local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w * 0.85, y: w * 0.7 }, { x: w * 0.1, y: w * 0.6 }];
+    }
+    if (f.k === "triangle" && labels.filter((l) => points.has(l)).length === 2) {
+      const existing = labels.filter((l) => points.has(l));
+      const missing = labels.find((l) => !points.has(l))!;
+      const U = points.get(existing[0])!;
+      const V = points.get(existing[1])!;
+      const baseLen = Math.hypot(V.x - U.x, V.y - U.y);
+      if (baseLen > 1e-6) {
+        const uw = num(existing[0], missing) ?? baseLen * 0.85;
+        const vw = num(existing[1], missing) ?? uw;
+        const ex = { x: (V.x - U.x) / baseLen, y: (V.y - U.y) / baseLen };
+        let ey = { x: -ex.y, y: ex.x };
+        const otherPt = [...points.entries()].find(([k]) => k !== existing[0] && k !== existing[1])?.[1];
+        if (otherPt && (otherPt.x - U.x) * ey.x + (otherPt.y - U.y) * ey.y > 0) {
+          ey = { x: -ey.x, y: -ey.y };
+        }
+        const cosU = Math.max(-0.9, Math.min(0.9, (baseLen * baseLen + uw * uw - vw * vw) / (2 * baseLen * uw)));
+        const sinU = Math.sqrt(Math.max(0.08, 1 - cosU * cosU));
+        points.set(missing, {
+          x: U.x + ex.x * uw * cosU + ey.x * uw * sinU,
+          y: U.y + ex.y * uw * cosU + ey.y * uw * sinU,
+        });
+        polygons.push({ labels, kind: "triangle", rightAt: f.right });
+        continue;
+      }
     }
     const minX = Math.min(...local.map((p) => p.x));
     const maxX = Math.max(...local.map((p) => p.x));

@@ -77,7 +77,7 @@ export function buildRhombusInCoordinatePlaneFigure(
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: localizeGeometricVertexLabelSSOT("و", notation), position: { x: 0, y: 0 } };
+  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: notation === "english" ? "O(0,0)" : "و(٠، ٠)", position: { x: 0, y: 0 } };
   const vX: CanonicalVertexNode = { id: `${opts.figureId}_vX`, label: notation === "english" ? "X" : "س", position: { x: 10, y: 0 } };
   const vH: CanonicalVertexNode = { id: `${opts.figureId}_vH`, label: notation === "english" ? "H" : "هـ", position: { x: -2.5, y: 0 } };
   const vY: CanonicalVertexNode = { id: `${opts.figureId}_vY`, label: notation === "english" ? "y" : "ص", position: { x: 0, y: 10 } };
@@ -133,8 +133,8 @@ export function buildSquareDiagonalLineFigure(
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sX`, fromVertexId: vXneg.id, toVertexId: vX.id, strokeStyle: "dashed" },
     { id: `${opts.figureId}_sY`, fromVertexId: vYneg.id, toVertexId: vY.id, strokeStyle: "dashed" },
-    { id: `${opts.figureId}_sOA`, fromVertexId: vO.id, toVertexId: vA.id },
-    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
+    { id: `${opts.figureId}_sOA`, fromVertexId: vO.id, toVertexId: vA.id, lengthLabel: { value: 4, unit: "سم" } },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: 4, unit: "سم" } },
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sCO`, fromVertexId: vC.id, toVertexId: vO.id },
     { id: `${opts.figureId}_sACLine`, fromVertexId: vLineTop.id, toVertexId: vLineBot.id },

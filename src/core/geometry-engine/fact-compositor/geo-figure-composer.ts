@@ -12,6 +12,8 @@ import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
+import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
+import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
 import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
@@ -21,15 +23,24 @@ interface ExtraSeg { readonly a: string; readonly b: string; readonly dashed?: b
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
+  // 0. فحص اتساق مواصفة المسألة (Problem Spec) قبل الرسم (المتباينة المثلثية، مجموع الزوايا، فيثاغورس)
+  const specDual = extractGeometryProblemSpecDual(description);
+  const consistency = verifyProblemSpecMathematicalConsistency(specDual.spec);
+  if (!consistency.passed) {
+    return { figure: null, warnings: [...consistency.violations] };
+  }
+
   // 1. فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية أولاً على كامل النص المدمج
   const normDesc = splitDescriptionIntoFactStrings(description).join(" ؛ ");
+  const isAnalyticCoordinate = /محور|إحداثي|احداثي|معادلة|ميل|\(\s*-?\d+\s*[,،]\s*-?\d+\s*\)/i.test(normDesc);
   const isSimilarityContext =
-    /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|اقليدس/i.test(
+    !isAnalyticCoordinate &&
+    (/[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|اقليدس/i.test(
       description
     ) ||
-    /AED.*=.*B|ADE.*=.*C/i.test(normDesc) ||
-    (normDesc.includes("∩") && !normDesc.includes("∠") && !normDesc.includes("°") && (/يوازي|\/\/|تشابه|~/.test(normDesc) || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i.test(normDesc))) ||
-    ((normDesc.includes("قائم") || /ق\s*\(\s*∠\s*[A-Z]\s*\)\s*=\s*90/i.test(normDesc)) && normDesc.includes("⊥") && !normDesc.includes("مربع") && !normDesc.includes("مستطيل") && !normDesc.includes("متساوي الساقين") && !normDesc.includes("متوسط"));
+      /AED.*=.*B|ADE.*=.*C/i.test(normDesc) ||
+      (normDesc.includes("∩") && !normDesc.includes("∠") && !normDesc.includes("°") && (/يوازي|\/\/|تشابه|~/.test(normDesc) || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i.test(normDesc))) ||
+      ((normDesc.includes("قائم") || /ق\s*\(\s*∠\s*[A-Z]\s*\)\s*=\s*90/i.test(normDesc)) && normDesc.includes("⊥") && !normDesc.includes("مربع") && !normDesc.includes("مستطيل") && !normDesc.includes("متساوي الساقين") && !normDesc.includes("متوسط")));
 
   if (isSimilarityContext) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
@@ -157,11 +168,15 @@ export function composeFigureFromGeometryDescription(description: string, figure
 
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const segments: CanonicalSegmentNode[] = [];
+  const seenSegPairs = new Set<string>();
   const pushSeg = (a: string, b: string, baseKey: string, dashed?: boolean) => {
-    const len = lengths.get(pairKey(a, b));
+    const pk = pairKey(a, b);
+    if (seenSegPairs.has(pk)) return;
+    seenSegPairs.add(pk);
+    const len = lengths.get(pk);
     segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
       ...(len ? { lengthLabel: { value: len.numeric ?? len.text, unit: len.unit ?? "سم" } } : {}),
-      ...(ticks.get(pairKey(a, b)) ? { tickMarks: Math.min(3, ticks.get(pairKey(a, b))!) as 1 | 2 | 3 } : {}),
+      ...(ticks.get(pk) ? { tickMarks: Math.min(3, ticks.get(pk)!) as 1 | 2 | 3 } : {}),
       ...(parallelMarks.get(baseKey) ? { parallelArrows: parallelMarks.get(baseKey) as 1 | 2 } : {}), ...(dashed ? { strokeStyle: "dashed" as const } : {}) });
   };
   for (const poly of polygons) poly.labels.forEach((a, i) => {

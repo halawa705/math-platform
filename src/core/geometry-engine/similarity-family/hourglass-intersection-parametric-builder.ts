@@ -59,9 +59,12 @@ export function buildHourglassIntersectionFigure(
   else if (lenBMid && lenDMid && lenBMid > 0) botScale = lenDMid / lenBMid;
   botScale = Math.max(0.25, Math.min(3.2, botScale));
 
-  const topHalfW = 2.6;
-  const topH = 2.6;
-  const botHalfW = Number((topHalfW * botScale).toFixed(2));
+  const baseTopH = lenAMid && lenBMid ? Math.min(lenAMid, lenBMid) * 0.72 : 2.6;
+  const topHalfWA = lenAMid && lenAMid > baseTopH ? Number(Math.sqrt(lenAMid * lenAMid - baseTopH * baseTopH).toFixed(2)) : 2.6;
+  const topHalfWB = lenBMid && lenBMid > baseTopH ? Number(Math.sqrt(lenBMid * lenBMid - baseTopH * baseTopH).toFixed(2)) : 2.6;
+  const topH = Number(baseTopH.toFixed(2));
+  const botHalfWC = Number((topHalfWA * botScale).toFixed(2));
+  const botHalfWD = Number((topHalfWB * botScale).toFixed(2));
   const botH = Number((topH * botScale).toFixed(2));
 
   // 1. حساب إحداثيات الرؤوس: النقطة الوسطى في المركز، والطرفان في الأعلى والأسفل
@@ -75,24 +78,24 @@ export function buildHourglassIntersectionFigure(
   const vA: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${a}`,
     label: localizeGeometricVertexLabelSSOT(a, notation),
-    position: { x: Number((5.0 - topHalfW).toFixed(2)), y: Number((4.5 + topH).toFixed(2)) },
+    position: { x: Number((5.0 - topHalfWA).toFixed(2)), y: Number((4.5 + topH).toFixed(2)) },
   };
   const vB: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${b}`,
     label: localizeGeometricVertexLabelSSOT(b, notation),
-    position: { x: Number((5.0 + topHalfW).toFixed(2)), y: Number((4.5 + topH).toFixed(2)) },
+    position: { x: Number((5.0 + topHalfWB).toFixed(2)), y: Number((4.5 + topH).toFixed(2)) },
   };
 
   // الطرف السفلي (مثلث 2 - معكوس الرؤوس بالتقاطع المستقيم: الخط A-Mid-C والخط B-Mid-D)
   const vC: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${c}`,
     label: localizeGeometricVertexLabelSSOT(c, notation),
-    position: { x: Number((5.0 + botHalfW).toFixed(2)), y: Number((4.5 - botH).toFixed(2)) },
+    position: { x: Number((5.0 + botHalfWC).toFixed(2)), y: Number((4.5 - botH).toFixed(2)) },
   };
   const vD: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${d}`,
     label: localizeGeometricVertexLabelSSOT(d, notation),
-    position: { x: Number((5.0 - botHalfW).toFixed(2)), y: Number((4.5 - botH).toFixed(2)) },
+    position: { x: Number((5.0 - botHalfWD).toFixed(2)), y: Number((4.5 - botH).toFixed(2)) },
   };
 
   const vertices: CanonicalVertexNode[] = [vMid, vA, vB, vC, vD];

@@ -1,4 +1,3 @@
-descs=190 matched=190 issues=3
+descs=190 matched=190 issues=2
 #48 triangle_thales_parallel_line «مستقيمان متوازيان بحالة تبادل حرف Z مع زاوية 64° أوجد قيمة X = 64°» :: [error] قطعتان بعلامة توازٍ 1 غير متوازيتين في الرسم.
-#55 quad_parallelogram_diagonals «في الشكل المقابل قياس D = 65° وقياس C = 115° وقياس E = 70° و A = 45° أثبت أن ABCD متوازي أضلاع» :: [warning] النقطتان جـ وهـ متقاربتان جداً في الرسم.
 #150 triangle_right_pythagoras «في الشكل المقابل : إذا كان: Δ ABC ≅ Δ HAD أوجد قيمة: X + y» :: [warning] النقطتان جـ ود متقاربتان جداً في الرسم.

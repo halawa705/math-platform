@@ -27,6 +27,7 @@ export function extractGivenNumbersFromProblemText(text: string): Set<string> {
   const withoutAnswerTail = text
     .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب)\s+[^؛;]*$/i, "")
     .replace(/(?:مجموع|محيط)\s+[^؛;\n=]*?(?:=|يساوي|تساوي|هو|هي)\s*\d+(?:\.\d+)?\s*(?:سم|م|°|\^?\\circ|درجة)?/g, " ")
+    .replace(/(?:نسبة\s*التشابه|معامل\s*التشابه)\s*(?:=|تساوي|يساوي|هي|هو)?\s*(?:\\frac\{\d+\}\{\d+\}|\d+\s*[/:]\s*\d+|\d+(?:\.\d+)?)/gi, " ")
     .replace(/(?:ق|m|\\angle|∠)[^؛;\n=]*?\+\s*(?:ق|m|\\angle|∠)[^؛;\n=]*?=\s*\d+(?:\.\d+)?\s*(?:°|\^?\\circ|درجة)?/gi, " ");
   return extractNumbersFromProblemText(withoutAnswerTail);
 }
@@ -50,15 +51,17 @@ export function extractNumbersShownOnFigure(figure: CanonicalGeometryFigureIR): 
     return shown;
   }
   for (const v of figure.vertices) {
-    // نستخرج فقط الإحداثيات الصريحة داخل أقواس مثل A(2, 3) ونتجاهل تسمية نقطة الأصل (0, 0) أو الإحداثي الصفري للمسقط A'(2, 0)
-    const isProjectedPrime = v.label.includes("'");
-    for (const coordMatch of v.label.matchAll(/\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/g)) {
+    const cleanLabel = toWesternNumeralsSSOT(v.label);
+    // نستخرج فقط الإحداثيات الصريحة داخل أقواس مثل A(2, 3) ونتجاهل الإحداثي الصفري للمسقط A'(2, 0)
+    const isProjectedPrime = cleanLabel.includes("'");
+    for (const coordMatch of cleanLabel.matchAll(/\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/g)) {
       const x = normalizeNumberToken(coordMatch[1].replace(/^-/, ""));
       const y = normalizeNumberToken(coordMatch[2].replace(/^-/, ""));
-      if (x !== "0" || y !== "0") {
-        if (!isProjectedPrime || x !== "0") shown.add(x);
-        if (!isProjectedPrime || y !== "0") shown.add(y);
-      }
+      if (!isProjectedPrime || x !== "0") shown.add(x);
+      if (!isProjectedPrime || y !== "0") shown.add(y);
+    }
+    if (cleanLabel.includes("=")) {
+      addAllNumbersFromText(cleanLabel, shown);
     }
   }
   for (const seg of figure.segments) addAllNumbersFromText(seg.lengthLabel?.value, shown);
