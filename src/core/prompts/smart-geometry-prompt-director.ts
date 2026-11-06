@@ -1,11 +1,20 @@
 /**
  * @file smart-geometry-prompt-director.ts
- * @description الموجه الذكي المضغوط لبرومبتات الهندسة لـ NotebookLM (< 355 حرفاً).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 90 سطراً).
+ * @description المنسق الموحد للتوجيهات الذكية للرسوم والنماذج لـ NotebookLM (المرحلة 1.3):
+ * يوجه البرومبت بحسب نوع المادة والصف:
+ * - المرحلة الابتدائية (نماذج بصرية ومساحات).
+ * - المرحلة الإعدادية (هندسة مستوية وتشابه وإقليدس ودوائر).
+ * - الإحصاء والبيانات (مدرجات، قطاعات، صندوق).
+ * - الدوال والرسوم الكارتيزية (خطية، تربيعية، شبكة إحداثية).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطر).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
+import { buildPrimaryStageFigurePromptGuidance } from "./geometry-prompt-guidance-primary";
+import { buildPrepStageFigurePromptGuidance } from "./geometry-prompt-guidance-prep";
+import { buildStatisticsFigurePromptGuidance } from "./geometry-prompt-guidance-statistics";
+import { buildCartesianFunctionsPromptGuidance } from "./geometry-prompt-guidance-functions";
 
 export const MODULE_ID_SMART_GEOMETRY_PROMPT_DIRECTOR =
   "smart_geometry_prompt_director" as const;
@@ -15,19 +24,23 @@ export interface GeometryPromptDetectionParams {
   readonly notationLanguage?: MathNotationLanguage;
   readonly lessonTitleArabic?: string;
   readonly unitTitleArabic?: string;
+  readonly gradeId?: string;
+  readonly stage?: "primary" | "preparatory" | "secondary";
 }
 
 export function isGeometryContext(params: GeometryPromptDetectionParams): boolean {
   if (
     params.branchId === "plane_geometry" ||
     params.branchId === "solid_geometry" ||
-    params.branchId === "analytic_geometry"
+    params.branchId === "analytic_geometry" ||
+    params.branchId === "statistics_probability" ||
+    params.branchId === "functions"
   ) {
     return true;
   }
   const combined = `${params.unitTitleArabic || ""} ${params.lessonTitleArabic || ""}`.trim();
   if (!combined) return false;
-  return /هندسة|تشابه|مضلع|مثلث|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|طائرة\s*ورقية|دالتون|أوتار|مماس|قاطع|إقليدس|فيثاغورس|طاليس|منصف|إحداثي|حجوم|مساحات|زوايا|زاوية|تقاطع/i.test(
+  return /هندسة|تشابه|مضلع|مثلث|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|طائرة\s*ورقية|دالتون|أوتار|مماس|قاطع|إقليدس|فيثاغورس|طاليس|منصف|إحداثي|حجوم|مساحات|زوايا|زاوية|تقاطع|إحصاء|مدرج|صندوق|أعمدة|قطاع|دالة|منحنى|شبكة\s*تربيعية|شريطي|ساعة/i.test(
     combined
   );
 }
@@ -36,8 +49,30 @@ export function buildSmartGeometryPromptGuidance(
   params: GeometryPromptDetectionParams
 ): string {
   if (!isGeometryContext(params)) return "";
-  if (params.notationLanguage === "arabic") {
-    return "📐 توجيه الإخراج الهندسي الذكي: للشكل فقط اكتب `[رسم هندسي: ...]` كحقائق بـ `;` بلا كود: الرؤوس (مثلث أ ب جـ قائم في ب|ABCD ~ EFGH)؛ أطوال الأضلاع مع قيمها ووحداتها (أ ب=6 سم)؛ قياسات الزوايا الدقيقة (ق(∠ب)=60°;د هـ // ب جـ;أ د ⊥ ب جـ). ممنوع وسم عائم بلا رؤوس؛ الأسئلة النظرية بلا وسم. وللدوال: `[رسم بياني: ص=٢س+١]`.";
+
+  const combined = `${params.unitTitleArabic || ""} ${params.lessonTitleArabic || ""}`.trim();
+  const notation: MathNotationLanguage = params.notationLanguage || "english";
+
+  // 1. فرع أو دروس الإحصاء
+  if (params.branchId === "statistics_probability" || /إحصاء|بيانات|مدرج|صندوق|أعمدة|قطاع|تكرار/i.test(combined)) {
+    return buildStatisticsFigurePromptGuidance();
   }
-  return "📐 توجيه الإخراج الهندسي الذكي: للشكل فقط اكتب `[رسم هندسي: ...]` كحقائق بـ `;` بلا كود: الرؤوس (مثلث ABC قائم في B|ABCD ~ EFGH)؛ أطوال الأضلاع مع قيمها ووحداتها (AB=6 سم)؛ قياسات الزوايا الدقيقة (m(∠B)=60°;DE // BC;AD ⊥ BC). ممنوع وسم عائم بلا رؤوس؛ الأسئلة النظرية بلا وسم. وللدوال: `[رسم بياني: y=2x+1]`.";
+
+  // 2. فرع أو دروس الدوال والرسوم الكارتيزية
+  if (params.branchId === "functions" || /دالة|تربيعية|خطية|مقياس|منحنى|رسم\s*بياني/i.test(combined)) {
+    return buildCartesianFunctionsPromptGuidance(notation);
+  }
+
+  // 3. المرحلة الابتدائية (الصفوف 3–6)
+  const isPrimary =
+    params.stage === "primary" ||
+    (params.gradeId ? params.gradeId.startsWith("prim") : false) ||
+    /ابتدائي|شريط|ساعة|وحدات\s*مربعة/i.test(combined);
+
+  if (isPrimary) {
+    return buildPrimaryStageFigurePromptGuidance(notation);
+  }
+
+  // 4. المرحلة الإعدادية والهندسة العامة
+  return buildPrepStageFigurePromptGuidance(notation);
 }

@@ -8,6 +8,7 @@ import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
+import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
 import { parseNotebookLMExamQuestionsToIR, resolveCorrectChoiceIndex } from "./notebooklm-exam-questions-parser";
@@ -92,8 +93,13 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         const combinedGeo = !graphSpec && hasFigureRef
           ? combineProblemAndTagGeometryContext(ex.geometryRaw, ex.promptAr)
           : "";
+        const diagramAllowed = isDiagramJustifiedForQuestion({
+          promptArabic: ex.promptAr,
+          rawDiagramTagText: combinedGeo,
+          branchId: params.branchId,
+        });
         const geoDiag =
-          combinedGeo
+          diagramAllowed && combinedGeo
             ? matchGeometryWithDiagnostics(combinedGeo, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
             : undefined;
         const geoMatch = geoDiag?.figure;
@@ -128,6 +134,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
             questionNumber: resultItems.length + 1,
             block: { ...drill, ideaIndex: ideaIdx + 1 },
             branchNameAr: params.branchNameAr,
+            branchId: params.branchId,
             defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
             defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
             solutionsMap,
@@ -166,6 +173,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
             questionNumber: resultItems.length + 1,
             block: { ...drill, ideaIndex: seenIdx },
             branchNameAr: params.branchNameAr,
+            branchId: params.branchId,
             defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
             defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
             bannerTitleAr: dIdx === 0 ? `الفكرة (${seenIdx}) — تمارين حاول بنفسك` : undefined,
@@ -183,6 +191,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         questionNumber: hIdx + 1,
         block: hw,
         branchNameAr: params.branchNameAr,
+        branchId: params.branchId,
         defaultPrompt: `سؤال واجب (${hIdx + 1})`,
         defaultAnswer: "واجب منزلي للتقييم والتصحيح",
         bannerTitleAr: hIdx === 0 ? "📚 تمارين الواجب المنزلي الشاملة على الدرس" : undefined,

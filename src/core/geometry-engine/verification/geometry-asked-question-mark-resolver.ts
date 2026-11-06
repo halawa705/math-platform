@@ -19,6 +19,7 @@ import type {
 } from "../../ssot/geometry-archetype-ssot";
 import { convertGeometryLatexToPlainText } from "../description-intake/geometry-latex-to-plain-normalizer";
 import { normalizeLabelKey, pairKey, parseLabelList } from "../fact-compositor/geo-label-utils";
+import { extractAskedClauseFromTagContent } from "../../ssot/figure-tag-grammar-ssot";
 
 export const MODULE_ID_GEOMETRY_ASKED_QUESTION_MARK_RESOLVER =
   "geometry_asked_question_mark_resolver" as const;
@@ -30,14 +31,28 @@ const PROOF_PATTERNS = /(?:أثبت|اثبت|برهن|بين\s*أن|هل\b|اذ�
  */
 export function extractGeometryAskedSpecFromPrompt(rawText: string): GeometryAskedTargetSpec | undefined {
   if (!rawText || !rawText.trim()) return undefined;
-  const withoutTags = rawText.replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]]+\]/gi, " ");
+  // فحص مباشر لتعيين المجهول بعلامة استفهام داخل الوسم: ب جـ = ؟ أو BC = ؟
+  const directQMatch = rawText.match(/([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*[؟?]/i);
+  if (directQMatch) {
+    const segLabels = parseLabelList(directQMatch[1]);
+    if (segLabels && segLabels.length === 2) {
+      return {
+        kind: "length",
+        targetKey: `${segLabels[0]}${segLabels[1]}`,
+        rawAskedClause: directQMatch[0],
+      };
+    }
+  }
+
+  const tagAskedClause = extractAskedClauseFromTagContent(rawText);
+  const withoutTags = rawText.replace(/\[\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي)?|نموذج\s*بصري)\s*:\s*[^\]]+\]/gi, " ");
   const clean = convertGeometryLatexToPlainText(withoutTags);
 
   // استخراج جملة المطلوب الأخيرة (أوجد / احسب / اثبت / ما قيمة / فإن ...)
   const askedClauseMatch = clean.match(
     /(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت|اثبت|برهن|ما\s*(?:هي|هو)?\s*(?:قيمة|طول|قياس|مساحة)|فإن)\s+([^؛;\n|]+)/i
   );
-  const clause = askedClauseMatch ? askedClauseMatch[0].trim() : "";
+  const clause = tagAskedClause || (askedClauseMatch ? askedClauseMatch[0].trim() : "");
 
   if (PROOF_PATTERNS.test(clause || clean)) {
     return {

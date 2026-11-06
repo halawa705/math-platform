@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file geometry-similarity-catalogs-and-smart-prompt.test.ts
  * @description اختبارات شاملة لتغذية معمل الأشكال لدرس تشابه المضلعات والموجه الذكي للبرومبت.
  */
@@ -24,11 +24,11 @@ describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
       lessonTitleArabic: "تشابه المضلعات",
     });
 
-    expect(prompt).toContain("توجيه الإخراج الهندسي الذكي");
+    expect(prompt).toContain("توجيه الإخراج الهندسي للإعدادي");
     expect(prompt).toContain("[رسم هندسي: ...]");
     expect(prompt).toContain("ABCD ~ EFGH");
-    expect(prompt).toContain("أطوال الأضلاع مع قيمها ووحداتها");
-    expect(prompt).toContain("قياسات الزوايا الدقيقة");
+    expect(prompt).toContain("أطوال الأضلاع ووحداتها");
+    expect(prompt).toContain("الزوايا");
   });
 
   it("matches Example 2 from textbook images (quads with radicals and specific angles)", () => {

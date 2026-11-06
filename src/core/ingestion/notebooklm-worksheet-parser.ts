@@ -13,6 +13,7 @@ import { combineProblemAndTagGeometryContext } from "../geometry-engine/descript
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { detectAndBuildAreaModelSvg } from "../geometry-engine/arithmetic-area-model/area-model-arithmetic-svg-builder";
+import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -211,8 +212,13 @@ export function parseNotebookLMWorksheetResponse(
       const diagCombined = ex.diagramDesc
         ? combineProblemAndTagGeometryContext(ex.examplePrompt, ex.diagramDesc)
         : undefined;
-      geoMatch = diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
-      graphSpec = ex.diagramDesc ? parseCartesianGraphDescription(ex.diagramDesc) : undefined;
+      const diagramAllowed = isDiagramJustifiedForQuestion({
+        promptArabic: ex.examplePrompt,
+        rawDiagramTagText: diagCombined || ex.diagramDesc,
+        branchId,
+      });
+      geoMatch = diagramAllowed && diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
+      graphSpec = diagramAllowed && ex.diagramDesc ? parseCartesianGraphDescription(ex.diagramDesc) : undefined;
     }
 
     output.push({
@@ -249,8 +255,13 @@ export function parseNotebookLMWorksheetResponse(
       const diagCombined = q.diagramDesc
         ? combineProblemAndTagGeometryContext(q.promptText, q.diagramDesc)
         : undefined;
-      geoMatch = diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
-      graphSpec = q.diagramDesc ? parseCartesianGraphDescription(q.diagramDesc) : undefined;
+      const diagramAllowed = isDiagramJustifiedForQuestion({
+        promptArabic: q.promptText,
+        rawDiagramTagText: diagCombined || q.diagramDesc,
+        branchId,
+      });
+      geoMatch = diagramAllowed && diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
+      graphSpec = diagramAllowed && q.diagramDesc ? parseCartesianGraphDescription(q.diagramDesc) : undefined;
     }
 
     const isEssay = q.kind === "essay";

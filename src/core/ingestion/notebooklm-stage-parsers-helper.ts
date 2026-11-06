@@ -8,7 +8,9 @@ import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
+import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
+import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -177,6 +179,7 @@ export function buildStage2PrintableItem(params: {
   readonly questionNumber: number;
   readonly block: ExtractedQuestionBlock;
   readonly branchNameAr: string;
+  readonly branchId?: MathBranchId;
   readonly defaultPrompt: string;
   readonly defaultAnswer: string;
   readonly bannerTitleAr?: string;
@@ -197,7 +200,14 @@ export function buildStage2PrintableItem(params: {
   const combinedGeo = !graphSpec && hasFigureRef
     ? combineProblemAndTagGeometryContext(geoMatch?.[1], params.block.rawText || params.block.promptText)
     : "";
-  const geoDiag = combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `${params.id}_geo`) : undefined;
+  const diagramAllowed = params.branchId
+    ? isDiagramJustifiedForQuestion({
+        promptArabic: params.block.rawText || params.block.promptText,
+        rawDiagramTagText: combinedGeo,
+        branchId: params.branchId,
+      })
+    : true;
+  const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `${params.id}_geo`) : undefined;
   const geometryFigure = geoDiag?.figure;
   const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
