@@ -47,6 +47,10 @@ export interface GoldenCorpusCase {
   /** اسم الكتاب/الصفحة لتتبع المصدر. */
   readonly source: string;
   readonly humanVerdict: GoldenHumanVerdict;
+  /** ملاحظات المراجع البشري أو المعلم عند الاعتماد */
+  readonly humanNotes?: string;
+  /** تاريخ وتوقيت المراجعة البشرية بتنسيق ISO */
+  readonly reviewedAtIso?: string;
   /** مواصفة الشكل المتوقعة آلياً للمقارنة المرجعية (المهمة 0.1). */
   readonly expectedFigureSpec?: GoldenExpectedFigureSpec;
 }
