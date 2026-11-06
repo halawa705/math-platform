@@ -99,7 +99,7 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
     case "exam_section_banner": return 38;
     case "exam_wish_banner": return 32;
     case "answer_section_banner": return 48;
-    case "mcq_answer_key": return 180;
+    case "mcq_answer_key": return 260;
     case "accreditation_footer": return 95;
     default: return 190;
   }

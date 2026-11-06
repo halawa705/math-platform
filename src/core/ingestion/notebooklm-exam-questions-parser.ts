@@ -137,45 +137,53 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   let rawBlocks: string[] = [];
   if (/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\]/i.test(cleanedText)) {
     rawBlocks = cleanedText.split(/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\][^\n]*===/i).map((b) => b.trim()).filter((b) => b.length > 6);
-  } else if (/(?:^|\n)\s*(?:\[\d+\]|#\d+)\s+/m.test(cleanedText)) {
+  } else if (/(?:^|\n)\s*(?:\[\d+\]|#\d+|\(\d+\))\s*[:.-]?\s+/m.test(cleanedText)) {
     rawBlocks = cleanedText
-      .split(/(?:^|\n)\s*(?=(?:\[\d+\]|#\d+)\s+)/m)
-      .map((b) => b.replace(/^\s*(?:\[\d+\]|#\d+)\s*/, "").trim())
+      .split(/(?:^|\n)\s*(?=(?:\[\d+\]|#\d+|\(\d+\))\s*[:.-]?\s+)/m)
+      .map((b) => b.replace(/^\s*(?:\[\d+\]|#\d+|\(\d+\))\s*[:.-]?\s*/, "").trim())
       .filter((b) => b.length > 6 && !/^(?:المراجعة|التعليمات|الهيكل)/i.test(b));
   } else {
     rawBlocks = cleanedText
-      .split(/(?:^|\n)\s*(?:السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|\d+)\s*[:.-]|\d+[.)-]\s+)/m)
-      .map((b) => b.trim())
+      .split(/(?:^|\n)\s*(?=(?:(?:السؤال|سؤال)\s+(?:\[\d+\]|\(\d+\)|\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[1-9]\d*)\s*[:.-]?|\d+[.)-]\s+))/m)
+      .map((b) => b.replace(/^\s*(?:(?:السؤال|سؤال)\s+(?:\[\d+\]|\(\d+\)|\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[1-9]\d*)\s*[:.-]?|\d+[.)-]\s+)/, "").trim())
       .filter((b) => b.length > 8);
   }
 
   // معالجة ذكية حاسمة في حال عدم وجود أرقام صريحة بالرد أو اندماج الأسئلة في كتلة واحدة
   if (rawBlocks.length <= 1) {
-    // 1. التحقق من وجود أسئلة اختيار من متعدد متعددة تنتهي بـ "الإجابة الصحيحة:"
     const mcqAnswerMatches = cleanedText.match(/(?:^|\n)\s*(?:الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية)\s*:/gi);
     if (mcqAnswerMatches && mcqAnswerMatches.length > 1) {
       const mcqSplits = cleanedText
         .split(/(?<=(?:^|\n)\s*(?:الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية)\s*:[^\n]*)(?:\r?\n)+/i)
         .map((b) => b.trim())
         .filter((b) => b.length > 8);
-      if (mcqSplits.length > 1) {
-        rawBlocks = mcqSplits;
-      }
+      if (mcqSplits.length > 1) rawBlocks = mcqSplits;
     }
   }
 
   if (rawBlocks.length <= 1) {
-    // 2. التحقق من وجود فقرات أسئلة مقالية منفصلة بأسطر فارغة مزدوجة
     const paragraphBlocks = cleanedText
       .split(/(?:\r?\n)\s*(?:\r?\n)+/)
       .map((b) => b.trim())
-      .filter((b) => b.length > 12 && !/^(?:المرحلة|التعليمات|الهيكل|ملاحظات|المراجعة\s+النهائية)/i.test(b));
-    if (paragraphBlocks.length > 1) {
-      rawBlocks = paragraphBlocks;
-    }
+      .filter((b) => b.length > 8 && !/^(?:المرحلة|التعليمات|الهيكل|ملاحظات|المراجعة\s+النهائية)/i.test(b));
+    if (paragraphBlocks.length > 1) rawBlocks = paragraphBlocks;
   }
 
   if (rawBlocks.length === 0) rawBlocks = cleanedText.split(/\n{2,}/).map((b) => b.trim()).filter((b) => b.length > 5);
+
+  // دمج الجداول المنفصلة أو الكتل الناقصة الملحقة بالمسألة السابقة لمنع تحول الجدول لسؤال مستقل بدون رأس
+  const consolidated: string[] = [];
+  for (const block of rawBlocks) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
+    const isTable = trimmed.startsWith("|") || (/^\s*\|.*\|\s*$/m.test(trimmed) && !/(?:أوجد|احسب|اكتب|حدد|ما|هل|إذا|كم)/i.test(trimmed));
+    if (isTable && consolidated.length > 0) {
+      consolidated[consolidated.length - 1] = `${consolidated[consolidated.length - 1]}\n\n${trimmed}`;
+    } else {
+      consolidated.push(trimmed);
+    }
+  }
+  rawBlocks = consolidated;
 
   return rawBlocks.map((block, idx): QuestionAssessmentIR => {
     const orderNumber = idx + 1;
