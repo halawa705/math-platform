@@ -185,7 +185,9 @@ export function convertQuestionAssessmentIRToPrintableItem(
     solutionStepsAr:
       q.modelSolutionStepsArabic.length > 0
         ? q.modelSolutionStepsArabic
-        : [q.finalCanonicalAnswerArabic],
+        : q.finalCanonicalAnswerArabic?.trim().length > 0
+          ? [q.finalCanonicalAnswerArabic]
+          : undefined,
     givenDataAr:
       q.givenDataArabic && q.givenDataArabic.length > 0
         ? q.givenDataArabic.join(" ، ")

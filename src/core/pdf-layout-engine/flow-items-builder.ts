@@ -47,13 +47,12 @@ function isMcqQuestion(q: PrintableMathQuestionItem): boolean {
 }
 
 function shouldGenerateAnswerCard(q: PrintableMathQuestionItem): boolean {
+  const hasSteps = Boolean(q.solutionStepsAr?.some((s) => s.trim().length > 0));
+  const hasModelAnswer = Boolean(q.modelAnswerAr && q.modelAnswerAr.trim().length > 0);
   if (!isMcqQuestion(q)) {
-    return Boolean(
-      (q.solutionStepsAr && q.solutionStepsAr.length > 0) ||
-      (q.modelAnswerAr && q.modelAnswerAr.trim().length > 0)
-    );
+    return hasSteps || hasModelAnswer;
   }
-  return Boolean(q.solutionStepsAr && q.solutionStepsAr.length > 1);
+  return Boolean(q.solutionStepsAr && q.solutionStepsAr.filter((s) => s.trim().length > 0).length > 1);
 }
 
 export function buildFlowItems(params: {

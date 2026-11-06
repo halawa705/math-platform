@@ -38,10 +38,14 @@ export function StructuredStepByStepSolutionBox({
   /** شريحة الخطوات المعروضة عند تقسيم الحل بين صفحتين (الخطوة تُعرض كاملة دائماً). */
   readonly slice?: FlowSolutionSlice;
 }) {
-  const allSteps =
+  const rawSteps =
     item.solutionStepsAr && item.solutionStepsAr.length > 0
       ? item.solutionStepsAr
-      : [item.modelAnswerAr];
+      : item.modelAnswerAr && item.modelAnswerAr.trim().length > 0
+        ? [item.modelAnswerAr]
+        : [];
+  const allSteps = rawSteps.filter((s) => s && s.trim().length > 0);
+  if (allSteps.length === 0) return null;
   const stepOffset = slice ? slice.from : 0;
   const steps = slice ? allSteps.slice(slice.from, slice.to) : allSteps;
   const isContinuation = stepOffset > 0;

@@ -42,14 +42,30 @@ const ARABIC_ORDINAL_INDEX_MAP: Record<string, number> = {
   "الثلاثون": 30, "الثلاثين": 30,
 };
 
-function isConversationalIntroBlock(b: string): boolean {
-  const trimmed = b.trim();
-  if (/^(?:إليك|فيما يلي|مرحباً|أهلاً|نقدم|عزيزي|هذه هي|نموذج الإجابة الرسمي|كراسة الإجابة|ملاحظات|المرحلة\s+الثالثة|حلول\s+المسائل)/i.test(trimmed)) {
-    return true;
+function cleanConversationalIntro(text: string): string {
+  return text.trim().replace(
+    /^(?:(?:إليك|فيما\s+يلي|مرحباً|أهلاً|نقدم|نموذج\s+(?:إجابة|الإجابة)|كراسة\s+الإجابة|حلول\s+المسائل|المرحلة\s+الثالثة|إجابات\s+المسائل)[^\n:]*[:\n]+)+/i,
+    ""
+  ).trim();
+}
+
+const QUESTION_HEADER_REGEX =
+  /(?:^|\n)\s*(?=(?:(?:حل|إجابة)\s*(?:السؤال|المسألة)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+|الأولى?|الثاني?ة?|الثالثة?|الرابعة?|الخامسة?|السادسة?|السابعة?|الثامنة?|التاسعة?|العاشرة?|الحادي\s*عشر|الثاني\s*عشر)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+|الأولى?|الثاني?ة?|الثالثة?|الرابعة?|الخامسة?|السادسة?|السابعة?|الثامنة?|التاسعة?|العاشرة?|الحادي\s*عشر|الثاني\s*عشر)|===\s*\[(?:SOLUTION|حل|QUESTION|إجابة)|\[\d+\]|\(\d+\)|\d+[.)-]\s+))/i;
+
+function splitStage3Blocks(cleaned: string): readonly string[] {
+  let blocks = cleaned.split(QUESTION_HEADER_REGEX).map((b) => b.trim()).filter((b) => b.length > 5);
+  if (blocks.length <= 1) {
+    const stepSplits = cleaned.split(/(?:^|\n)\s*(?=خطوات[_\s]الحل\s*:)/i).map((b) => b.trim()).filter((b) => b.length > 5);
+    if (stepSplits.length > 1) {
+      blocks = stepSplits;
+    } else {
+      const dblSplits = cleaned.split(/\n{2,}/).map((b) => b.trim()).filter((b) => b.length > 5);
+      if (dblSplits.length > 1) {
+        blocks = dblSplits;
+      }
+    }
   }
-  const hasSolutionTag = /(?:خطوات[_\s]الحل|الناتج[_\s]النهائي|الحل\s*:|حل\s+(?:السؤال|المسألة)|===\s*\[|\[\d+\])/i.test(trimmed);
-  const hasMath = /[=\-+$\times\div\le\ge]/.test(trimmed);
-  return !hasSolutionTag && !hasMath;
+  return blocks;
 }
 
 function extractStage3EssaySolutionsByNumber(
@@ -60,36 +76,39 @@ function extractStage3EssaySolutionsByNumber(
   if (!stage3Cleaned) return map;
 
   const sanitized = stage3Cleaned.replace(/^[\s"“«]+|[\s"”»]+$/g, "").trim();
-
-  // تجزئة الكتل بناء على بادئة حل السؤال سواء برقم [1] أو (1) أو بدون أرقام
-  const rawBlocks = sanitized
-    .split(/(?:^|\n)\s*(?=(?:حل\s+(?:السؤال|المسألة)|(?:السؤال|المسألة)\s*(?:\[\d+\]|\(\d+\)|\d+)|===\s*\[(?:SOLUTION|حل|QUESTION)|\[\d+\]\s*(?:خطوات|الحل|:|-)?|\(\d+\)\s*(?:خطوات|الحل|:|-)?))/i)
-    .map((b) => b.trim())
-    .filter((b) => b.length > 5);
+  const cleaned = cleanConversationalIntro(sanitized);
+  const rawBlocks = splitStage3Blocks(cleaned);
 
   let seq = 1;
   for (const block of rawBlocks) {
-    if (isConversationalIntroBlock(block)) {
+    const hasMathOrSolutionTags =
+      /(?:خطوات[_\s]الحل|الناتج[_\s]النهائي|الحل\s*:|[=\-+$\times\div\le\ge])/i.test(block);
+    if (!hasMathOrSolutionTags) {
       continue;
     }
 
-    const digitMatch = block.match(/(?:حل\s+(?:السؤال|المسألة)?\s*[:.-]?\s*(?:\[(\d+)\]|\((\d+)\)|(\d+))|===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\]|\[(\d+)\]|\((\d+)\)|(?:سؤال|المسألة)\s*(?:\[(\d+)\]|\((\d+)\)|(\d+)))/i);
-    const matchedDigit = digitMatch?.[1] || digitMatch?.[2] || digitMatch?.[3] || digitMatch?.[4] || digitMatch?.[5] || digitMatch?.[6] || digitMatch?.[7] || digitMatch?.[8] || digitMatch?.[9];
-
-    let qNum: number;
-    if (matchedDigit) {
-      qNum = Number(matchedDigit);
-    } else {
-      const ordinalMatch = block.match(/(?:حل\s+(?:السؤال|المسألة)\s+(الأولى|الأول|الثانية|الثاني|الثالثة|الثالث|الرابعة|الرابع|الخامسة|الخامس|السادسة|السادس|السابعة|السابع|الثامنة|الثامن|التاسعة|التاسع|العاشرة|العاشر))/i);
-      const ordinalKey = ordinalMatch?.[1];
-      qNum = ordinalKey && ARABIC_ORDINAL_INDEX_MAP[ordinalKey] ? ARABIC_ORDINAL_INDEX_MAP[ordinalKey] : seq++;
-    }
+    const digitMatch = block.match(
+      /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة)?\s*[:.-]?\s*(?:\[(\d+)\]|\((\d+)\)|(\d+))|(?:السؤال|المسألة|سؤال|س)\s*(?:\[(\d+)\]|\((\d+)\)|(\d+))|===\s*\[(?:SOLUTION|حل|QUESTION|إجابة)\s*:\s*(\d+)\]|\[(\d+)\]|\((\d+)\)|(\d+)[.)-]\s+)/i
+    );
+    const matchedDigit =
+      digitMatch?.[1] || digitMatch?.[2] || digitMatch?.[3] ||
+      digitMatch?.[4] || digitMatch?.[5] || digitMatch?.[6] ||
+      digitMatch?.[7] || digitMatch?.[8] || digitMatch?.[9] ||
+      digitMatch?.[10];
 
     const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     const steps: string[] = [];
 
-    for (const line of lines) {
-      if (/^(?:حل\s+(?:السؤال|المسألة)|===\s*\[)/i.test(line)) continue;
+    for (let line of lines) {
+      line = line
+        .replace(
+          /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+)?|===\s*\[[^\n\]]+\]|\[\d+\]|\(\d+\)|\d+[.)-]\s*)\s*[:.-]?\s*/i,
+          ""
+        )
+        .trim();
+
+      if (!line) continue;
+
       if (/^خطوات[_\s]الحل\s*:\s*/i.test(line)) {
         const afterColon = line.replace(/^خطوات[_\s]الحل\s*:\s*/i, "").trim();
         const subSteps = afterColon.split(/\s*\|\s*/).map((s) => s.trim()).filter(Boolean);
@@ -103,7 +122,20 @@ function extractStage3EssaySolutionsByNumber(
     }
 
     if (steps.length > 0) {
+      const currentSeq = seq++;
+      let qNum: number;
+      if (matchedDigit) {
+        qNum = Number(matchedDigit);
+      } else {
+        const ordinalMatch = block.match(
+          /^(?:(?:حل|إجابة)?\s*(?:السؤال|المسألة)\s+(الأولى|الأول|الثانية|الثاني|الثالثة|الثالث|الرابعة|الرابع|الخامسة|الخامس|السادسة|السادس|السابعة|السابع|الثامنة|الثامن|التاسعة|التاسع|العاشرة|العاشر))/i
+        );
+        const ordinalKey = ordinalMatch?.[1];
+        qNum = ordinalKey && ARABIC_ORDINAL_INDEX_MAP[ordinalKey] ? ARABIC_ORDINAL_INDEX_MAP[ordinalKey] : currentSeq;
+      }
+
       map.set(qNum, steps);
+      map.set(currentSeq, steps);
     }
   }
   return map;
@@ -174,15 +206,22 @@ export function mergeFinalReviewThreeStagesToPrintableItems(params: {
         essaySolutionsMap.get(s1Count + essayOrder) ??
         essaySolutionsMap.get(globalQuestionNum);
 
+      const finalSteps =
+        matchedSteps && matchedSteps.length > 0
+          ? matchedSteps
+          : base.solutionStepsAr && base.solutionStepsAr.some((s) => s.trim().length > 0)
+            ? base.solutionStepsAr.filter((s) => s.trim().length > 0)
+            : undefined;
+
       resultItems.push({
         ...base,
         id: `rev-essay-${essayOrder}`,
         questionNumber: resultItems.length + 1,
         marks: q.allocatedMarks > 1 ? q.allocatedMarks : 3,
-        modelAnswerAr: matchedSteps
-          ? matchedSteps.join(" ⇐ ")
+        modelAnswerAr: finalSteps && finalSteps.length > 0
+          ? finalSteps.join(" ⇐ ")
           : base.modelAnswerAr,
-        solutionStepsAr: matchedSteps || base.solutionStepsAr,
+        solutionStepsAr: finalSteps,
         ideaBannerTitleAr:
           idx === 0
             ? `ثانياً: الأسئلة المقالية والبرهان (${s2Essays.length} مسألة)`

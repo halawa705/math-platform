@@ -102,4 +102,72 @@ describe("Review Ingestion & Table Resilience", () => {
     expect(items[2].solutionStepsAr?.[0]).toContain("التعويض");
     expect(items[2].solutionStepsAr?.[0]).toContain("18");
   });
+
+  it("handles Stage 3 formatted as numbered list (1., 2.) without losing solutions or treating as intro", () => {
+    const stage2Raw = `
+أوجد ناتج الجمع 25 + 35
+
+احسب مساحة المربع الذي طول ضلعه 4 سم
+`;
+
+    const stage3Raw = `
+إليك نموذج الإجابة الرسمي خطوة بخطوة لجميع المسائل:
+
+1. خطوات الحل: جمع الآحاد 5 + 5 = 10 | جمع العشرات 20 + 30 = 50 | المجموع الكلي 60
+الناتج النهائي: 60
+
+2. خطوات الحل: قانون المساحة = الضلع في نفسه | 4 * 4 = 16 سم مربع
+الناتج النهائي: 16 سم²
+`;
+
+    const items = mergeFinalReviewThreeStagesToPrintableItems({
+      stage1Raw: "",
+      stage2Raw,
+      stage3Raw,
+      branchId: "numbers",
+      branchNameAr: "الأعداد",
+      titleArabic: "مراجعة الأعداد",
+    });
+
+    expect(items.length).toBe(2);
+    expect(items[0].solutionStepsAr?.length).toBeGreaterThanOrEqual(2);
+    expect(items[0].solutionStepsAr?.[0]).toContain("جمع الآحاد");
+    expect(items[1].solutionStepsAr?.[0]).toContain("قانون المساحة");
+  });
+
+  it("handles Stage 3 using global test question numbers (e.g. Question 41, 42) mapped to essay questions", () => {
+    const stage1Raw = `
+1. حاصل ضرب 5 في 6:
+(أ) 30
+(ب) 25
+(جـ) 20
+(د) 15
+الإجابة الصحيحة: (أ) 30
+`;
+
+    const stage2Raw = `
+إذا كان مع أحمد 100 جنيه واشترى كتباً بـ 40 جنيهاً، فكم جنيهاً تبقى معه؟
+`;
+
+    const stage3Raw = `
+نموذج إجابة الامتحان الرسمي:
+
+حل السؤال [2]: خطوات الحل: حساب المبلغ المتبقي 100 - 40 = 60 جنيهاً
+الناتج النهائي: 60 جنيهاً
+`;
+
+    const items = mergeFinalReviewThreeStagesToPrintableItems({
+      stage1Raw,
+      stage2Raw,
+      stage3Raw,
+      branchId: "algebra",
+      branchNameAr: "الجبر",
+      titleArabic: "مراجعة",
+    });
+
+    expect(items.length).toBe(2);
+    // السؤال الثاني وهو المقالي ارتبط بحل السؤال 2 العام
+    expect(items[1].solutionStepsAr?.[0]).toContain("حساب المبلغ المتبقي");
+    expect(items[1].solutionStepsAr?.[0]).toContain("60");
+  });
 });
