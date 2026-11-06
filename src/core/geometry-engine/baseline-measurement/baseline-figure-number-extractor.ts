@@ -14,20 +14,29 @@ function normalizeNumberToken(raw: string): string {
 
 /** كل الأعداد الواردة في النص (بعد توحيد الأرقام المشرقية وإزالة فواصل الآلاف). */
 export function extractNumbersFromProblemText(text: string): Set<string> {
-  const western = toWesternNumeralsSSOT(text).replace(/٫/g, ".").replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
+  const western = toWesternNumeralsSSOT(text)
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, "")
+    .replace(/٫/g, ".")
+    .replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
   const found = western.match(/\d+(?:\.\d+)?/g) ?? [];
   return new Set(found.map(normalizeNumberToken));
 }
 
 /** الأعداد المعطاة في نص المسألة (مع استبعاد جملة المطلوب/الجواب مثل «أوجد قيمة X = 25°» حتى لا يُطالَب الشكل بتسريب الحل). */
 export function extractGivenNumbersFromProblemText(text: string): Set<string> {
-  const withoutAnswerTail = text.replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب)\s+[^؛;]*$/i, "");
+  const withoutAnswerTail = text
+    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب)\s+[^؛;]*$/i, "")
+    .replace(/(?:مجموع|محيط)\s+[^؛;\n=]*?(?:=|يساوي|تساوي|هو|هي)\s*\d+(?:\.\d+)?\s*(?:سم|م|°|\^?\\circ|درجة)?/g, " ")
+    .replace(/(?:ق|m|\\angle|∠)[^؛;\n=]*?\+\s*(?:ق|m|\\angle|∠)[^؛;\n=]*?=\s*\d+(?:\.\d+)?\s*(?:°|\^?\\circ|درجة)?/gi, " ");
   return extractNumbersFromProblemText(withoutAnswerTail);
 }
 
 function addAllNumbersFromText(raw: string | number | undefined, into: Set<string>): void {
   if (raw === undefined) return;
-  const clean = toWesternNumeralsSSOT(raw).replace(/٫/g, ".").replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
+  const clean = toWesternNumeralsSSOT(raw)
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, "")
+    .replace(/٫/g, ".")
+    .replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
   for (const n of clean.match(/\d+(?:\.\d+)?/g) ?? []) {
     into.add(normalizeNumberToken(n));
   }
@@ -41,20 +50,30 @@ export function extractNumbersShownOnFigure(figure: CanonicalGeometryFigureIR): 
     return shown;
   }
   for (const v of figure.vertices) {
-    // نستخرج فقط الإحداثيات الصريحة داخل أقواس مثل A(2, 3) ونتجاهل تسمية نقطة الأصل (0, 0) التلقائية
+    // نستخرج فقط الإحداثيات الصريحة داخل أقواس مثل A(2, 3) ونتجاهل تسمية نقطة الأصل (0, 0) أو الإحداثي الصفري للمسقط A'(2, 0)
+    const isProjectedPrime = v.label.includes("'");
     for (const coordMatch of v.label.matchAll(/\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/g)) {
       const x = normalizeNumberToken(coordMatch[1].replace(/^-/, ""));
       const y = normalizeNumberToken(coordMatch[2].replace(/^-/, ""));
       if (x !== "0" || y !== "0") {
-        shown.add(x);
-        shown.add(y);
+        if (!isProjectedPrime || x !== "0") shown.add(x);
+        if (!isProjectedPrime || y !== "0") shown.add(y);
       }
     }
   }
   for (const seg of figure.segments) addAllNumbersFromText(seg.lengthLabel?.value, shown);
+  for (const badge of figure.interiorBadges ?? []) addAllNumbersFromText(badge.text, shown);
   for (const ang of figure.angles) {
+    if (ang.isRightAngle || ang.degrees === 90) shown.add("90");
     if (ang.degreesLabel !== undefined) addAllNumbersFromText(ang.degreesLabel, shown);
-    else if (ang.degrees !== undefined && !ang.isRightAngle) addAllNumbersFromText(ang.degrees, shown);
+    else if (
+      ang.degrees !== undefined &&
+      !ang.isRightAngle &&
+      ang.markSymbol !== "dot" &&
+      ang.markSymbol !== "cross"
+    ) {
+      addAllNumbersFromText(ang.degrees, shown);
+    }
   }
   return shown;
 }

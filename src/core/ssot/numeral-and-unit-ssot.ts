@@ -205,3 +205,43 @@ export function getChoiceLetterByNotationSSOT(
   return ARABIC_CHOICE_LETTERS[index] || String(index + 1);
 }
 
+const GEOMETRY_UNIT_NORMALIZATION_MAP: Readonly<Record<string, ArabicMathUnit>> = {
+  "سم": "سم",
+  "سنتيمتر": "سم",
+  "سنتيمترات": "سم",
+  cm: "سم",
+  "م": "م",
+  "متر": "م",
+  "أمتار": "م",
+  "امتار": "م",
+  m: "م",
+  "كم": "كم",
+  "كيلومتر": "كم",
+  km: "كم",
+  "مم": "مم",
+  "ملليمتر": "مم",
+  "مليمتر": "مم",
+  mm: "مم",
+  "ديسم": "ديسم",
+  "ديسيمتر": "ديسم",
+  dm: "ديسم",
+  "وحدة": "وحدة",
+  "وحدات": "وحدة",
+  "وحدة طول": "وحدة طول",
+  unit: "وحدة",
+  units: "وحدة",
+  "سم²": "سم²",
+  "م²": "م²",
+  "درجة": "درجة",
+};
+
+/**
+ * يوحد وحدة القياس الهندسية الواردة في النص إلى الوحدة العربية المعتمدة في الدستور (مثل سم، م، كم، مم، ديسم، وحدة).
+ */
+export function normalizeArabicGeometryUnitSSOT(rawUnit?: string): ArabicMathUnit | undefined {
+  if (!rawUnit) return undefined;
+  const key = rawUnit.trim().replace(/\s+/g, " ").toLowerCase();
+  return GEOMETRY_UNIT_NORMALIZATION_MAP[key];
+}
+
+

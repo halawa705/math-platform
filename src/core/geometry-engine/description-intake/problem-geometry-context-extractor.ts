@@ -137,7 +137,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8
   const lengthMatches = clean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*([0-9.]+|[0-9.xسصy+\-\s]+?)\s*(?:سم|م|وحدة)?(?=[\s،,;؛|)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(?:سم|م|كم|مم|ديسم|وحدة)?(?=[\s،,;؛|.)]|$)/gi
   );
   for (const lm of lengthMatches) {
     const segRaw = lm[1].replace(/\s+/g, "");
@@ -150,7 +150,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠ب) = 65° أو ق(∠أ ب جـ) = 90°
   const angleMatches = clean.matchAll(
-    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9.xسصy+\-\s]+?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
+    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
@@ -196,11 +196,16 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (!facts.includes(fanStr)) facts.push(fanStr);
   }
 
-  // 8. تقاطع مستقيمين: تقاطع المستقيمان AB و CD في النقطة M
+  // 8. تقاطع مستقيمين أو قطعتين: تقاطع المستقيمان AB و CD في النقطة M أو AC ∩ BD = {E}
   const interMatch = clean.match(/(?:إذا\s+)?تقاطع\s+(?:المستقيمان\s+|المستقيم\s+)?([A-Za-z]{2})\s*و\s*([A-Za-z]{2})\s*في\s+(?:النقطة\s+)?([A-Za-z])/i);
   if (interMatch) {
     const interStr = `تقاطع المستقيم ${interMatch[1]} و المستقيم ${interMatch[2]} في النقطة ${interMatch[3]}`;
     if (!facts.includes(interStr)) facts.push(interStr);
+  }
+  const capInterMatches = clean.matchAll(/([A-Za-z]{2})\s*(?:∩|×)\s*([A-Za-z]{2})\s*=\s*\{?\s*([A-Za-z])\s*\}?/gi);
+  for (const cim of capInterMatches) {
+    const capStr = `${cim[1]} ∩ ${cim[2]} = {${cim[3]}}`;
+    if (!facts.includes(capStr)) facts.push(capStr);
   }
 
   // 9. استخراج أذرع زاوية المطلوب لضمان عدم سقوط أي شعاع ذُكر في المطلوب فقط (مثل m(∠CMD))
@@ -214,7 +219,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   }
 
   // 10. المثلث القائم في رأس: مثلث ABC قائم في A
-  const rightTriMatch = clean.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})\s*قائم(?:الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
+  const rightTriMatch = clean.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
   if (rightTriMatch) {
     const tri = rightTriMatch[1];
     const apex = rightTriMatch[2];

@@ -10,11 +10,13 @@ import { buildParametricSimilarityFigure } from "./similarity-family/similarity-
 import { convertGeometryLatexToPlainText } from "./description-intake/geometry-latex-to-plain-normalizer";
 import { healFourRaysHallucination } from "../ingestion/notebooklm-citation-latex-sanitizer";
 import {
+  checkFigureFidelityToPrompt,
   isFigureFaithfulToPrompt,
   isPurelyTheoreticalNoDiagramProblem,
 } from "./verification/geometry-figure-fidelity-gate";
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
+import { verifyGeometryFigure } from "./verification/geometry-figure-verification-orchestrator";
 import { matchPrimaryGrade4VisualModelsFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-visual-models-catalog";
 import { matchPrimaryGrade4GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
 import { matchPrimaryGrade5GeometryFigure } from "./curriculum-catalogs/primary-stage/grade-5/primary-grade5-geometry-catalog";
@@ -79,8 +81,8 @@ export function matchOptionalGeometryFigureFromArabicDescription(
       cleanDesc
     ) ||
     /AED.*=.*B|ADE.*=.*C/i.test(cleanDesc) ||
-    (cleanDesc.includes("قائم") && cleanDesc.includes("⊥") && !cleanDesc.includes("مربع") && !cleanDesc.includes("مستطيل")) ||
-    (cleanDesc.includes("∩") && (cleanDesc.includes("//") || cleanDesc.includes("يوازي") || cleanDesc.includes("تشابه"))) ||
+    (cleanDesc.includes("قائم") && cleanDesc.includes("⊥") && !cleanDesc.includes("مربع") && !cleanDesc.includes("مستطيل") && !cleanDesc.includes("متساوي الساقين") && !cleanDesc.includes("متوسط")) ||
+    (cleanDesc.includes("∩") && !cleanDesc.includes("∠") && !cleanDesc.includes("°") && (cleanDesc.includes("//") || cleanDesc.includes("يوازي") || cleanDesc.includes("تشابه") || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i.test(cleanDesc))) ||
     (cleanDesc.includes("∈") && cleanDesc.includes("//") && (cleanDesc.includes("مثلث") || cleanDesc.includes("Δ")) && !cleanDesc.includes("متوسط"));
 
   if (isSimilarity) {
@@ -163,11 +165,8 @@ export function matchArabicDescriptionToCanonicalGeometryFigure(
   arabicDescription: string,
   figureId = "matched_geom_fig",
   notationLanguage: MathNotationLanguage = "english"
-): CanonicalGeometryFigureIR {
-  return (
-    matchOptionalGeometryFigureFromArabicDescription(arabicDescription, figureId, notationLanguage) ??
-    buildTriangleMidsegmentFigure({ figureId, notationLanguage })
-  );
+): CanonicalGeometryFigureIR | undefined {
+  return matchOptionalGeometryFigureFromArabicDescription(arabicDescription, figureId, notationLanguage);
 }
 
 const TOPOLOGY_LOCKED_BRANCH_IDS: ReadonlySet<string> = new Set([
@@ -182,10 +181,15 @@ function finalizeVerifiedFigure(
   figure: CanonicalGeometryFigureIR,
   warnings: readonly string[]
 ): { readonly figure: CanonicalGeometryFigureIR; readonly warnings: readonly string[] } {
-  // الأشكال البارامترية المحكومة طوبولوجياً (طاليس/القاطع العكسي/الساعة الرملية/إقليدس): تحريك رؤوسها لمطابقة الأطوال
-  // يكسر استقامة الأضلاع ويُخرج مضلعات ليست مثلثات، فتُترك على بنيتها الصحيحة (التسامح البصري مقبول والأرقام على مواضعها).
-  if (figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(figure.branchId)) return { figure, warnings };
   if (figure.familyId === "statistics_family" || Boolean(figure.rawSvgMarkup)) return { figure, warnings };
+  // الأشكال البارامترية المحكومة طوبولوجياً: لا نحرّك رؤوسها بالمحسّن العددي كي لا تنكسر استقامة الأضلاع، لكن نفحصها.
+  if (figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(figure.branchId)) {
+    const report = verifyGeometryFigure(figure);
+    const issues = report.issues
+      .filter((i) => i.severity === "error" && i.rule !== "length-scale" && i.rule !== "length-order")
+      .map((i) => `تحقق الشكل: ${i.message}`);
+    return { figure, warnings: [...warnings, ...issues] };
+  }
   const refined = refineFigureToMatchGivens(figure);
   const remaining = refined.report.issues.filter((i) => i.severity === "error").map((i) => `تحقق الشكل: ${i.message}`);
   return { figure: refined.figure, warnings: [...warnings, ...remaining] };
@@ -209,14 +213,40 @@ export function matchGeometryWithDiagnostics(
   }
   const composed = composeFigureFromGeometryDescription(cleanDesc, figureId, notation);
   if (composed.figure && composed.warnings.length === 0) {
-    return { ...finalizeVerifiedFigure(composed.figure, []), source: "compositor" };
+    const fidelity = checkFigureFidelityToPrompt(composed.figure, cleanDesc);
+    if (fidelity.passed) {
+      const verified = finalizeVerifiedFigure(composed.figure, []);
+      if (verified.warnings.length === 0) {
+        return { ...verified, source: "compositor" };
+      }
+    }
   }
   const legacy = matchOptionalGeometryFigureFromArabicDescription(cleanDesc, figureId, notation);
-  if (legacy && isFigureFaithfulToPrompt(legacy, cleanDesc)) {
-    return { ...finalizeVerifiedFigure(legacy, composed.figure ? composed.warnings : []), source: "catalog" };
+  if (legacy) {
+    const fidelity = checkFigureFidelityToPrompt(legacy, cleanDesc);
+    if (fidelity.passed) {
+      const verifiedLegacy = finalizeVerifiedFigure(legacy, []);
+      if (verifiedLegacy.warnings.length === 0) {
+        return { ...verifiedLegacy, source: "catalog" };
+      }
+      return {
+        warnings: verifiedLegacy.warnings,
+        source: "none",
+      };
+    }
+    return {
+      warnings: fidelity.reasons,
+      source: "none",
+    };
   }
   if (composed.figure) {
-    return { ...finalizeVerifiedFigure(composed.figure, composed.warnings), source: "compositor" };
+    const fidelity = checkFigureFidelityToPrompt(composed.figure, cleanDesc);
+    const verified = finalizeVerifiedFigure(composed.figure, composed.warnings);
+    const allReasons = [...verified.warnings, ...fidelity.reasons];
+    return {
+      warnings: allReasons.length > 0 ? allReasons : ["تعذر التحقق الكامل من مطابقة الشكل للمعطيات."],
+      source: "none",
+    };
   }
   return {
     warnings: composed.warnings.length ? composed.warnings : ["لم يُتعرَّف على شكل مطابق للمسألة بدقة."],

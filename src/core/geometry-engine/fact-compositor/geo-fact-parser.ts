@@ -5,8 +5,11 @@
 import type { GeoFact, QuadKind, Seg } from "./geo-fact-types";
 import { normalizeLabelKey, parseLabelList } from "./geo-label-utils";
 import { evaluateSimpleMathExpression } from "@/core/exam-grading/math-simple-expression-evaluator";
+import { normalizeArabicGeometryUnitSSOT } from "@/core/ssot/numeral-and-unit-ssot";
 
 export const MODULE_ID_GEO_FACT_PARSER = "geo_fact_parser" as const;
+
+const UNIT_RX = "(?:(سم²|م²|سم|متر|أمتار|امتار|م|كم|مم|ديسم|وحدة\\s*طول|وحدة|وحدات|cm|mm|km|dm|m))?";
 
 const L = "(?:[A-Za-z]|[أ-ي]ـ?)";
 const SEGRX = `(${L}\\s*${L})(?![A-Za-zء-ي])`;
@@ -26,12 +29,12 @@ const QUAD_WORDS: Array<[RegExp, QuadKind]> = [
 export function parseGeoFactString(s: string): GeoFact | null {
   let m: RegExpMatchArray | null;
   // دائرة (G-7)
-  if ((m = s.match(new RegExp(`^(?:ال)?دائرة\\s*(?:التي\\s*)?مركزها\\s*${ONE}(?:\\s*(?:وطول\\s*)?نصف\\s*قطرها\\s*=\\s*(\\d+(?:\\.\\d+)?))?`, "u")))) {
+  if ((m = s.match(new RegExp(`^(?:ال)?دائرة\\s*(?:التي\\s*)?مركزها\\s*${ONE}(?:\\s*(?:وطول\\s*)?نصف\\s*قطرها\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX})?`, "u")))) {
     const r = m[2] ? Number(m[2]) : undefined;
-    return { k: "circle", center: one(m[1]), radius: r && Number.isFinite(r) ? r : undefined };
+    return { k: "circle", center: one(m[1]), radius: r && Number.isFinite(r) ? r : undefined, unit: normalizeArabicGeometryUnitSSOT(m[3]) };
   }
-  if ((m = s.match(/^(?:نق|نصف\s*القطر|طول\s*نصف\s*القطر)\s*=\s*(\d+(?:\.\d+)?)\s*(?:سم|م|وحدة)?$/u))) {
-    return { k: "radius", r: Number(m[1]) };
+  if ((m = s.match(new RegExp(`^(?:نق|نصف\\s*القطر|طول\\s*نصف\\s*القطر|نصف\\s*قطرها)\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}$`, "u")))) {
+    return { k: "radius", r: Number(m[1]), unit: normalizeArabicGeometryUnitSSOT(m[2]) };
   }
   if ((m = s.match(new RegExp(`^${LIST1}\\s*(?:على|∈)\\s*(?:محيط\\s*)?الدائرة$`, "u")))) {
     const labels = parseLabelList(m[1]);
@@ -107,8 +110,8 @@ export function parseGeoFactString(s: string): GeoFact | null {
   }
   // تساوي أضلاع / طول
   if ((m = s.match(re(`${SEGRX}\\s*=\\s*${SEGRX}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "equal", a, b }; }
-  if ((m = s.match(re(`${SEGRX}\\s*=\\s*(.+?)\\s*(?:سم|م|وحدة|وحدات)?`)))) {
-    const a = seg(m[1]); const text = m[2].trim();
+  if ((m = s.match(re(`${SEGRX}\\s*=\\s*(.+?)\\s*${UNIT_RX}`)))) {
+    const a = seg(m[1]); const text = m[2].trim(); const unit = normalizeArabicGeometryUnitSSOT(m[3]);
     if (a && text) {
       let n = evaluateSimpleMathExpression(text.replace(/√\s*(\d+)/g, "sqrt($1)").replace(/\s+/g, ""));
       if (n === null && /[a-zA-Zسصع]/.test(text)) {
@@ -116,7 +119,7 @@ export function parseGeoFactString(s: string): GeoFact | null {
         const mockVal = evaluateSimpleMathExpression(mockExpr);
         n = mockVal !== null && mockVal > 0 ? mockVal : 5;
       }
-      return { k: "length", seg: a, text, numeric: n === null ? undefined : n };
+      return { k: "length", seg: a, text, numeric: n === null ? undefined : n, unit };
     }
   }
   return null;

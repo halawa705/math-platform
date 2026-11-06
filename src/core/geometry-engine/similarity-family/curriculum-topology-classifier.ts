@@ -113,7 +113,7 @@ export function classifyCurriculumGeometryTopology(
     (p) => p.foot || text.includes(`${p.a[0]} ⊥`) || text.includes(`${p.a[1]} ⊥`)
   );
 
-  if (hasEuclidKeyword || (perpFacts.length > 0 && /قائم/i.test(text) && altitudeFoot)) {
+  if (hasEuclidKeyword || (perpFacts.length > 0 && /قائم/i.test(text) && altitudeFoot && (hasEuclidKeyword || !/متساوي\s*الساقين|متوسط/i.test(text)))) {
     const altM =
       text.match(/(?:العمود|عمود)?\s*([A-Za-z]{2}|(?:[أ-ي]ـ?\s*){2})\s*⊥/i) ||
       text.match(/العمود\s*([A-Za-z]{2})/i);
@@ -121,7 +121,7 @@ export function classifyCurriculumGeometryTopology(
       altitudeFoot?.foot ||
       altitudeFoot?.a[1] ||
       (altM ? normalizeLabelKey(altM[1].replace(/\s+/g, "").slice(-1)) : hasEuclidKeyword ? "D" : undefined);
-    const rightApexM = text.match(/قائم(?:الزاوية)?\s*(?:في|عند)\s*([A-Za-z]|[أ-ي]ـ?)/i);
+    const rightApexM = text.match(/قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z]|[أ-ي]ـ?)/i);
     const apex = rightApexM ? normalizeLabelKey(rightApexM[1]) : "A";
     const mainTriM = text.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})/i);
     const o = mainTriM ? [mainTriM[1][0], mainTriM[1][1], mainTriM[1][2]].filter((l) => l !== apex) : [];

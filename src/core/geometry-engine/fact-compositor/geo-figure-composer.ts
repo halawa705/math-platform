@@ -22,14 +22,14 @@ const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
   // 1. فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية أولاً على كامل النص المدمج
+  const normDesc = splitDescriptionIntoFactStrings(description).join(" ؛ ");
   const isSimilarityContext =
     /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|إقليدس|اقليدس/i.test(
       description
     ) ||
-    /AED.*=.*B|ADE.*=.*C/i.test(description) ||
-    (description.includes("∩") && (/يوازي|\/\/|تشابه|~/.test(description) || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?[A-Z]\}?/i.test(description))) ||
-    ((description.includes("قائم") || /m\s*\(\s*∠\s*[A-Z]\s*\)\s*=\s*90/i.test(description)) && description.includes("⊥") && !description.includes("مربع") && !description.includes("مستطيل")) ||
-    ((/∈|ينتمي/.test(description) || /قاطع/.test(description)) && (/\/\/|يوازي/.test(description) || /ADE|AED|ADH|XY/.test(description)) && (/مثلث|Δ/.test(description) || /[A-Za-z]{3}/.test(description)) && !/متوسط/.test(description));
+    /AED.*=.*B|ADE.*=.*C/i.test(normDesc) ||
+    (normDesc.includes("∩") && !normDesc.includes("∠") && !normDesc.includes("°") && (/يوازي|\/\/|تشابه|~/.test(normDesc) || /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i.test(normDesc))) ||
+    ((normDesc.includes("قائم") || /ق\s*\(\s*∠\s*[A-Z]\s*\)\s*=\s*90/i.test(normDesc)) && normDesc.includes("⊥") && !normDesc.includes("مربع") && !normDesc.includes("مستطيل") && !normDesc.includes("متساوي الساقين") && !normDesc.includes("متوسط"));
 
   if (isSimilarityContext) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
@@ -52,8 +52,8 @@ export function composeFigureFromGeometryDescription(description: string, figure
     const f = parseGeoFactString(line);
     if (f) facts.push(f); else warnings.push(`لم يُفهم السطر: «${line}»`);
   }
-  const lengths = new Map<string, { text: string; numeric?: number }>();
-  for (const f of facts) if (f.k === "length") lengths.set(pairKey(f.seg[0], f.seg[1]), { text: f.text, numeric: f.numeric });
+  const lengths = new Map<string, { text: string; numeric?: number; unit?: string }>();
+  for (const f of facts) if (f.k === "length") lengths.set(pairKey(f.seg[0], f.seg[1]), { text: f.text, numeric: f.numeric, unit: f.unit });
 
   const circleFig = composeCircleFigureFromFacts(facts, lengths, description, figureId, notation);
   if (circleFig) return { figure: circleFig, warnings };
@@ -107,7 +107,18 @@ export function composeFigureFromGeometryDescription(description: string, figure
     } else if (f.k === "perp") {
       let [apex, foot] = f.a; if (f.foot) foot = f.foot; if (!P(apex) && P(foot)) [apex, foot] = [foot, apex];
       const [b0, b1] = f.b; if (!P(apex) || !P(b0) || !P(b1)) { warnings.push("تعامد بنقاط غير معرّفة"); continue; }
-      points.set(foot, footOfPerpendicular(P(apex)!, P(b0)!, P(b1)!)); host.set(foot, f.b); addExtra(apex, foot);
+      const len0 = lengths.get(pairKey(b0, foot))?.numeric;
+      const len1 = lengths.get(pairKey(foot, b1))?.numeric;
+      const lenAlt = lengths.get(pairKey(apex, foot))?.numeric;
+      if (Math.abs(P(b0)!.y - P(b1)!.y) < 1e-6 && (len0 || len1 || lenAlt)) {
+        const y0 = P(b0)!.y; const x0 = Math.min(P(b0)!.x, P(b1)!.x);
+        const d0 = len0 ?? 3; const d1 = len1 ?? 5; const h = lenAlt ?? 4;
+        points.set(b0, { x: x0, y: y0 }); points.set(foot, { x: x0 + d0, y: y0 });
+        points.set(b1, { x: x0 + d0 + d1, y: y0 }); points.set(apex, { x: x0 + d0, y: y0 + h });
+      } else {
+        points.set(foot, footOfPerpendicular(P(apex)!, P(b0)!, P(b1)!));
+      }
+      host.set(foot, f.b); addExtra(apex, foot);
       addAngle(foot, apex, vDist(P(foot)!, P(b1)!) >= vDist(P(foot)!, P(b0)!) ? b1 : b0, { isRightAngle: true, degrees: 90 });
     } else if (f.k === "bisector") {
       const opp = trianglesSides(f.vertex); const d = f.seg[0] === f.vertex ? f.seg[1] : f.seg[0]; if (!opp || !P(f.vertex)) continue;
@@ -136,12 +147,20 @@ export function composeFigureFromGeometryDescription(description: string, figure
     }
   }
 
+  for (const f of facts) {
+    if (f.k === "length" && P(f.seg[0]) && P(f.seg[1]) && !isPolygonSide(f.seg[0], f.seg[1])) {
+      const h0 = host.get(f.seg[0]); const h1 = host.get(f.seg[1]);
+      const onSameHostSide = (h0 && (h0[0] === f.seg[1] || h0[1] === f.seg[1])) || (h1 && (h1[0] === f.seg[0] || h1[1] === f.seg[0]));
+      if (!onSameHostSide) addExtra(f.seg[0], f.seg[1]);
+    }
+  }
+
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const segments: CanonicalSegmentNode[] = [];
   const pushSeg = (a: string, b: string, baseKey: string, dashed?: boolean) => {
     const len = lengths.get(pairKey(a, b));
     segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
-      ...(len ? { lengthLabel: { value: len.numeric ?? len.text, unit: "سم" } } : {}),
+      ...(len ? { lengthLabel: { value: len.numeric ?? len.text, unit: len.unit ?? "سم" } } : {}),
       ...(ticks.get(pairKey(a, b)) ? { tickMarks: Math.min(3, ticks.get(pairKey(a, b))!) as 1 | 2 | 3 } : {}),
       ...(parallelMarks.get(baseKey) ? { parallelArrows: parallelMarks.get(baseKey) as 1 | 2 } : {}), ...(dashed ? { strokeStyle: "dashed" as const } : {}) });
   };
@@ -149,6 +168,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
     const b = poly.labels[(i + 1) % poly.labels.length]; const base = pairKey(a, b);
     const mids = [...host.entries()].filter(([, s]) => pairKey(s[0], s[1]) === base).map(([k]) => k).sort((m, n) => vDist(P(a)!, P(m)!) - vDist(P(a)!, P(n)!));
     const chain = [a, ...mids, b]; for (let j = 0; j + 1 < chain.length; j++) pushSeg(chain[j], chain[j + 1], base);
+    if (mids.length > 0 && lengths.has(base) && !chain.some((u, j) => j + 1 < chain.length && lengths.has(pairKey(u, chain[j + 1])))) {
+      const fullLen = lengths.get(base)!;
+      segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
+        lengthLabel: { value: fullLen.numeric ?? fullLen.text, unit: fullLen.unit ?? "سم" } });
+    }
   });
   for (const e of extras) if (P(e.a) && P(e.b)) pushSeg(e.a, e.b, pairKey(e.a, e.b), e.dashed);
 

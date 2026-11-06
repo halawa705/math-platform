@@ -171,7 +171,7 @@ export function solveAngleFanDirections(spec: AngleFanSpec): SolvedAngleFanLayou
             arm1: u,
             arm2: v,
             degrees: eachDeg,
-            rawLabel: `${eachDeg}°`,
+            rawLabel: "",
           });
         }
       }

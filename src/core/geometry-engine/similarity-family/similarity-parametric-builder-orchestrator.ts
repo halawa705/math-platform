@@ -28,6 +28,7 @@ import {
   unpackSequentialSideLengths,
 } from "../description-intake/problem-geometry-context-extractor";
 import { parseGeoFactString } from "../fact-compositor/geo-fact-parser";
+import { splitDescriptionIntoFactStrings } from "../fact-compositor/geo-fact-splitter";
 import type { GeoFact } from "../fact-compositor/geo-fact-types";
 import { pairKey } from "../fact-compositor/geo-label-utils";
 
@@ -84,8 +85,8 @@ export function buildParametricSimilarityFigure(
   const topologyRes = classifyCurriculumGeometryTopology(clean);
   if (topologyRes.topology === "unknown_topology") return undefined;
 
-  // استخراج الحقائق
-  const clauses = clean.split(/\s*[;؛\n،,]+\s*/).map((c) => c.trim()).filter(Boolean);
+  // استخراج الحقائق من الوصف المهيكل
+  const clauses = splitDescriptionIntoFactStrings(enriched || description);
   const facts = clauses.map(parseGeoFactString).filter((f): f is GeoFact => f !== null);
   const { lengths, angles } = extractGivenMaps(clean, facts);
 

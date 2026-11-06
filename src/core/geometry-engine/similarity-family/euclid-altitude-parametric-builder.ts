@@ -50,12 +50,16 @@ export function buildEuclidAltitudeParametricFigure(
   const lenH1Foot = getLen(b, d)?.numeric;
   const lenFootH2 = getLen(d, c)?.numeric;
   const lenHyp = getLen(b, c)?.numeric;
+  const lenAB = getLen(a, b)?.numeric;
+  const lenAC = getLen(a, c)?.numeric;
 
   let ratio = 0.36;
   if (lenH1Foot && lenFootH2 && lenH1Foot + lenFootH2 > 0) {
     ratio = Math.max(0.2, Math.min(0.8, lenH1Foot / (lenH1Foot + lenFootH2)));
   } else if (lenH1Foot && lenHyp && lenHyp > lenH1Foot) {
     ratio = Math.max(0.2, Math.min(0.8, lenH1Foot / lenHyp));
+  } else if (lenAB && lenAC && lenAB * lenAB + lenAC * lenAC > 0) {
+    ratio = Math.max(0.2, Math.min(0.8, (lenAB * lenAB) / (lenAB * lenAB + lenAC * lenAC)));
   } else if (opts.splitRatio && opts.splitRatio > 0 && opts.splitRatio < 1) {
     ratio = opts.splitRatio;
   }

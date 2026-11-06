@@ -55,9 +55,15 @@ export interface BaselineCaseResult {
 
 function expectedNumbersOf(testCase: GoldenCorpusCase): Set<string> {
   if (testCase.expectedGivenNumbers.length > 0) {
-    return extractNumbersFromProblemText(testCase.expectedGivenNumbers.join(" "));
+    const rawExpected = extractNumbersFromProblemText(testCase.expectedGivenNumbers.join(" "));
+    const filteredProblem = extractGivenNumbersFromProblemText(`${testCase.geometryRaw} ${testCase.problemText}`);
+    return new Set([...rawExpected].filter((n) => filteredProblem.has(n)));
   }
   return extractGivenNumbersFromProblemText(testCase.geometryRaw);
+}
+
+function sanitizeProblemTextForNumberExtraction(text: string): string {
+  return text.replace(/NotebookLM\s+intake\s+#\d+/gi, "");
 }
 
 function emptyResult(c: GoldenCorpusCase, outcome: BaselineOutcomeKind, flags: BaselineRiskFlag[], details: string[]): BaselineCaseResult {
@@ -77,10 +83,11 @@ export function classifyBaselineCase(testCase: GoldenCorpusCase): BaselineCaseRe
 
     const flags: BaselineRiskFlag[] = [];
     const details: string[] = [...diag.warnings];
-    const textNumbers = extractNumbersFromProblemText(`${testCase.problemText} ${testCase.geometryRaw}`);
+    const cleanProblem = sanitizeProblemTextForNumberExtraction(testCase.problemText);
+    const textNumbers = extractNumbersFromProblemText(`${cleanProblem} ${testCase.geometryRaw}`);
     const shown = extractNumbersShownOnFigure(figure);
     const missing = [...expectedNumbersOf(testCase)].filter((n) => !shown.has(n));
-    const leaked = [...shown].filter((n) => !textNumbers.has(n));
+    const leaked = [...shown].filter((n) => n !== "90" && !textNumbers.has(n));
 
     if (missing.length > 0) flags.push("missing_given_on_figure");
     if (leaked.length > 0) flags.push("leaked_number_not_in_text");

@@ -2,6 +2,8 @@
  * @file geo-fact-types.ts
  * @description مفردات «الحقائق الهندسية» المغلقة التي يفهمها المركّب. كل حقيقة سطر واحد قصير.
  */
+import type { ArabicMathUnit } from "@/core/ssot/numeral-and-unit-ssot";
+
 export const MODULE_ID_GEO_FACT_TYPES = "geo_fact_types" as const;
 
 export type Seg = readonly [string, string];
@@ -10,13 +12,13 @@ export type QuadKind = "rectangle" | "square" | "rhombus" | "parallelogram" | "t
 export type GeoFact =
   | { readonly k: "triangle"; readonly labels: readonly string[]; readonly right?: string; readonly isoApex?: string; readonly equilateral?: boolean }
   | { readonly k: "quad"; readonly kind: QuadKind; readonly labels: readonly string[] }
-  | { readonly k: "circle"; readonly center: string; readonly radius?: number }
-  | { readonly k: "radius"; readonly r: number }
+  | { readonly k: "circle"; readonly center: string; readonly radius?: number; readonly unit?: ArabicMathUnit }
+  | { readonly k: "radius"; readonly r: number; readonly unit?: ArabicMathUnit }
   | { readonly k: "onCircle"; readonly labels: readonly string[] }
   | { readonly k: "chord"; readonly seg: Seg }
   | { readonly k: "diameter"; readonly seg: Seg }
   | { readonly k: "tangent"; readonly seg: Seg; readonly at: string }
-  | { readonly k: "length"; readonly seg: Seg; readonly text: string; readonly numeric?: number }
+  | { readonly k: "length"; readonly seg: Seg; readonly text: string; readonly numeric?: number; readonly unit?: ArabicMathUnit }
   | { readonly k: "equal"; readonly a: Seg; readonly b: Seg }
   | { readonly k: "angle"; readonly arms?: readonly [string, string, string]; readonly vertex: string; readonly deg?: number; readonly text?: string; readonly right?: boolean }
   | { readonly k: "pointOn"; readonly p: string; readonly seg: Seg }

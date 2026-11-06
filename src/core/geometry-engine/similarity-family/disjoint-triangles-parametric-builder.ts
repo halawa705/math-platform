@@ -51,9 +51,9 @@ export function buildDisjointSimilarTrianglesFigure(
     const radA = (angA * Math.PI) / 180;
     const radB = (angB * Math.PI) / 180;
     const radC = Math.PI - radA - radB;
-    const bSide = (baseWidth1 * Math.sin(radB)) / Math.sin(radC);
-    apexX1 = bSide * Math.cos(radA);
-    apexY1 = bSide * Math.sin(radA);
+    const cSide = (baseWidth1 * Math.sin(radC)) / Math.sin(radA);
+    apexX1 = cSide * Math.cos(radB);
+    apexY1 = cSide * Math.sin(radB);
   } else if (opts.givenAngles?.get(a1)?.isRight) {
     apexX1 = 0;
     apexY1 = 4.0;

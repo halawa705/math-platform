@@ -40,44 +40,62 @@ export function buildHourglassIntersectionFigure(
   const [a, b] = tri1Endpoints;
   const [c, d] = tri2Endpoints;
 
+  const getLen = (u: string, v: string) => {
+    const p = pairKey(u, v);
+    return opts.givenLengths?.get(p) || opts.givenLengths?.get(`${u}${v}`) || opts.givenLengths?.get(`${v}${u}`);
+  };
+
+  // حساب نسبة التشابه بين المثلثين العلوي والسفلي إن توفرت أضلاع متناظرة
+  const lenAB = getLen(a, b)?.numeric;
+  const lenCD = getLen(c, d)?.numeric;
+  const lenAMid = getLen(a, mid)?.numeric;
+  const lenCMid = getLen(c, mid)?.numeric;
+  const lenBMid = getLen(b, mid)?.numeric;
+  const lenDMid = getLen(d, mid)?.numeric;
+
+  let botScale = 1.0;
+  if (lenAB && lenCD && lenAB > 0) botScale = lenCD / lenAB;
+  else if (lenAMid && lenCMid && lenAMid > 0) botScale = lenCMid / lenAMid;
+  else if (lenBMid && lenDMid && lenBMid > 0) botScale = lenDMid / lenBMid;
+  botScale = Math.max(0.25, Math.min(3.2, botScale));
+
+  const topHalfW = 2.6;
+  const topH = 2.6;
+  const botHalfW = Number((topHalfW * botScale).toFixed(2));
+  const botH = Number((topH * botScale).toFixed(2));
+
   // 1. حساب إحداثيات الرؤوس: النقطة الوسطى في المركز، والطرفان في الأعلى والأسفل
   const vMid: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${mid}`,
     label: localizeGeometricVertexLabelSSOT(mid, notation),
-    position: { x: 5.0, y: 4.0 },
+    position: { x: 5.0, y: 4.5 },
   };
 
   // الطرف العلوي (مثلث 1)
   const vA: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${a}`,
     label: localizeGeometricVertexLabelSSOT(a, notation),
-    position: { x: 2.0, y: 7.0 },
+    position: { x: Number((5.0 - topHalfW).toFixed(2)), y: Number((4.5 + topH).toFixed(2)) },
   };
   const vB: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${b}`,
     label: localizeGeometricVertexLabelSSOT(b, notation),
-    position: { x: 8.0, y: 7.0 },
+    position: { x: Number((5.0 + topHalfW).toFixed(2)), y: Number((4.5 + topH).toFixed(2)) },
   };
 
   // الطرف السفلي (مثلث 2 - معكوس الرؤوس بالتقاطع المستقيم: الخط A-Mid-C والخط B-Mid-D)
   const vC: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${c}`,
     label: localizeGeometricVertexLabelSSOT(c, notation),
-    position: { x: 8.0, y: 1.0 },
+    position: { x: Number((5.0 + botHalfW).toFixed(2)), y: Number((4.5 - botH).toFixed(2)) },
   };
   const vD: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${d}`,
     label: localizeGeometricVertexLabelSSOT(d, notation),
-    position: { x: 2.0, y: 1.0 },
+    position: { x: Number((5.0 - botHalfW).toFixed(2)), y: Number((4.5 - botH).toFixed(2)) },
   };
 
   const vertices: CanonicalVertexNode[] = [vMid, vA, vB, vC, vD];
-
-  // 2. بناء الأضلاع مع الأطوال المعطاة وأسهم التوازي إن وُجدت
-  const getLen = (u: string, v: string) => {
-    const p = pairKey(u, v);
-    return opts.givenLengths?.get(p) || opts.givenLengths?.get(`${u}${v}`) || opts.givenLengths?.get(`${v}${u}`);
-  };
 
   const segments: CanonicalSegmentNode[] = [
     // المثلث العلوي
@@ -85,13 +103,21 @@ export function buildHourglassIntersectionFigure(
       id: `${opts.figureId}_s_${a}_${mid}`,
       fromVertexId: vA.id,
       toVertexId: vMid.id,
-      lengthLabel: getLen(a, mid) ? { value: getLen(a, mid)!.text } : undefined,
+      lengthLabel: getLen(a, mid)
+        ? { value: getLen(a, mid)!.text }
+        : !getLen(c, mid) && getLen(a, c)
+        ? { value: getLen(a, c)!.text }
+        : undefined,
     },
     {
       id: `${opts.figureId}_s_${b}_${mid}`,
       fromVertexId: vB.id,
       toVertexId: vMid.id,
-      lengthLabel: getLen(b, mid) ? { value: getLen(b, mid)!.text } : undefined,
+      lengthLabel: getLen(b, mid)
+        ? { value: getLen(b, mid)!.text }
+        : !getLen(d, mid) && getLen(b, d)
+        ? { value: getLen(b, d)!.text }
+        : undefined,
     },
     {
       id: `${opts.figureId}_s_${a}_${b}`,
@@ -106,13 +132,21 @@ export function buildHourglassIntersectionFigure(
       id: `${opts.figureId}_s_${c}_${mid}`,
       fromVertexId: vC.id,
       toVertexId: vMid.id,
-      lengthLabel: getLen(c, mid) ? { value: getLen(c, mid)!.text } : undefined,
+      lengthLabel: getLen(c, mid)
+        ? { value: getLen(c, mid)!.text }
+        : getLen(a, mid) && getLen(a, c)
+        ? { value: getLen(a, c)!.text }
+        : undefined,
     },
     {
       id: `${opts.figureId}_s_${d}_${mid}`,
       fromVertexId: vD.id,
       toVertexId: vMid.id,
-      lengthLabel: getLen(d, mid) ? { value: getLen(d, mid)!.text } : undefined,
+      lengthLabel: getLen(d, mid)
+        ? { value: getLen(d, mid)!.text }
+        : getLen(b, mid) && getLen(b, d)
+        ? { value: getLen(b, d)!.text }
+        : undefined,
     },
     {
       id: `${opts.figureId}_s_${c}_${d}`,

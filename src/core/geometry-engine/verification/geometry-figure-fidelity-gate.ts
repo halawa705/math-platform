@@ -9,6 +9,7 @@
 import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ssot";
 import { normalizeLabelKey } from "../fact-compositor/geo-label-utils";
 import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
+import { findMissingDimensionalGivensOnFigure } from "./geometry-figure-completeness-checker";
 
 export const MODULE_ID_GEOMETRY_FIGURE_FIDELITY_GATE =
   "geometry_figure_fidelity_gate" as const;
@@ -17,6 +18,7 @@ export interface FigureFidelityCheckResult {
   readonly passed: boolean;
   readonly alienVertices: readonly string[];
   readonly alienNumbers: readonly string[];
+  readonly missingNumbers: readonly string[];
   readonly isPurelyTheoretical: boolean;
   readonly reasons: readonly string[];
 }
@@ -161,6 +163,7 @@ export function checkFigureFidelityToPrompt(
       passed: true,
       alienVertices: [],
       alienNumbers: [],
+      missingNumbers: [],
       isPurelyTheoretical: false,
       reasons: [],
     };
@@ -172,6 +175,7 @@ export function checkFigureFidelityToPrompt(
       passed: false,
       alienVertices: [],
       alienNumbers: [],
+      missingNumbers: [],
       isPurelyTheoretical: true,
       reasons: ["المسألة نظرية لفظية عامة ولا تتطلب شكلاً هندسياً."],
     };
@@ -199,10 +203,10 @@ export function checkFigureFidelityToPrompt(
       }
     }
 
-    // إذا كان أكثر من 40% من رؤوس الشكل دخيلة وغير موجودة في السؤال، فهذا شكل خاطئ تماماً
+    // إذا كان 35% أو أكثر من رؤوس الشكل دخيلة وغير موجودة في السؤال، فهذا شكل خاطئ
     if (alienVertices.length > 0 && figure.vertices.length > 0) {
       const alienRatio = alienVertices.length / figure.vertices.length;
-      if (alienRatio >= 0.4) {
+      if (alienRatio >= 0.35) {
         reasons.push(
           `الشكل يحتوي على رؤوس دخيلة غير مذكورة في السؤال: (${alienVertices.join("، ")})`
         );
@@ -210,11 +214,15 @@ export function checkFigureFidelityToPrompt(
     }
   }
 
-  // 3. فحص الأرقام المكتوبة على الأضلاع
+  const stripUnits = (s: string) =>
+    s.replace(/(?:سم²|م²|سم|مم|كم|ديسم|متر|م|وحدات\s*طول|وحدة\s*طول|وحدات|وحدة|درجة|°)/gi, "").trim();
+
+  // 3. فحص الأرقام المكتوبة على الأضلاع (صفر تسامح مع أي رقم دخيل أو مسرب)
   for (const seg of figure.segments) {
     if (!seg.lengthLabel) continue;
     const rawVal = String(seg.lengthLabel.value);
-    const cleanNum = toWesternNumeralsSSOT(rawVal).trim();
+    const cleanNum = stripUnits(toWesternNumeralsSSOT(rawVal));
+    if (!cleanNum || cleanNum === "؟" || cleanNum === "?") continue;
     // إذا كانت البطاقة تعبيراً جبرياً وارد بالنص (مثل 2y - 7 أو x + 2 أو X)
     if (/[a-zA-Zسصع]/.test(cleanNum)) {
       const varChar = cleanNum.match(/[a-zA-Zسصع]/)?.[0]?.toLowerCase();
@@ -232,10 +240,11 @@ export function checkFigureFidelityToPrompt(
     }
   }
 
-  // 4. فحص قياسات الزوايا المكتوبة
+  // 4. فحص قياسات الزوايا المكتوبة (صفر تسامح مع أي قياس زاوية دخيل أو مسرب)
   for (const ang of figure.angles) {
     if (ang.degreesLabel) {
-      const labelText = toWesternNumeralsSSOT(ang.degreesLabel).trim();
+      const labelText = stripUnits(toWesternNumeralsSSOT(ang.degreesLabel));
+      if (!labelText || labelText === "؟" || labelText === "?") continue;
       // إذا كان تعبيراً جبرياً مثل (2س + 5)° أو (2y)° أو 3س
       if (/[a-zA-Zسصع]/.test(labelText)) {
         const varChar = labelText.match(/[a-zA-Zسصع]/)?.[0]?.toLowerCase();
@@ -248,15 +257,21 @@ export function checkFigureFidelityToPrompt(
       if (pureDigits && pureDigits !== "90" && !promptNumbers.has(pureDigits)) {
         alienNumbers.push(ang.degreesLabel);
       }
-    } else if (ang.degrees && ang.degrees !== 90 && ang.degreesLabel === undefined) {
-      // قياس زاوية غير مرئي للبطاقة (داخلي فقط لحساب المتجهات) - لا يُحسب كـ alien
     }
   }
 
-  // إذا وُجد رقمان أو أكثر أو قياسات زوايا غريبة غير موجودة في المسألة (مثل 2y أو 100° أو 30 أو 18 أو 12)
-  if (alienNumbers.length >= 2) {
+  // المرحلة 1: رفض الشكل فوراً عند وجود أي رقم دخيل أو مسرب واحد على الأقل (alienNumbers.length >= 1)
+  if (alienNumbers.length >= 1) {
     reasons.push(
-      `الشكل يحتوي على أرقام وأبعاد دخيلة تخالف نص المسألة: (${alienNumbers.join("، ")})`
+      `الشكل يحتوي على أرقام أو أبعاد دخيلة غير واردة في نص المسألة: (${alienNumbers.join("، ")})`
+    );
+  }
+
+  // المرحلة 1: فحص الاكتمال الصارم (كل معطى بُعدي في النص يجب أن يظهر على الشكل)
+  const missingNumbers = findMissingDimensionalGivensOnFigure(figure, rawPromptOrDescription);
+  if (missingNumbers.length >= 1) {
+    reasons.push(
+      `الشكل ينقصه معطيات هندسية واردة في المسألة لم تظهر على الرسم: (${missingNumbers.join("، ")})`
     );
   }
 
@@ -265,6 +280,7 @@ export function checkFigureFidelityToPrompt(
     passed,
     alienVertices,
     alienNumbers,
+    missingNumbers,
     isPurelyTheoretical: false,
     reasons,
   };

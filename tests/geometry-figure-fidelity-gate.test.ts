@@ -12,9 +12,12 @@ import {
   isPurelyTheoreticalNoDiagramProblem,
 } from "@/core/geometry-engine/verification/geometry-figure-fidelity-gate";
 import {
+  matchArabicDescriptionToCanonicalGeometryFigure,
   matchGeometryWithDiagnostics,
   matchOptionalGeometryFigureFromArabicDescription,
 } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
+import { localizeFigureLabelText } from "@/core/geometry-engine/figure-label-symbol-localizer";
+import { verifySegmentLengthScaleRule } from "@/core/geometry-engine/verification/verify-segment-length-scale-rule";
 import { buildCongruenceReflectionInDBFigure } from "@/core/geometry-engine/curriculum-catalogs/prep-stage/grade-2/prep-grade2-congruence-shared-base-builder";
 import { buildTriangleButterflyAtApexAFigure } from "@/core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-butterfly-similarity-builder";
 
@@ -114,6 +117,65 @@ describe("المرحلة المحورية الأولى: بوابة الصدق ا
       if (legacy) {
         expect(legacy.figureId).not.toContain("prep2_triangle_congruence");
       }
+    });
+  });
+
+  describe("4. ضمانات المرحلة 1: سد الثغرات الخطرة (Phase 1 Invariants)", () => {
+    it("يرفض الشكل فوراً عند وجود رقم دخيل أو مسرب واحد فقط (صفر تسامح مع تسريب الحل)", () => {
+      const diag = matchGeometryWithDiagnostics("مثلث أ ب جـ قائم في ب، أ ب = 3 سم، ب جـ = 4 سم", "rt_leak_check", "arabic");
+      expect(diag.figure).toBeDefined();
+      const leakedFig = {
+        ...diag.figure!,
+        segments: diag.figure!.segments.map((s, idx) =>
+          idx === 2 ? { ...s, lengthLabel: { value: 5, unit: "سم" as const } } : s
+        ),
+      };
+      const check = checkFigureFidelityToPrompt(leakedFig, "مثلث أ ب جـ قائم في ب، أ ب = 3 سم، ب جـ = 4 سم");
+      expect(check.passed).toBe(false);
+      expect(check.alienNumbers).toContain("5");
+    });
+
+    it("يرفض الشكل عند غياب معطى بُعدي صريح وارد في نص المسألة (فحص الاكتمال الصارم)", () => {
+      const diag = matchGeometryWithDiagnostics("مثلث أ ب جـ قائم في ب، أ ب = 6 سم، ب جـ = 8 سم", "rt_missing_check", "arabic");
+      expect(diag.figure).toBeDefined();
+      const incompleteFig = {
+        ...diag.figure!,
+        segments: diag.figure!.segments.map((s) =>
+          String(s.lengthLabel?.value) === "8" ? { ...s, lengthLabel: undefined } : s
+        ),
+      };
+      const check = checkFigureFidelityToPrompt(incompleteFig, "مثلث أ ب جـ قائم في ب، أ ب = 6 سم، ب جـ = 8 سم");
+      expect(check.passed).toBe(false);
+      expect(check.missingNumbers).toContain("8");
+    });
+
+    it("يحمي وحدات القياس العربية (م، مم، كم، سم) من التحول الخاطئ إلى حروف رؤوس لاتينية", () => {
+      expect(localizeFigureLabelText("1.8 م", "english", "western")).toBe("1.8 م");
+      expect(localizeFigureLabelText("15 مم", "english", "western")).toBe("15 مم");
+      expect(localizeFigureLabelText("12 كم", "english", "western")).toBe("12 كم");
+      expect(localizeFigureLabelText("6 cm", "arabic", "eastern_arabic")).toBe("٦ cm");
+    });
+
+    it("يرفع مخالفة تناسب أطوال الأضلاع وترتيبها إلى خطأ (error) لا مجرد تحذير", () => {
+      const diag = matchGeometryWithDiagnostics("مثلث أ ب جـ فيه أ ب = 3 سم، ب جـ = 4 سم، أ جـ = 5 سم", "scale_err_check", "arabic");
+      expect(diag.figure).toBeDefined();
+      const distortedFig = {
+        ...diag.figure!,
+        segments: diag.figure!.segments.map((s) =>
+          String(s.lengthLabel?.value) === "3" ? { ...s, lengthLabel: { value: 15, unit: "سم" as const } } : s
+        ),
+      };
+      const issues = verifySegmentLengthScaleRule(distortedFig);
+      expect(issues.some((i) => i.severity === "error")).toBe(true);
+    });
+
+    it("يوقف الدالة الاحتياطية لمثلث القطعة الواصلة عند فشل المطابقة ويعيد undefined بدلاً من شكل عشوائي", () => {
+      const res = matchArabicDescriptionToCanonicalGeometryFigure(
+        "مسألة جبرية عامة لا تحتوي على أي شكل هندسي معروف",
+        "no_fallback_check",
+        "arabic"
+      );
+      expect(res).toBeUndefined();
     });
   });
 });

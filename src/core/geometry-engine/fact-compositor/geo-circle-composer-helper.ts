@@ -14,7 +14,7 @@ const rad = (d: number) => (d * Math.PI) / 180;
 
 export function composeCircleFigureFromFacts(
   facts: readonly GeoFact[],
-  lengths: ReadonlyMap<string, { readonly text: string; readonly numeric?: number }>,
+  lengths: ReadonlyMap<string, { readonly text: string; readonly numeric?: number; readonly unit?: string }>,
   description: string,
   figureId: string,
   notation: "english" | "arabic"
@@ -23,6 +23,8 @@ export function composeCircleFigureFromFacts(
   if (!circleFact || circleFact.k !== "circle") return null;
 
   const radiusFact = facts.find((f) => f.k === "radius");
+  const hasExplicitRadius = circleFact.radius !== undefined || (radiusFact !== undefined && radiusFact.k === "radius");
+  const radiusUnit = circleFact.unit ?? (radiusFact && radiusFact.k === "radius" ? radiusFact.unit : undefined) ?? "سم";
   const r = circleFact.radius ?? (radiusFact && radiusFact.k === "radius" ? radiusFact.r : 5);
   const centerKey = circleFact.center;
   const points = new Map<string, Vec2>([[centerKey, { x: 0, y: 0 }]]);
@@ -44,8 +46,16 @@ export function composeCircleFigureFromFacts(
       const degA = rimAngles.get(a) ?? 180;
       ensureRimPoint(b, degA + 180);
     } else if (f.k === "chord") {
-      ensureRimPoint(f.seg[0]);
-      ensureRimPoint(f.seg[1]);
+      const [a, b] = f.seg;
+      const chordLen = lengths.get(pairKey(a, b))?.numeric;
+      if (chordLen && chordLen > 0 && chordLen < 2 * r && !points.has(a) && !points.has(b)) {
+        const halfDeg = (Math.asin(chordLen / (2 * r)) * 180) / Math.PI;
+        ensureRimPoint(a, 270 - halfDeg);
+        ensureRimPoint(b, 270 + halfDeg);
+      } else {
+        ensureRimPoint(a);
+        ensureRimPoint(b);
+      }
     }
   }
 
@@ -57,14 +67,21 @@ export function composeCircleFigureFromFacts(
   const keyId = (k: string) => (k === centerKey ? `${figureId}_center_${k}` : `${figureId}_v_${k}`);
   const segments: CanonicalSegmentNode[] = [];
   const angles: CanonicalAngleNode[] = [];
-  const pushSeg = (a: string, b: string, dashed?: boolean) => {
+  let radiusLabeled = false;
+  const pushSeg = (a: string, b: string, dashed?: boolean, isRadiusSeg?: boolean) => {
     if (segments.some((s) => pairKey(s.fromVertexId, s.toVertexId) === pairKey(keyId(a), keyId(b)))) return;
     const len = lengths.get(pairKey(a, b));
+    const attachRadius = !len && isRadiusSeg && hasExplicitRadius && !radiusLabeled;
+    if (attachRadius) radiusLabeled = true;
     segments.push({
       id: `${figureId}_s_${segments.length}`,
       fromVertexId: keyId(a),
       toVertexId: keyId(b),
-      ...(len ? { lengthLabel: { value: len.numeric ?? len.text, unit: "سم" } } : {}),
+      ...(len
+        ? { lengthLabel: { value: len.numeric ?? len.text, unit: len.unit ?? "سم" } }
+        : attachRadius
+          ? { lengthLabel: { value: r, unit: radiusUnit } }
+          : {}),
       ...(dashed ? { strokeStyle: "dashed" as const } : {}),
     });
   };
@@ -82,7 +99,7 @@ export function composeCircleFigureFromFacts(
       const P = points.get(at)!;
       const dir = { x: -Math.sin(rad(deg)), y: Math.cos(rad(deg)) };
       points.set(other, vAdd(P, vScale(dir, 0.6 * r)));
-      pushSeg(centerKey, at, true);
+      pushSeg(centerKey, at, true, true);
       pushSeg(at, other);
       angles.push({
         id: `${figureId}_ang_${angles.length}`,
@@ -111,6 +128,11 @@ export function composeCircleFigureFromFacts(
         });
       }
     }
+  }
+
+  if (hasExplicitRadius && !radiusLabeled) {
+    const firstRimKey = [...points.keys()].find((k) => k !== centerKey);
+    if (firstRimKey) pushSeg(centerKey, firstRimKey, true, true);
   }
 
   const vertices: CanonicalVertexNode[] = [...points.entries()].map(([k, position]) => ({

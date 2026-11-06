@@ -60,9 +60,9 @@ export function buildParallelAlternateAnglesFigure(opts: PrepGrade1ParallelOptio
   const notation = opts.notationLanguage || "english";
 
   const vA1: CanonicalVertexNode = { id: `${opts.figureId}_vA1`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 1.5, y: 7 } };
-  const vB1: CanonicalVertexNode = { id: `${opts.figureId}_vB1`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 7.5, y: 7 } };
-  const vA2: CanonicalVertexNode = { id: `${opts.figureId}_vA2`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 2.5, y: 3 } };
-  const vB2: CanonicalVertexNode = { id: `${opts.figureId}_vB2`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 8.5, y: 3 } };
+  const vB1: CanonicalVertexNode = { id: `${opts.figureId}_vB1`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 6.0, y: 7 } };
+  const vA2: CanonicalVertexNode = { id: `${opts.figureId}_vA2`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 4.0, y: 2.9 } };
+  const vB2: CanonicalVertexNode = { id: `${opts.figureId}_vB2`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 8.5, y: 2.9 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sTop`, fromVertexId: vA1.id, toVertexId: vB1.id, parallelArrows: 1 },
@@ -94,7 +94,7 @@ export function buildParallelConsecutiveInteriorAnglesFigure(opts: PrepGrade1Par
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 6.8, y: 7.2 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 1.5, y: 7.2 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 5.2, y: 3 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 8.8, y: 3 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.5, y: 3 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sTop`, fromVertexId: vB.id, toVertexId: vA.id, parallelArrows: 1 },
@@ -112,7 +112,7 @@ export function buildParallelConsecutiveInteriorAnglesFigure(opts: PrepGrade1Par
     segments,
     angles: [
       { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: 70, degreesLabel: "70°" },
-      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 110, degreesLabel: "110°" },
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 110, degreesLabel: "؟" },
     ],
   };
 }
@@ -123,12 +123,12 @@ export function buildParallelConsecutiveInteriorAnglesFigure(opts: PrepGrade1Par
 export function buildParallelAlgebraicAlternate3X15Figure(opts: PrepGrade1ParallelOptions): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 4.5, y: 7.8 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 5.2, y: 7.8 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 7.8 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 4.5, y: 3 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 3.9, y: 3 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 8.5, y: 3 } };
-  const vTTop: CanonicalVertexNode = { id: `${opts.figureId}_vTTop`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 4.5, y: 9 } };
-  const vTBot: CanonicalVertexNode = { id: `${opts.figureId}_vTBot`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 4.5, y: 1.5 } };
+  const vTTop: CanonicalVertexNode = { id: `${opts.figureId}_vTTop`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5.5, y: 8.9 } };
+  const vTBot: CanonicalVertexNode = { id: `${opts.figureId}_vTBot`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 3.5, y: 1.5 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sTop`, fromVertexId: vA.id, toVertexId: vB.id, parallelArrows: 1 },

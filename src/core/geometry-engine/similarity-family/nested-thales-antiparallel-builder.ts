@@ -42,7 +42,49 @@ export function buildNestedThalesAntiparallelFigure(
   const notation: MathNotationLanguage = opts.notationLanguage || "english";
   const { apex, base1, base2, cut1, cut2 } = opts;
 
-  // 1. إحداثيات المثلث الكبير (Apex عند القمة، والقاعدة على محور السينات)
+  const getLen = (u: string, v: string) => {
+    const p = pairKey(u, v);
+    return opts.givenLengths?.get(p) || opts.givenLengths?.get(`${u}${v}`) || opts.givenLengths?.get(`${v}${u}`);
+  };
+
+  // 1. حساب موقع القاطع على الضلعين من النسب الحقيقية المعطاة
+  let r1 = opts.splitRatio && opts.splitRatio > 0 && opts.splitRatio < 1 ? opts.splitRatio : 0.5;
+  const lenACut1 = getLen(apex, cut1)?.numeric;
+  const lenCut1B1 = getLen(cut1, base1)?.numeric;
+  const lenAB1 = getLen(apex, base1)?.numeric;
+  const lenACut2 = getLen(apex, cut2)?.numeric;
+  const lenCut2B2 = getLen(cut2, base2)?.numeric;
+  const lenAB2 = getLen(apex, base2)?.numeric;
+  const lenCut = getLen(cut1, cut2)?.numeric;
+  const lenBase = getLen(base1, base2)?.numeric;
+
+  if (!opts.isAntiparallel) {
+    if (lenACut1 && lenCut1B1) r1 = lenACut1 / (lenACut1 + lenCut1B1);
+    else if (lenACut1 && lenAB1 && lenAB1 > lenACut1) r1 = lenACut1 / lenAB1;
+    else if (lenACut2 && lenCut2B2) r1 = lenACut2 / (lenACut2 + lenCut2B2);
+    else if (lenACut2 && lenAB2 && lenAB2 > lenACut2) r1 = lenACut2 / lenAB2;
+    else if (lenCut && lenBase && lenBase > lenCut) r1 = lenCut / lenBase;
+    r1 = Math.max(0.22, Math.min(0.78, r1));
+  }
+
+  let r2 = r1;
+  if (opts.isAntiparallel) {
+    r1 = lenACut1 && lenCut1B1 ? Math.max(0.22, Math.min(0.78, lenACut1 / (lenACut1 + lenCut1B1))) : 0.45;
+    r2 = lenACut2 && lenCut2B2 ? Math.max(0.22, Math.min(0.78, lenACut2 / (lenACut2 + lenCut2B2))) : 0.65;
+  }
+
+  // ضبط عرض القاعدة ليتناسب مع طول الضلع عند توفر DE أو BC مع ضلع جانبي
+  const sideTotal = (lenACut1 && lenCut1B1 ? lenACut1 + lenCut1B1 : lenAB1) || (lenACut2 && lenCut2B2 ? lenACut2 + lenCut2B2 : lenAB2);
+  const drawnSideLen = 6.95; // طول الضلع المرسوم تقريباً من (4.5, 7) إلى (1, 1)
+  let halfBase = 3.5;
+  if (!opts.isAntiparallel && sideTotal && (lenCut || lenBase)) {
+    const targetBaseNum = lenBase || (lenCut ? lenCut / r1 : undefined);
+    if (targetBaseNum) {
+      const scaledBase = (targetBaseNum / sideTotal) * drawnSideLen;
+      halfBase = Math.max(2.0, Math.min(4.2, scaledBase / 2));
+    }
+  }
+
   const vApex: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${apex}`,
     label: localizeGeometricVertexLabelSSOT(apex, notation),
@@ -51,23 +93,13 @@ export function buildNestedThalesAntiparallelFigure(
   const vB1: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${base1}`,
     label: localizeGeometricVertexLabelSSOT(base1, notation),
-    position: { x: 1.0, y: 1.0 },
+    position: { x: Number((4.5 - halfBase).toFixed(2)), y: 1.0 },
   };
   const vB2: CanonicalVertexNode = {
     id: `${opts.figureId}_v_${base2}`,
     label: localizeGeometricVertexLabelSSOT(base2, notation),
-    position: { x: 8.0, y: 1.0 },
+    position: { x: Number((4.5 + halfBase).toFixed(2)), y: 1.0 },
   };
-
-  // 2. حساب موقع القاطع على الضلعين
-  let r1 = opts.splitRatio && opts.splitRatio > 0 && opts.splitRatio < 1 ? opts.splitRatio : 0.5;
-  let r2 = r1;
-
-  // إذا كان قاطعاً عكسياً غير موازٍ، نميل القاطع بنسبتين مختلفتين ليظهر الميل بوضوح
-  if (opts.isAntiparallel) {
-    r1 = 0.45;
-    r2 = 0.65;
-  }
 
   // النقطة D على الضلع Apex-B1: position = Apex + r1 * (B1 - Apex)
   const vCut1: CanonicalVertexNode = {
@@ -90,12 +122,6 @@ export function buildNestedThalesAntiparallelFigure(
   };
 
   const vertices: CanonicalVertexNode[] = [vApex, vB1, vB2, vCut1, vCut2];
-
-  // 3. بناء الأضلاع مع علامات التوازي والأطوال المعطاة
-  const getLen = (u: string, v: string) => {
-    const p = pairKey(u, v);
-    return opts.givenLengths?.get(p) || opts.givenLengths?.get(`${u}${v}`) || opts.givenLengths?.get(`${v}${u}`);
-  };
 
   const segments: CanonicalSegmentNode[] = [
     // أجزاء الضلع الأيسر: Apex-Cut1 و Cut1-Base1

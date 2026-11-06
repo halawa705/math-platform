@@ -44,7 +44,7 @@ export function buildSegmentProjectionOnXAxisFigure(opts: PrepGrade1CoordinatesO
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sProjA`, fromVertexId: vA.id, toVertexId: vAprime.id, strokeStyle: "dashed" },
     { id: `${opts.figureId}_sProjB`, fromVertexId: vB.id, toVertexId: vBprime.id, strokeStyle: "dashed" },
-    { id: `${opts.figureId}_sProjAB`, fromVertexId: vBprime.id, toVertexId: vAprime.id, lengthLabel: { value: "6 وحدات" } },
+    { id: `${opts.figureId}_sProjAB`, fromVertexId: vBprime.id, toVertexId: vAprime.id },
   ];
 
   return {

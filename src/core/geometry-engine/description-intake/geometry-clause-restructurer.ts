@@ -17,6 +17,7 @@ const LABELS_ONE_SEG = "[A-Z]{2}";
 const LABELS = `(?:[A-Z]{2,5}|(?:${AR}\\s+){1,4}${AR})`;
 const FACT_START = `(?:ق\\s*\\(|∠|(?:ال)?زاوية|قياس|[A-Z]{1,5}\\s*(?:=|//|⊥|∈|∩|منتصف|وتر|قطر|مماس|ينصف|منصف|متوسط)|${AR}\\s*${AR}\\s*(?:=|//|⊥)|نصف|طول|نق\\b)`;
 const QUAD_DIMENSIONS = new RegExp(`(?:^\\s*|${SEP.trim()}\\s*)((?:مستطيل|مربع)\\s*(${LABELS}))([^؛;]*)`, "g");
+const TRI_SIDE_DIMENSION = new RegExp(`(?:^\\s*|${SEP.trim()}\\s*)(مثلث\\s*(${LABELS})\\s*متساوي\\s*الأضلاع)\\s*(?:طول\\s*)?ضلعه\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم|م)?`, "g");
 
 function dimensionFacts(shapeHead: string, labelsRaw: string, tail: string): string {
   const k = parseLabelList(labelsRaw);
@@ -29,7 +30,7 @@ function dimensionFacts(shapeHead: string, labelsRaw: string, tail: string): str
   if (len) extra.push(`${k[0]}${k[1]} = ${len[1]}`);
   if (wid) extra.push(`${k[1]}${k[2]} = ${wid[1]}`);
   if (side) extra.push(`${k[0]}${k[1]} = ${side[1]}`);
-  const rest = tail.replace(/(?:طوله|طولها|بعداه|الطول|عرضه|عرضها|العرض|ضلعه|ضلعها|طول\s*ضلعه)\s*=?\s*\d+(?:\.\d+)?\s*(?:سم)?/g, " ").replace(/\sو\s*$|\sو\s+(?=قطرا)/g, " ");
+  const rest = tail.replace(/(?:طوله|طولها|بعداه|الطول|عرضه|عرضها|العرض|ضلعه|ضلعها|طول\s*ضلعه)\s*=?\s*\d+(?:\.\d+)?\s*(?:سم|م)?/g, " ").replace(/\sو\s*$|\sو\s+(?=قطرا)/g, " ");
   return [shapeHead + rest, ...extra].join(SEP);
 }
 
@@ -54,7 +55,6 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(new RegExp(`(${LABELS_ONE_SEG})\\s+([^؛;]*?)(?:طوله|طولها)\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم)?`, "g"), "$1 $2 ؛ $1 = $3 سم ")
     .replace(new RegExp(`\\sو(?:\\s*)(?=${FACT_START})`, "g"), SEP)
     .replace(/\sو(?=(?:ال)?زاوية|قياس)/g, SEP)
-    .replace(/\sو(?=\s*(?:عرضه|عرضها|ضلعه))/g, SEP)
     .replace(/\sو(?=نصف)/g, " ")
     .replace(/(نصف\s*قطرها)\s+(?=\d)/g, "$1 = ")
     .replace(/(?:^|\s)ال(?=(?:مثلث|مستطيل|مربع|معين|متوازي|شبه|رباعي))/g, " ")
@@ -64,6 +64,11 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(new RegExp(`(?:قياس\\s*)?(?:ال)?زاوية\\s*(${LABELS}|[A-Z]|${AR})\\s*=`, "g"), "ق(∠ $1) =")
     .replace(/\s*(?:،|,(?=\s))\s*/g, SEP);
   t = t.replace(QUAD_DIMENSIONS, (_m, head: string, labels: string, tail: string) => SEP + dimensionFacts(head, labels, tail));
+  t = t.replace(TRI_SIDE_DIMENSION, (_m, head: string, labels: string, val: string) => {
+    const k = parseLabelList(labels);
+    return k && k.length === 3 ? `${SEP}${head}${SEP}${k[0]}${k[1]} = ${val} سم` : `${SEP}${head}`;
+  });
+  t = t.replace(/\s+(?:و\s*)?(?=قطرا[هـا]?\s+يتقاطعان)/g, SEP);
   t = t.split(/\s*؛\s*/).filter((c) => !GOAL_CLAUSE.test(c.trim())).join(SEP);
   return t.replace(/(\s*؛\s*)+/g, SEP).replace(/^\s*؛\s*|\s*؛\s*$/g, "").replace(/\s+/g, " ").trim();
 }

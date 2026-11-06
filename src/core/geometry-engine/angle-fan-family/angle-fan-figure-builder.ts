@@ -102,7 +102,7 @@ export function composeAngleFanFigureFromDescription(
     }
     addAngleNode(ang.arm1, ang.arm2, {
       degrees: Number(ang.degrees.toFixed(1)),
-      degreesLabel: ang.rawLabel,
+      degreesLabel: ang.rawLabel || undefined,
     });
   }
 

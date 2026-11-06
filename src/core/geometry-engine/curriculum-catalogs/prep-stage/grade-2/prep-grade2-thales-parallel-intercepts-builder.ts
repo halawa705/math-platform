@@ -83,18 +83,18 @@ export function buildThalesTransversals4x8yFigure(
   const vL2R: CanonicalVertexNode = { id: `${opts.figureId}_vL2R`, label: "", position: { x: 9, y: 6.5 } };
   const vL3L: CanonicalVertexNode = { id: `${opts.figureId}_vL3L`, label: "", position: { x: 1, y: 4 } };
   const vL3R: CanonicalVertexNode = { id: `${opts.figureId}_vL3R`, label: "", position: { x: 9, y: 4 } };
-  const vL4L: CanonicalVertexNode = { id: `${opts.figureId}_vL4L`, label: "", position: { x: 1, y: 1 } };
-  const vL4R: CanonicalVertexNode = { id: `${opts.figureId}_vL4R`, label: "", position: { x: 9, y: 1 } };
+  const vL4L: CanonicalVertexNode = { id: `${opts.figureId}_vL4L`, label: "", position: { x: 1, y: 1.5 } };
+  const vL4R: CanonicalVertexNode = { id: `${opts.figureId}_vL4R`, label: "", position: { x: 9, y: 1.5 } };
 
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 3.5, y: 9 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 3.3, y: 6.5 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 3.1, y: 4 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 2.8, y: 1 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 2.9, y: 1.5 } };
 
   const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: "", position: { x: 5.5, y: 9 } };
   const vN: CanonicalVertexNode = { id: `${opts.figureId}_vN`, label: "", position: { x: 6.3, y: 6.5 } };
   const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: "", position: { x: 7.1, y: 4 } };
-  const vP: CanonicalVertexNode = { id: `${opts.figureId}_vP`, label: "", position: { x: 8, y: 1 } };
+  const vP: CanonicalVertexNode = { id: `${opts.figureId}_vP`, label: "", position: { x: 7.9, y: 1.5 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sL1`, fromVertexId: vL1L.id, toVertexId: vL1R.id, parallelArrows: 1 },
@@ -115,7 +115,7 @@ export function buildThalesTransversals4x8yFigure(
     branchId: "triangle_thales_parallel_line",
     titleArabic: "قاطعان لمستقيمات متوازية بأجزاء متساوية لإيجاد قيمتي X و y",
     notationLanguage: notation,
-    vertices: [vA, vB, vC, vD, vM, vN, vO, vP],
+    vertices: [vL1L, vL1R, vL2L, vL2R, vL3L, vL3R, vL4L, vL4R, vA, vB, vC, vD, vM, vN, vO, vP],
     segments,
     angles: [],
   };

@@ -44,45 +44,46 @@ export function buildAppliedShadowHeightFigure(
   const pHead = vertices.personHead || "E";
   const bTop = vertices.postTop || "A";
 
-  // 2. استخراج الأطوال الحقيقية (بالمتر عادة) من النص أو الخريطة
-  let personH = "1.8 م";
-  let shadowL = "2.4 م";
-  let distBase = "2 م";
-  let postH = "؟";
+  // 2. استخراج الأطوال الحقيقية (بالمتر عادة) من النص أو الخريطة دون اختلاق أرقام غير واردة
+  let personHVal: string | undefined;
+  let shadowLVal: string | undefined;
+  let distBaseVal: string | undefined;
+  let postHVal = "؟";
 
-  // فحص النص للأطوال الحياتية
-  const personMatch = problemText.match(/(?:رجل|شخص|طالب|عمود|سارية|شجرة)[^0-9\n]{0,25}طول[هـا]?\s*([0-9]+(?:\.[0-9]+)?)\s*م?/i);
-  if (personMatch) personH = `${personMatch[1]} م`;
+  const personMatch = problemText.match(/(?:رجل|شخص|طالب|فتاة|ولد)[^0-9\n]{0,25}طول[هـا]?\s*([0-9]+(?:\.[0-9]+)?)\s*م?/i);
+  if (personMatch) personHVal = personMatch[1];
 
   const shadowMatch = problemText.match(/ظل(?:ه|ها)?[^0-9\n]{0,20}([0-9]+(?:\.[0-9]+)?)\s*م?/i);
-  if (shadowMatch) shadowL = `${shadowMatch[1]} م`;
+  if (shadowMatch) shadowLVal = shadowMatch[1];
 
-  const distMatch = problemText.match(/(?:المسافة|يبعد)[^0-9\n]{0,35}([0-9]+(?:\.[0-9]+)?)\s*م?/i);
-  if (distMatch) distBase = `${distMatch[1]} م`;
+  const distMatch = problemText.match(/(?:المسافة|يبعد|على\s*بعد)[^0-9\n]{0,35}([0-9]+(?:\.[0-9]+)?)\s*م?/i);
+  if (distMatch) distBaseVal = distMatch[1];
 
   // التحقق من المعطيات من givenLengths إذا توفرت
   for (const [k, v] of givenLengths.entries()) {
-    const val = v.text || (v.numeric ? `${v.numeric} م` : "");
-    if (!val) continue;
-    if (k.includes(pHead) && k.includes(pFoot)) personH = val;
-    else if (k.includes(tip) && k.includes(pFoot)) shadowL = val;
-    else if (k.includes(pFoot) && k.includes(bFoot)) distBase = val;
-    else if (k.includes(bTop) && k.includes(bFoot)) postH = val;
+    const rawNum = v.numeric !== undefined ? String(v.numeric) : v.text.replace(/\s*م$/, "").trim();
+    if (!rawNum) continue;
+    if (k.includes(pHead) && k.includes(pFoot)) personHVal = rawNum;
+    else if (k.includes(tip) && k.includes(pFoot)) shadowLVal = rawNum;
+    else if (k.includes(pFoot) && k.includes(bFoot)) distBaseVal = rawNum;
+    else if (k.includes(bTop) && k.includes(bFoot)) postHVal = rawNum;
   }
 
-  // 3. حساب الإحداثيات الهندسية الحتمية المتوازية
-  // C = طرف الظل على الأرض
-  // D = قاعدة الرجل، E = رأس الرجل
-  // B = قاعدة العمود، A = قمة العمود
+  // 3. حساب الإحداثيات الهندسية الحتمية المتناسبة مع الأبعاد المعطاة
+  const pNum = personHVal ? parseFloat(personHVal) || 1.8 : 1.8;
+  const sNum = shadowLVal ? parseFloat(shadowLVal) || 2.4 : 2.4;
+  const dNum = distBaseVal ? parseFloat(distBaseVal) || 2.4 : sNum * 1.1;
+  const totalGround = sNum + dNum;
+  const scale = 7.5 / Math.max(totalGround, 1);
+
   const groundY = 1.0;
   const cX = 1.0;
-  const dX = 4.5;
-  const bX = 8.5;
+  const dX = Number((cX + sNum * scale).toFixed(2));
+  const bX = Number((dX + dNum * scale).toFixed(2));
 
-  const eY = 3.2;
-  // زاوية شعاع الضوء: خط مستقيم من C(1, 1) عبر E(4.5, 3.2) إلى A(8.5, aY)
-  const slope = (eY - groundY) / (dX - cX); // 2.2 / 3.5 ≈ 0.628
-  const aY = Number((groundY + slope * (bX - cX)).toFixed(2)); // 1.0 + 0.628 * 7.5 ≈ 5.71
+  const eY = Number((groundY + pNum * scale).toFixed(2));
+  const slope = (eY - groundY) / Math.max(dX - cX, 0.5);
+  const aY = Number((groundY + slope * (bX - cX)).toFixed(2));
 
   const keyId = (v: string) => `${figureId}_v_${v}`;
 
@@ -94,35 +95,35 @@ export function buildAppliedShadowHeightFigure(
     { id: keyId(bTop), label: toDisplayLabel(bTop, notationLanguage), position: { x: bX, y: aY } },
   ];
 
-  // 4. الأضلاع والقطع المستقيمة
+  // 4. الأضلاع والقطع المستقيمة (تُكتب الأبعاد المعطاة فقط)
   const segments: CanonicalSegmentNode[] = [
     // خط الأرض: C -> D (الظل)
     {
       id: `${figureId}_s_ground_shadow`,
       fromVertexId: keyId(tip),
       toVertexId: keyId(pFoot),
-      lengthLabel: { value: shadowL, unit: "" },
+      lengthLabel: shadowLVal ? { value: shadowLVal, unit: "م" } : undefined,
     },
     // خط الأرض: D -> B (المسافة بين الرجل وقاعدة العمود)
     {
       id: `${figureId}_s_ground_dist`,
       fromVertexId: keyId(pFoot),
       toVertexId: keyId(bFoot),
-      lengthLabel: { value: distBase, unit: "" },
+      lengthLabel: distBaseVal ? { value: distBaseVal, unit: "م" } : undefined,
     },
     // الرجل: D -> E (رأسي قائم)
     {
       id: `${figureId}_s_person`,
       fromVertexId: keyId(pFoot),
       toVertexId: keyId(pHead),
-      lengthLabel: { value: personH, unit: "" },
+      lengthLabel: personHVal ? { value: personHVal, unit: "م" } : undefined,
     },
     // العمود: B -> A (رأسي قائم)
     {
       id: `${figureId}_s_post`,
       fromVertexId: keyId(bFoot),
       toVertexId: keyId(bTop),
-      lengthLabel: { value: postH, unit: "" },
+      lengthLabel: { value: postHVal, unit: postHVal === "؟" ? "" : "م" },
     },
     // شعاع الضوء والوتر: C -> E
     {
