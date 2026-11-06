@@ -55,7 +55,12 @@ export type StatisticsDerivedBranchId =
   | "stats_dot_plot"
   | "stats_histogram_columns"
   | "stats_boxplot_and_quartiles"
-  | "stats_bar_chart";
+  | "stats_bar_chart"
+  | "stats_frequency_distribution_table"
+  | "stats_frequency_polygon_and_curve"
+  | "stats_ascending_descending_ogive"
+  | "stats_pie_circular_sectors"
+  | "stats_scatter_regression_line";
 
 export type PrimaryVisualModelsBranchId = "primary_bar_model" | "primary_analog_clock";
 

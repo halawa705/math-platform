@@ -45,6 +45,7 @@ import { buildRegularPyramid3DFigure } from "./spatial-3d-family/pyramid-spatial
 import { buildCubeCuboid3DFigure } from "./spatial-3d-family/cube-cuboid-prism-branch";
 import { buildRightCircularCone3DFigure } from "./spatial-3d-family/cylinder-cone-sphere-branch";
 import { buildInclinedPlaneForcesFigure } from "./spatial-3d-family/mechanics-force-vectors-branch";
+import { matchAndRenderStatisticsFigure } from "../statistics-engine/statistics-orchestrator";
 
 export const MODULE_ID_NATURAL_ARABIC_GEOMETRY_MATCHER = "natural_arabic_geometry_matcher" as const;
 
@@ -58,6 +59,11 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (isPurelyTheoreticalNoDiagramProblem(desc)) return undefined;
 
   const cleanDesc = convertGeometryLatexToPlainText(desc);
+  if (/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*بيانية|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|شجر(?:ة)?\s*(?:ال)?احتمال)/i.test(cleanDesc)) {
+    const statsFig = matchAndRenderStatisticsFigure(cleanDesc, figureId, "western", notationLanguage);
+    if (statsFig) return statsFig;
+  }
+
   const isSimilarity = isSimilarityGeometryContext(cleanDesc);
 
   if (isSimilarity) {
