@@ -4,16 +4,17 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
-import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
+import type { CanonicalGeometryFigureIR, FigureTriStateDecision } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "../ssot/numeral-and-unit-ssot";
 import { buildParametricSimilarityFigure } from "./similarity-family/similarity-parametric-builder-orchestrator";
 import { convertGeometryLatexToPlainText } from "./description-intake/geometry-latex-to-plain-normalizer";
 import { healFourRaysHallucination } from "../ingestion/notebooklm-citation-latex-sanitizer";
 import {
-  checkFigureFidelityToPrompt,
   isFigureFaithfulToPrompt,
   isPurelyTheoreticalNoDiagramProblem,
 } from "./verification/geometry-figure-fidelity-gate";
+import { applyAskedQuestionMarkToFigure } from "./verification/geometry-asked-question-mark-resolver";
+import { evaluateFigureTriStateDecision } from "./verification/geometry-tri-state-decision-gate";
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
 import { verifyGeometryFigure } from "./verification/geometry-figure-verification-orchestrator";
@@ -152,9 +153,43 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (/خط\s*الأعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage });
   if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage });
 
-  if (/هرم/i.test(desc)) return buildRegularPyramid3DFigure({ figureId, notationLanguage });
-  if (/مخروط|أسطوانة/i.test(desc)) return buildRightCircularCone3DFigure({ figureId, notationLanguage });
-  if (/مكعب|متوازي\s*مستطيلات/i.test(desc)) return buildCubeCuboid3DFigure({ figureId, notationLanguage });
+  if (/هرم/i.test(desc)) {
+    const baseM = cleanDesc.match(/(?:طول\s*)?(?:ضلع\s*قاعدت[هـا]?|ضلعه)\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const heightM = cleanDesc.match(/ارتفاع[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);
+    return buildRegularPyramid3DFigure({
+      figureId,
+      notationLanguage,
+      baseSideCm: baseM ? Number(baseM[1]) : undefined,
+      heightCm: heightM ? Number(heightM[1]) : undefined,
+    });
+  }
+  if (/مخروط|أسطوانة/i.test(desc)) {
+    const radM = cleanDesc.match(/(?:نصف\s*قطر[هـا]?|نق)\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const heightM = cleanDesc.match(/ارتفاع[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const slantM = cleanDesc.match(/(?:راسم[هـا]?|طول\s*راسم[هـا]?)\s*=?\s*(\d+(?:\.\d+)?)/i);
+    return buildRightCircularCone3DFigure({
+      figureId,
+      notationLanguage,
+      radiusCm: radM ? Number(radM[1]) : undefined,
+      heightCm: heightM ? Number(heightM[1]) : undefined,
+      slantCm: slantM ? Number(slantM[1]) : undefined,
+    });
+  }
+  if (/مكعب|متوازي\s*مستطيلات/i.test(desc)) {
+    const dimsM = cleanDesc.match(/أبعاده\s*(\d+(?:\.\d+)?)\s*[،,و]\s*(\d+(?:\.\d+)?)\s*[،,و]\s*(\d+(?:\.\d+)?)/i);
+    const edgeM = cleanDesc.match(/(?:طول\s*حرفه|حرفه|ضلعه)\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const lenM = cleanDesc.match(/طول[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const widM = cleanDesc.match(/عرض[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const hgtM = cleanDesc.match(/ارتفاع[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);
+    const cubeEdge = edgeM ? Number(edgeM[1]) : undefined;
+    return buildCubeCuboid3DFigure({
+      figureId,
+      notationLanguage,
+      lengthCm: dimsM ? Number(dimsM[1]) : lenM ? Number(lenM[1]) : cubeEdge,
+      widthCm: dimsM ? Number(dimsM[2]) : widM ? Number(widM[1]) : cubeEdge,
+      heightCm: dimsM ? Number(dimsM[3]) : hgtM ? Number(hgtM[1]) : cubeEdge,
+    });
+  }
   if (/مستوى\s*مائل|قوى|رد\s*الفعل/i.test(desc)) return buildInclinedPlaneForcesFigure({ figureId, notationLanguage });
   if (/مثلث/i.test(desc) && /يوازي|توازي|طاليس/i.test(desc)) return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
 
@@ -203,54 +238,57 @@ export function matchGeometryWithDiagnostics(
   readonly figure?: CanonicalGeometryFigureIR;
   readonly warnings: readonly string[];
   readonly source: "compositor" | "catalog" | "none";
+  readonly decision: FigureTriStateDecision;
 } {
   const cleanDesc = healFourRaysHallucination(desc);
   if (isPurelyTheoreticalNoDiagramProblem(cleanDesc)) {
     return {
       warnings: ["المسألة نظرية لفظية عامة ولا تتطلب شكلاً هندسياً."],
       source: "none",
+      decision: "red",
     };
   }
   const composed = composeFigureFromGeometryDescription(cleanDesc, figureId, notation);
-  if (composed.figure && composed.warnings.length === 0) {
-    const fidelity = checkFigureFidelityToPrompt(composed.figure, cleanDesc);
-    if (fidelity.passed) {
-      const verified = finalizeVerifiedFigure(composed.figure, []);
-      if (verified.warnings.length === 0) {
-        return { ...verified, source: "compositor" };
-      }
+  if (composed.figure) {
+    const withAsked = applyAskedQuestionMarkToFigure(composed.figure, cleanDesc);
+    const verified = finalizeVerifiedFigure(withAsked, []);
+    const isLocked = Boolean(verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId));
+    const tri = evaluateFigureTriStateDecision(verified.figure, cleanDesc, verified.warnings, isLocked);
+    if (tri.decision === "green") {
+      return { figure: verified.figure, warnings: [], source: "compositor", decision: "green" };
     }
   }
   const legacy = matchOptionalGeometryFigureFromArabicDescription(cleanDesc, figureId, notation);
   if (legacy) {
-    const fidelity = checkFigureFidelityToPrompt(legacy, cleanDesc);
-    if (fidelity.passed) {
-      const verifiedLegacy = finalizeVerifiedFigure(legacy, []);
-      if (verifiedLegacy.warnings.length === 0) {
-        return { ...verifiedLegacy, source: "catalog" };
-      }
-      return {
-        warnings: verifiedLegacy.warnings,
-        source: "none",
-      };
+    const withAsked = applyAskedQuestionMarkToFigure(legacy, cleanDesc);
+    const verifiedLegacy = finalizeVerifiedFigure(withAsked, []);
+    const isLocked = Boolean(verifiedLegacy.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verifiedLegacy.figure.branchId));
+    const triLegacy = evaluateFigureTriStateDecision(verifiedLegacy.figure, cleanDesc, verifiedLegacy.warnings, isLocked);
+    if (triLegacy.decision === "green") {
+      return { figure: verifiedLegacy.figure, warnings: [], source: "catalog", decision: "green" };
     }
     return {
-      warnings: fidelity.reasons,
+      warnings: triLegacy.reasons,
       source: "none",
+      decision: triLegacy.decision,
     };
   }
   if (composed.figure) {
-    const fidelity = checkFigureFidelityToPrompt(composed.figure, cleanDesc);
-    const verified = finalizeVerifiedFigure(composed.figure, composed.warnings);
-    const allReasons = [...verified.warnings, ...fidelity.reasons];
+    const withAsked = applyAskedQuestionMarkToFigure(composed.figure, cleanDesc);
+    const verified = finalizeVerifiedFigure(withAsked, composed.warnings);
+    const isLocked = Boolean(verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId));
+    const tri = evaluateFigureTriStateDecision(verified.figure, cleanDesc, verified.warnings, isLocked);
     return {
-      warnings: allReasons.length > 0 ? allReasons : ["تعذر التحقق الكامل من مطابقة الشكل للمعطيات."],
+      warnings: tri.reasons.length > 0 ? tri.reasons : ["تعذر التحقق الكامل من مطابقة الشكل للمعطيات."],
       source: "none",
+      decision: tri.decision,
     };
   }
+  const emptyTri = evaluateFigureTriStateDecision(null, cleanDesc, composed.warnings);
   return {
-    warnings: composed.warnings.length ? composed.warnings : ["لم يُتعرَّف على شكل مطابق للمسألة بدقة."],
+    warnings: emptyTri.reasons,
     source: "none",
+    decision: emptyTri.decision,
   };
 }
 

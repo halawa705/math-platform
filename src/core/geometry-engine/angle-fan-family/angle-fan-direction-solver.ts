@@ -161,7 +161,8 @@ export function solveAngleFanDirections(spec: AngleFanSpec): SolvedAngleFanLayou
   for (const eq of spec.sumEquations) {
     if (eq.angles.length === 2) {
       const eachDeg = eq.sumDeg / 2;
-      for (const [u, v] of eq.angles) {
+      const sumLabel = `${eq.sumDeg}°`;
+      eq.angles.forEach(([u, v], idx) => {
         if (
           !evaluatedAngles.some(
             (a) => (a.arm1 === u && a.arm2 === v) || (a.arm1 === v && a.arm2 === u)
@@ -171,10 +172,11 @@ export function solveAngleFanDirections(spec: AngleFanSpec): SolvedAngleFanLayou
             arm1: u,
             arm2: v,
             degrees: eachDeg,
-            rawLabel: "",
+            // نحتفظ برقم المجموع الأصلي في rawLabel لأول زاوية فقط ليتعرف عليه فحص الاكتمال دون كشف 70° على الشكل
+            rawLabel: idx === 0 ? `__SUM_${sumLabel}__` : "",
           });
         }
-      }
+      });
     }
   }
 

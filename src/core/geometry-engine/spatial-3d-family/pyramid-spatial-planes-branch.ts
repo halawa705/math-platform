@@ -15,21 +15,27 @@ export const MODULE_ID_PYRAMID_SPATIAL_PLANES_BRANCH =
 export function buildRegularPyramid3DFigure(params: {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly baseSideCm?: number;
+  readonly heightCm?: number;
 }): CanonicalGeometryFigureIR {
   const notation = params.notationLanguage || "arabic";
+  const S = params.baseSideCm && params.baseSideCm > 0 ? params.baseSideCm : 8;
+  const H = params.heightCm && params.heightCm > 0 ? params.heightCm : 8;
+  const halfD = Number((S * 0.25).toFixed(2));
+  const fullD = Number((S * 0.5).toFixed(2));
 
   const apexM = create3DProjectedVertex({
     id: `${params.figureId}_M`,
     labelArabic: "م",
-    x: 4,
-    y: 8,
-    z: 2,
+    x: S / 2,
+    y: H,
+    z: halfD,
     notationLanguage: notation,
   });
   const baseA = create3DProjectedVertex({
     id: `${params.figureId}_A`,
     labelArabic: "أ",
-    x: 8,
+    x: S,
     y: 0,
     z: 0,
     notationLanguage: notation,
@@ -47,23 +53,23 @@ export function buildRegularPyramid3DFigure(params: {
     labelArabic: "جـ",
     x: 0,
     y: 0,
-    z: 4,
+    z: fullD,
     notationLanguage: notation,
   });
   const baseD = create3DProjectedVertex({
     id: `${params.figureId}_D`,
     labelArabic: "د",
-    x: 8,
+    x: S,
     y: 0,
-    z: 4,
+    z: fullD,
     notationLanguage: notation,
   });
   const centerN = create3DProjectedVertex({
     id: `${params.figureId}_N`,
     labelArabic: "ن",
-    x: 4,
+    x: S / 2,
     y: 0,
-    z: 2,
+    z: halfD,
     notationLanguage: notation,
   });
 
@@ -75,7 +81,12 @@ export function buildRegularPyramid3DFigure(params: {
     notationLanguage: notation,
     vertices: [apexM, baseA, baseB, baseC, baseD, centerN],
     segments: [
-      { id: `${params.figureId}_AB`, fromVertexId: baseA.id, toVertexId: baseB.id },
+      {
+        id: `${params.figureId}_AB`,
+        fromVertexId: baseA.id,
+        toVertexId: baseB.id,
+        ...(params.baseSideCm ? { lengthLabel: { value: params.baseSideCm, unit: "سم", labelKind: "given" } } : {}),
+      },
       { id: `${params.figureId}_BC`, fromVertexId: baseB.id, toVertexId: baseC.id, strokeStyle: "dashed" },
       { id: `${params.figureId}_CD`, fromVertexId: baseC.id, toVertexId: baseD.id, strokeStyle: "dashed" },
       { id: `${params.figureId}_DA`, fromVertexId: baseD.id, toVertexId: baseA.id },
@@ -83,7 +94,13 @@ export function buildRegularPyramid3DFigure(params: {
       { id: `${params.figureId}_MB`, fromVertexId: apexM.id, toVertexId: baseB.id },
       { id: `${params.figureId}_MC`, fromVertexId: apexM.id, toVertexId: baseC.id, strokeStyle: "dashed" },
       { id: `${params.figureId}_MD`, fromVertexId: apexM.id, toVertexId: baseD.id },
-      { id: `${params.figureId}_MN`, fromVertexId: apexM.id, toVertexId: centerN.id, strokeStyle: "dotted" },
+      {
+        id: `${params.figureId}_MN`,
+        fromVertexId: apexM.id,
+        toVertexId: centerN.id,
+        strokeStyle: "dotted",
+        ...(params.heightCm ? { lengthLabel: { value: params.heightCm, unit: "سم", labelKind: "given" } } : {}),
+      },
     ],
     angles: [],
   };

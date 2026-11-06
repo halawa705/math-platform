@@ -9,6 +9,7 @@
 import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ssot";
 import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
 import { extractNumbersShownOnFigure } from "../baseline-measurement/baseline-figure-number-extractor";
+import { convertGeometryLatexToPlainText } from "../description-intake/geometry-latex-to-plain-normalizer";
 
 export const MODULE_ID_GEOMETRY_FIGURE_COMPLETENESS_CHECKER =
   "geometry_figure_completeness_checker" as const;
@@ -26,7 +27,7 @@ export function extractExplicitDimensionalGivensFromPrompt(rawText: string): Set
   const givens = new Set<string>();
   if (!rawText) return givens;
 
-  const clean = toWesternNumeralsSSOT(rawText)
+  const clean = convertGeometryLatexToPlainText(rawText)
     .replace(/٫/g, ".")
     // حذف ترويسات الاختبارات وأرقام الصفحات والمسائل والأشكال المرجعية
     .replace(/NotebookLM\s+intake\s+#\d+/gi, " ")
@@ -39,9 +40,9 @@ export function extractExplicitDimensionalGivensFromPrompt(rawText: string): Set
     .replace(/[xyسص]_[12]|[xyسص][12]/gi, " ")
     // حذف معادلات مجموع الزوايا أو محيطات المثلثات لأنها علاقات جبرية وليست بطاقة ضلع أو زاوية مفردة
     .replace(/(?:مجموع|محيط)\s+[^؛;\n=]*?(?:=|يساوي|تساوي|هو|هي)\s*\d+(?:\.\d+)?\s*(?:سم|م|°|\^?\\circ|درجة)?/g, " ")
-    .replace(/(?:ق|m|\\angle|∠)[^؛;\n=]*?\+\s*(?:ق|m|\\angle|∠)[^؛;\n=]*?=\s*\d+(?:\.\d+)?\s*(?:°|\^?\\circ|درجة)?/gi, " ")
-    // حذف ذيل المطلوب/الإجابة حتى لا يُطالب الشكل بإظهار الجواب النهائي
-    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت\s*أن|اثبت\s*ان|برهن\s*أن)\s+[^؛;\n]*$/i, " ");
+    .replace(/(?:ق|m|\\angle|∠)[^؛;\n=+]*?\+[^؛;\n=]*?=\s*\d+(?:\.\d+)?\s*(?:°|\^?\\circ|درجة)?/gi, " ")
+    // حذف ذيل المطلوب/الإجابة (مع الإبقاء على ما بعد «حيث / إذا كان» كمعطيات)
+    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت\s*أن|اثبت\s*ان|برهن\s*أن)\s+[^؛;\n]*?(?=\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s|$)/gi, " ");
 
   // 1. أطوال أو زوايا بصيغة مساواة أو قياس (= 8، = 63°، طوله 5، عرضه 6، نق = 5، بزاوية 70°)
   const measureMatches = clean.matchAll(

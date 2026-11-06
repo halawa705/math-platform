@@ -34,6 +34,14 @@ export function buildCircleChordBisectorFigure(params: {
     titleArabic: `الدائرة ${root.centerVertex.label} فيها ${midD.label} منتصف الوتر ${ptA.label}${ptB.label}، إذن ${root.centerVertex.label}${midD.label} ⊥ ${ptA.label}${ptB.label}`,
     notationLanguage: root.notationLanguage,
     vertices: [root.centerVertex, ptA, ptB, midD],
+    circles: [
+      {
+        id: `${params.figureId}_circle_main`,
+        centerVertexId: root.centerVertex.id,
+        radius: root.radiusCm,
+        rimVertexId: ptA.id,
+      },
+    ],
     segments: [
       {
         id: `${params.figureId}_chord_AD`,

@@ -42,6 +42,15 @@ export function extractEssayQuestionsFromReviewStage2Reply(
       results.push(clean.slice(0, 40));
     }
   }
+  if (results.length === 0) {
+    const paragraphs = stage2Raw
+      .split(/(?:\r?\n)\s*(?:\r?\n)+/)
+      .map((p) => p.replace(/\*\*/g, "").trim())
+      .filter((p) => p.length > 12 && !/^(?:المرحلة|التعليمات|الهيكل|ملاحظات)/i.test(p));
+    for (const p of paragraphs) {
+      results.push(p.slice(0, 40));
+    }
+  }
   return results.slice(0, 16);
 }
 
@@ -74,6 +83,8 @@ export function buildFinalReviewNotebookLMPrompt(
     return [
       `${scopeLabel} (المرحلة ١: أسئلة اختر وإجابتها): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
       `🎯 النطاق الحصري: [${unitsList}] | العدد الإلزامي الحرفي: (${mcqCount}) سؤال اختيار من متعدد [اختر] تغطي جميع أفكار الوحدات بلا أي تكرار.`,
+      `🎲 التوزيع العشوائي للإجابات: وزّع موضع الإجابة الصحيحة عشوائياً بالتساوي على البدائل (أ، ب، جـ، د) بمعدل ~25% لكل حرف؛ يُمنع منعاً باتاً حصر الإجابة في (أ) أو تكرار نفس الحرف لأكثر من سؤالين متتاليين.`,
+      `🔢 الترقيم الإلزامي الحرفي: ابدأ كل سؤال برقمه بوضوح: [1] ثم [2] ... حتى [${mcqCount}].`,
       ...(customRule ? [customRule] : []),
       sharedRules,
       `📐 قالب الإخراج الإلزامي للمرحلة ١ (من [1] حتى [${mcqCount}]):`,
@@ -82,7 +93,7 @@ export function buildFinalReviewNotebookLMPrompt(
       "(ب) [الخيار ٢]",
       "(جـ) [الخيار ٣]",
       "(د) [الخيار ٤]",
-      "الإجابة الصحيحة: (أ) [نص الإجابة المعتمدة]",
+      "الإجابة الصحيحة: ([الحرف الصحيح عشوائياً: إما أ أو ب أو جـ أو د]) [نص الإجابة المعتمدة]",
     ].join("\n");
   }
 
@@ -90,6 +101,7 @@ export function buildFinalReviewNotebookLMPrompt(
     return [
       `${scopeLabel} (المرحلة ٢: الأسئلة المقالية والبرهان بلا حلول): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
       `🎯 النطاق الحصري: [${unitsList}] | العدد الإلزامي الحرفي: (${essayCount}) مسائل مقالية وبراهين متنوعة الأفكار (بدون كتابة الحلول هنا؛ الحلول في المرحلة ٣).`,
+      `🔢 الترقيم الإلزامي الحرفي: ابدأ كل مسألة برقمها بوضوح: [1] ثم [2] ... حتى [${essayCount}].`,
       ...(customRule ? [customRule] : []),
       sharedRules,
       `📐 قالب الإخراج الإلزامي للمرحلة ٢ (من [1] حتى [${essayCount}]):`,
@@ -106,6 +118,7 @@ export function buildFinalReviewNotebookLMPrompt(
   return [
     `${scopeLabel} (المرحلة ٣: إجابات مقالي المرحلة ٢): ${branchSpec.nameArabic} | ${config.gradeNameArabic}.`,
     stage2Summary,
+    `🔢 الترقيم الإلزامي: اكتب رقم المسألة في ترويسة كل حل بوضوح: حل السؤال [1]: ثم حل السؤال [2]: ... حتى [${essayCount}].`,
     sharedRules,
     "📐 قالب الإخراج الإلزامي للمرحلة ٣:",
     "حل السؤال [1]:",

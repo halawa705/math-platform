@@ -34,6 +34,14 @@ export function buildCircleTangentChordAngleFigure(params: {
     titleArabic: `الزاوية المماسية ∠${tanD.label}${ptA.label}${ptB.label} والزاوية المحيطية ∠${ptA.label}${ptC.label}${ptB.label}`,
     notationLanguage: root.notationLanguage,
     vertices: [root.centerVertex, ptA, ptB, ptC, tanD],
+    circles: [
+      {
+        id: `${params.figureId}_circle_main`,
+        centerVertexId: root.centerVertex.id,
+        radius: root.radiusCm,
+        rimVertexId: ptA.id,
+      },
+    ],
     segments: [
       { id: `${params.figureId}_AB`, fromVertexId: ptA.id, toVertexId: ptB.id },
       { id: `${params.figureId}_BC`, fromVertexId: ptB.id, toVertexId: ptC.id },

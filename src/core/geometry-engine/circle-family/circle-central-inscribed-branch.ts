@@ -33,6 +33,14 @@ export function buildCircleCentralInscribedFigure(params: {
     titleArabic: `الزاوية المحيطية ∠${ptB.label}${ptA.label}${ptC.label} والزاوية المركزية ∠${ptB.label}${root.centerVertex.label}${ptC.label} المشتركتان في القوس`,
     notationLanguage: root.notationLanguage,
     vertices: [root.centerVertex, ptA, ptB, ptC],
+    circles: [
+      {
+        id: `${params.figureId}_circle_main`,
+        centerVertexId: root.centerVertex.id,
+        radius: root.radiusCm,
+        rimVertexId: ptA.id,
+      },
+    ],
     segments: [
       { id: `${params.figureId}_AB`, fromVertexId: ptA.id, toVertexId: ptB.id },
       { id: `${params.figureId}_AC`, fromVertexId: ptA.id, toVertexId: ptC.id },

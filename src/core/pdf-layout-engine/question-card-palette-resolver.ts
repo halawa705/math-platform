@@ -19,8 +19,18 @@ export function resolveQuestionCardColorScheme(params: {
   readonly isBookletHomework: boolean;
   readonly isOddQuestion: boolean;
   readonly palette: PrintThemePaletteTokens;
+  readonly isAnswerCard?: boolean;
 }): QuestionCardColorScheme {
-  const { isBookletSolvedExample, isBookletDrill, isBookletHomework, isOddQuestion, palette } = params;
+  const { isBookletSolvedExample, isBookletDrill, isBookletHomework, isOddQuestion, palette, isAnswerCard } = params;
+
+  if (isAnswerCard) {
+    return {
+      cardSurfaceBgHex: isOddQuestion ? "#F0FDF4" : "#F5F3FF",
+      cardBorderColorHex: isOddQuestion ? "#14B8A6" : "#818CF8",
+      badgeBgColorHex: isOddQuestion ? "#0D9488" : "#4338CA",
+      exampleRoleLabel: "إجابة معتمدة",
+    };
+  }
 
   const cardSurfaceBgHex = isBookletSolvedExample
     ? isOddQuestion

@@ -197,9 +197,10 @@ export const ENGLISH_CHOICE_LETTERS = ["A", "B", "C", "D"] as const;
 
 export function getChoiceLetterByNotationSSOT(
   index: number,
-  notation?: MathNotationLanguage
+  notation?: MathNotationLanguage,
+  forceArabicChoices = true
 ): string {
-  if (notation === "english") {
+  if (!forceArabicChoices && notation === "english") {
     return ENGLISH_CHOICE_LETTERS[index] || String(index + 1);
   }
   return ARABIC_CHOICE_LETTERS[index] || String(index + 1);

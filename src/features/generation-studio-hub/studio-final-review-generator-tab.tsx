@@ -96,10 +96,18 @@ export default function StudioFinalReviewGeneratorTab({
     setNotice(null);
     setDiagRows(items.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! })));
     onApplyParsedQuestionsToSheet?.(items);
-    onApplyReviewTitleToSheet(buildStandardDocumentTitleSSOT({
-      gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScope,
-      promptText: prompt, rawReplyText: replies[1] || replies[2],
-    }));
+    const standardTitle = buildStandardDocumentTitleSSOT({
+      gradeId,
+      unitTitleInput: unitTitleAr,
+      lessonTitleInput: activeScope,
+      promptText: prompt,
+      rawReplyText: replies[1] || replies[2],
+    });
+    const reviewPrefix = scope === "final_exam_night_capsule" ? "المراجعة النهائية" : "مراجعة شهر";
+    const finalReviewTitle = standardTitle.includes("مراجعة")
+      ? standardTitle
+      : `${reviewPrefix} • ${standardTitle}`;
+    onApplyReviewTitleToSheet(finalReviewTitle);
   };
 
   const stage = STAGE_COPY[activeStage];

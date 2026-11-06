@@ -35,6 +35,20 @@ export function buildCircleIntersectingPairFigure(params: {
     titleArabic: `الدائرتان المتقاطعتان ${rootM.centerVertex.label}، ${centerN.label} وخط المركزين عمودي على الوتر المشترك ${ptA.label}${ptB.label}`,
     notationLanguage: rootM.notationLanguage,
     vertices: [rootM.centerVertex, centerN, ptA, ptB, midC],
+    circles: [
+      {
+        id: `${params.figureId}_circle_M`,
+        centerVertexId: rootM.centerVertex.id,
+        radius: rootM.radiusCm,
+        rimVertexId: ptA.id,
+      },
+      {
+        id: `${params.figureId}_circle_N`,
+        centerVertexId: centerN.id,
+        radius: 3.9,
+        rimVertexId: ptA.id,
+      },
+    ],
     segments: [
       {
         id: `${params.figureId}_MN`,

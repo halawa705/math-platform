@@ -15,13 +15,18 @@ export const MODULE_ID_CYLINDER_CONE_SPHERE_BRANCH =
 export function buildRightCircularCone3DFigure(params: {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly radiusCm?: number;
+  readonly heightCm?: number;
+  readonly slantCm?: number;
 }): CanonicalGeometryFigureIR {
   const notation = params.notationLanguage || "arabic";
+  const r = params.radiusCm && params.radiusCm > 0 ? params.radiusCm : 4;
+  const h = params.heightCm && params.heightCm > 0 ? params.heightCm : 7;
 
-  const apexA = create3DProjectedVertex({ id: `${params.figureId}_A`, labelArabic: "أ", x: 4, y: 7, z: 0, notationLanguage: notation });
-  const baseB = create3DProjectedVertex({ id: `${params.figureId}_B`, labelArabic: "ب", x: 8, y: 0, z: 0, notationLanguage: notation });
+  const apexA = create3DProjectedVertex({ id: `${params.figureId}_A`, labelArabic: "أ", x: r, y: h, z: 0, notationLanguage: notation });
+  const baseB = create3DProjectedVertex({ id: `${params.figureId}_B`, labelArabic: "ب", x: r * 2, y: 0, z: 0, notationLanguage: notation });
   const baseC = create3DProjectedVertex({ id: `${params.figureId}_C`, labelArabic: "جـ", x: 0, y: 0, z: 0, notationLanguage: notation });
-  const centerM = create3DProjectedVertex({ id: `${params.figureId}_M`, labelArabic: "م", x: 4, y: 0, z: 0, notationLanguage: notation });
+  const centerM = create3DProjectedVertex({ id: `${params.figureId}_M`, labelArabic: "م", x: r, y: 0, z: 0, notationLanguage: notation });
 
   return {
     figureId: params.figureId,
@@ -31,10 +36,27 @@ export function buildRightCircularCone3DFigure(params: {
     notationLanguage: notation,
     vertices: [apexA, baseB, baseC, centerM],
     segments: [
-      { id: `${params.figureId}_AB`, fromVertexId: apexA.id, toVertexId: baseB.id, lengthLabel: { value: 10, unit: "سم" } },
+      {
+        id: `${params.figureId}_AB`,
+        fromVertexId: apexA.id,
+        toVertexId: baseB.id,
+        ...(params.slantCm ? { lengthLabel: { value: params.slantCm, unit: "سم", labelKind: "given" } } : {}),
+      },
       { id: `${params.figureId}_AC`, fromVertexId: apexA.id, toVertexId: baseC.id },
       { id: `${params.figureId}_BC`, fromVertexId: baseB.id, toVertexId: baseC.id },
-      { id: `${params.figureId}_AM`, fromVertexId: apexA.id, toVertexId: centerM.id, strokeStyle: "dashed", lengthLabel: { value: 8, unit: "سم" } },
+      {
+        id: `${params.figureId}_MB`,
+        fromVertexId: centerM.id,
+        toVertexId: baseB.id,
+        ...(params.radiusCm ? { lengthLabel: { value: params.radiusCm, unit: "سم", labelKind: "given" } } : {}),
+      },
+      {
+        id: `${params.figureId}_AM`,
+        fromVertexId: apexA.id,
+        toVertexId: centerM.id,
+        strokeStyle: "dashed",
+        ...(params.heightCm ? { lengthLabel: { value: params.heightCm, unit: "سم", labelKind: "given" } } : {}),
+      },
     ],
     angles: [],
   };

@@ -100,9 +100,11 @@ export function composeAngleFanFigureFromDescription(
       }
       continue;
     }
+    const isImplicitSum = ang.rawLabel.startsWith("__SUM_") || ang.rawLabel === "";
     addAngleNode(ang.arm1, ang.arm2, {
       degrees: Number(ang.degrees.toFixed(1)),
-      degreesLabel: ang.rawLabel || undefined,
+      degreesLabel: isImplicitSum ? undefined : ang.rawLabel || undefined,
+      ...(isImplicitSum ? { arcCount: 2 as const } : {}),
     });
   }
 

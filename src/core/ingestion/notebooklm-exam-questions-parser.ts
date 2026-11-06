@@ -128,8 +128,11 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   readonly lessonId: string;
   readonly lessonTitleArabic: string;
 }): readonly QuestionAssessmentIR[] {
-  const { cleanedText } = sanitizeNotebookLMCitationsAndLatex(params.rawText);
+  let { cleanedText } = sanitizeNotebookLMCitationsAndLatex(params.rawText);
   if (!cleanedText) return [];
+
+  // إزالة علامات الاقتباس الافتتاحية والختامية إذا نسخ المستخدم الرد كاملاً بين تنصيص
+  cleanedText = cleanedText.replace(/^[\s"“«]+|[\s"”»]+$/g, "").trim();
 
   let rawBlocks: string[] = [];
   if (/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\]/i.test(cleanedText)) {
@@ -145,6 +148,33 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .map((b) => b.trim())
       .filter((b) => b.length > 8);
   }
+
+  // معالجة ذكية حاسمة في حال عدم وجود أرقام صريحة بالرد أو اندماج الأسئلة في كتلة واحدة
+  if (rawBlocks.length <= 1) {
+    // 1. التحقق من وجود أسئلة اختيار من متعدد متعددة تنتهي بـ "الإجابة الصحيحة:"
+    const mcqAnswerMatches = cleanedText.match(/(?:^|\n)\s*(?:الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية)\s*:/gi);
+    if (mcqAnswerMatches && mcqAnswerMatches.length > 1) {
+      const mcqSplits = cleanedText
+        .split(/(?<=(?:^|\n)\s*(?:الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية)\s*:[^\n]*)(?:\r?\n)+/i)
+        .map((b) => b.trim())
+        .filter((b) => b.length > 8);
+      if (mcqSplits.length > 1) {
+        rawBlocks = mcqSplits;
+      }
+    }
+  }
+
+  if (rawBlocks.length <= 1) {
+    // 2. التحقق من وجود فقرات أسئلة مقالية منفصلة بأسطر فارغة مزدوجة
+    const paragraphBlocks = cleanedText
+      .split(/(?:\r?\n)\s*(?:\r?\n)+/)
+      .map((b) => b.trim())
+      .filter((b) => b.length > 12 && !/^(?:المرحلة|التعليمات|الهيكل|ملاحظات|المراجعة\s+النهائية)/i.test(b));
+    if (paragraphBlocks.length > 1) {
+      rawBlocks = paragraphBlocks;
+    }
+  }
+
   if (rawBlocks.length === 0) rawBlocks = cleanedText.split(/\n{2,}/).map((b) => b.trim()).filter((b) => b.length > 5);
 
   return rawBlocks.map((block, idx): QuestionAssessmentIR => {

@@ -10,6 +10,7 @@ import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ss
 import { normalizeLabelKey } from "../fact-compositor/geo-label-utils";
 import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
 import { findMissingDimensionalGivensOnFigure } from "./geometry-figure-completeness-checker";
+import { verifyNoSolutionLeakOnFigure } from "./geometry-solution-leak-guard";
 
 export const MODULE_ID_GEOMETRY_FIGURE_FIDELITY_GATE =
   "geometry_figure_fidelity_gate" as const;
@@ -260,10 +261,16 @@ export function checkFigureFidelityToPrompt(
     }
   }
 
-  // المرحلة 1: رفض الشكل فوراً عند وجود أي رقم دخيل أو مسرب واحد على الأقل (alienNumbers.length >= 1)
+  // المرحلة 1 و 2: رفض الشكل فوراً عند وجود أي رقم دخيل أو مسرب للحل (alienNumbers.length >= 1)
+  const solutionLeak = verifyNoSolutionLeakOnFigure(figure, rawPromptOrDescription);
+  for (const leakedVal of solutionLeak.leakedSolutionValues) {
+    if (!alienNumbers.includes(leakedVal)) {
+      alienNumbers.push(leakedVal);
+    }
+  }
   if (alienNumbers.length >= 1) {
     reasons.push(
-      `الشكل يحتوي على أرقام أو أبعاد دخيلة غير واردة في نص المسألة: (${alienNumbers.join("، ")})`
+      `الشكل يحتوي على أرقام أو أبعاد دخيلة أو مسربة للحل غير واردة في معطيات المسألة: (${alienNumbers.join("، ")})`
     );
   }
 

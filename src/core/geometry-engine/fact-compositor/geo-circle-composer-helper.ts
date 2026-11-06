@@ -141,6 +141,7 @@ export function composeCircleFigureFromFacts(
     position,
   }));
 
+  const firstRimKey = [...points.keys()].find((k) => k !== centerKey && !facts.some((f) => f.k === "tangent" && (f.seg[0] === k || f.seg[1] === k) && f.at !== k));
   return {
     figureId,
     familyId: "circle_family",
@@ -148,6 +149,14 @@ export function composeCircleFigureFromFacts(
     titleArabic: description.slice(0, 60),
     notationLanguage: notation,
     vertices,
+    circles: [
+      {
+        id: `${figureId}_circle_main`,
+        centerVertexId: keyId(centerKey),
+        radius: r,
+        rimVertexId: firstRimKey ? keyId(firstRimKey) : undefined,
+      },
+    ],
     segments,
     angles,
   };

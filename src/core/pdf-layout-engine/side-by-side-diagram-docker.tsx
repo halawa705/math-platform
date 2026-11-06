@@ -60,6 +60,7 @@ export default function SideBySideDiagramDocker({
         settings.answerVisibilityMode === "answer_key_only")) ||
     (isBookletDrillOrHomework && settings.answerVisibilityMode === "answer_key_only");
 
+  const isAnswerKeyOnlyMode = settings.answerVisibilityMode === "answer_key_only";
   const isOddQuestion = question.questionNumber % 2 === 1;
   const { cardSurfaceBgHex, cardBorderColorHex, badgeBgColorHex, exampleRoleLabel } =
     resolveQuestionCardColorScheme({
@@ -68,6 +69,7 @@ export default function SideBySideDiagramDocker({
       isBookletHomework,
       isOddQuestion,
       palette,
+      isAnswerCard: isAnswerKeyOnlyMode,
     });
 
   const mcqCols = resolveAdaptiveMCQColumnsCount(
@@ -98,6 +100,7 @@ export default function SideBySideDiagramDocker({
           isBookletSolvedExample={isBookletSolvedExample}
           isBookletDrill={isBookletDrill}
           isBookletHomework={isBookletHomework}
+          isAnswerCard={isAnswerKeyOnlyMode}
           formattedQNum={formattedQNum}
           formattedMarks={formatNumeralsByModeSSOT(question.marks, settings.numeralMode)}
           exampleRoleLabel={exampleRoleLabel}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * @file structured-step-by-step-solution-box.tsx
@@ -49,6 +49,8 @@ export function StructuredStepByStepSolutionBox({
 
   const effectiveEm = Number((0.86 * compactScale).toFixed(2));
   const useTwoColShortSteps = steps.length >= 4;
+  const isOddQuestion = item.questionNumber % 2 === 1;
+  const badgeBg = isOddQuestion ? "#0D9488" : "#4338CA";
 
   return (
     <div
@@ -56,7 +58,17 @@ export function StructuredStepByStepSolutionBox({
       className="mt-1 pt-1 border-t border-slate-200/90 space-y-1 min-w-0"
     >
       <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
-        <span>{isContinuation ? "تابع خطوات الحل:" : "خطوات الحل والشرح بالتفصيل:"}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            style={{ backgroundColor: badgeBg }}
+            className="px-2 py-0.5 rounded-md text-white text-[0.84em] font-black shadow-2xs shrink-0"
+          >
+            ✍️ {isContinuation ? "تابع الحل" : `إجابة سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
+          </span>
+          <span className="text-slate-600 font-bold text-[0.82em]">
+            {isContinuation ? "" : "خطوات الحل والشرح بالتفصيل:"}
+          </span>
+        </span>
         {!isContinuation && item.kind === "mcq" && item.correctMcqIndex !== undefined && (
           <span
             style={{

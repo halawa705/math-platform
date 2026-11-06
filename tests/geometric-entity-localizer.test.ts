@@ -112,10 +112,11 @@ describe("Geometric Entity Localizer — Arabic <-> Latin Synchronization", () =
     expect(getChoiceLetterByNotationSSOT(2, "arabic")).toBe("جـ");
     expect(getChoiceLetterByNotationSSOT(3, "arabic")).toBe("د");
 
-    expect(getChoiceLetterByNotationSSOT(0, "english")).toBe("A");
-    expect(getChoiceLetterByNotationSSOT(1, "english")).toBe("B");
-    expect(getChoiceLetterByNotationSSOT(2, "english")).toBe("C");
-    expect(getChoiceLetterByNotationSSOT(3, "english")).toBe("D");
+    expect(getChoiceLetterByNotationSSOT(0, "english", false)).toBe("A");
+    expect(getChoiceLetterByNotationSSOT(1, "english", false)).toBe("B");
+    expect(getChoiceLetterByNotationSSOT(2, "english", false)).toBe("C");
+    expect(getChoiceLetterByNotationSSOT(3, "english", false)).toBe("D");
+    expect(getChoiceLetterByNotationSSOT(0, "english")).toBe("أ");
   });
 
   it("projects geometric figure SVG with localized vertex labels based on notation", () => {

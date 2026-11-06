@@ -13,6 +13,7 @@ export interface QuestionCardBadgeHeaderProps {
   readonly isBookletSolvedExample: boolean;
   readonly isBookletDrill: boolean;
   readonly isBookletHomework?: boolean;
+  readonly isAnswerCard?: boolean;
   readonly formattedQNum: string;
   readonly formattedMarks?: string;
   readonly exampleRoleLabel: string;
@@ -27,6 +28,7 @@ export function QuestionCardBadgeHeader({
   isBookletSolvedExample,
   isBookletDrill,
   isBookletHomework = false,
+  isAnswerCard = false,
   formattedQNum,
   formattedMarks,
   exampleRoleLabel,
@@ -36,6 +38,28 @@ export function QuestionCardBadgeHeader({
   citationBadgeAr,
   formattedIdeaIndex,
 }: QuestionCardBadgeHeaderProps) {
+  if (isAnswerCard) {
+    return (
+      <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">
+        <span
+          style={{ backgroundColor: badgeBgColorHex }}
+          className="px-3 py-1 rounded-lg text-white text-[0.88em] font-black inline-flex items-center gap-1.5 shadow-xs"
+        >
+          <span>✍️</span>
+          <span>إجابة سؤال {formattedQNum}</span>
+        </span>
+        {citationBadgeAr && (
+          <span
+            style={{ color: badgeBgColorHex, borderColor: cardBorderColorHex }}
+            className="px-2 py-0.5 rounded bg-white border text-[0.75em] font-black truncate"
+          >
+            📍 {citationBadgeAr}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   if (isBookletSolvedExample) {
     return (
       <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">

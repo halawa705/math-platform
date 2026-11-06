@@ -70,7 +70,8 @@ export function extractNumbersShownOnFigure(figure: CanonicalGeometryFigureIR): 
       ang.degrees !== undefined &&
       !ang.isRightAngle &&
       ang.markSymbol !== "dot" &&
-      ang.markSymbol !== "cross"
+      ang.markSymbol !== "cross" &&
+      !ang.arcCount
     ) {
       addAllNumbersFromText(ang.degrees, shown);
     }

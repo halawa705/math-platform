@@ -116,8 +116,13 @@ export function projectGeometryAnglesSVGMarkup(
       : undefined;
 
     if (labelText) {
+      const isUnknown =
+        ang.labelKind === "unknown" ||
+        labelText.includes("؟") ||
+        labelText.includes("?");
+      const angTextColor = isUnknown ? "#D97706" : opts.accentColor;
       elements.push(
-        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="8" font-weight="bold" fill="${opts.accentColor}">${labelText}</text>`
+        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="8" font-weight="bold" fill="${angTextColor}">${labelText}</text>`
       );
     }
 

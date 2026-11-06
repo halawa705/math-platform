@@ -72,18 +72,110 @@ export interface Point2DCoordinate {
   readonly y: number;
 }
 
+/**
+ * تصنيف نوع الملصق البصري في النموذج الوسيط IR v2:
+ * - `given`: معطى صريح في المسألة
+ * - `unknown`: مطلوب مجهول يُرسم كعلامة استفهام «؟» أو متغير السؤال
+ * - `name`: اسم رأس أو عنصر تعريفي
+ */
+export type FigureLabelSemanticKind = "given" | "unknown" | "name";
+
+/**
+ * نوع المطلوب الهندسي في المسألة (`asked`) وفق مخطط المرحلة 2 و3:
+ * - `length`: طول قطعة مستقيمة أو نصف قطر أو محيط
+ * - `angle`: قياس زاوية
+ * - `area`: مساحة منطقة أو مضلع
+ * - `ratio`: نسبة بين قطعتين أو مساحتين
+ * - `coordinates`: إحداثيات نقطة
+ * - `proof`: برهان أو إثبات (لا يوضع له «؟» على الشكل)
+ */
+export type GeometryAskedKind =
+  | "length"
+  | "angle"
+  | "area"
+  | "ratio"
+  | "coordinates"
+  | "proof";
+
+export interface GeometryAskedTargetSpec {
+  readonly kind: GeometryAskedKind;
+  /** الرؤوس أو القطعة أو الزاوية المطلوبة بعد التطبيع اللاتيني (مثل "AB" أو "ABC" أو "B"). */
+  readonly targetKey?: string;
+  /** المتغير الجبري الصريح إن كان السؤال يطلب قيمة متغير موجود على الرسم (مثل "x" أو "س"). */
+  readonly variableSymbol?: string;
+  /** النص الأصلي لجملة المطلوب في المسألة. */
+  readonly rawAskedClause?: string;
+}
+
+/**
+ * القرار الثلاثي لبوابة الصدق والتحقق في المرحلة 2:
+ * - `green`: اجتاز جميع الفحوص ويُعتمد تلقائياً
+ * - `yellow`: نقص أو التباس قابل للإصلاح بتحرير قائمة الحقائق
+ * - `red`: مرفوض (لا شكل) مع السبب الصريح
+ */
+export type FigureTriStateDecision = "green" | "yellow" | "red";
+
+export interface CanonicalCircleNode {
+  readonly id: string;
+  readonly centerVertexId: string;
+  /** نصف القطر بوحدات إحداثيات الشكل (إن غاب يُقاس من أقرب نقطة محيطية أو rimVertexId). */
+  readonly radius: number;
+  readonly rimVertexId?: string;
+  readonly strokeStyle?: "solid" | "dashed" | "dotted";
+  readonly fillColorHex?: string;
+  readonly fillOpacity?: number;
+}
+
+export interface CanonicalArcNode {
+  readonly id: string;
+  readonly centerVertexId: string;
+  readonly radius: number;
+  readonly startAngleDeg: number;
+  readonly endAngleDeg: number;
+  readonly counterClockwise?: boolean;
+  readonly strokeStyle?: "solid" | "dashed" | "dotted";
+  readonly arcLabel?: {
+    readonly value: string;
+    readonly labelKind?: FigureLabelSemanticKind;
+  };
+}
+
+export interface CanonicalShadedRegionNode {
+  readonly id: string;
+  /** قائمة معرّفات الرؤوس المكونة للمنطقة المظللة بالترتيب. */
+  readonly vertexIds: readonly string[];
+  readonly fillColorHex?: string;
+  readonly fillOpacity?: number;
+  readonly patternStyle?: "solid_tint" | "diagonal_hatch";
+  readonly regionLabel?: string;
+  readonly labelKind?: FigureLabelSemanticKind;
+}
+
+export interface CanonicalCoordinateGridSpec {
+  readonly enabled: boolean;
+  readonly step?: number;
+  readonly showAxesArrows?: boolean;
+  readonly showTickNumbers?: boolean;
+  readonly originVertexId?: string;
+}
+
 export interface CanonicalVertexNode {
   readonly id: string;
   readonly label: string;
   readonly position: Point2DCoordinate;
   readonly hideVertexDot?: boolean;
+  readonly labelKind?: FigureLabelSemanticKind;
 }
 
 export interface CanonicalSegmentNode {
   readonly id: string;
   readonly fromVertexId: string;
   readonly toVertexId: string;
-  readonly lengthLabel?: { readonly value: number | string; readonly unit?: ArabicMathUnit | string };
+  readonly lengthLabel?: {
+    readonly value: number | string;
+    readonly unit?: ArabicMathUnit | string;
+    readonly labelKind?: FigureLabelSemanticKind;
+  };
   readonly tickMarks?: 1 | 2 | 3;
   readonly parallelArrows?: 1 | 2;
   readonly strokeStyle?: "solid" | "dashed" | "dotted";
@@ -100,6 +192,7 @@ export interface CanonicalAngleNode {
   readonly arm2VertexId: string;
   readonly degrees?: number;
   readonly degreesLabel?: string;
+  readonly labelKind?: FigureLabelSemanticKind;
   readonly isRightAngle?: boolean;
   readonly arcCount?: 1 | 2;
   readonly markSymbol?: "arc" | "dot" | "cross";
@@ -110,6 +203,7 @@ export interface CanonicalInteriorBadgeNode {
   readonly text: string;
   readonly position: Point2DCoordinate;
   readonly badgeType?: "perimeter" | "area" | "generic";
+  readonly labelKind?: FigureLabelSemanticKind;
   readonly fontSize?: number;
 }
 
@@ -122,10 +216,20 @@ export interface CanonicalGeometryFigureIR {
   readonly vertices: readonly CanonicalVertexNode[];
   readonly segments: readonly CanonicalSegmentNode[];
   readonly angles: readonly CanonicalAngleNode[];
+  /** دوائر صريحة بالمركز ونصف القطر (يدعم دائرة واحدة أو دائرتين متقاطعتين/متماستين أو أكثر في IR v2). */
+  readonly circles?: readonly CanonicalCircleNode[];
+  /** أقواس دائرية صريحة بزاويتي البداية والنهاية (IR v2). */
+  readonly arcs?: readonly CanonicalArcNode[];
   /** مضلعات صريحة للتظليل (قوائم معرّفات رؤوس). إن غابت يُستعمل التخمين القديم حسب عدد الرؤوس. */
   readonly polygons?: readonly (readonly string[])[];
-  /** شارات ونصوص توضيحية داخل مساحة الشكل (مثل "المحيط = 24 سم" أو "المساحة = 30 سم²"). */
+  /** مناطق مظللة صريحة بلون أو تهشير مخصص (IR v2). */
+  readonly shadedRegions?: readonly CanonicalShadedRegionNode[];
+  /** إعدادات الشبكة الإحداثية الاختيارية لمسائل الإحداثيات والتحويلات الهندسية (IR v2). */
+  readonly coordinateGrid?: CanonicalCoordinateGridSpec;
+  /** شارات ونصوص توضيحية حرة داخل مساحة الشكل (مثل "المحيط = 24 سم" أو "المساحة = ؟"). */
   readonly interiorBadges?: readonly CanonicalInteriorBadgeNode[];
+  /** توصيف المطلوب المستخرج من السؤال لربطه بعلامة «؟» على الشكل (IR v2). */
+  readonly askedSpec?: GeometryAskedTargetSpec;
   /** رسم متجهي SVG نقي مولد مسبقاً (خاص بالأشكال الإحصائية أو المركبة الفائقة الدقة). */
   readonly rawSvgMarkup?: string;
 }

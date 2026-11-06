@@ -16,6 +16,7 @@ import {
 import { projectGeometryAnglesSVGMarkup } from "./vector-svg-angle-projector";
 import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
 import { projectGeometrySurfaceShadingSVGMarkup } from "./vector-svg-surface-shading-projector";
+import { projectCirclesArcsAndRegionsSVGMarkup } from "./vector-svg-circles-and-arcs-projector";
 
 export const MODULE_ID_VECTOR_SVG_FIGURE_PROJECTOR =
   "vector_svg_figure_projector" as const;
@@ -51,6 +52,13 @@ export function projectGeometryFigureToSVGMarkup(
 
   const xs = figure.vertices.map((v) => v.position.x);
   const ys = figure.vertices.map((v) => v.position.y);
+  for (const c of figure.circles ?? []) {
+    const cv = figure.vertices.find((v) => v.id === c.centerVertexId);
+    if (cv && c.radius > 0) {
+      xs.push(cv.position.x - c.radius, cv.position.x + c.radius);
+      ys.push(cv.position.y - c.radius, cv.position.y + c.radius);
+    }
+  }
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
   const minY = Math.min(...ys);
@@ -79,16 +87,19 @@ export function projectGeometryFigureToSVGMarkup(
   const centerSx = Array.from(vertexMap.values()).reduce((acc, v) => acc + v.screen.sx, 0) / figure.vertices.length;
   const centerSy = Array.from(vertexMap.values()).reduce((acc, v) => acc + v.screen.sy, 0) / figure.vertices.length;
 
-  // إذا كان الشكل من عائلة الدائرة، نرسم محيط الدائرة المتجهي حول المركز
-  let circleRimSvg = "";
-  if (figure.familyId === "circle_family") {
-    const centerNode = Array.from(vertexMap.values()).find((v) => v.id.includes("center")) || Array.from(vertexMap.values())[0];
-    const rimPoint = Array.from(vertexMap.values()).find((v) => v.id !== centerNode?.id);
-    if (centerNode && rimPoint) {
-      const rPx = Math.hypot(rimPoint.screen.sx - centerNode.screen.sx, rimPoint.screen.sy - centerNode.screen.sy);
-      circleRimSvg = `<circle cx="${centerNode.screen.sx}" cy="${centerNode.screen.sy}" r="${rPx.toFixed(1)}" fill="none" stroke="${strokeColor}" stroke-width="1.8" />`;
-    }
-  }
+  const circleRimSvg = projectCirclesArcsAndRegionsSVGMarkup({
+    figure,
+    vertexMap,
+    toScreen,
+    scale,
+    width,
+    height,
+    padding,
+    strokeColor,
+    accentColor,
+    numeralMode,
+    notation,
+  });
 
   const segmentsSvg = figure.segments
     .map((seg) => {
@@ -180,14 +191,21 @@ export function projectGeometryFigureToSVGMarkup(
       // تسمية طول الضلع داخل كبسولة عائمة بيضاء أنيقة تمنع التداخل (Floating Pill Badge)
       if (seg.lengthLabel) {
         const rawVal = seg.lengthLabel.value;
+        const isUnknown =
+          seg.lengthLabel.labelKind === "unknown" ||
+          String(rawVal).trim() === "؟" ||
+          String(rawVal).trim() === "?";
         const formattedVal = localizeFigureLabelText(String(rawVal), notation, numeralMode);
-        const unitText = seg.lengthLabel.unit ? ` ${seg.lengthLabel.unit}` : "";
+        const unitText = !isUnknown && seg.lengthLabel.unit ? ` ${seg.lengthLabel.unit}` : "";
         const textStr = `${formattedVal}${unitText}`;
         const pillW = Math.max(textStr.length * 5.2 + 6, 16);
         const lx = mx + nx * 7;
         const ly = my + ny * 7 + 2.5;
+        const pillBg = isUnknown ? "#FFFBEB" : "#FFFFFF";
+        const pillBorder = isUnknown ? "#F59E0B" : "#E2E8F0";
+        const pillTextCol = isUnknown ? "#D97706" : accentColor;
 
-        decorations += `<rect x="${(lx - pillW / 2).toFixed(1)}" y="${(ly - 7.5).toFixed(1)}" width="${pillW.toFixed(1)}" height="10.5" rx="3" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.7" opacity="0.95" /><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="7.8" font-weight="800" font-family="system-ui, sans-serif" fill="${accentColor}">${textStr}</text>`;
+        decorations += `<rect x="${(lx - pillW / 2).toFixed(1)}" y="${(ly - 7.5).toFixed(1)}" width="${pillW.toFixed(1)}" height="10.5" rx="3" fill="${pillBg}" stroke="${pillBorder}" stroke-width="0.7" opacity="0.95" /><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="7.8" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}">${textStr}</text>`;
       }
 
       return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="1.8" stroke-linecap="round" ${dashAttr} />${decorations}`;

@@ -34,6 +34,14 @@ export function buildCircleCyclicQuadFigure(params: {
     titleArabic: `الشكل الرباعي الدائري ${ptA.label}${ptB.label}${ptC.label}${ptD.label} المرسوم داخل الدائرة ${root.centerVertex.label}`,
     notationLanguage: root.notationLanguage,
     vertices: [root.centerVertex, ptA, ptB, ptC, ptD],
+    circles: [
+      {
+        id: `${params.figureId}_circle_main`,
+        centerVertexId: root.centerVertex.id,
+        radius: root.radiusCm,
+        rimVertexId: ptA.id,
+      },
+    ],
     segments: [
       { id: `${params.figureId}_AB`, fromVertexId: ptA.id, toVertexId: ptB.id },
       { id: `${params.figureId}_BC`, fromVertexId: ptB.id, toVertexId: ptC.id },

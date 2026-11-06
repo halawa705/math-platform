@@ -33,6 +33,14 @@ export function buildCircleExternalTangentsFigure(params: {
     titleArabic: `القطعتان المماستان ${extA.label}${ptB.label}، ${extA.label}${ptC.label} المرسومتان من النقطة ${extA.label} للدائرة ${root.centerVertex.label}`,
     notationLanguage: root.notationLanguage,
     vertices: [root.centerVertex, extA, ptB, ptC],
+    circles: [
+      {
+        id: `${params.figureId}_circle_main`,
+        centerVertexId: root.centerVertex.id,
+        radius: root.radiusCm,
+        rimVertexId: ptB.id,
+      },
+    ],
     segments: [
       {
         id: `${params.figureId}_tan_AB`,

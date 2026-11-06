@@ -46,7 +46,7 @@ function resolveDocAutoFitDefaults(
   const isBookletOrReview = Boolean(
     customTitle?.includes("مذكرة") ||
       customTitle?.includes("مراجعة") ||
-      customQuestions?.some((q) => q.id.startsWith("booklet-s1-"))
+      customQuestions?.some((q) => q.id.startsWith("booklet-s1-") || q.id.startsWith("rev-"))
   );
   const isExamDoc = Boolean(
     !isBookletOrReview &&
@@ -72,7 +72,12 @@ export default function PDFPreviewOrchestrator({
     const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
     return {
       ...persisted,
-      paperTemplateId: isExamDoc ? "official_school_exam" : (persisted.paperTemplateId ?? "classic_sovereign"),
+      paperTemplateId: isExamDoc
+        ? "official_school_exam"
+        : isBookletOrReview
+          ? "classic_sovereign"
+          : (persisted.paperTemplateId ?? "classic_sovereign"),
+      columnsCount: isBookletOrReview ? 2 : (persisted.columnsCount ?? 2),
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
         : isExamDoc
@@ -98,7 +103,12 @@ export default function PDFPreviewOrchestrator({
     setSettings((prev) => ({
       ...prev,
       ...persisted,
-      paperTemplateId: isExamDoc ? "official_school_exam" : (persisted.paperTemplateId ?? "classic_sovereign"),
+      paperTemplateId: isExamDoc
+        ? "official_school_exam"
+        : isBookletOrReview
+          ? "classic_sovereign"
+          : (persisted.paperTemplateId ?? "classic_sovereign"),
+      columnsCount: isBookletOrReview ? 2 : (persisted.columnsCount ?? 2),
       answerVisibilityMode: isBookletOrReview
         ? "questions_with_answers"
         : isExamDoc

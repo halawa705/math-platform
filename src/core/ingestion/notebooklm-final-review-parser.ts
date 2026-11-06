@@ -24,26 +24,36 @@ function extractStage3EssaySolutionsByNumber(
   const map = new Map<number, readonly string[]>();
   if (!stage3Cleaned) return map;
 
-  const splits = stage3Cleaned.split(
-    /(?:^|\n)\s*(?:حل\s+السؤال\s*\[?(\d+)\]?\s*:?|===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\][^\n]*===|\[(\d+)\])/i
-  );
+  const sanitized = stage3Cleaned.replace(/^[\s"“«]+|[\s"”»]+$/g, "").trim();
+
+  // تجزئة الكتل بناء على بادئة حل السؤال سواء برقم [1] أو بدون أرقام
+  const rawBlocks = sanitized
+    .split(/(?:^|\n)\s*(?=(?:حل\s+(?:السؤال|المسألة)|===\s*\[(?:SOLUTION|حل|QUESTION)|\[\d+\]\s*(?:خطوات|الحل)))/i)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 5);
 
   let seq = 1;
-  for (let i = 1; i < splits.length; i += 4) {
-    const qNum = Number(splits[i] || splits[i + 1] || splits[i + 2]) || seq++;
-    const body = splits[i + 3] || "";
-    const steps = body
-      .split(/\||\r?\n/)
-      .map((s) =>
-        s
-          .replace(
-            /^\s*(?:خطوات[_\s]الحل|الناتج[_\s]النهائي(?:\s*المعتمد)?|الإجابة[_\s]النهائية)\s*:\s*/i,
-            ""
-          )
-          .replace(/^\s*(?:[-•*]|\d+[.)-])\s*/, "")
-          .trim()
-      )
-      .filter((s) => s.length > 1);
+  for (const block of rawBlocks) {
+    const numMatch = block.match(/(?:حل\s+(?:السؤال|المسألة)\s*\[?(\d+)\]?|===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\]|\[(\d+)\])/i);
+    const qNum = Number(numMatch?.[1] || numMatch?.[2] || numMatch?.[3]) || seq++;
+
+    const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const steps: string[] = [];
+
+    for (const line of lines) {
+      if (/^(?:حل\s+(?:السؤال|المسألة)|===\s*\[)/i.test(line)) continue;
+      if (/^خطوات[_\s]الحل\s*:\s*/i.test(line)) {
+        const afterColon = line.replace(/^خطوات[_\s]الحل\s*:\s*/i, "").trim();
+        const subSteps = afterColon.split(/\s*\|\s*/).map((s) => s.trim()).filter(Boolean);
+        steps.push(...subSteps);
+      } else if (/^الناتج[_\s]النهائي/i.test(line)) {
+        steps.push(line);
+      } else {
+        const parts = line.split(/\s*\|\s*/).map((s) => s.trim()).filter(Boolean);
+        steps.push(...parts);
+      }
+    }
+
     if (steps.length > 0) {
       map.set(qNum, steps);
     }
