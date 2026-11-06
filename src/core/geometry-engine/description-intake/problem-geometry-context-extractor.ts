@@ -268,7 +268,7 @@ export function combineProblemAndTagGeometryContext(
     // فواصل الآلاف (13,000) ليست فواصل حقائق: تُحمى قبل التقسيم وإلا تحوّل 13,000 إلى حقيقتين «13» و«000».
     const cleanTag = convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
     const tagClauses = cleanTag
-      .split(/\s*[;؛\n،,]+\s*/)
+      .split(/\s*(?:[;؛\n]+|[,،]+(?![^()]*\)))\s*/)
       .map((c) => c.replace(/[\[\]]/g, "").trim())
       .filter(Boolean);
     for (const clause of tagClauses) {

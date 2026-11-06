@@ -17,6 +17,7 @@ import {
 export interface PrepGrade1MidpointOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly showMidpointCoords?: boolean;
 }
 
 /**
@@ -88,7 +89,11 @@ export function buildSegmentMidpointNumericalFigure(opts: PrepGrade1MidpointOpti
   // A(1, 2) و B(5, 6) و M(3, 4)
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: "A(1, 2)", position: { x: 2.7, y: 5.7 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: "B(5, 6)", position: { x: 7.5, y: 2.1 } };
-  const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: "M(3, 4)", position: { x: 5.1, y: 3.9 } };
+  const vM: CanonicalVertexNode = {
+    id: `${opts.figureId}_vM`,
+    label: opts.showMidpointCoords ? "M(3, 4)" : "M(؟, ؟)",
+    position: { x: 5.1, y: 3.9 },
+  };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAxisX`, fromVertexId: vXneg.id, toVertexId: vXpos.id },
@@ -103,6 +108,7 @@ export function buildSegmentMidpointNumericalFigure(opts: PrepGrade1MidpointOpti
     branchId: "triangle_base_general",
     titleArabic: "منتصف القطعة المستقيمة AB: النقطتان A(1, 2) و B(5, 6) ونقطة المنتصف M(3, 4)",
     notationLanguage: notation,
+    coordinateGrid: { enabled: true },
     vertices: [vXneg, vXpos, vYneg, vYpos, vO, vA, vB, vM],
     segments,
     angles: [],

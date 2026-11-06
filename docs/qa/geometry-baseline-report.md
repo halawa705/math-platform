@@ -1,6 +1,6 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية (المرحلة 0)
 
-> تاريخ التوليد: 2026-11-06T10:35:56.893Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-06T11:17:36.055Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر وليست حكماً نهائياً**. الدقة الحقيقية لا تُحسب إلا من خانة `humanVerdict` بعد المراجعة البشرية.
@@ -8,11 +8,11 @@
 ## الملخص
 
 - إجمالي الحالات: **375**
-- أنتج النظام شكلاً في: **268** (71.5%)
+- أنتج النظام شكلاً في: **275** (73.3%)
 - شكل بلا أي علامة خطر آلية: **164** (43.7%)
-- شكل بعلامات خطر: **104** (27.7%)
+- شكل بعلامات خطر: **111** (29.6%)
 - 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها: **0**
-- شكل مفقود لمسألة تستحق شكلاً: **67**
+- شكل مفقود لمسألة تستحق شكلاً: **60**
 - رفض صحيح (لا شكل): **40**
 - الدقة المُثبتة بشرياً: **لم تُراجَع أي حالة بعد**
 
@@ -20,14 +20,14 @@
 
 | العلامة | العدد |
 |---|---|
-| `from_fixed_catalog` | 101 |
-| `missing_given_on_figure` | 9 |
+| `from_fixed_catalog` | 109 |
+| `missing_given_on_figure` | 8 |
 
 ### حسب الصف
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
 |---|---|---|---|---|---|---|
-| prep-1 | 120 | 35 | 53 | 0 | 26 | 6 |
+| prep-1 | 120 | 35 | 60 | 0 | 19 | 6 |
 | prep-2 | 89 | 14 | 43 | 0 | 32 | 0 |
 | prep-3 | 33 | 15 | 7 | 0 | 9 | 2 |
 | primary-4 | 49 | 21 | 0 | 0 | 0 | 28 |
@@ -39,7 +39,7 @@
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح |
 |---|---|---|---|---|---|---|
 | numbers | 49 | 21 | 0 | 0 | 0 | 28 |
-| plane_geometry | 297 | 118 | 104 | 0 | 67 | 8 |
+| plane_geometry | 297 | 118 | 111 | 0 | 60 | 8 |
 | statistics_probability | 29 | 25 | 0 | 0 | 0 | 4 |
 
 ## الحالات التي تستحق الفحص أولاً
@@ -68,17 +68,17 @@
 | prep-1-prep-grade1-angles-relationships-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-angles-relationships-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-angles-relationships-catalog-11 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-coordinates-catalog-1 | missed_figure | — | none | — | — |
+| prep-1-prep-grade1-coordinates-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-coordinates-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-coordinates-catalog-3 | missed_figure | — | none | — | — |
+| prep-1-prep-grade1-coordinates-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-coordinates-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-coordinates-catalog-5 | missed_figure | — | none | — | — |
+| prep-1-prep-grade1-coordinates-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-coordinates-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-parallelism-catalog-1 | missed_figure | — | none | — | — |
+| prep-1-prep-grade1-parallelism-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-parallelism-catalog-2 | missed_figure | — | none | — | — |
-| prep-1-prep-grade1-parallelism-catalog-3 | missed_figure | — | none | — | — |
-| prep-1-prep-grade1-parallelism-catalog-4 | missed_figure | — | none | — | — |
-| prep-1-prep-grade1-parallelism-catalog-5 | missed_figure | — | none | — | — |
+| prep-1-prep-grade1-parallelism-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-1-prep-grade1-parallelism-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-1-prep-grade1-parallelism-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-parallelism-catalog-6 | missed_figure | — | none | — | — |
 | prep-1-prep-grade1-parallelism-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-parallelism-catalog-8 | missed_figure | — | none | — | — |
@@ -212,7 +212,7 @@
 | prep-3-prep-grade3-line-equation-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-prep-grade3-line-equation-catalog-4 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 1 | — |
 | prep-3-prep-grade3-line-equation-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-3-prep-grade3-line-equation-catalog-6 | figure_flagged | missing_given_on_figure | compositor | 4، 3، 2 | — |
+| prep-3-prep-grade3-line-equation-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-prep-grade3-line-equation-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-prep-grade3-line-equation-catalog-8 | missed_figure | — | none | — | — |
 | prep-3-prep-grade3-line-equation-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |

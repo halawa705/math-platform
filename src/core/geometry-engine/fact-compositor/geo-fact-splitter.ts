@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file geo-fact-splitter.ts
  * @description يقسّم وصف الشكل إلى سطور حقائق، ويوحّد الرموز (≈ // ⊥ ∈ °) قبل التحليل.
  */
@@ -30,7 +30,7 @@ const LEADING_CONNECTORS = /^(?:فيه|فيها|حيث|بحيث|إذا\s*كان|
 export function splitDescriptionIntoFactStrings(description: string): string[] {
   const text = restructureGeometryClauses(normalizeGeometryText(convertGeometryLatexToPlainText(description)));
   const raw = text
-    .split(/[;؛\n،]|(?<=\D)\.(?=\s)/)
+    .split(/[;؛\n]|،(?![^()]*\))|(?<=\D)\.(?=\s)/)
     .map((s) => { let t = s.trim(); for (let i = 0; i < 2; i++) t = t.replace(LEADING_CONNECTORS, "").trim(); return t; })
     .filter((s) => s.length > 0);
   return orderFactsByDependency(raw.flatMap(splitSimilarityPair).flatMap(expandEqualityChain));

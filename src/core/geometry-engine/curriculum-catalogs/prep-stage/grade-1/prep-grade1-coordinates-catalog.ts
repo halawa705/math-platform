@@ -25,18 +25,26 @@ export function matchPrepGrade1CoordinatesFigure(
   if (!d) return undefined;
 
   // 1. مسألة 1: مسقط القطعة AB على محور السينات X مع A(2, 3) و B(-4, -1)
-  if (/A\(2\s*,\s*3\).*B\(-4\s*,\s*-1\)|مسقط.*AB.*محور\s*(?:السينات|X)|طول\s*المسقط.*6\s*وحدات/i.test(d)) {
-    return buildSegmentProjectionOnXAxisFigure({ figureId, notationLanguage });
+  if (/A\(2\s*[,،]\s*3\).*B\(-4\s*[,،]\s*-1\)|مسقط.*AB.*محور\s*(?:السينات|X)|طول\s*المسقط.*6\s*وحدات/i.test(d)) {
+    return buildSegmentProjectionOnXAxisFigure({
+      figureId,
+      notationLanguage,
+      showProjectionLength: /6\s*وحدات/.test(d),
+    });
   }
 
   // 2. مسألة 2: مسقط القطعة CD على محور الصادات Y مع C(1, 4) و D(5, 1)
-  if (/C\(1\s*,\s*4\).*D\(5\s*,\s*1\)|مسقط.*CD.*محور\s*(?:الصادات|y|Y)|طول\s*المسقط.*3\s*وحدات/i.test(d)) {
+  if (/C\(1\s*[,،]\s*4\).*D\(5\s*[,،]\s*1\)|مسقط.*CD.*محور\s*(?:الصادات|y|Y)|طول\s*المسقط.*3\s*وحدات/i.test(d)) {
     return buildSegmentProjectionOnYAxisFigure({ figureId, notationLanguage });
   }
 
   // 3. مسألة حاول بنفسك 2: مسقط القطعة على المحورين مع A(3, -2) و B(-4, 4)
-  if (/A\(3\s*,\s*-2\).*B\(-4\s*,\s*4\)|مسقط.*المحورين|المحور\s*X.*المحور\s*y.*مسقط/i.test(d)) {
-    return buildSegmentProjectionsBothAxesFigure({ figureId, notationLanguage });
+  if (/A\(3\s*[,،]\s*-2\).*B\(-4\s*[,،]\s*4\)|مسقط.*المحورين|المحور\s*X.*المحور\s*y.*مسقط/i.test(d)) {
+    return buildSegmentProjectionsBothAxesFigure({
+      figureId,
+      notationLanguage,
+      showProjectionLength: /7\s*وحدات/.test(d),
+    });
   }
 
   // 4. إحداثيا منتصف قطعة مستقيمة (القانون العام والتطبيقي)
@@ -45,8 +53,12 @@ export function matchPrepGrade1CoordinatesFigure(
   }
 
   // 5. مسألة عددية لمنتصف قطعة مستقيمة A(1, 2) و B(5, 6)
-  if (/منتصف.*A\(1\s*,\s*2\)|A\(1\s*,\s*2\).*B\(5\s*,\s*6\)|M\(3\s*,\s*4\)/i.test(d)) {
-    return buildSegmentMidpointNumericalFigure({ figureId, notationLanguage });
+  if (/منتصف.*A\(1\s*[,،]\s*2\)|A\(1\s*[,،]\s*2\).*B\(5\s*[,،]\s*6\)|M\(3\s*[,،]\s*4\)/i.test(d)) {
+    return buildSegmentMidpointNumericalFigure({
+      figureId,
+      notationLanguage,
+      showMidpointCoords: /M\s*\(\s*3\s*[,،]\s*4\s*\)/i.test(d),
+    });
   }
 
   // 6. مطابقة عامة لدرس الإحداثيات والمساقط في أولى إعدادي

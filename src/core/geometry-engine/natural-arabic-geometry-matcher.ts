@@ -62,6 +62,7 @@ import { buildTrapezoidAltitudesFigure } from "./quadrilateral-family/trapezoid-
 import { buildHourglassButterflySimilarityFigure } from "./quadrilateral-family/hourglass-butterfly-similarity-branch";
 import { buildQuadraticParabolaCurveFigure } from "./analytic-function-family/linear-quadratic-curve-branch";
 import { buildNumberLineIntervalFigure } from "./analytic-function-family/number-line-intervals-branch";
+import { buildCoordinatePlanePolygonFigure } from "./analytic-function-family/coordinate-plane-polygon-plotter";
 import { buildRegularPyramid3DFigure } from "./spatial-3d-family/pyramid-spatial-planes-branch";
 import { buildCubeCuboid3DFigure } from "./spatial-3d-family/cube-cuboid-prism-branch";
 import { buildRightCircularCone3DFigure } from "./spatial-3d-family/cylinder-cone-sphere-branch";
@@ -131,6 +132,13 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     matchPrimaryGrade4GeometryFigure(desc, figureId, notationLanguage);
   if (stageRes) return stageRes;
 
+  if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage, description: desc });
+  if (/خط\s*الأعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage, description: desc });
+  if (/(?:مستوى\s*إحداثي|شبكة\s*تربيعية|محوري\s*الإحداثيات)/i.test(desc) && /(?:ارسم|مث[ّل]?\s*بياني|عي[ّن]?\s*النقاط|مضلع|قطعة)/i.test(desc)) {
+    const coordPoly = buildCoordinatePlanePolygonFigure({ figureId, notationLanguage, description: desc });
+    if (coordPoly) return coordPoly;
+  }
+
   if (/شاشة|كمبيوتر|تلفاز|تمثال|مبنى|برج|شجرة|سارية|حديقة|ملعب|سباعي|ثماني|مستوى\s*إحداثي|رسم\s*بياني|إحداثيات|نقطة\s*الأصل|خريطة|مجهر|حشرة|ظل/i.test(desc)) {
     return undefined;
   }
@@ -153,9 +161,6 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (/ساعة\s*رملية|فراشة|تقاطع\s*قطعتين/i.test(desc)) return buildHourglassButterflySimilarityFigure({ figureId, notationLanguage });
   if (/(?:^|\s)(?:مستطيل|مربع|معين)(?:\s|$|[،.])/i.test(desc) && !/مستطيلان|مربعان/i.test(desc)) return buildRectangleSquareRhombusFigure({ figureId, notationLanguage });
   if (/متوازي\s*أضلاع/i.test(desc) && !/متوازيا/i.test(desc)) return buildParallelogramDiagonalsFigure({ figureId, notationLanguage });
-
-  if (/خط\s*الأعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage });
-  if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage });
 
   if (/هرم/i.test(desc)) {
     const baseM = cleanDesc.match(/(?:طول\s*)?(?:ضلع\s*قاعدت[هـا]?|ضلعه)\s*=?\s*(\d+(?:\.\d+)?)/i);

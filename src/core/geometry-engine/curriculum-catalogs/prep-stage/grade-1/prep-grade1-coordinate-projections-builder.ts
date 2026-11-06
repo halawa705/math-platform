@@ -17,6 +17,7 @@ import {
 export interface PrepGrade1CoordinatesOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly showProjectionLength?: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export interface PrepGrade1CoordinatesOptions {
  */
 export function buildSegmentProjectionOnXAxisFigure(opts: PrepGrade1CoordinatesOptions): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
+  const showLen = opts.showProjectionLength ?? false;
 
   // محاور الإحداثيات
   const vXneg: CanonicalVertexNode = { id: `${opts.figureId}_vXneg`, label: "", position: { x: 0.5, y: 5 } };
@@ -44,7 +46,12 @@ export function buildSegmentProjectionOnXAxisFigure(opts: PrepGrade1CoordinatesO
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
     { id: `${opts.figureId}_sProjA`, fromVertexId: vA.id, toVertexId: vAprime.id, strokeStyle: "dashed" },
     { id: `${opts.figureId}_sProjB`, fromVertexId: vB.id, toVertexId: vBprime.id, strokeStyle: "dashed" },
-    { id: `${opts.figureId}_sProjAB`, fromVertexId: vBprime.id, toVertexId: vAprime.id },
+    {
+      id: `${opts.figureId}_sProjAB`,
+      fromVertexId: vBprime.id,
+      toVertexId: vAprime.id,
+      lengthLabel: showLen ? { value: "6 وحدات" } : undefined,
+    },
   ];
 
   return {
@@ -53,6 +60,7 @@ export function buildSegmentProjectionOnXAxisFigure(opts: PrepGrade1CoordinatesO
     branchId: "triangle_base_general",
     titleArabic: "مسقط القطعة AB على محور السينات: A(2,3) و B(-4,-1) طول المسقط = 6 وحدات",
     notationLanguage: notation,
+    coordinateGrid: { enabled: true },
     vertices: [vXneg, vXpos, vYneg, vYpos, vO, vA, vB, vAprime, vBprime],
     segments,
     angles: [],
@@ -126,8 +134,18 @@ export function buildSegmentProjectionsBothAxesFigure(opts: PrepGrade1Coordinate
     { id: `${opts.figureId}_sProjBX`, fromVertexId: vB.id, toVertexId: vBpX.id, strokeStyle: "dashed" },
     { id: `${opts.figureId}_sProjAY`, fromVertexId: vA.id, toVertexId: vApY.id, strokeStyle: "dashed" },
     { id: `${opts.figureId}_sProjBY`, fromVertexId: vB.id, toVertexId: vBpY.id, strokeStyle: "dashed" },
-    { id: `${opts.figureId}_sLengthX`, fromVertexId: vBpX.id, toVertexId: vApX.id, lengthLabel: { value: "7 وحدات" } },
-    { id: `${opts.figureId}_sLengthY`, fromVertexId: vApY.id, toVertexId: vBpY.id, lengthLabel: { value: "6 وحدات" } },
+    {
+      id: `${opts.figureId}_sLengthX`,
+      fromVertexId: vBpX.id,
+      toVertexId: vApX.id,
+      lengthLabel: opts.showProjectionLength ? { value: "7 وحدات" } : { value: "؟" },
+    },
+    {
+      id: `${opts.figureId}_sLengthY`,
+      fromVertexId: vApY.id,
+      toVertexId: vBpY.id,
+      lengthLabel: opts.showProjectionLength ? { value: "6 وحدات" } : { value: "؟" },
+    },
   ];
 
   return {
@@ -136,6 +154,7 @@ export function buildSegmentProjectionsBothAxesFigure(opts: PrepGrade1Coordinate
     branchId: "triangle_base_general",
     titleArabic: "مسقط القطعة AB على المحورين: المسقط السيني = 7 وحدات، المسقط الصادي = 6 وحدات",
     notationLanguage: notation,
+    coordinateGrid: { enabled: true },
     vertices: [vXneg, vXpos, vYneg, vYpos, vO, vA, vB, vApX, vBpX, vApY, vBpY],
     segments,
     angles: [],

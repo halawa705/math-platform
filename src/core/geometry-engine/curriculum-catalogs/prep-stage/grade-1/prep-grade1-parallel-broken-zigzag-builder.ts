@@ -27,9 +27,9 @@ export function buildParallelBrokenZigzagClassicFigure(opts: PrepGrade1ParallelZ
 
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 7.5, y: 7.8 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 2, y: 7.8 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 4.5, y: 5 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 4.16, y: 5 } };
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 7.5, y: 5 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 7.5, y: 2.2 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 6.12, y: 2.2 } };
   const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 2, y: 2.2 } };
 
   const segments: CanonicalSegmentNode[] = [
@@ -51,7 +51,7 @@ export function buildParallelBrokenZigzagClassicFigure(opts: PrepGrade1ParallelZ
     angles: [
       { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: 40, degreesLabel: "40°" },
       { id: `${opts.figureId}_angE`, vertexId: vE.id, arm1VertexId: vF.id, arm2VertexId: vC.id, degrees: 55, degreesLabel: "55°" },
-      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vE.id, degrees: 95, degreesLabel: "X°" },
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vE.id, degreesLabel: "X°" },
     ],
   };
 }
@@ -64,10 +64,10 @@ export function buildParallelBrokenThreeRaysAEC130Figure(opts: PrepGrade1Paralle
 
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 3, y: 8 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 8 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5.5, y: 5 } };
-  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 1.5, y: 5 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 3.5, y: 2 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.5, y: 2 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 4.09, y: 5 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 1.0, y: 5 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 2.36, y: 2 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 0.8, y: 2 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, parallelArrows: 1 },
@@ -88,7 +88,7 @@ export function buildParallelBrokenThreeRaysAEC130Figure(opts: PrepGrade1Paralle
     angles: [
       { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vE.id, degrees: 70, degreesLabel: "70°" },
       { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vD.id, arm2VertexId: vE.id, degrees: 120, degreesLabel: "120°" },
-      { id: `${opts.figureId}_angAEC`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vC.id, degrees: 130, degreesLabel: "130°" },
+      { id: `${opts.figureId}_angAEC`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vC.id, degreesLabel: "؟" },
     ],
   };
 }
@@ -101,8 +101,8 @@ export function buildParallelBrokenRightAngleFigure(opts: PrepGrade1ParallelZigz
 
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 2, y: 7.8 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8, y: 7.8 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 5, y: 5 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 2, y: 2.2 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 5.34, y: 5 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 2.99, y: 2.2 } };
   const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 8, y: 2.2 } };
 
   const segments: CanonicalSegmentNode[] = [
@@ -122,8 +122,8 @@ export function buildParallelBrokenRightAngleFigure(opts: PrepGrade1ParallelZigz
     segments,
     angles: [
       { id: `${opts.figureId}_angTop`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: 40, degreesLabel: "40°" },
-      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 90, degreesLabel: "90°" },
-      { id: `${opts.figureId}_angBot`, vertexId: vD.id, arm1VertexId: vE.id, arm2VertexId: vC.id, degrees: 50, degreesLabel: "X°" },
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 90, degreesLabel: "90°", isRightAngle: true },
+      { id: `${opts.figureId}_angBot`, vertexId: vD.id, arm1VertexId: vE.id, arm2VertexId: vC.id, degreesLabel: "X°" },
     ],
   };
 }
@@ -136,8 +136,8 @@ export function buildParallelBrokenReflexAlgebraicFigure(opts: PrepGrade1Paralle
 
   const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 2, y: 7.8 } };
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 7.8 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 5.5, y: 5 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 2, y: 2.2 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 5.98, y: 5.5 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 3.21, y: 2.2 } };
   const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 8.5, y: 2.2 } };
 
   const segments: CanonicalSegmentNode[] = [
@@ -158,7 +158,7 @@ export function buildParallelBrokenReflexAlgebraicFigure(opts: PrepGrade1Paralle
     angles: [
       { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: 30, degreesLabel: "30°" },
       { id: `${opts.figureId}_angD`, vertexId: vD.id, arm1VertexId: vE.id, arm2VertexId: vC.id, degrees: 50, degreesLabel: "50°" },
-      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degrees: 280, degreesLabel: "(6X+40)°" },
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degreesLabel: "(6X+40)°" },
     ],
   };
 }

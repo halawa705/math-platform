@@ -15,6 +15,7 @@ import type {
 } from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
+  toWesternNumeralsSSOT,
   type MathNotationLanguage,
 } from "../../../../ssot/numeral-and-unit-ssot";
 import { matchGrade4PerimeterAreaFigure } from "./primary-grade4-perimeter-area-builder";
@@ -82,32 +83,99 @@ function buildGrade4LinesRelationFigure(
 }
 
 /**
- * زاوية محددة النوع (قائمة، حادة، منفرجة)
+ * زاوية محددة النوع (قائمة، حادة، منفرجة، مستقيمة) مع استخراج القياس الصريح إن وُجد دون تسريب أرقام غريبة
  */
 function buildGrade4AngleTypeFigure(
-  kind: "right" | "acute" | "obtuse",
-  opts: Grade4FigureBuildOptions
+  kind: "right" | "acute" | "obtuse" | "straight",
+  opts: Grade4FigureBuildOptions,
+  explicitDeg?: number
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
-  const deg = kind === "right" ? 90 : kind === "acute" ? 45 : 125;
-  const rayEndX = kind === "right" ? 5 : kind === "acute" ? 8 : 2;
+  const drawDeg = explicitDeg ?? (kind === "right" ? 90 : kind === "acute" ? 50 : kind === "obtuse" ? 130 : 180);
+  const rad = (drawDeg * Math.PI) / 180;
+  const armLen = 4.2;
 
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 5, y: 2 } };
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: rayEndX, y: 8 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9, y: 2 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 5, y: 2.5 } };
+  const vA: CanonicalVertexNode = {
+    id: `${opts.figureId}_vA`,
+    label: localizeGeometricVertexLabelSSOT("أ", notation),
+    position: {
+      x: Number((5 + armLen * Math.cos(rad)).toFixed(2)),
+      y: Number((2.5 + armLen * Math.sin(rad)).toFixed(2)),
+    },
+  };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9.2, y: 2.5 } };
 
   return {
     figureId: opts.figureId,
     familyId: "triangle_family",
     branchId: "triangle_base_general",
-    titleArabic: `زاوية ${kind === "right" ? "قائمة" : kind === "acute" ? "حادة" : "منفرجة"} قياسها ${deg}°`,
+    titleArabic: `زاوية ${kind === "right" ? "قائمة" : kind === "acute" ? "حادة" : kind === "obtuse" ? "منفرجة" : "مستقيمة"}`,
     notationLanguage: notation,
     vertices: [vB, vA, vC],
     segments: [
       { id: `${opts.figureId}_sBA`, fromVertexId: vB.id, toVertexId: vA.id },
       { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     ],
-    angles: [{ id: `${opts.figureId}_aB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vC.id, degrees: deg, isRightAngle: kind === "right" }],
+    angles: [
+      {
+        id: `${opts.figureId}_aB`,
+        vertexId: vB.id,
+        arm1VertexId: vA.id,
+        arm2VertexId: vC.id,
+        degrees: explicitDeg ?? (kind === "right" ? 90 : undefined),
+        degreesLabel: explicitDeg ? `${explicitDeg}°` : undefined,
+        isRightAngle: kind === "right" || explicitDeg === 90,
+        arcCount: kind === "right" || explicitDeg === 90 ? undefined : 1,
+      },
+    ],
+  };
+}
+
+/**
+ * تصنيف المثلثات حسب أطوال الأضلاع (متساوي الأضلاع، متساوي الساقين، مختلف الأضلاع)
+ */
+function buildGrade4TriangleSideClassificationFigure(
+  kind: "equilateral" | "isosceles" | "scalene",
+  opts: Grade4FigureBuildOptions,
+  sideVal?: number
+): CanonicalGeometryFigureIR {
+  const notation = opts.notationLanguage || "english";
+  const vA: CanonicalVertexNode = {
+    id: `${opts.figureId}_vA`,
+    label: localizeGeometricVertexLabelSSOT("أ", notation),
+    position: kind === "scalene" ? { x: 3.8, y: 7.5 } : { x: 5, y: 7.8 },
+  };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1.5, y: 2 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 8.5, y: 2 } };
+
+  const sideLbl = sideVal ? { value: sideVal, unit: "سم" } : undefined;
+  return {
+    figureId: opts.figureId,
+    familyId: "triangle_family",
+    branchId: "triangle_base_general",
+    titleArabic: `مثلث ${kind === "equilateral" ? "متساوي الأضلاع" : kind === "isosceles" ? "متساوي الساقين" : "مختلف الأضلاع"}`,
+    notationLanguage: notation,
+    vertices: [vA, vB, vC],
+    segments: [
+      { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, tickMarks: 1, lengthLabel: sideLbl },
+      {
+        id: `${opts.figureId}_sBC`,
+        fromVertexId: vB.id,
+        toVertexId: vC.id,
+        tickMarks: kind === "equilateral" ? 1 : kind === "isosceles" ? undefined : 2,
+        lengthLabel: kind === "equilateral" ? sideLbl : undefined,
+      },
+      {
+        id: `${opts.figureId}_sCA`,
+        fromVertexId: vC.id,
+        toVertexId: vA.id,
+        tickMarks: kind === "scalene" ? 3 : 1,
+        lengthLabel: sideLbl,
+      },
+    ],
+    angles: [],
+    polygons: [[vA.id, vB.id, vC.id]],
   };
 }
 
@@ -119,7 +187,7 @@ export function matchPrimaryGrade4GeometryFigure(
   figureId = "grade4_fig",
   notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR | undefined {
-  const d = description.trim();
+  const d = toWesternNumeralsSSOT(description.trim());
   if (!d) return undefined;
 
   // 1. الأشكال المركبة (L, T, U مقلوب، مستطيلان ملتصقان، مقتطع)
@@ -142,15 +210,33 @@ export function matchPrimaryGrade4GeometryFigure(
     return buildGrade4LinesRelationFigure("parallel", { figureId, notationLanguage });
   }
 
-  // 5. أنواع الزوايا
+  // 5. تصنيف الزوايا مع استخراج الدرجة الصريحة إن ذُكرت
+  const degMatch = d.match(/(\d+(?:\.\d+)?)\s*(?:°|درجة)/);
+  const explicitDeg = degMatch ? Number(degMatch[1]) : undefined;
   if (/زاوية\s*حادة/i.test(d)) {
-    return buildGrade4AngleTypeFigure("acute", { figureId, notationLanguage });
+    return buildGrade4AngleTypeFigure("acute", { figureId, notationLanguage }, explicitDeg);
   }
   if (/زاوية\s*منفرجة/i.test(d)) {
-    return buildGrade4AngleTypeFigure("obtuse", { figureId, notationLanguage });
+    return buildGrade4AngleTypeFigure("obtuse", { figureId, notationLanguage }, explicitDeg);
   }
   if (/زاوية\s*قائمة/i.test(d)) {
-    return buildGrade4AngleTypeFigure("right", { figureId, notationLanguage });
+    return buildGrade4AngleTypeFigure("right", { figureId, notationLanguage }, explicitDeg);
+  }
+  if (/زاوية\s*مستقيمة/i.test(d)) {
+    return buildGrade4AngleTypeFigure("straight", { figureId, notationLanguage }, explicitDeg);
+  }
+
+  // 6. تصنيف المثلثات للصف الرابع
+  const sideM = d.match(/(?:طول\s*ضلعه|ضلعه)\s*=?\s*(\d+(?:\.\d+)?)/);
+  const sideVal = sideM ? Number(sideM[1]) : undefined;
+  if (/مثلث\s*متساوي\s*الأضلاع/i.test(d)) {
+    return buildGrade4TriangleSideClassificationFigure("equilateral", { figureId, notationLanguage }, sideVal);
+  }
+  if (/مثلث\s*متساوي\s*الساقين/i.test(d)) {
+    return buildGrade4TriangleSideClassificationFigure("isosceles", { figureId, notationLanguage }, sideVal);
+  }
+  if (/مثلث\s*مختلف\s*الأضلاع/i.test(d)) {
+    return buildGrade4TriangleSideClassificationFigure("scalene", { figureId, notationLanguage });
   }
 
   return undefined;

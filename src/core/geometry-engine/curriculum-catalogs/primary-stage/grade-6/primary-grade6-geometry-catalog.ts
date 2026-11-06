@@ -13,6 +13,7 @@ import type {
 } from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
+  toWesternNumeralsSSOT,
   type MathNotationLanguage,
 } from "../../../../ssot/numeral-and-unit-ssot";
 import { matchPrimaryGrade6StatisticsFigure } from "./primary-grade6-statistics-catalog";
@@ -23,22 +24,42 @@ export const MODULE_ID_PRIMARY_GRADE6_GEOMETRY_CATALOG =
 export interface Grade6FigureBuildOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly radiusVal?: number;
+  readonly diameterVal?: number;
+  readonly unit?: string;
 }
 
 /**
- * دائرة مع نصف قطر r مرسوم ومحدد بوحدة سم
+ * دائرة للصف السادس الابتدائي مع نصف قطر r أو قطر كامل d (IR v2) بدون تسريب أرقام غير واردة
  */
 function buildGrade6CircleRadiusFigure(
   opts: Grade6FigureBuildOptions
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
+  const unit = opts.unit || "سم";
 
   const vCenter: CanonicalVertexNode = { id: `${opts.figureId}_center`, label: localizeGeometricVertexLabelSSOT("م", notation), position: { x: 5, y: 5 } };
-  const vRim: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 8.5, y: 5 } };
+  const vRimRight: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 8.5, y: 5 } };
+  const vRimLeft: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1.5, y: 5 } };
 
-  const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sRadius`, fromVertexId: vCenter.id, toVertexId: vRim.id, lengthLabel: { value: 7, unit: "سم" } },
-  ];
+  const isDiameterGiven = opts.diameterVal !== undefined && opts.radiusVal === undefined;
+  const segments: CanonicalSegmentNode[] = isDiameterGiven
+    ? [
+        {
+          id: `${opts.figureId}_sDiameter`,
+          fromVertexId: vRimLeft.id,
+          toVertexId: vRimRight.id,
+          lengthLabel: { value: opts.diameterVal!, unit, labelKind: "given" },
+        },
+      ]
+    : [
+        {
+          id: `${opts.figureId}_sRadius`,
+          fromVertexId: vCenter.id,
+          toVertexId: vRimRight.id,
+          lengthLabel: opts.radiusVal !== undefined ? { value: opts.radiusVal, unit, labelKind: "given" } : undefined,
+        },
+      ];
 
   return {
     figureId: opts.figureId,
@@ -46,9 +67,17 @@ function buildGrade6CircleRadiusFigure(
     branchId: "circle_base_radius_chord",
     titleArabic: "الدائرة: نصف القطر ومحيط ومساحة الدائرة",
     notationLanguage: notation,
-    vertices: [vCenter, vRim],
+    vertices: isDiameterGiven ? [vCenter, vRimRight, vRimLeft] : [vCenter, vRimRight],
     segments,
     angles: [],
+    circles: [
+      {
+        id: `${opts.figureId}_circle_main`,
+        centerVertexId: vCenter.id,
+        radius: 3.5,
+        rimVertexId: vRimRight.id,
+      },
+    ],
   };
 }
 
@@ -57,14 +86,19 @@ export function matchPrimaryGrade6GeometryFigure(
   figureId = "primary6_fig",
   notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR | undefined {
-  const d = description.trim();
+  const d = toWesternNumeralsSSOT(description.trim());
   if (!d) return undefined;
 
   const statFigure = matchPrimaryGrade6StatisticsFigure(d, figureId, notationLanguage);
   if (statFigure) return statFigure;
 
-  if (/دائرة.*نصف\s*قطر|محيط\s*الدائرة|مساحة\s*الدائرة|ط.*نق/i.test(d)) {
-    return buildGrade6CircleRadiusFigure({ figureId, notationLanguage });
+  if (/دائرة.*(?:نصف\s*قطر|قطر(?:ها|ه)?)|محيط\s*الدائرة|مساحة\s*الدائرة|ط\s*نق/i.test(d)) {
+    const radM = d.match(/(?:نصف\s*قطر(?:ها|ه)?|نق)\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i);
+    const diaM = !radM ? d.match(/(?:طول\s*)?قطر(?:ها|ه)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i) : null;
+    const radiusVal = radM ? Number(radM[1]) : undefined;
+    const diameterVal = diaM ? Number(diaM[1]) : undefined;
+    const unit = radM?.[2] || diaM?.[2] || "سم";
+    return buildGrade6CircleRadiusFigure({ figureId, notationLanguage, radiusVal, diameterVal, unit });
   }
 
   return undefined;

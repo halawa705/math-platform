@@ -14,6 +14,7 @@ import type {
 } from "../../../../ssot/geometry-archetype-ssot";
 import {
   localizeGeometricVertexLabelSSOT,
+  toWesternNumeralsSSOT,
   type MathNotationLanguage,
 } from "../../../../ssot/numeral-and-unit-ssot";
 
@@ -23,26 +24,50 @@ export const MODULE_ID_PRIMARY_GRADE5_GEOMETRY_CATALOG =
 export interface Grade5FigureBuildOptions {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly baseVal?: number;
+  readonly heightVal?: number;
+  readonly areaVal?: number;
+  readonly unit?: string;
 }
 
 /**
- * مثلث مع ارتفاع ساقط على القاعدة لحساب المساحة (نصف القاعدة × الارتفاع)
+ * مثلث مع ارتفاع ساقط على القاعدة لحساب المساحة (نصف القاعدة × الارتفاع) بالأبعاد الحقيقية من المسألة
  */
 function buildGrade5TriangleAltitudeAreaFigure(
   opts: Grade5FigureBuildOptions
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
+  const unit = opts.unit || "سم";
+  const b = opts.baseVal ?? 8;
+  const h = opts.heightVal ?? 6;
+  const scale = 7 / Math.max(b, h, 1);
+  const drawnB = Math.max(3.5, Math.min(8, Number((b * scale).toFixed(2))));
+  const drawnH = Math.max(2.5, Math.min(7, Number((h * scale).toFixed(2))));
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_pA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 5, y: 8 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_pB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1, y: 1 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_pC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 9, y: 1 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_pD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 5, y: 1 } };
+  const xLeft = Number((5 - drawnB / 2).toFixed(2));
+  const xRight = Number((5 + drawnB / 2).toFixed(2));
+
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_pA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: 5, y: Number((1.5 + drawnH).toFixed(2)) } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_pB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: xLeft, y: 1.5 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_pC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: xRight, y: 1.5 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_pD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 5, y: 1.5 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
-    { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: 8, unit: "سم" } },
+    {
+      id: `${opts.figureId}_sBC`,
+      fromVertexId: vB.id,
+      toVertexId: vC.id,
+      lengthLabel: opts.baseVal !== undefined ? { value: opts.baseVal, unit, labelKind: "given" } : opts.areaVal !== undefined && opts.heightVal !== undefined ? { value: "؟", labelKind: "unknown" } : undefined,
+    },
     { id: `${opts.figureId}_sCA`, fromVertexId: vC.id, toVertexId: vA.id },
-    { id: `${opts.figureId}_sAD`, fromVertexId: vA.id, toVertexId: vD.id, strokeStyle: "dashed", lengthLabel: { value: 6, unit: "سم" } },
+    {
+      id: `${opts.figureId}_sAD`,
+      fromVertexId: vA.id,
+      toVertexId: vD.id,
+      strokeStyle: "dashed",
+      lengthLabel: opts.heightVal !== undefined ? { value: opts.heightVal, unit, labelKind: "given" } : opts.areaVal !== undefined && opts.baseVal !== undefined ? { value: "؟", labelKind: "unknown" } : undefined,
+    },
   ];
 
   const angles: CanonicalAngleNode[] = [
@@ -58,6 +83,55 @@ function buildGrade5TriangleAltitudeAreaFigure(
     vertices: [vA, vB, vC, vD],
     segments,
     angles,
+    polygons: [[vA.id, vB.id, vC.id]],
+    interiorBadges:
+      opts.areaVal !== undefined
+        ? [{ id: `${opts.figureId}_area`, text: `المساحة = ${opts.areaVal} ${unit}²`, position: { x: 5, y: Number((1.5 + drawnH * 0.35).toFixed(2)) }, badgeType: "area", labelKind: "given" }]
+        : undefined,
+  };
+}
+
+/**
+ * متوازي أضلاع مع قاعدة وارتفاع ساقط لحساب المساحة (طول القاعدة × الارتفاع المناظر)
+ */
+function buildGrade5ParallelogramAreaFigure(
+  opts: Grade5FigureBuildOptions
+): CanonicalGeometryFigureIR {
+  const notation = opts.notationLanguage || "english";
+  const unit = opts.unit || "سم";
+  const b = opts.baseVal ?? 8;
+  const h = opts.heightVal ?? 5;
+  const scale = 6.5 / Math.max(b, h, 1);
+  const w = Math.max(3.5, Math.min(7.5, Number((b * scale).toFixed(2))));
+  const dH = Math.max(2.5, Math.min(6, Number((h * scale).toFixed(2))));
+  const shift = 1.6;
+
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("أ", notation), position: { x: Number((1.5 + shift).toFixed(2)), y: Number((1.5 + dH).toFixed(2)) } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("ب", notation), position: { x: 1.5, y: 1.5 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: Number((1.5 + w).toFixed(2)), y: 1.5 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: Number((1.5 + w + shift).toFixed(2)), y: Number((1.5 + dH).toFixed(2)) } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("هـ", notation), position: { x: Number((1.5 + shift).toFixed(2)), y: 1.5 } };
+
+  return {
+    figureId: opts.figureId,
+    familyId: "quadrilateral_family",
+    branchId: "quad_parallelogram_diagonals",
+    titleArabic: "مساحة متوازي الأضلاع = طول القاعدة × الارتفاع المناظر",
+    notationLanguage: notation,
+    vertices: [vA, vB, vC, vD, vE],
+    segments: [
+      { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
+      { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.baseVal !== undefined ? { value: opts.baseVal, unit, labelKind: "given" } : undefined },
+      { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id },
+      { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
+      { id: `${opts.figureId}_sAE`, fromVertexId: vA.id, toVertexId: vE.id, strokeStyle: "dashed", lengthLabel: opts.heightVal !== undefined ? { value: opts.heightVal, unit, labelKind: "given" } : undefined },
+    ],
+    angles: [{ id: `${opts.figureId}_aE`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vC.id, isRightAngle: true }],
+    polygons: [[vA.id, vB.id, vC.id, vD.id]],
+    interiorBadges:
+      opts.areaVal !== undefined
+        ? [{ id: `${opts.figureId}_area`, text: `المساحة = ${opts.areaVal} ${unit}²`, position: { x: Number((1.5 + w * 0.55).toFixed(2)), y: Number((1.5 + dH * 0.5).toFixed(2)) }, badgeType: "area", labelKind: "given" }]
+        : undefined,
   };
 }
 
@@ -66,11 +140,23 @@ export function matchPrimaryGrade5GeometryFigure(
   figureId = "primary5_fig",
   notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR | undefined {
-  const d = description.trim();
+  const d = toWesternNumeralsSSOT(description.trim());
   if (!d) return undefined;
 
-  if (/مساحة.*مثلث|نصف.*القاعدة.*الارتفاع|قاعدة.*ارتفاع/i.test(d)) {
-    return buildGrade5TriangleAltitudeAreaFigure({ figureId, notationLanguage });
+  const baseM = d.match(/(?:طول\s*)?قاعدت(?:ها|ه)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i);
+  const heightM = d.match(/ارتفاع(?:ها|ه)?(?:\s*المناظر)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i);
+  const areaM = d.match(/مساحت(?:ها|ه)?\s*=?\s*(\d+(?:\.\d+)?)/i);
+  const unit = baseM?.[2] || heightM?.[2] || "سم";
+  const baseVal = baseM ? Number(baseM[1]) : undefined;
+  const heightVal = heightM ? Number(heightM[1]) : undefined;
+  const areaVal = areaM ? Number(areaM[1]) : undefined;
+
+  if (/متوازي\s*(?:ال)?أضلاع/i.test(d) && (baseVal !== undefined || heightVal !== undefined || /ارتفاع/i.test(d))) {
+    return buildGrade5ParallelogramAreaFigure({ figureId, notationLanguage, baseVal, heightVal, areaVal, unit });
+  }
+
+  if (/مساحة.*مثلث|نصف.*القاعدة.*الارتفاع|(?:مثلث.*)?قاعدت(?:ها|ه)?.*ارتفاع/i.test(d)) {
+    return buildGrade5TriangleAltitudeAreaFigure({ figureId, notationLanguage, baseVal, heightVal, areaVal, unit });
   }
 
   return undefined;

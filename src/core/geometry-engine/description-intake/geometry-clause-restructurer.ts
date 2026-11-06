@@ -62,7 +62,7 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(new RegExp(`(^\\s*|[؛;]\\s*)(${LABELS})\\s+(${SHAPE})`, "g"), "$1$3 $2")
     .replace(/(^\s*|[؛;]\s*)([A-Z]{3})\s+(?=قائم|متساوي)/g, "$1مثلث $2 ")
     .replace(new RegExp(`(?:قياس\\s*)?(?:ال)?زاوية\\s*(${LABELS}|[A-Z]|${AR})\\s*=`, "g"), "ق(∠ $1) =")
-    .replace(/\s*(?:،|,(?=\s))\s*/g, SEP);
+    .replace(/\s*(?:،|,(?=\s))(?![^()]*\))\s*/g, SEP);
   t = t.replace(QUAD_DIMENSIONS, (_m, head: string, labels: string, tail: string) => SEP + dimensionFacts(head, labels, tail));
   t = t.replace(TRI_SIDE_DIMENSION, (_m, head: string, labels: string, val: string) => {
     const k = parseLabelList(labels);

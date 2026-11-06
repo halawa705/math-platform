@@ -93,8 +93,8 @@ export function matchPrepGrade1QuadrilateralsFigure(
     return buildTrapezoidIsoscelesAlgebraicFigure({ figureId, notationLanguage });
   }
 
-  // 13. مطابقة عامة لدرس الأشكال الرباعية في أولى إعدادي
-  if (/الأشكال\s*الرباعية|متوازي\s*الأضلاع|خواص\s*متوازي\s*الأضلاع/i.test(d)) {
+  // 13. مطابقة عامة لدرس الأشكال الرباعية في أولى إعدادي (مع استثناء مسائل المساحة والقاعدة والارتفاع)
+  if ((/الأشكال\s*الرباعية|متوازي\s*الأضلاع|خواص\s*متوازي\s*الأضلاع/i.test(d)) && !/مساح|قاعدت|ارتفاع/i.test(d)) {
     return buildParallelogramAnglesOppositeConsecutiveFigure({ figureId, notationLanguage });
   }
 

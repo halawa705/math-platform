@@ -9,7 +9,7 @@ import type {
   CanonicalGeometryFigureIR,
   CanonicalVertexNode,
 } from "../../ssot/geometry-archetype-ssot";
-import type { MathNotationLanguage } from "../../ssot/numeral-and-unit-ssot";
+import { toWesternNumeralsSSOT, type MathNotationLanguage } from "../../ssot/numeral-and-unit-ssot";
 import { createCartesianPlaneRootCore } from "./cartesian-plane-root-core";
 
 export const MODULE_ID_LINEAR_QUADRATIC_CURVE_BRANCH =
@@ -18,6 +18,9 @@ export const MODULE_ID_LINEAR_QUADRATIC_CURVE_BRANCH =
 export function buildQuadraticParabolaCurveFigure(params: {
   readonly figureId: string;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly description?: string;
+  readonly vertexX?: number;
+  readonly vertexY?: number;
 }): CanonicalGeometryFigureIR {
   const plane = createCartesianPlaneRootCore({
     idPrefix: params.figureId,
@@ -25,30 +28,45 @@ export function buildQuadraticParabolaCurveFigure(params: {
     notationLanguage: params.notationLanguage,
   });
 
-  const pNeg2: CanonicalVertexNode = {
+  const cleanDesc = params.description ? toWesternNumeralsSSOT(params.description) : "";
+  const vertexCoordMatch = cleanDesc.match(/رأس\s*المنحنى\s*[A-Za-zأ-ي]?\s*\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/);
+  const shiftConstMatch = !vertexCoordMatch ? cleanDesc.match(/(?:س²|x\^2|س\^2)\s*([+-])\s*(\d+(?:\.\d+)?)/i) : null;
+
+  const hasExplicitVertex = Boolean(vertexCoordMatch || shiftConstMatch || params.vertexX !== undefined || params.vertexY !== undefined);
+  const vx = params.vertexX ?? (vertexCoordMatch ? Number(vertexCoordMatch[1]) : 0);
+  const vy = params.vertexY ?? (vertexCoordMatch ? Number(vertexCoordMatch[2]) : shiftConstMatch ? (shiftConstMatch[1] === "-" ? -Number(shiftConstMatch[2]) : Number(shiftConstMatch[2])) : -3);
+
+  const rootDist = vy < 0 ? Math.sqrt(-vy) : 2;
+  const pNegRoot: CanonicalVertexNode = {
     id: `${params.figureId}_p_neg2`,
-    label: "(-٢، ٠)",
-    position: { x: -2.5, y: 0 },
+    label: "",
+    position: { x: Number((vx - rootDist).toFixed(2)), y: 0 },
   };
   const vertexV: CanonicalVertexNode = {
     id: `${params.figureId}_vertex_V`,
-    label: "ن (٠، -٣)",
-    position: { x: 0, y: -3 },
+    label: hasExplicitVertex
+      ? vertexCoordMatch
+        ? `(${vx}, ${vy})`
+        : `${Math.abs(vy)}`
+      : plane.notationLanguage === "english"
+        ? "V"
+        : "ن",
+    position: { x: vx, y: vy },
   };
-  const pPos2: CanonicalVertexNode = {
+  const pPosRoot: CanonicalVertexNode = {
     id: `${params.figureId}_p_pos2`,
-    label: "(٢، ٠)",
-    position: { x: 2.5, y: 0 },
+    label: "",
+    position: { x: Number((vx + rootDist).toFixed(2)), y: 0 },
   };
   const pLeftTop: CanonicalVertexNode = {
     id: `${params.figureId}_p_lt`,
-    label: "أ",
-    position: { x: -4, y: 3.5 },
+    label: "",
+    position: { x: Number((vx - rootDist - 1.2).toFixed(2)), y: 3.5 },
   };
   const pRightTop: CanonicalVertexNode = {
     id: `${params.figureId}_p_rt`,
-    label: "ب",
-    position: { x: 4, y: 3.5 },
+    label: "",
+    position: { x: Number((vx + rootDist + 1.2).toFixed(2)), y: 3.5 },
   };
 
   return {
@@ -57,6 +75,7 @@ export function buildQuadraticParabolaCurveFigure(params: {
     branchId: "triangle_base_general",
     titleArabic: "التمثيل البياني لمنحنى الدالة التربيعية ورأس المنحنى ومحور التماثل",
     notationLanguage: plane.notationLanguage,
+    coordinateGrid: { enabled: true, step: 1, showAxesArrows: true },
     vertices: [
       plane.originO,
       plane.xMaxVertex,
@@ -64,17 +83,17 @@ export function buildQuadraticParabolaCurveFigure(params: {
       plane.yMaxVertex,
       plane.yMinVertex,
       pLeftTop,
-      pNeg2,
+      pNegRoot,
       vertexV,
-      pPos2,
+      pPosRoot,
       pRightTop,
     ],
     segments: [
       ...plane.axesSegments,
-      { id: `${params.figureId}_c1`, fromVertexId: pLeftTop.id, toVertexId: pNeg2.id },
-      { id: `${params.figureId}_c2`, fromVertexId: pNeg2.id, toVertexId: vertexV.id },
-      { id: `${params.figureId}_c3`, fromVertexId: vertexV.id, toVertexId: pPos2.id },
-      { id: `${params.figureId}_c4`, fromVertexId: pPos2.id, toVertexId: pRightTop.id },
+      { id: `${params.figureId}_c1`, fromVertexId: pLeftTop.id, toVertexId: pNegRoot.id },
+      { id: `${params.figureId}_c2`, fromVertexId: pNegRoot.id, toVertexId: vertexV.id },
+      { id: `${params.figureId}_c3`, fromVertexId: vertexV.id, toVertexId: pPosRoot.id },
+      { id: `${params.figureId}_c4`, fromVertexId: pPosRoot.id, toVertexId: pRightTop.id },
     ],
     angles: [],
   };
