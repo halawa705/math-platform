@@ -1,8 +1,16 @@
 /**
  * @file graph-svg-projector.ts
- * @description مصيّر الرسوم البيانية للدوال (Cartesian Graph SVG Projector) بدون أي مكتبات خارجية.
+ * @description مصيّر الرسوم البيانية للدوال (Cartesian Graph SVG Projector v2):
+ * يدعم رسم المنحنيات الخطية، التربيعية، المقياس، متعددة التعريف،
+ * وتظليل نصفي المستوى للمتباينات، ومحور التماثل، والنقاط المصمتة والمفرغة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (< 200 سطر).
  */
-import type { CartesianGraphSpec, GraphFunctionSpec } from "@/core/ssot/cartesian-graph-spec-ssot";
+
+import type {
+  CartesianGraphSpec,
+  GraphFunctionSpec,
+  HalfPlaneShading,
+} from "@/core/ssot/cartesian-graph-spec-ssot";
 import {
   formatNumeralsByModeSSOT,
   localizeGeometricVertexLabelSSOT,
@@ -21,11 +29,47 @@ export interface GraphSVGProjectorOptions {
   readonly notationLanguage?: MathNotationLanguage;
 }
 
-function evalGraphFn(fn: GraphFunctionSpec, x: number): number {
+function evalGraphFn(fn: { a: number; b: number; c: number; kind: string }, x: number): number {
   if (fn.kind === "linear") return fn.a * x + fn.b;
   if (fn.kind === "quadratic") return fn.a * x * x + fn.b * x + fn.c;
   if (fn.kind === "absolute") return fn.a * Math.abs(x - fn.b) + fn.c;
+  if (fn.kind === "horizontal_line") return fn.a;
   return fn.a;
+}
+
+function buildShadingSvg(
+  fn: GraphFunctionSpec,
+  shade: HalfPlaneShading,
+  sx: (x: number) => number,
+  sy: (y: number) => number,
+  pad: number,
+  w: number,
+  h: number,
+  xMin: number,
+  xMax: number
+): string {
+  const fillColor = "rgba(59, 130, 246, 0.15)";
+  if (fn.kind === "vertical_line") {
+    const px = sx(fn.a);
+    const x1 = shade === "right" ? px : pad;
+    const x2 = shade === "right" ? w - pad : px;
+    return `<rect x="${x1.toFixed(1)}" y="${pad}" width="${Math.max(0, x2 - x1).toFixed(1)}" height="${(h - 2 * pad).toFixed(1)}" fill="${fillColor}" />`;
+  }
+  if (fn.kind === "horizontal_line") {
+    const py = sy(fn.a);
+    const y1 = shade === "above" ? pad : py;
+    const y2 = shade === "above" ? py : h - pad;
+    return `<rect x="${pad}" y="${y1.toFixed(1)}" width="${(w - 2 * pad).toFixed(1)}" height="${Math.max(0, y2 - y1).toFixed(1)}" fill="${fillColor}" />`;
+  }
+  // دالة خطية
+  const yLeft = evalGraphFn(fn, xMin);
+  const yRight = evalGraphFn(fn, xMax);
+  const p1 = `${sx(xMin).toFixed(1)},${sy(yLeft).toFixed(1)}`;
+  const p2 = `${sx(xMax).toFixed(1)},${sy(yRight).toFixed(1)}`;
+  if (shade === "above") {
+    return `<polygon points="${p1} ${p2} ${(w - pad).toFixed(1)},${pad} ${pad},${pad}" fill="${fillColor}" />`;
+  }
+  return `<polygon points="${p1} ${p2} ${(w - pad).toFixed(1)},${(h - pad).toFixed(1)} ${pad},${(h - pad).toFixed(1)}" fill="${fillColor}" />`;
 }
 
 export function projectCartesianGraphToSVGMarkup(
@@ -77,14 +121,53 @@ export function projectCartesianGraphToSVGMarkup(
     <text x="${(originX + 4).toFixed(1)}" y="${(pad - 3).toFixed(1)}" font-size="8" font-weight="900" fill="${strokeColor}">${yAxisLabel}</text>
   `;
 
+  // 1. تظليل المتباينات أولاً تحت الشبكة
+  const shadingSvg = spec.functions
+    .filter((fn) => fn.shadeHalfPlane)
+    .map((fn) => buildShadingSvg(fn, fn.shadeHalfPlane!, sx, sy, pad, width, height, xMin, xMax))
+    .join("");
+
+  // 2. محاور التماثل
+  const axesSymSvg = spec.functions
+    .filter((fn) => fn.axisOfSymmetry !== undefined)
+    .map((fn) => {
+      const px = sx(fn.axisOfSymmetry!);
+      return `<line x1="${px.toFixed(1)}" y1="${pad}" x2="${px.toFixed(1)}" y2="${height - pad}" stroke="#94A3B8" stroke-width="1.0" stroke-dasharray="3,3" />`;
+    })
+    .join("");
+
+  // 3. المنحنيات
   const curvesSvg = spec.functions
     .map((fn, idx) => {
       const color = idx === 0 ? accentColor : strokeColor;
       const dash = fn.dashed ? `stroke-dasharray="4,3"` : "";
+
+      if (fn.kind === "piecewise" && fn.branches) {
+        return fn.branches
+          .map((br) => {
+            const bMin = br.domain.min ?? xMin;
+            const bMax = br.domain.max ?? xMax;
+            const pts: string[] = [];
+            const samples = 40;
+            for (let i = 0; i <= samples; i++) {
+              const x = bMin + (i / samples) * (bMax - bMin);
+              const y = evalGraphFn(br, x);
+              if (y >= yMin - 0.5 && y <= yMax + 0.5) {
+                pts.push(`${sx(x).toFixed(1)},${sy(y).toFixed(1)}`);
+              }
+            }
+            return pts.length >= 2
+              ? `<polyline points="${pts.join(" ")}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" />`
+              : "";
+          })
+          .join("");
+      }
+
       if (fn.kind === "vertical_line") {
         const px = sx(fn.a);
         return `<line x1="${px.toFixed(1)}" y1="${pad}" x2="${px.toFixed(1)}" y2="${height - pad}" stroke="${color}" stroke-width="1.8" ${dash} />`;
       }
+
       const samples = 80;
       const pts: string[] = [];
       for (let i = 0; i <= samples; i++) {
@@ -100,16 +183,29 @@ export function projectCartesianGraphToSVGMarkup(
     })
     .join("");
 
-  const pointsSvg = spec.points
+  // 4. النقاط
+  const allPoints = [...spec.points];
+  for (const fn of spec.functions) {
+    if (fn.vertexPoint) allPoints.push(fn.vertexPoint);
+  }
+
+  const pointsSvg = allPoints
     .map((pt) => {
       const px = sx(pt.x);
       const py = sy(pt.y);
       const locPtLabel = pt.label ? localizeGeometricVertexLabelSSOT(pt.label, notation) : "";
-      const lbl = locPtLabel ? `${locPtLabel}(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})` : `(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})`;
-      return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.6" fill="${accentColor}" stroke="#FFFFFF" stroke-width="0.9" />
+      const lbl = locPtLabel
+        ? `${locPtLabel}(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})`
+        : `(${formatNumeralsByModeSSOT(pt.x, numeralMode)},${formatNumeralsByModeSSOT(pt.y, numeralMode)})`;
+
+      const fill = pt.style === "hollow" ? "#FFFFFF" : accentColor;
+      const strokeW = pt.style === "hollow" ? "1.4" : "0.9";
+      const stroke = pt.style === "hollow" ? accentColor : "#FFFFFF";
+
+      return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.6" fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}" />
       <text x="${(px + 4).toFixed(1)}" y="${(py - 4).toFixed(1)}" font-size="7" font-weight="800" fill="${strokeColor}">${lbl}</text>`;
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${gridLines.join("")}${axesSvg}${tickLabels.join("")}${curvesSvg}${pointsSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${shadingSvg}${gridLines.join("")}${axesSvg}${axesSymSvg}${tickLabels.join("")}${curvesSvg}${pointsSvg}</svg>`;
 }
