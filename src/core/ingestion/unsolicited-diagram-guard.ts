@@ -12,7 +12,16 @@ export const MODULE_ID_UNSOLICITED_DIAGRAM_GUARD =
   "unsolicited_diagram_guard" as const;
 
 const EXPLICIT_VISUAL_CUES_REGEX =
-  /(في\s+الشكل\s+المقابل|من\s+الشكل|بالشكل\s+المرسوم|ارسم|مثل\s+بياني|الشبكة\s+التربيعية|المنحنى\s+المقابل|الدائرة\s+م|المثلث\s+[أابجدهـ]+)/i;
+  /(في\s+الشكل\s+المقابل|من\s+الشكل|بالشكل\s+المرسوم|مستعيناً\s+بالشكل|ارسم|مثل\s+بياني|الشبكة\s+التربيعية|المنحنى\s+المقابل|الدائرة\s+م|المثلث\s+[أابجدهـ]+|(?:في\s+(?:أي\s+)?)?(?:المثلث|مثلث|Δ|\\Delta)\s*[A-Za-z]{3}\b|\b[A-Za-z]{3}\s+مثلث\s+(?:قائم|متساوي)|(?:في\s+)?(?:المربع|المستطيل|المعين|شبه\s+المنحرف)(?:\s+المتساوي\s+الساقين)?\s+[A-Za-z]{4}\b|\b[A-Za-z]{4}\s+شبه\s+منحرف|مربعات\s+متطابقة[\s\S]{0,60}المستطيل\s+[A-Za-z]{4}|طائرة\s+ورقية[\s\S]{0,40}خيط|سلم\s+طوله[\s\S]{0,50}(?:يستند|حائط|أرض)|عمود\s+إنارة\s+ارتفاعه|حبل\s+مشدود\s+من\s+قمة\s+برج)/i;
+
+/**
+ * يكشف ما إذا كان نص السؤال يصف صراحةً مضلعاً هندسياً أو مثلثاً قائماً/متساوي الساقين أو تطبيقاً مثلثياً مرسوماً.
+ */
+export function hasExplicitGeometricOrTrigShapeInPrompt(promptArabic: string): boolean {
+  if (!promptArabic) return false;
+  const cleanPrompt = promptArabic.replace(/[\$*]/g, " ").replace(/\s+/g, " ");
+  return EXPLICIT_VISUAL_CUES_REGEX.test(cleanPrompt);
+}
 
 const PURE_ALGEBRAIC_NO_DIAGRAM_CUES_REGEX =
   /(مجموعة\s+حل\s+المعادلة|اختصر\s+لأبسط\s+صورة|أوجد\s+قيمة\s+ك|حلل\s+المقدار|إذا\s+كان\s+س\s*=|أوجد\s+المشتقة\s+الأولى|أوجد\s+نهاية)/i;
@@ -31,15 +40,17 @@ export function isDiagramJustifiedForQuestion(params: {
     return false;
   }
 
-  // إذا كان السؤال ينص صراحة على "في الشكل المقابل" أو "ارسم" فالرسم مبرر دائماً
-  if (EXPLICIT_VISUAL_CUES_REGEX.test(promptArabic)) {
+  const cleanPrompt = (promptArabic || "").replace(/[\$*]/g, " ").replace(/\s+/g, " ");
+
+  // إذا كان السؤال ينص صراحة على "في الشكل المقابل" أو "ارسم" أو يصف مضلعاً صريحاً فالرسم مبرر دائماً
+  if (EXPLICIT_VISUAL_CUES_REGEX.test(cleanPrompt)) {
     return true;
   }
 
   // إذا كان السؤال جبرياً أو حسابياً لفظياً خالصاً ولا يذكر شكلاً، يُحجب الرسم غير المطلوب فوراً
   if (
     (branchId === "numbers" || branchId === "algebra" || branchId === "calculus") &&
-    PURE_ALGEBRAIC_NO_DIAGRAM_CUES_REGEX.test(promptArabic)
+    PURE_ALGEBRAIC_NO_DIAGRAM_CUES_REGEX.test(cleanPrompt)
   ) {
     return false;
   }

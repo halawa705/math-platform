@@ -12,6 +12,7 @@ import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
+import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
@@ -39,6 +40,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
     if (parametricFig) {
       return { figure: parametricFig, warnings: [] };
     }
+  }
+
+  const trigCatalogFig = matchPrepGrade3TrigonometryFigure(description, figureId, notation);
+  if (trigCatalogFig) {
+    return { figure: trigCatalogFig, warnings: [] };
   }
 
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);

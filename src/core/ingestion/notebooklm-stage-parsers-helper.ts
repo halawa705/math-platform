@@ -10,7 +10,10 @@ import { parseCartesianGraphDescription } from "../geometry-engine/graph-composi
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
-import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
+import {
+  hasExplicitGeometricOrTrigShapeInPrompt,
+  isDiagramJustifiedForQuestion,
+} from "./unsolicited-diagram-guard";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -200,11 +203,12 @@ export function buildStage2PrintableItem(params: {
   const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
   const hasFigureRef =
     Boolean(geoMatch) ||
+    hasExplicitGeometricOrTrigShapeInPrompt(rawPrompt) ||
     /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(
-      params.block.rawText || params.block.promptText
+      rawPrompt
     );
   const combinedGeo = !graphSpec && hasFigureRef
-    ? combineProblemAndTagGeometryContext(geoMatch?.[1], params.block.rawText || params.block.promptText)
+    ? combineProblemAndTagGeometryContext(geoMatch?.[1], rawPrompt)
     : "";
   const diagramAllowed = params.branchId
     ? isDiagramJustifiedForQuestion({

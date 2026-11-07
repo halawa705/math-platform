@@ -33,6 +33,11 @@ export function extractGivenNumbersFromProblemText(text: string): Set<string> {
     .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت|اثبت|فأثبت|فاثبت|برهن|لإثبات|لاثبات|حدد\s+موضع)\s+[^؛;\n]*/gi, " ")
     .replace(/(?:مجموع|محيط)\s+[^؛;\n=]*?(?:=|يساوي|تساوي|هو|هي)\s*\d+(?:\.\d+)?\s*(?:سم|م|°|\^?\\circ|درجة)?/g, " ")
     .replace(/(?:نسبة\s*التشابه|معامل\s*التشابه)\s*(?:=|تساوي|يساوي|هي|هو)?\s*(?:\\frac\{\d+\}\{\d+\}|\d+\s*[/:]\s*\d+|\d+(?:\.\d+)?)/gi, " ")
+    .replace(/\^\s*\d+/g, " ")
+    .replace(
+      /(?:sin|cos|tan|cot|sec|csc|جا|جتا|ظا|قتا|قا|ظتا)\s*(?:\([^)]*\)|[A-Za-zθβأ-ي0-9°]+)\s*=\s*(?:\\frac\{\d+\}\{\d+\}|\(?\s*-?\d+(?:\.\d+)?\s*\)?(?:\s*\/\s*\(?\s*-?\d+(?:\.\d+)?\s*\)?)?)/gi,
+      " "
+    )
     .replace(/(?:ق|m|\\angle|∠)[^؛;\n=]*?\+\s*(?:ق|m|\\angle|∠)[^؛;\n=]*?=\s*\d+(?:\.\d+)?\s*(?:°|\^?\\circ|درجة)?/gi, " ");
   return extractNumbersFromProblemText(withoutAnswerTail);
 }

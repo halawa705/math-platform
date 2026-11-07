@@ -8,7 +8,10 @@ import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
-import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
+import {
+  hasExplicitGeometricOrTrigShapeInPrompt,
+  isDiagramJustifiedForQuestion,
+} from "./unsolicited-diagram-guard";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
 import { parseNotebookLMExamQuestionsToIR, resolveCorrectChoiceIndex } from "./notebooklm-exam-questions-parser";
@@ -87,6 +90,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         const graphSpec = ex.geometryRaw ? parseCartesianGraphDescription(ex.geometryRaw) ?? undefined : undefined;
         const hasFigureRef =
           Boolean(ex.geometryRaw) ||
+          hasExplicitGeometricOrTrigShapeInPrompt(ex.promptAr) ||
           /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(
             ex.promptAr
           );

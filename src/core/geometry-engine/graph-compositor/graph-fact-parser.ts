@@ -95,6 +95,15 @@ export function parseCartesianGraphDescription(rawDescription: string): Cartesia
 
   if (functions.length === 0 && points.length === 0) return null;
 
+  // إذا لم توجد أي دالة رياضية وكان الوصف يخص مضلعاً هندسياً في المستوى الإحداثي (مستطيل، مربع، معين، مثلث)
+  // يُترك لمحرك الهندسة ليرسم المضلع وأضلاعه وأقطاره وزواياه القائمة بدلاً من شبكة دالة فارغة
+  if (
+    functions.length === 0 &&
+    /(?:مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|مثلث)/i.test(cleaned)
+  ) {
+    return null;
+  }
+
   // توسيع المدى تلقائياً إن لم يُحدد صراحة ليشمل جميع النقاط الحرجة
   if (!explicitLimits) {
     for (const pt of points) {

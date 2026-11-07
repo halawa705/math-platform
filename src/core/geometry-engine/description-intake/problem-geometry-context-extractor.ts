@@ -8,6 +8,7 @@
  */
 
 import { convertGeometryLatexToPlainText } from "./geometry-latex-to-plain-normalizer";
+import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
 import {
   type ExtractedSimilarityCorrespondence,
   extractOrderedSimilarityTriangles,
@@ -60,9 +61,12 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     facts.push(simStr);
   }
 
-  // 2. الأطوال الترتيبية
+  // 2. الأطوال الترتيبية والمساواة المتسلسلة مثل AB = AC = 10 سم
   const seqLengths = unpackSequentialSideLengths(clean, sim?.tri1);
   facts.push(...seqLengths);
+  for (const chm of assertionsClean.matchAll(/\b([A-Za-z]{2})\s*=\s*([A-Za-z]{2})\s*=\s*(\d+(?:\.\d+)?)/g)) {
+    facts.push(`${chm[1]} = ${chm[3]} سم`, `${chm[2]} = ${chm[3]} سم`);
+  }
 
   // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (من المعطيات فقط لا المطلوب ولا المعاملات المضروبة)
   const lengthMatches = assertionsClean.matchAll(
@@ -147,12 +151,16 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 10. المثلث القائم في رأس: مثلث ABC قائم في A
-  const rightTriMatch = clean.match(/(?:مثلث|Δ)\s*([A-Za-z]{3})\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
+  // 10. المثلث القائم في رأس (بترتيبيْ الكلمات) أو المتساوي الساقين
+  const rightTriMatch =
+    clean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i) ??
+    clean.match(/\b([A-Za-z]{3})\s*مثلث\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
   if (rightTriMatch) {
-    const tri = rightTriMatch[1];
-    const apex = rightTriMatch[2];
-    facts.push(`مثلث ${tri} قائم في ${apex}`);
+    facts.push(`مثلث ${rightTriMatch[1]} قائم في ${rightTriMatch[2]}`);
+  }
+  const isoTriMatch = clean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
+  if (isoTriMatch) {
+    facts.push(`مثلث ${isoTriMatch[1]} متساوي الساقين`);
   }
 
   return facts;
@@ -182,6 +190,15 @@ export function combineProblemAndTagGeometryContext(
     if (embeddedMatch) {
       effectiveTag = embeddedMatch[1].trim();
     }
+  }
+
+  // إذا وُجد نص مسألة يطابق مباشرة سجل القواعد الذهبية لحساب المثلثات (3ع)، نحتفظ بسياقه الكامل مع الوسم
+  if (effectivePrompt && matchPrepGrade3TrigonometryFigure(effectivePrompt)) {
+    const cleanPromptForTrig = effectivePrompt
+      .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
+      .replace(/[\[\]]/g, "")
+      .trim();
+    return effectiveTag ? `${cleanPromptForTrig} ؛ ${effectiveTag}` : cleanPromptForTrig;
   }
 
   const parts: string[] = [];

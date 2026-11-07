@@ -37,6 +37,7 @@ import { matchPrepGrade2PolygonAnglesFigure } from "./prep-stage/grade-2/prep-gr
 import { matchPrepSimilarityGeometryFigure } from "./prep-stage/grade-3/prep-similarity-geometry-catalog";
 import { matchPrepGrade3TriangleSimilarityFigure } from "./prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { matchPrepGrade3LineEquationFigure } from "./prep-stage/grade-3/prep-grade3-line-equation-catalog";
+import { matchPrepGrade3TrigonometryFigure } from "./prep-stage/grade-3/prep-grade3-trigonometry-catalog";
 
 export const MODULE_ID_GEOMETRY_CATALOG_MATCH_REGISTRY =
   "geometry_catalog_match_registry" as const;
@@ -92,6 +93,7 @@ export const GEOMETRY_CATALOG_MATCHERS: readonly CatalogMatcherDescriptor[] = [
   { id: "prep-3-similarity-geometry", gradeId: "prep_grade_3", stage: "preparatory", match: matchPrepSimilarityGeometryFigure },
   { id: "prep-3-triangle-similarity", gradeId: "prep_grade_3", stage: "preparatory", match: matchPrepGrade3TriangleSimilarityFigure },
   { id: "prep-3-line-equation", gradeId: "prep_grade_3", stage: "preparatory", match: matchPrepGrade3LineEquationFigure },
+  { id: "prep-3-trigonometry", gradeId: "prep_grade_3", stage: "preparatory", match: matchPrepGrade3TrigonometryFigure },
 ];
 
 /**

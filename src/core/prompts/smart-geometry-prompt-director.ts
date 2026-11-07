@@ -33,6 +33,9 @@ export function isGeometryContext(params: GeometryPromptDetectionParams): boolea
     params.branchId === "plane_geometry" ||
     params.branchId === "solid_geometry" ||
     params.branchId === "analytic_geometry" ||
+    params.branchId === "trigonometry" ||
+    params.branchId === "statics" ||
+    params.branchId === "dynamics" ||
     params.branchId === "statistics_probability" ||
     params.branchId === "functions"
   ) {
@@ -40,7 +43,7 @@ export function isGeometryContext(params: GeometryPromptDetectionParams): boolea
   }
   const combined = `${params.unitTitleArabic || ""} ${params.lessonTitleArabic || ""}`.trim();
   if (!combined) return false;
-  return /هندسة|تشابه|مضلع|مثلث|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|طائرة\s*ورقية|دالتون|أوتار|مماس|قاطع|إقليدس|فيثاغورس|طاليس|منصف|إحداثي|حجوم|مساحات|زوايا|زاوية|تقاطع|إحصاء|مدرج|صندوق|أعمدة|قطاع|دالة|منحنى|شبكة\s*تربيعية|شريطي|ساعة/i.test(
+  return /هندسة|تشابه|مضلع|مثلث|مثلثية|نسب\s*مثلثية|حساب\s*المثلثات|جا|جتا|ظا|وتر|قائم|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|طائرة\s*ورقية|سلم|برج|عمود|ظل|دالتون|أوتار|مماس|قاطع|إقليدس|فيثاغورس|طاليس|منصف|إحداثي|حجوم|مساحات|زوايا|زاوية|تقاطع|إحصاء|مدرج|صندوق|أعمدة|قطاع|دالة|منحنى|شبكة\s*تربيعية|شريطي|ساعة/i.test(
     combined
   );
 }

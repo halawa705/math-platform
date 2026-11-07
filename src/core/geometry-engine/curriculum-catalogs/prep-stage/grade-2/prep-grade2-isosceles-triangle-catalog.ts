@@ -92,8 +92,11 @@ export function matchPrepGrade2IsoscelesTriangleFigure(
     return buildTwoRightTrianglesSharedHypotenuseDECFigure({ figureId, notationLanguage });
   }
 
-  // 13. مطابقة عامة لدرس المثلث المتساوي الساقين في 2 إعدادي
-  if (/المثلث\s*المتساوي\s*الساقين|متساوي\s*الساقين.*2\s*إعدادي|زاويتا\s*القاعدة/i.test(d)) {
+  // 13. مطابقة عامة لدرس المثلث المتساوي الساقين في 2 إعدادي (مع استثناء مسائل النسب المثلثية والعمود الساقط بـ 3ع)
+  if (
+    (/المثلث\s*المتساوي\s*الساقين|متساوي\s*الساقين.*2\s*إعدادي|زاويتا\s*القاعدة/i.test(d)) &&
+    !/(?:sin|cos|tan|جا|جتا|ظا|النسب\s*المثلثية|⊥|العمود\s*النازل|(?:AB\s*=\s*AC|XY\s*=\s*XZ)\s*=\s*\d+)/i.test(d)
+  ) {
     return buildIsoscelesAlgebraicAnglesFigure({ figureId, notationLanguage });
   }
 
