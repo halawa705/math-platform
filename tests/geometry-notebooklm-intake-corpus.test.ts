@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file geometry-notebooklm-intake-corpus.test.ts
  * @description مجموعة أوصاف بصيغة ردود NotebookLM (عربي/لاتيني/LaTeX مختلط): كلها يجب أن تُفهم وتُرسم وتجتاز التحقق القياسي بلا تحذيرات.
  */

@@ -58,6 +58,8 @@ export function localizeCanonicalLatex(
     );
   }
   out = wrapBareArabicInText(out);
+  // رمز التوازي في المنهج المصري والعربي مائل دائماً (// وليس ||)
+  out = out.replace(/\\parallel\b/g, "\\mathrel{/\\mkern-2.5mu/}");
   if (numeralMode === "eastern" && shouldReverseForEasternRtl(latex)) {
     out = reverseLatexForEasternRtl(out);
   }

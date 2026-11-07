@@ -22,9 +22,10 @@ export function renderKatexHtmlCached(latex: string): string {
   if (cached !== undefined) return cached;
 
   let html: string;
+  const slantedLatex = latex.replace(/\\parallel\b/g, "\\mathrel{/\\mkern-2.5mu/}");
   try {
     html = katex
-      .renderToString(latex, { throwOnError: true, strict: "ignore", output: "html" })
+      .renderToString(slantedLatex, { throwOnError: true, strict: "ignore", output: "html" })
       .replace(/<\/span><span class="base">/g, '</span><wbr><span class="base">');
   } catch {
     html = `<span dir="ltr">${escapeHtml(degradeLatexToPlainUnicode(latex))}</span>`;

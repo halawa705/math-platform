@@ -162,3 +162,95 @@ export function buildParallelBrokenReflexAlgebraicFigure(opts: PrepGrade1Paralle
     ],
   };
 }
+
+/**
+ * مثال 3 ص 2: AB // DE مع الزاوية المنكسرة عند C من CA و CD
+ * m(∠CAB) = 40° و m(∠CDE) = 25° مع شعاع مساعد CF لإيجاد ∠ACE
+ */
+export function buildParallelBrokenZigzag40And25Figure(
+  opts: PrepGrade1ParallelZigzagOptions & {
+    readonly degA?: number;
+    readonly degD?: number;
+    readonly angCLabel?: string;
+  }
+): CanonicalGeometryFigureIR {
+  const notation = opts.notationLanguage || "english";
+
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 2.0, y: 7.5 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 7.5 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 5.83, y: 4.29 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 8.5, y: 4.29 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 2.0, y: 2.5 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 8.5, y: 2.5 } };
+
+  const segments: CanonicalSegmentNode[] = [
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, parallelArrows: 1 },
+    { id: `${opts.figureId}_sCA`, fromVertexId: vC.id, toVertexId: vA.id },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id },
+    { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id, parallelArrows: 1 },
+    { id: `${opts.figureId}_sCF`, fromVertexId: vC.id, toVertexId: vF.id, strokeStyle: "dashed", parallelArrows: 1 },
+  ];
+
+  const aDeg = opts.degA ?? 40;
+  const dDeg = opts.degD ?? 25;
+  return {
+    figureId: opts.figureId,
+    familyId: "triangle_family",
+    branchId: "triangle_thales_parallel_line",
+    titleArabic: "توازي AB // DE وزاوية منكسرة عند C مع 40° و 25° وشعاع مساعد CF لإيجاد ∠ACE",
+    notationLanguage: notation,
+    vertices: [vA, vB, vC, vF, vD, vE],
+    segments,
+    angles: [
+      { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vC.id, degrees: aDeg, degreesLabel: `${aDeg}°` },
+      { id: `${opts.figureId}_angD`, vertexId: vD.id, arm1VertexId: vE.id, arm2VertexId: vC.id, degrees: dDeg, degreesLabel: `${dDeg}°` },
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vA.id, arm2VertexId: vD.id, degreesLabel: opts.angCLabel || "؟" },
+    ],
+  };
+}
+
+/**
+ * مثال 4 ص 3: AB // CD مع نقطة E بين المستقيمين
+ * m(∠A) = 45° و m(∠C) = 130° مع مستقيم مساعد EF لإيجاد m(∠AEC)
+ */
+export function buildParallelBrokenThreeRays45And130Figure(
+  opts: PrepGrade1ParallelZigzagOptions & {
+    readonly degA?: number;
+    readonly degC?: number;
+    readonly angELabel?: string;
+  }
+): CanonicalGeometryFigureIR {
+  const notation = opts.notationLanguage || "english";
+
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 3.0, y: 7.5 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 7.5 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5.5, y: 5.0 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: localizeGeometricVertexLabelSSOT("F", notation), position: { x: 8.5, y: 5.0 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 7.6, y: 2.5 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 9.0, y: 2.5 } };
+
+  const segments: CanonicalSegmentNode[] = [
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, parallelArrows: 1 },
+    { id: `${opts.figureId}_sAE`, fromVertexId: vA.id, toVertexId: vE.id },
+    { id: `${opts.figureId}_sCE`, fromVertexId: vC.id, toVertexId: vE.id },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id, parallelArrows: 1 },
+    { id: `${opts.figureId}_sEF`, fromVertexId: vE.id, toVertexId: vF.id, strokeStyle: "dashed", parallelArrows: 1 },
+  ];
+
+  const aDeg = opts.degA ?? 45;
+  const cDeg = opts.degC ?? 130;
+  return {
+    figureId: opts.figureId,
+    familyId: "triangle_family",
+    branchId: "triangle_thales_parallel_line",
+    titleArabic: "توازي AB // CD مع E بينهما و A = 45° و C = 130° مع مستقيم مساعد EF لإيجاد AEC = 95°",
+    notationLanguage: notation,
+    vertices: [vA, vB, vE, vF, vC, vD],
+    segments,
+    angles: [
+      { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vB.id, arm2VertexId: vE.id, degrees: aDeg, degreesLabel: `${aDeg}°` },
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vD.id, arm2VertexId: vE.id, degrees: cDeg, degreesLabel: `${cDeg}°` },
+      { id: `${opts.figureId}_angAEC`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vC.id, degreesLabel: opts.angELabel || "؟" },
+    ],
+  };
+}

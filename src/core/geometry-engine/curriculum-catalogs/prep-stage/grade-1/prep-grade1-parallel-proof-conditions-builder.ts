@@ -162,3 +162,92 @@ export function buildParallelNonParallelCheckFigure(opts: PrepGrade1ParallelProo
     ],
   };
 }
+
+/**
+ * مثال 5 ص 3: CA // BE مع C = 125° و B = 55° و A = 55° لإثبات أن AB // CD
+ */
+export function buildParallelProofAlternate55And125Figure(
+  opts: PrepGrade1ParallelProofOptions & {
+    readonly degC?: number;
+    readonly degB?: number;
+    readonly degA?: number;
+  }
+): CanonicalGeometryFigureIR {
+  const notation = opts.notationLanguage || "english";
+
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 3.5, y: 6.0 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.49, y: 8.87 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 6.55, y: 6.0 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 4.1, y: 2.5 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 8.8, y: 2.5 } };
+
+  const segments: CanonicalSegmentNode[] = [
+    { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id },
+    { id: `${opts.figureId}_sCA`, fromVertexId: vC.id, toVertexId: vA.id, parallelArrows: 1 },
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
+    { id: `${opts.figureId}_sBE`, fromVertexId: vB.id, toVertexId: vE.id, parallelArrows: 1 },
+  ];
+
+  const cDeg = opts.degC ?? 125;
+  const bDeg = opts.degB ?? 55;
+  const aDeg = opts.degA ?? 55;
+  return {
+    figureId: opts.figureId,
+    familyId: "triangle_family",
+    branchId: "triangle_thales_parallel_line",
+    titleArabic: "CA // BE مع C = 125° و B = 55° و A = 55° لإثبات أن AB // CD",
+    notationLanguage: notation,
+    vertices: [vC, vD, vA, vB, vE],
+    segments,
+    angles: [
+      { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vD.id, arm2VertexId: vA.id, degrees: cDeg, degreesLabel: `${cDeg}°` },
+      { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vC.id, arm2VertexId: vB.id, degrees: aDeg, degreesLabel: `${aDeg}°` },
+      { id: `${opts.figureId}_angB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vE.id, degrees: bDeg, degreesLabel: `${bDeg}°` },
+    ],
+  };
+}
+
+/**
+ * مثال 6 ص 4: قاطع EC يقطع AB و CD في B و C مع EBA = 110° و BCD = 110° بالتناظر لإثبات AB // CD
+ */
+export function buildParallelProofCorresponding110Figure(
+  opts: PrepGrade1ParallelProofOptions & {
+    readonly degEBA?: number;
+    readonly degBCD?: number;
+  }
+): CanonicalGeometryFigureIR {
+  const notation = opts.notationLanguage || "english";
+
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5.91, y: 9.0 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 5.0, y: 6.5 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 3.54, y: 2.5 } };
+  const vF: CanonicalVertexNode = { id: `${opts.figureId}_vF`, label: "", position: { x: 2.63, y: 0.0 } };
+
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 1.5, y: 6.5 } };
+  const vB2: CanonicalVertexNode = { id: `${opts.figureId}_vB2`, label: "", position: { x: 8.8, y: 6.5 } };
+
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 0.5, y: 2.5 } };
+  const vD2: CanonicalVertexNode = { id: `${opts.figureId}_vD2`, label: "", position: { x: 7.8, y: 2.5 } };
+
+  const segments: CanonicalSegmentNode[] = [
+    { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB2.id },
+    { id: `${opts.figureId}_sCD`, fromVertexId: vD.id, toVertexId: vD2.id },
+    { id: `${opts.figureId}_sTrans`, fromVertexId: vE.id, toVertexId: vF.id },
+  ];
+
+  const ebaDeg = opts.degEBA ?? 110;
+  const bcdDeg = opts.degBCD ?? 110;
+  return {
+    figureId: opts.figureId,
+    familyId: "triangle_family",
+    branchId: "triangle_thales_parallel_line",
+    titleArabic: "قاطع EC يقطع AB و CD في B و C مع EBA = 110° و BCD = 110° لإثبات أن AB // CD",
+    notationLanguage: notation,
+    vertices: [vE, vB, vC, vF, vA, vB2, vD, vD2],
+    segments,
+    angles: [
+      { id: `${opts.figureId}_angEBA`, vertexId: vB.id, arm1VertexId: vE.id, arm2VertexId: vA.id, degrees: ebaDeg, degreesLabel: `${ebaDeg}°` },
+      { id: `${opts.figureId}_angBCD`, vertexId: vC.id, arm1VertexId: vB.id, arm2VertexId: vD.id, degrees: bcdDeg, degreesLabel: `${bcdDeg}°` },
+    ],
+  };
+}

@@ -78,10 +78,20 @@ export function evaluateFigureTriStateDecision(
     fidelity.alienVertices.length / Math.max(figure.vertices.length, 1) < 0.35 &&
     leakCheck.passed;
 
+  const hasParallelProofGoal =
+    /(?:أثبت|اثبت|بيّن|بين|برهن).*?(?:توازي|\\parallel|\/\/|\|\|)/i.test(rawPromptOrDescription);
+  const hasParallelPremise =
+    (/(?:[A-Z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*(?:\/\/|\\parallel|\|\|)/i.test(rawPromptOrDescription) ||
+      /إذا\s*كان.*?(?:توازي|متوازيان|متوازيين|يوازي)/i.test(rawPromptOrDescription)) &&
+    !hasParallelProofGoal;
+  const parallelCheckPassed =
+    !hasParallelPremise || figure.segments.some((s) => (s.parallelArrows ?? 0) > 0);
+
   const passedAllThreeChecks =
     check1MeasurementPassed &&
     check2CompletenessPassed &&
     check3NoExtrasOrLeakPassed &&
+    parallelCheckPassed &&
     compositorWarnings.length === 0;
 
   if (passedAllThreeChecks) {
@@ -101,13 +111,17 @@ export function evaluateFigureTriStateDecision(
     ...leakCheck.reasons.filter((r) => !fidelity.reasons.includes(r)),
     ...measurementErrors.map((e) => `تحقق القياس: ${e.message}`),
   ];
+  if (!parallelCheckPassed) {
+    reasons.push("المسألة تتضمن مستقيمات متوازية ولكن الشكل لا يحتوي على علامات أو أسهم التوازي.");
+  }
 
   // المسائل النظرية أو تسريب الحل أو تشوه الرؤوس ← أحمر قاطع (red)
   // أما نقص معطى أو سطر غير مفهوم قابل لإعادة الصياغة في قائمة الحقائق ← أصفر (yellow)
   const isHardRed =
     fidelity.isPurelyTheoretical ||
     !check3NoExtrasOrLeakPassed ||
-    !check1MeasurementPassed;
+    !check1MeasurementPassed ||
+    !parallelCheckPassed;
 
   return {
     decision: isHardRed ? "red" : "yellow",

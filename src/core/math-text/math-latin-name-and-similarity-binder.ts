@@ -56,6 +56,12 @@ export function bindLatinNamesAndSimilarity(line: string): string {
     (_m, noun: string | undefined, a: string, op: string, b: string) =>
       `${noun ?? ""}$${a} ${similarityLatex(op)} ${b}$`
   );
+  // ربط متتاليات التوازي مثل AB // CD أو AB || CD أو l1 // l2 أو CF // AB // DE
+  out = replaceOutsideMath(
+    out,
+    /(?<![A-Za-z\\])([A-Z]{1,6}'*|[a-z][0-9]?)\s*(?:\/\/|\|\||\\parallel)\s*([A-Z]{1,6}'*|[a-z][0-9]?)(?:\s*(?:\/\/|\|\||\\parallel)\s*([A-Z]{1,6}'*|[a-z][0-9]?))*/g,
+    (m) => ` $${m.replace(/\s*(?:\/\/|\|\||\\parallel)\s*/g, " \\mathrel{/\\mkern-2.5mu/} ").trim()}$ `
+  );
   out = replaceOutsideMath(
     out,
     new RegExp(`${SIMILARITY_OPERATOR}\\s*(${NAME})\\s+(?:و\\s*)?(${NAME})(?![A-Za-z'])`, "g"),

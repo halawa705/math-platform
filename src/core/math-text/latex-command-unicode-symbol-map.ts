@@ -10,7 +10,7 @@ export const MODULE_ID_LATEX_COMMAND_UNICODE_SYMBOL_MAP =
 const LATEX_COMMAND_TO_UNICODE: Readonly<Record<string, string>> = {
   times: "×", div: "÷", pm: "±", mp: "∓", cdot: "·",
   le: "≤", leq: "≤", ge: "≥", geq: "≥", ne: "≠", neq: "≠", approx: "≈", equiv: "≡",
-  cong: "≅", sim: "∼", perp: "⊥", parallel: "∥", angle: "∠", triangle: "△", Delta: "Δ",
+  cong: "≅", sim: "∼", perp: "⊥", parallel: "⫽", angle: "∠", triangle: "△", Delta: "Δ",
   Rightarrow: "⇒", implies: "⇒", iff: "⇔", Leftrightarrow: "⇔", rightarrow: "→", to: "→",
   in: "∈", notin: "∉", subset: "⊂", subseteq: "⊆", cup: "∪", cap: "∩",
   infty: "∞", pi: "π", theta: "θ", alpha: "α", beta: "β", gamma: "γ", sigma: "σ", mu: "μ",

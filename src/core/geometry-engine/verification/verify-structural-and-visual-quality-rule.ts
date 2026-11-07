@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file verify-structural-and-visual-quality-rule.ts
  * @description قاعدة: سلامة المراجع (رؤوس/أضلاع/مضلعات)، تفرّد الأسماء، وعدم تقارب النقاط أو انهيار الأشكال بصرياً.
  */
@@ -25,7 +25,11 @@ export function verifyStructuralAndVisualQualityRule(fig: CanonicalGeometryFigur
   const diag = Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
   for (let i = 0; i < fig.vertices.length; i++) for (let j = i + 1; j < fig.vertices.length; j++) {
     const d = measureDistance(fig.vertices[i].position, fig.vertices[j].position);
-    if (diag > 0 && d / diag < 0.04) issues.push({ rule: "crowded-points", severity: "warning", message: `النقطتان ${fig.vertices[i].label} و${fig.vertices[j].label} متقاربتان جداً في الرسم.` });
+    if (diag > 0 && d / diag < 0.005) {
+      issues.push({ rule: "collapsed-points", severity: "error", message: `النقطتان ${fig.vertices[i].label} و${fig.vertices[j].label} منطبقتان على نفس الإحداثيات تماماً.` });
+    } else if (diag > 0 && d / diag < 0.04) {
+      issues.push({ rule: "crowded-points", severity: "warning", message: `النقطتان ${fig.vertices[i].label} و${fig.vertices[j].label} متقاربتان جداً في الرسم.` });
+    }
   }
   return issues;
 }

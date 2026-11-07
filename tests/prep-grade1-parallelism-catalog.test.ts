@@ -4,8 +4,12 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { matchOptionalGeometryFigureFromArabicDescription } from "../src/core/geometry-engine/natural-arabic-geometry-matcher";
+import {
+  matchOptionalGeometryFigureFromArabicDescription,
+  matchGeometryWithDiagnostics,
+} from "../src/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "../src/core/geometry-engine/vector-svg-figure-projector";
+import { renderKatexHtmlCached } from "../src/components/global-ui/math-katex-cached-html-renderer";
 
 describe("Prep Grade 1 Parallelism Geometry Catalog", () => {
   it("1. matches Problem 10 p.194: AB // CD // EF with A = 70° and C = 120° to find AEC = 130°", () => {
@@ -133,5 +137,83 @@ describe("Prep Grade 1 Parallelism Geometry Catalog", () => {
     expect(svgMarkup).toContain("</svg>");
     expect(svgMarkup).toContain("<line");
     expect(svgMarkup).toContain("<text");
+  });
+
+  it("16. Example 1 from PDF: AB // CD cut by EF at G & H with alternate (9x-5)° and (5x+15)°", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || CD، وكان المستقيم EF قاطعاً لهما في G و H على الترتيب، حيث m(∠AGH) = (9x - 5)° و m(∠GHD) = (5x + 15)° وهما زاويتان متبادلتان داخلياً، فأوجد قيمة x.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex1", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "C", "D", "E", "F", "G", "H"]));
+    expect(res.figure?.segments.some((s) => (s.parallelArrows ?? 0) > 0)).toBe(true);
+    expect(res.figure?.angles.length).toBe(2);
+  });
+
+  it("17. Example 2 from PDF: BA // CD cut by BC with consecutive interior angle 60°", () => {
+    const desc = "في الشكل المقابل، إذا كان BA || CD، وكان المستقيم BC قاطعاً لهما، حيث قياس الزاوية الداخلة m(∠C) = 60°، فأوجد قياس الزاوية الداخلة m(∠B).";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex2", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["B", "A", "C", "D"]));
+    expect(res.figure?.segments.some((s) => (s.parallelArrows ?? 0) > 0)).toBe(true);
+    expect(res.figure?.angles.some((a) => a.degrees === 60)).toBe(true);
+  });
+
+  it("18. Example 3 from PDF: AB // DE with broken angle at C (40° and 25°) to find ∠ACE", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || DE، وكانت الزاوية المنكسرة عند الرأس C تتكون من الشعاعين CA و CD، حيث m(∠CAB) = 40° و m(∠CDE) = 25°، فأوجد قياس ∠ACE.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex3", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "C", "D", "E", "F"]));
+    expect(res.figure?.segments.some((s) => s.strokeStyle === "dashed")).toBe(true);
+  });
+
+  it("19. Example 4 from PDF: AB // CD with point E between lines (45° and 130°) to find m(∠AEC)", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || CD، وكانت نقطة E تقع بين المستقيمين، حيث m(∠A) = 45° و m(∠C) = 130°، فأوجد قياس الزاوية المنكسرة m(∠AEC).";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex4", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "E", "C", "D"]));
+  });
+
+  it("20. Example 5 from PDF: CA // BE with 125°, 55°, 55° to prove AB // CD", () => {
+    const desc = "في الشكل المقابل، إذا كان CA || BE، وكان m(∠C) = 125° و m(∠B) = 55° و m(∠A) = 55°، فأثبت أن AB || CD.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex5", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["C", "D", "A", "B", "E"]));
+  });
+
+  it("21. Example 6 from PDF: EC cuts AB and CD with corresponding angles 110° and 110°", () => {
+    const desc = "في الشكل المقابل، إذا كان القاطع EC يقطع المستقيمين AB و CD في النقطتين B و C على الترتيب، حيث m(∠EBA) = 110° و m(∠BCD) = 110°، فأثبت أن AB || CD.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex6", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["E", "B", "C", "A", "D"]));
+  });
+
+  it("22. Example 7 from PDF: AB // CD with bisector BF and corresponding (2x+10)°", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || CD، وكان الشعاع BF ينصف ∠EBA حيث m(∠FBA) = 55°، وكان m(∠DCB) = (2x + 10)° بالتناظر مع ∠EBA، فأوجد قيمة x.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex7", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["E", "B", "C", "A", "D", "F"]));
+    expect(res.figure?.segments.some((s) => s.isRay)).toBe(true);
+  });
+
+  it("23. Example 8 from PDF: l1 // l2 with perpendicular transversal n ⊥ l1", () => {
+    const desc = "في الشكل المقابل، إذا كان l1 || l2 وكان المستقيم n عمودياً على l1 (n ⊥ l1) عند نقطة A ويقطع l2 في نقطة B، فأثبت برهانياً أن المستقيم n عمودي على l2 (n ⊥ l2) واحسب قياس الزاوية القائمة الناتجة.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex8", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure).toBeDefined();
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B"]));
+    expect(res.figure?.angles.some((a) => a.isRightAngle)).toBe(true);
+  });
+
+  it("24. Slanted parallel symbol: renders slanted double solidus in KaTeX output", () => {
+    const html = renderKatexHtmlCached("AB \\parallel CD");
+    // يجب أن يصيّر رمز التوازي كشرطتين مائلتين (مائل قليلاً) وليس || الرأسي
+    expect(html).toContain("mspace");
+    expect(html).not.toContain("<span class=\"mrel\">∥</span>");
   });
 });

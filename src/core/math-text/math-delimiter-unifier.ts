@@ -52,9 +52,16 @@ export function healShatteredAnglesAndEquations(text: string): string {
 
   for (let pass = 0; pass < 4; pass++) {
     out = out.replace(
-      /\$([^$\n]+)\$\s*(=|⇒|⟹|⇔)\s*\$([^$\n]+)\$/g,
+      /\$([^$\n]+)\$\s*(=|⇒|⟹|⇔|\/\/|\|\||\\parallel)\s*\$([^$\n]+)\$/g,
       (_m, lhs: string, rel: string, rhs: string) => {
-        const op = rel === "⇒" || rel === "⟹" ? "\\implies" : rel === "⇔" ? "\\iff" : "=";
+        const op =
+          rel === "⇒" || rel === "⟹"
+            ? "\\implies"
+            : rel === "⇔"
+            ? "\\iff"
+            : rel === "//" || rel === "||" || rel === "\\parallel"
+            ? "\\mathrel{/\\mkern-2.5mu/}"
+            : "=";
         return `$${lhs.trim()} ${op} ${rhs.trim()}$`;
       }
     );

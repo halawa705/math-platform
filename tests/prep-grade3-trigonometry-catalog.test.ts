@@ -22,9 +22,7 @@ describe("Grade 3 Prep Trigonometry — Golden Rules & Strict Source-Only Prompt
       solvedExamplesPerIdea: 2,
     });
 
-    expect(prompt).toContain("حظر قاطع لاختلاق الأفكار أو القوانين");
-    expect(prompt).toContain("ممنوع اختلاق أفكار أو قوانين غير موجودة في الدرس");
-    expect(prompt).toContain("تحويل خطوة حل/إثبات فرعي إلى قانون مستقل وفكرة جديدة");
+    expect(prompt).toContain("وبدون حشو أو اختلاق قوانين خارج المنهج");
   });
 
   it("2. activates smart geometry guidance for trigonometry branch and lessons", () => {

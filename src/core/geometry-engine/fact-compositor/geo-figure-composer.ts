@@ -13,6 +13,7 @@ import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
 import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
+import { matchPrepGrade1ParallelismFigure } from "../curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
@@ -47,6 +48,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
     return { figure: trigCatalogFig, warnings: [] };
   }
 
+  const parallelCatalogFig = matchPrepGrade1ParallelismFigure(description, figureId, notation);
+  if (parallelCatalogFig) {
+    return { figure: parallelCatalogFig, warnings: [] };
+  }
+
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
   if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
     const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
@@ -70,8 +76,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const points = new Map<string, Vec2>();
   const polygons = placeDeclaredShapes(facts, lengths, points);
   if (polygons.length === 0) {
-    const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation);
-    if (angleFanFig) return { figure: angleFanFig, warnings: [] };
+    const isParallelProblem = /(?:\/\/|\\parallel|\|\|)|توازي|متوازيان|متوازيين|متوازية|يوازي|توازى/i.test(description);
+    if (!isParallelProblem) {
+      const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation);
+      if (angleFanFig) return { figure: angleFanFig, warnings: [] };
+    }
     return { figure: null, warnings: [...warnings, "لا يوجد مثلث أو رباعي أو دائرة معلنة في الوصف."] };
   }
 
