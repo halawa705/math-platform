@@ -32,6 +32,8 @@ import {
   buildParallelProofAlternate55And125Figure,
   buildParallelProofCorresponding110Figure,
 } from "./prep-grade1-parallel-proof-conditions-builder";
+import { buildParallelTransversalParametricFromDescription } from "./prep-grade1-parallel-transversal-parametric-builder";
+import { normalizeParallelismArabicLettersToLatin } from "./prep-grade1-parallelism-arabic-letters-normalizer";
 import {
   buildParallelBisectorCorrespondingFigure,
   buildParallelPerpendicularTransversalFigure,
@@ -42,13 +44,17 @@ export function matchPrepGrade1ParallelismFigure(
   figureId = "prep1_parallel_fig",
   notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR | undefined {
-  const d = (arabicDescription || "").trim();
+  const d = normalizeParallelismArabicLettersToLatin((arabicDescription || "").trim());
   if (!d) return undefined;
 
   // حماية: استبعاد المضلعات والرباعيات ونظريات 2ع و 3ع كي لا يحدث التباس في السجل الموحد
   if (/شكل\s*رباعي|متوازي\s*الأضلاع|متوازي\s*اضلاع|مستطيل|مربع|معين|شبه\s*منحرف|سداسي|خماسي|معادلة|إحداثي|l3|l4|أربعة\s*مستقيمات|متوسطات|مثلث.*قائم/i.test(d)) {
     return undefined;
   }
+
+  // 0. رسم بارامتري عام: مستقيمان متوازيان وقاطع في نقطتين مع زوايا معطاة (عددية/جبرية) بأي أسماء نقاط
+  const parametricFig = buildParallelTransversalParametricFromDescription(d, figureId, notationLanguage);
+  if (parametricFig) return parametricFig;
 
   // 1. مثال 1 ص 1 ومسائل التبادل الجبري: AB // CD وقاطع EF في G و H مع (9x-5)° و (5x+15)°
   if (
