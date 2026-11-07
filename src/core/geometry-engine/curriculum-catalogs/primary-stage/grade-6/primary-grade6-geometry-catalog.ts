@@ -88,13 +88,17 @@ export function matchPrimaryGrade6GeometryFigure(
 ): CanonicalGeometryFigureIR | undefined {
   const d = toWesternNumeralsSSOT(description.trim());
   if (!d) return undefined;
+  // «الربع الأول» في المستوى الإحداثي ليس ربيعاً إحصائياً
+  if (/مستوى\s*(?:ال)?إحداثي/i.test(d)) return undefined;
 
   const statFigure = matchPrimaryGrade6StatisticsFigure(d, figureId, notationLanguage);
   if (statFigure) return statFigure;
 
-  if (/دائرة.*(?:نصف\s*قطر|قطر(?:ها|ه)?)|محيط\s*الدائرة|مساحة\s*الدائرة|ط\s*نق/i.test(d)) {
-    const radM = d.match(/(?:نصف\s*قطر(?:ها|ه)?|نق)\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i);
-    const diaM = !radM ? d.match(/(?:طول\s*)?قطر(?:ها|ه)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i) : null;
+  if (/دائرة.*(?:نصف\s*(?:ال)?قطر|قطر(?:ها|ه)?)|محيط\s*الدائرة|مساحة\s*الدائرة|ط\s*نق/i.test(d)) {
+    // يسمح باسم القطعة بعد الكلمة: «نصف القطر م أ = 7 سم» / «القطر أ ب = 14 سم»
+    const segName = "(?:[أ-ي]ـ?\\s*[أ-ي]ـ?\\s*)?";
+    const radM = d.match(new RegExp(`(?:نصف\\s*(?:ال)?قطر(?:ها|ه)?|نق)\\s*${segName}=?\\s*(\\d+(?:\\.\\d+)?)\\s*(سم|م|ديسم|مم)?`, "i"));
+    const diaM = !radM ? d.match(new RegExp(`(?:طول\\s*)?(?:ال)?قطر(?:ها|ه)?\\s*${segName}=?\\s*(\\d+(?:\\.\\d+)?)\\s*(سم|م|ديسم|مم)?`, "i")) : null;
     const radiusVal = radM ? Number(radM[1]) : undefined;
     const diameterVal = diaM ? Number(diaM[1]) : undefined;
     const unit = radM?.[2] || diaM?.[2] || "سم";

@@ -124,7 +124,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     return buildRightCircularCone3DFigure({ figureId, notationLanguage, radiusCm: radM ? Number(radM[1]) : undefined, heightCm: heightM ? Number(heightM[1]) : undefined, slantCm: slantM ? Number(slantM[1]) : undefined });
   }
   if (/مكعب|متوازي\s*مستطيلات/i.test(desc)) {
-    const dimsM = cleanDesc.match(/أبعاده\s*(\d+(?:\.\d+)?)\s*[،,و]\s*(\d+(?:\.\d+)?)\s*[،,و]\s*(\d+(?:\.\d+)?)/i);
+    const dimsM = cleanDesc.match(/(?:أبعاده|مكعبات\s*وحدة)\s*(\d+(?:\.\d+)?)\s*(?:سم|م|في|×|x|[،,و؛;\s])+\s*(\d+(?:\.\d+)?)\s*(?:سم|م|في|×|x|[،,و؛;\s])+\s*(\d+(?:\.\d+)?)/i);
     const edgeM = cleanDesc.match(/(?:طول\s*حرفه|حرفه|ضلعه)\s*=?\s*(\d+(?:\.\d+)?)/i);
     const lenM = cleanDesc.match(/طول[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);
     const widM = cleanDesc.match(/عرض[هـا]?\s*=?\s*(\d+(?:\.\d+)?)/i);

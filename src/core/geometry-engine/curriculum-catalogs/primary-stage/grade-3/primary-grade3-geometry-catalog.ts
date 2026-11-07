@@ -11,7 +11,7 @@ import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-s
 import { toWesternNumeralsSSOT, type MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 import { buildGrade3FractionFigure } from "./primary-grade3-fraction-models-builder";
 import { buildGrade3GridAreaFigure } from "./primary-grade3-grid-area-builder";
-import { buildGrade4AnalogClockSvgMarkup } from "../grade-4/primary-grade4-analog-clock-svg-builder";
+import { matchPrimaryGrade4VisualModelsFigure } from "../grade-4/primary-grade4-visual-models-catalog";
 
 export const MODULE_ID_PRIMARY_GRADE3_GEOMETRY_CATALOG =
   "primary_grade3_geometry_catalog" as const;
@@ -29,12 +29,30 @@ export function matchPrimaryGrade3GeometryFigure(
     return undefined;
   }
 
-  // 1. نماذج الكسور: شريحة أو دائرة
+  // 1. نماذج الكسور: شريحة أو دائرة (تعريف «البسط والمقام» نظري لا يُرسم له شكل)
+  if (/بسطه.*مقامه|يكتب\s*بالصيغة/i.test(d)) return undefined;
+
   const fracMatch =
     d.match(/(?:كسر|ظلل|مظلل)?\s*(\d+)\s*[\/على]\s*(\d+)/i) ||
     d.match(/(\d+)\s*أجزاء\s*من\s*(\d+)/i);
 
-  const dividedMatch = d.match(/مقسم[ةه]\s*إلى\s*(\d+)\s*أجزاء.*?(?:مظلل|ظلل)\s*(?:منها)?\s*(\d+)/i);
+  const dividedMatch = d.match(/مقسم[ةه]?\s*إلى\s*(\d+)\s*أجزاء.*?(?:مظلل|ظلل)\s*(?:منها)?\s*(\d+)/i);
+  // «مقسم إلى 6 أجزاء متساوية ; 2 جزء مظلل» / «جزء مظلل» (=1) / بلا تظليل (=0)
+  const splitOnly = d.match(/مقسم[ةه]?\s*إلى\s*(\d+)\s*أجزاء/i);
+  const shadedCount = d.match(/(\d+)\s*(?:جزء|أجزاء)\s*مظلل/i);
+  const oneShaded = /(?:^|[\s;؛])جزء\s*مظلل/i.test(d);
+
+  if (!fracMatch && !dividedMatch && splitOnly) {
+    const den = Number(splitOnly[1]);
+    const num = shadedCount ? Number(shadedCount[1]) : oneShaded ? 1 : 0;
+    if (den > 0 && num <= den) {
+      return buildGrade3FractionFigure(
+        { numerator: num, denominator: den, shape: /دائرة|قرص|قطاع/i.test(d) ? "circle" : "strip", hideFractionValue: true },
+        figureId,
+        notationLanguage
+      );
+    }
+  }
 
   if ((fracMatch || dividedMatch) && /(?:كسر|شريحة|دائرة|أجزاء|مظلل|مقام|بسط)/i.test(d)) {
     const num = dividedMatch ? Number(dividedMatch[2]) : Number(fracMatch![1]);
@@ -68,23 +86,9 @@ export function matchPrimaryGrade3GeometryFigure(
     );
   }
 
-  // 3. قراءة الوقت بالساعة
-  const timeMatch = d.match(/(?:الساعة|الوقت)\s*[:=]?\s*(\d{1,2})\s*[:：]\s*(\d{2})/);
-  if (timeMatch || /ساعة\s*عقارب|قراءة\s*الساعة/i.test(d)) {
-    const hour = timeMatch ? Number(timeMatch[1]) : 3;
-    const minute = timeMatch ? Number(timeMatch[2]) : 15;
-    const svg = buildGrade4AnalogClockSvgMarkup({ hour, minute });
-    return {
-      figureId,
-      familyId: "primary_visual_models_family",
-      branchId: "primary_analog_clock",
-      titleArabic: `ساعة العقارب: ${hour}:${String(minute).padStart(2, "0")}`,
-      notationLanguage,
-      vertices: [],
-      segments: [],
-      angles: [],
-      rawSvgMarkup: svg,
-    };
+  // 3. قراءة الوقت بالساعة: لا نخمّن وقتاً أبداً؛ يلزم وقت صريح H:MM ويُبنى الشكل بالمنشئ المشترك مع الصف الرابع
+  if (/ساعة/.test(d) && /(\d{1,2})\s*[:：]\s*(\d{2})/.test(d)) {
+    return matchPrimaryGrade4VisualModelsFigure(d, figureId, notationLanguage);
   }
 
   return undefined;

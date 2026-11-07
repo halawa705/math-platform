@@ -77,6 +77,14 @@ export function extractExplicitDimensionalGivensFromPrompt(rawText: string): Set
     }
   }
 
+  // 4. المقادير الجبرية لأضلاع أو أقطار مثل 7X - 11 أو 4X - 5 (مع استثناء معادلة المستقيم = 0)
+  if (!/=\s*0\b/.test(clean)) {
+    for (const m of clean.matchAll(/(\d+)\s*[Xxس]\s*[+\-]\s*(\d+)/g)) {
+      givens.add(normalizeNumericToken(m[1]));
+      givens.add(normalizeNumericToken(m[2]));
+    }
+  }
+
   return givens;
 }
 

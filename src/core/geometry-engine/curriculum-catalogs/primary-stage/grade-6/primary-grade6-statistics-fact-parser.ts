@@ -56,6 +56,17 @@ export function parseDotPlotSpecFromText(raw: string): StatisticalDotPlotSpec | 
     }
   }
 
+  if (points.length === 0 && /نقاط/i.test(t)) {
+    const rangeM = t.match(/من\s*(\d+(?:\.\d+)?)\s*إلى\s*(\d+(?:\.\d+)?)/i);
+    if (rangeM) {
+      const lo = Number(rangeM[1]);
+      const hi = Number(rangeM[2]);
+      if (hi > lo) {
+        points.push({ value: lo, count: 1 }, { value: hi, count: 1 });
+      }
+    }
+  }
+
   if (points.length < 2) return null;
 
   const values = points.map((p) => p.value);

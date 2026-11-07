@@ -25,7 +25,12 @@ export function extractNumbersFromProblemText(text: string): Set<string> {
 /** الأعداد المعطاة في نص المسألة (مع استبعاد جملة المطلوب/الجواب مثل «أوجد قيمة X = 25°» حتى لا يُطالَب الشكل بتسريب الحل). */
 export function extractGivenNumbersFromProblemText(text: string): Set<string> {
   const withoutAnswerTail = text
-    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب)\s+[^؛;]*$/i, "")
+    .replace(/\b\d+\.\s*matches\b|\bProblem\s*\d+(?:-\d+)?\b|\bp\.\s*\d+\b/gi, " ")
+    .replace(/\b[LlMm]\s*[1-9]\b/g, " ")
+    .replace(/(?:عدد\s*محاور\s*تماثل[هـا]?|محاور\s*تماثل[هـا]?\s*(?:عددها)?)\s*\d+|\d+\s*(?:محاور|axes)/gi, " ")
+    .replace(/\b[A-Z]{2}\s*=\s*\d+\s*[A-Z]{2}\b/g, " ")
+    .replace(/\b(?:to\s+(?:find|prove|calculate|show|determine))\b[^;؛\n]*/gi, " ")
+    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت|اثبت|فأثبت|فاثبت|برهن|لإثبات|لاثبات|حدد\s+موضع)\s+[^؛;\n]*/gi, " ")
     .replace(/(?:مجموع|محيط)\s+[^؛;\n=]*?(?:=|يساوي|تساوي|هو|هي)\s*\d+(?:\.\d+)?\s*(?:سم|م|°|\^?\\circ|درجة)?/g, " ")
     .replace(/(?:نسبة\s*التشابه|معامل\s*التشابه)\s*(?:=|تساوي|يساوي|هي|هو)?\s*(?:\\frac\{\d+\}\{\d+\}|\d+\s*[/:]\s*\d+|\d+(?:\.\d+)?)/gi, " ")
     .replace(/(?:ق|m|\\angle|∠)[^؛;\n=]*?\+\s*(?:ق|m|\\angle|∠)[^؛;\n=]*?=\s*\d+(?:\.\d+)?\s*(?:°|\^?\\circ|درجة)?/gi, " ");
@@ -60,7 +65,7 @@ export function extractNumbersShownOnFigure(figure: CanonicalGeometryFigureIR): 
       if (!isProjectedPrime || x !== "0") shown.add(x);
       if (!isProjectedPrime || y !== "0") shown.add(y);
     }
-    if (cleanLabel.includes("=")) {
+    if (cleanLabel.includes("=") || /^[\[\]()]?\s*-?\d+(?:\.\d+)?\s*[\[\]()]?$/.test(cleanLabel.trim())) {
       addAllNumbersFromText(cleanLabel, shown);
     }
   }

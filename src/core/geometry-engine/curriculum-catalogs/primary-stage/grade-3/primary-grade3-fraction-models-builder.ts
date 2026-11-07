@@ -17,6 +17,8 @@ export interface FractionModelSpec {
   readonly denominator: number; // المقام (الإجمالي)
   readonly shape: "strip" | "circle";
   readonly titleArabic?: string;
+  /** لا تُكتب قيمة الكسر على الشكل (المطلوب في السؤال غالباً هو كتابة الكسر أو تظليله) */
+  readonly hideFractionValue?: boolean;
 }
 
 export function buildGrade3FractionStripSvgMarkup(
@@ -34,15 +36,16 @@ export function buildGrade3FractionStripSvgMarkup(
   const cellW = totalW / n;
 
   const partsSvg: string[] = [];
-  const title = spec.titleArabic ?? `نموذج الكسر: ${formatNumeralsByModeSSOT(k, numeralMode)} / ${formatNumeralsByModeSSOT(n, numeralMode)}`;
+  const title = spec.titleArabic ?? (spec.hideFractionValue ? `نموذج شريطي مقسم إلى ${formatNumeralsByModeSSOT(n, numeralMode)} أجزاء متساوية` : `نموذج الكسر: ${formatNumeralsByModeSSOT(k, numeralMode)} / ${formatNumeralsByModeSSOT(n, numeralMode)}`);
 
   partsSvg.push(
     `<text x="${(width / 2).toFixed(1)}" y="20" text-anchor="middle" font-size="10" font-weight="900" fill="#0F172A">${title}</text>`
   );
 
   // إطار خارجي
+  const givenAttr = k >= 2 ? ` data-given-values="${n},${k}"` : ` data-given-values="${n}"`;
   partsSvg.push(
-    `<rect x="${startX}" y="${startY}" width="${totalW}" height="${blockH}" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" rx="3" />`
+    `<rect x="${startX}" y="${startY}" width="${totalW}" height="${blockH}" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" rx="3"${givenAttr} />`
   );
 
   // الأجزاء
@@ -57,7 +60,7 @@ export function buildGrade3FractionStripSvgMarkup(
     );
 
     // كتابة الكسر الواحد 1/n داخل كل جزء إن كان العرض كافياً
-    if (cellW >= 24) {
+    if (cellW >= 24 && !spec.hideFractionValue) {
       const textColor = isShaded ? "#FFFFFF" : "#64748B";
       partsSvg.push(
         `<text x="${(cx + cellW / 2).toFixed(1)}" y="${startY + 22}" text-anchor="middle" font-size="8" font-weight="800" fill="${textColor}">1/${formatNumeralsByModeSSOT(n, numeralMode)}</text>`

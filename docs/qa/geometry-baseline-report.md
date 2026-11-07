@@ -1,6 +1,6 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية والرسوم (لوحة القياس v2 - المرحلة 0)
 
-> تاريخ التوليد: 2026-11-07T00:29:37.508Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-07T00:53:58.266Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر ونظافة وليست حكماً نهائياً**. الدقة الحقيقية تُحسب فقط من خانة `humanVerdict` بعد المراجعة البشرية الصريحة.
@@ -8,46 +8,44 @@
 ## 1. الملخص التنفيذي ومؤشرات الدقة
 
 - إجمالي الحالات في المجموعة الذهبية: **437** حالة (تغطي ابتدائي 3–6 وإعدادي 1–3)
-- أنتج النظام شكلاً في: **360** (82.4%)
-- شكل بلا أي علامة خطر آلية: **165** (37.8%)
-- شكل بعلامات خطر آلية: **190** (43.5%)
-- 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها (هلوسة زائدة): **5**
-- شكل مفقود لمسألة تستحق شكلاً: **24**
-- رفض صحيح لمسائل نظرية (لا شكل): **53**
+- أنتج النظام شكلاً في: **379** (86.7%)
+- شكل بلا أي علامة خطر آلية: **182** (41.6%)
+- شكل بعلامات خطر آلية: **197** (45.1%)
+- 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها (هلوسة زائدة): **0**
+- شكل مفقود لمسألة تستحق شكلاً: **0**
+- رفض صحيح لمسائل نظرية (لا شكل): **58**
 - **الدقة المُثبتة بالمراجعة البشرية (Human Accuracy):** **لم تُراجَع أي حالة بعد**
-- **مطابقة المواصفة المرجعية الآلية (expectedFigureSpec):** **73/111** (65.8%)
+- **مطابقة المواصفة المرجعية الآلية (expectedFigureSpec):** **81/111** (73.0%)
 
 ## 2. مؤشرات وعلامات الخطر الآلية
 
 | العلامة الآلية | العدد |
 |---|---|
-| `from_fixed_catalog` | 189 |
-| `missing_given_on_figure` | 17 |
-| `leaked_number_not_in_text` | 5 |
+| `from_fixed_catalog` | 197 |
 
 ### لوحة التغطية والدقة حسب الصف الدراسي
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح | معتمد بشرياً | دقة مثبتة |
 |---|---|---|---|---|---|---|---|---|
 | prep-1 | 120 | 36 | 78 | 0 | 0 | 6 | 0/0 | — |
-| prep-2 | 89 | 13 | 76 | 0 | 0 | 0 | 0/0 | — |
+| prep-2 | 89 | 14 | 75 | 0 | 0 | 0 | 0/0 | — |
 | prep-3 | 33 | 15 | 16 | 0 | 0 | 2 | 0/0 | — |
-| primary-3 | 30 | 3 | 10 | 1 | 9 | 7 | 0/0 | — |
-| primary-4 | 49 | 17 | 0 | 0 | 4 | 28 | 0/0 | — |
-| primary-5 | 30 | 1 | 10 | 4 | 9 | 6 | 0/0 | — |
-| primary-6 | 31 | 25 | 0 | 0 | 2 | 4 | 0/0 | — |
+| primary-3 | 30 | 14 | 8 | 0 | 0 | 8 | 0/0 | — |
+| primary-4 | 49 | 21 | 0 | 0 | 0 | 28 | 0/0 | — |
+| primary-5 | 30 | 2 | 18 | 0 | 0 | 10 | 0/0 | — |
+| primary-6 | 31 | 25 | 2 | 0 | 0 | 4 | 0/0 | — |
 | unassigned | 55 | 55 | 0 | 0 | 0 | 0 | 0/0 | — |
 
 ### لوحة التغطية حسب الفرع الرياضي
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح | معتمد بشرياً | دقة مثبتة |
 |---|---|---|---|---|---|---|---|---|
-| analytic_geometry | 3 | 0 | 0 | 0 | 3 | 0 | 0/0 | — |
-| numbers | 67 | 17 | 3 | 2 | 9 | 36 | 0/0 | — |
-| plane_geometry | 324 | 122 | 181 | 2 | 7 | 12 | 0/0 | — |
-| primary_visual_models | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | — |
-| solid_geometry | 5 | 0 | 2 | 1 | 1 | 1 | 0/0 | — |
-| statistics_probability | 34 | 26 | 4 | 0 | 0 | 4 | 0/0 | — |
+| analytic_geometry | 3 | 0 | 3 | 0 | 0 | 0 | 0/0 | — |
+| numbers | 67 | 26 | 3 | 0 | 0 | 38 | 0/0 | — |
+| plane_geometry | 324 | 123 | 187 | 0 | 0 | 14 | 0/0 | — |
+| primary_visual_models | 4 | 4 | 0 | 0 | 0 | 0 | 0/0 | — |
+| solid_geometry | 5 | 0 | 3 | 0 | 0 | 2 | 0/0 | — |
+| statistics_probability | 34 | 29 | 1 | 0 | 0 | 4 | 0/0 | — |
 
 ## 3. أبرز الحالات التي تستحق الفحص والتحسين
 
@@ -98,9 +96,9 @@
 | prep-1-prep-grade1-polygons-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-polygons-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-polygons-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-polygons-catalog-5 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 5 | — |
-| prep-1-prep-grade1-polygons-catalog-6 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 3 | — |
-| prep-1-prep-grade1-polygons-catalog-7 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 6 | — |
+| prep-1-prep-grade1-polygons-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-1-prep-grade1-polygons-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-1-prep-grade1-polygons-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-polygons-catalog-8 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
@@ -117,8 +115,8 @@
 | prep-1-prep-grade1-special-quads-followup-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-special-quads-followup-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-special-quads-followup-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-special-quads-followup-catalog-7 | figure_flagged | missing_given_on_figure | compositor | 7، 11، 5، 1 | — |
-| prep-1-prep-grade1-special-quads-followup-catalog-8 | figure_flagged | missing_given_on_figure | compositor | 4، 5، 3 | — |
+| prep-1-prep-grade1-special-quads-followup-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-1-prep-grade1-special-quads-followup-catalog-8 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-triangle-angles-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-triangle-angles-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-triangle-angles-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
@@ -149,7 +147,7 @@
 | prep-2-prep-grade2-isosceles-triangle-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-2-prep-grade2-isosceles-triangle-catalog-7 | figure_flagged | missing_given_on_figure، from_fixed_catalog | catalog | 3 | — |
+| prep-2-prep-grade2-isosceles-triangle-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-8 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-isosceles-triangle-catalog-10 | figure_flagged | from_fixed_catalog | catalog | — | — |

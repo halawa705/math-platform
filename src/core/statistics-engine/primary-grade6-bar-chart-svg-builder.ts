@@ -20,6 +20,7 @@ export interface BarChartSvgOptions {
   readonly heightPx?: number;
   readonly numeralMode?: NumeralDisplayMode;
   readonly strokeColorHex?: string;
+  readonly omitDataGivenValues?: boolean;
 }
 
 const DEFAULT_BAR_COLORS = [
@@ -82,8 +83,9 @@ export function buildGrade6BarChartSvgMarkup(
     const color = bar.barColorHex || DEFAULT_BAR_COLORS[idx % DEFAULT_BAR_COLORS.length];
 
     if (bar.frequency > 0) {
+      const givenAttr = options.omitDataGivenValues ? "" : ` data-given-values="${bar.frequency}"`;
       barsSvg.push(
-        `<rect data-given-values="${bar.frequency}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" stroke="${stroke}" stroke-width="1.2" rx="1.5" opacity="0.9" />`
+        `<rect${givenAttr} x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" stroke="${stroke}" stroke-width="1.2" rx="1.5" opacity="0.9" />`
       );
     }
 

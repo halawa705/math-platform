@@ -27,25 +27,25 @@ export function buildSegmentMidpointCoordinatesFigure(opts: PrepGrade1MidpointOp
   const notation = opts.notationLanguage || "english";
 
   // المحاور الإحداثية
-  const vXneg: CanonicalVertexNode = { id: `${opts.figureId}_vXneg`, label: "", position: { x: 0.5, y: 7.5 } };
-  const vXpos: CanonicalVertexNode = { id: `${opts.figureId}_vXpos`, label: notation === "english" ? "X" : "س", position: { x: 9.5, y: 7.5 } };
-  const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 2, y: 8.5 } };
-  const vYpos: CanonicalVertexNode = { id: `${opts.figureId}_vYpos`, label: notation === "english" ? "y" : "ص", position: { x: 2, y: 0.5 } };
-  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: localizeGeometricVertexLabelSSOT("و", notation), position: { x: 2, y: 7.5 } };
+  const vXneg: CanonicalVertexNode = { id: `${opts.figureId}_vXneg`, label: "", position: { x: 0.5, y: 2.5 } };
+  const vXpos: CanonicalVertexNode = { id: `${opts.figureId}_vXpos`, label: notation === "english" ? "X" : "س", position: { x: 9.5, y: 2.5 } };
+  const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 2, y: 1.5 } };
+  const vYpos: CanonicalVertexNode = { id: `${opts.figureId}_vYpos`, label: notation === "english" ? "y" : "ص", position: { x: 2, y: 9.5 } };
+  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: localizeGeometricVertexLabelSSOT("و", notation), position: { x: 2, y: 2.5 } };
 
   // النقاط: A(x1, y1), B(x2, y2), M((x1+x2)/2, (y1+y2)/2)
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: "A(x₁, y₁)", position: { x: 3.5, y: 6 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: "B(x₂, y₂)", position: { x: 8.5, y: 2 } };
-  const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: "M", position: { x: 6, y: 4 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: "A(x₁, y₁)", position: { x: 3.5, y: 4 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: "B(x₂, y₂)", position: { x: 8.5, y: 8 } };
+  const vM: CanonicalVertexNode = { id: `${opts.figureId}_vM`, label: "M", position: { x: 6, y: 6 } };
 
   // مساقط على المحاور
-  const vProjAx: CanonicalVertexNode = { id: `${opts.figureId}_vPAx`, label: "x₁", position: { x: 3.5, y: 7.5 } };
-  const vProjMx: CanonicalVertexNode = { id: `${opts.figureId}_vPMx`, label: "(x₁+x₂)/2", position: { x: 6, y: 7.5 } };
-  const vProjBx: CanonicalVertexNode = { id: `${opts.figureId}_vPBx`, label: "x₂", position: { x: 8.5, y: 7.5 } };
+  const vProjAx: CanonicalVertexNode = { id: `${opts.figureId}_vPAx`, label: "x₁", position: { x: 3.5, y: 2.5 } };
+  const vProjMx: CanonicalVertexNode = { id: `${opts.figureId}_vPMx`, label: "(x₁+x₂)/2", position: { x: 6, y: 2.5 } };
+  const vProjBx: CanonicalVertexNode = { id: `${opts.figureId}_vPBx`, label: "x₂", position: { x: 8.5, y: 2.5 } };
 
-  const vProjAy: CanonicalVertexNode = { id: `${opts.figureId}_vPAy`, label: "y₁", position: { x: 2, y: 6 } };
-  const vProjMy: CanonicalVertexNode = { id: `${opts.figureId}_vPMy`, label: "(y₁+y₂)/2", position: { x: 2, y: 4 } };
-  const vProjBy: CanonicalVertexNode = { id: `${opts.figureId}_vPBy`, label: "y₂", position: { x: 2, y: 2 } };
+  const vProjAy: CanonicalVertexNode = { id: `${opts.figureId}_vPAy`, label: "y₁", position: { x: 2, y: 4 } };
+  const vProjMy: CanonicalVertexNode = { id: `${opts.figureId}_vPMy`, label: "(y₁+y₂)/2", position: { x: 2, y: 6 } };
+  const vProjBy: CanonicalVertexNode = { id: `${opts.figureId}_vPBy`, label: "y₂", position: { x: 2, y: 8 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAxisX`, fromVertexId: vXneg.id, toVertexId: vXpos.id },
@@ -80,19 +80,19 @@ export function buildSegmentMidpointCoordinatesFigure(opts: PrepGrade1MidpointOp
 export function buildSegmentMidpointNumericalFigure(opts: PrepGrade1MidpointOptions): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vXneg: CanonicalVertexNode = { id: `${opts.figureId}_vXneg`, label: "", position: { x: 0.5, y: 7.5 } };
-  const vXpos: CanonicalVertexNode = { id: `${opts.figureId}_vXpos`, label: notation === "english" ? "X" : "س", position: { x: 9.5, y: 7.5 } };
-  const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 1.5, y: 8.5 } };
-  const vYpos: CanonicalVertexNode = { id: `${opts.figureId}_vYpos`, label: notation === "english" ? "y" : "ص", position: { x: 1.5, y: 0.5 } };
-  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: localizeGeometricVertexLabelSSOT("و", notation), position: { x: 1.5, y: 7.5 } };
+  const vXneg: CanonicalVertexNode = { id: `${opts.figureId}_vXneg`, label: "", position: { x: 0.5, y: 2.5 } };
+  const vXpos: CanonicalVertexNode = { id: `${opts.figureId}_vXpos`, label: notation === "english" ? "X" : "س", position: { x: 9.5, y: 2.5 } };
+  const vYneg: CanonicalVertexNode = { id: `${opts.figureId}_vYneg`, label: "", position: { x: 1.5, y: 1.5 } };
+  const vYpos: CanonicalVertexNode = { id: `${opts.figureId}_vYpos`, label: notation === "english" ? "y" : "ص", position: { x: 1.5, y: 9.5 } };
+  const vO: CanonicalVertexNode = { id: `${opts.figureId}_vO`, label: localizeGeometricVertexLabelSSOT("و", notation), position: { x: 1.5, y: 2.5 } };
 
   // A(1, 2) و B(5, 6) و M(3, 4)
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: "A(1, 2)", position: { x: 2.7, y: 5.7 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: "B(5, 6)", position: { x: 7.5, y: 2.1 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: "A(1, 2)", position: { x: 2.7, y: 4.3 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: "B(5, 6)", position: { x: 7.5, y: 7.9 } };
   const vM: CanonicalVertexNode = {
     id: `${opts.figureId}_vM`,
     label: opts.showMidpointCoords ? "M(3, 4)" : "M(؟, ؟)",
-    position: { x: 5.1, y: 3.9 },
+    position: { x: 5.1, y: 6.1 },
   };
 
   const segments: CanonicalSegmentNode[] = [

@@ -163,7 +163,7 @@ export function buildGrade6BarChartFigure(
   }
 
   // 2. نموذج وجبات الغداء المشتراة
-  if (/وجبات|غذاء|غداء|أسبوع|اسبوع/i.test(d)) {
+  if (/وجبات|غذاء|غداء/i.test(d)) {
     const svg = buildGrade6BarChartSvgMarkup(
       {
         titleArabic: "عدد وجبات الغداء المشتراة لكل أسبوع",
@@ -180,7 +180,7 @@ export function buildGrade6BarChartFigure(
         yMax: 8,
         yStep: 1,
       },
-      { numeralMode: numMode }
+      { numeralMode: numMode, omitDataGivenValues: true }
     );
     return {
       figureId,
@@ -210,7 +210,7 @@ export function buildGrade6BarChartFigure(
       yMax: 6,
       yStep: 1,
     },
-    { numeralMode: numMode }
+    { numeralMode: numMode, omitDataGivenValues: true }
   );
 
   return {

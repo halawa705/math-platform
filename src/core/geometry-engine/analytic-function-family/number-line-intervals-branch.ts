@@ -23,15 +23,18 @@ export function buildNumberLineIntervalFigure(params: {
 }): CanonicalGeometryFigureIR {
   const cleanDesc = params.description ? toWesternNumeralsSSOT(params.description) : "";
   const intervalMatch = cleanDesc.match(/([\[\]])\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*([\[\]])/);
+  const fromToMatch = cleanDesc.match(/من\s*(-?\d+(?:\.\d+)?)\s*إلى\s*(-?\d+(?:\.\d+)?)/i);
+  const pointMatch = cleanDesc.match(/موضع\s*العدد\s*(-?\d+(?:\.\d+)?)/i);
 
-  const parsedLeft = intervalMatch ? Number(intervalMatch[2]) : undefined;
-  const parsedRight = intervalMatch ? Number(intervalMatch[3]) : undefined;
-  const hasExplicitBounds = params.leftBound !== undefined || params.rightBound !== undefined || Boolean(intervalMatch);
+  const parsedLeft = intervalMatch ? Number(intervalMatch[2]) : fromToMatch ? Number(fromToMatch[1]) : undefined;
+  const parsedRight = intervalMatch ? Number(intervalMatch[3]) : fromToMatch ? Number(fromToMatch[2]) : undefined;
+  const hasExplicitBounds =
+    params.leftBound !== undefined || params.rightBound !== undefined || Boolean(intervalMatch) || Boolean(fromToMatch);
 
   const leftVal = params.leftBound ?? parsedLeft ?? -2;
   const rightVal = params.rightBound ?? parsedRight ?? 4;
-  const leftBracket = intervalMatch?.[1] ?? "[";
-  const rightBracket = intervalMatch?.[4] ?? "]";
+  const leftBracket = intervalMatch?.[1] ?? (fromToMatch ? "" : "[");
+  const rightBracket = intervalMatch?.[4] ?? (fromToMatch ? "" : "]");
   const notation = params.notationLanguage || "arabic";
 
   const span = Math.max(6, Math.abs(leftVal) + 2, Math.abs(rightVal) + 2);
@@ -55,6 +58,9 @@ export function buildNumberLineIntervalFigure(params: {
     label: "+∞",
     position: { x: span, y: 0 },
   };
+  const extraVertices: CanonicalVertexNode[] = pointMatch
+    ? [{ id: `${params.figureId}_pt`, label: pointMatch[1], position: { x: Number(pointMatch[1]), y: 0 } }]
+    : [];
 
   return {
     figureId: params.figureId,
@@ -62,7 +68,7 @@ export function buildNumberLineIntervalFigure(params: {
     branchId: "triangle_base_general",
     titleArabic: `تمثيل الفترة الحقيقية ${leftBracket}${leftVal}، ${rightVal}${rightBracket} على خط الأعداد`,
     notationLanguage: notation,
-    vertices: [vMin, vLeft, vRight, vMax],
+    vertices: [vMin, vLeft, ...extraVertices, vRight, vMax],
     segments: [
       {
         id: `${params.figureId}_base_line`,

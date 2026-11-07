@@ -17,6 +17,7 @@ import {
   toWesternNumeralsSSOT,
   type MathNotationLanguage,
 } from "../../../../ssot/numeral-and-unit-ssot";
+import { buildGrade5CoordinatePlaneFigure, parseGrade5CoordinatePoints } from "./primary-grade5-coordinate-plane-builder";
 
 export const MODULE_ID_PRIMARY_GRADE5_GEOMETRY_CATALOG =
   "primary_grade5_geometry_catalog" as const;
@@ -28,6 +29,7 @@ export interface Grade5FigureBuildOptions {
   readonly heightVal?: number;
   readonly areaVal?: number;
   readonly unit?: string;
+  readonly sideAbVal?: number;
 }
 
 /**
@@ -120,7 +122,7 @@ function buildGrade5ParallelogramAreaFigure(
     notationLanguage: notation,
     vertices: [vA, vB, vC, vD, vE],
     segments: [
-      { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id },
+      { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.sideAbVal !== undefined ? { value: opts.sideAbVal, unit, labelKind: "given" } : undefined },
       { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: opts.baseVal !== undefined ? { value: opts.baseVal, unit, labelKind: "given" } : undefined },
       { id: `${opts.figureId}_sCD`, fromVertexId: vC.id, toVertexId: vD.id },
       { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
@@ -143,19 +145,35 @@ export function matchPrimaryGrade5GeometryFigure(
   const d = toWesternNumeralsSSOT(description.trim());
   if (!d) return undefined;
 
-  const baseM = d.match(/(?:طول\s*)?قاعدت(?:ها|ه)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i);
-  const heightM = d.match(/ارتفاع(?:ها|ه)?(?:\s*المناظر)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|ديسم|مم)?/i);
+  // مستوى إحداثي للربع الأول بنقاط عربية صريحة (لا نخمّن نقاطاً)
+  if (/مستوى\s*إحداثي|شبكة\s*(?:ال)?إحداثيات|شبكة\s*تربيعية/i.test(d)) {
+    const pts = parseGrade5CoordinatePoints(d);
+    if (pts.length > 0) {
+      return buildGrade5CoordinatePlaneFigure(pts, /مثلث|مستطيل|مضلع|مربع/i.test(d), figureId, notationLanguage);
+    }
+  }
+
+  // يسمح بأسماء القطع بعد الكلمة: «القاعدة ب جـ = 8» / «الارتفاع أ د = 6» / «ب جـ = 10» كقاعدة
+  const seg = "(?:[أ-ي]ـ?\\s*[أ-ي]ـ?\\s*)?";
+  const num = "=?\\s*(\\d+(?:\\.\\d+)?)\\s*(سم|م|ديسم|مم)?";
+  const baseM =
+    d.match(new RegExp(`(?:طول\\s*)?(?:ال)?قاعد(?:ة|ت)(?:ها|ه)?\\s*${seg}${num}`, "i")) ||
+    d.match(new RegExp(`(?:^|[؛;\\s])ب\\s*جـ?\\s*${num}`, "i"));
+  const heightM = d.match(new RegExp(`(?:ال)?ارتفاع(?:ها|ه)?(?:\\s*(?:المناظر|الأصغر))?\\s*${seg}${num}`, "i"));
   const areaM = d.match(/مساحت(?:ها|ه)?\s*=?\s*(\d+(?:\.\d+)?)/i);
+  const sideAbM = d.match(new RegExp(`(?:^|[؛;\\s])أ\\s*ب\\s*${num}`, "i"));
   const unit = baseM?.[2] || heightM?.[2] || "سم";
   const baseVal = baseM ? Number(baseM[1]) : undefined;
   const heightVal = heightM ? Number(heightM[1]) : undefined;
   const areaVal = areaM ? Number(areaM[1]) : undefined;
+  const sideAbVal = sideAbM ? Number(sideAbM[1]) : undefined;
 
   if (/متوازي\s*(?:ال)?أضلاع/i.test(d) && (baseVal !== undefined || heightVal !== undefined || /ارتفاع/i.test(d))) {
-    return buildGrade5ParallelogramAreaFigure({ figureId, notationLanguage, baseVal, heightVal, areaVal, unit });
+    return buildGrade5ParallelogramAreaFigure({ figureId, notationLanguage, baseVal, heightVal, areaVal, unit, sideAbVal });
   }
 
-  if (/مساحة.*مثلث|نصف.*القاعدة.*الارتفاع|(?:مثلث.*)?قاعدت(?:ها|ه)?.*ارتفاع/i.test(d)) {
+  const isTriangleWords = /مثلث/i.test(d) && (baseVal !== undefined || heightVal !== undefined);
+  if (isTriangleWords || /مساحة.*مثلث|نصف.*القاعدة.*الارتفاع|(?:مثلث.*)?قاعدت(?:ها|ه)?.*ارتفاع/i.test(d)) {
     return buildGrade5TriangleAltitudeAreaFigure({ figureId, notationLanguage, baseVal, heightVal, areaVal, unit });
   }
 

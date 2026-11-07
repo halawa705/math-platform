@@ -144,7 +144,7 @@ export function parseStatisticsTagDescription(rawText: string): ParsedStatistics
     const pairRegex = /([^\d,،؛;:\n]+?)\s*[:：=]?\s*(\d+(?:\.\d+)?)\s*(%|°|درجة)?/g;
     for (const m of clean.matchAll(pairRegex)) {
       const lbl = m[1].trim().replace(/^(?:فئات|مجموعات|تكرار)\s*/, "");
-      if (lbl && !/^(?:نوع|عنوان)/.test(lbl)) {
+      if (lbl && !/^(?:نوع|عنوان|من|إلى|الى)$/i.test(lbl) && !/\s(?:من|إلى|الى)$/i.test(lbl)) {
         categories.push({
           label: lbl,
           value: Number(m[2]),

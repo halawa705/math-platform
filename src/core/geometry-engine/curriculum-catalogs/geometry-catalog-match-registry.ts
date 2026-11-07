@@ -105,9 +105,13 @@ export function matchFromCatalogRegistry(
 ): CatalogRegistryMatchResult {
   const candidates: Array<{ id: string; figure: CanonicalGeometryFigureIR }> = [];
 
+  // «أ د ⊥ ب جـ» بحروف عربية بلا زوايا/برهان = ارتفاع ابتدائي (مساحة المثلث) لا سياق إعدادي
+  const hasArabicGridPoints = /[أ-ي]ـ?\s*\(\s*\d+\s*[,،]\s*\d+\s*\)/.test(desc) && !/[A-Za-z]/.test(desc);
+  const descForPrepContextTest = (hasArabicGridPoints ? desc.replace(/مستوى\s*(?:ال)?إحداثي|شبكة\s*(?:ال)?إحداثيات/g, " ") : desc)
+    .replace(/(?:^|[؛;،\s])[أ-ي]ـ?\s+[أ-ي]ـ?\s*⊥\s*[أ-ي]ـ?\s+[أ-ي]ـ?(?=\s*$|\s*[؛;،])/g, " ");
   const isPrepContext =
     /(?:برهان|أثبت|معادلة|إحداثي|احداثي|ميل|متوسط|فيثاغورس|إقليدس|اقليدس|طاليس|تشابه|تطابق|محيطية|مركزية|مماس|قاطع|وتر|رباعي\s*دائري|[A-Z]{2,4}\s*~|[A-Z]{2,4}\s*≅|\\sim|\\cong|⊥|\/\/|∠|قطراه|أقطار|قطرا\s*(?:المتوازي|المستطيل|المربع|المعين|الشكل)|زاويتا\s*قاعدت|(?:ال)?خارج(?:ي)?ة|محاور|تماثل|استقامة\s*واحدة|تناظر|تبادل|تداخل|حرف\s*[ZFUE]|[A-Z]{2,4}|\b[a-zA-Z]\b\s*=|(?:\d+[a-zA-Z]))/i.test(
-      desc
+      descForPrepContextTest
     );
 
   for (const entry of GEOMETRY_CATALOG_MATCHERS) {
