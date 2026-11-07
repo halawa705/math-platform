@@ -91,8 +91,11 @@ export function matchPrepGrade3TrigonometryFigure(
 
   // 7. شبه المنحرف المتساوي الساقين ABCD
   if (
-    /شبه\s*(?:ال)?منحرف.*متساوي\s*الساقين|ABCD\s*شبه\s*منحرف\s*متساوي\s*الساقين/i.test(clean) &&
-    (hasTrigToken || (/AD\s*\/\/\s*BC/i.test(clean) && /AB\s*=\s*CD\s*=/i.test(clean)))
+    /شبه\s*(?:ال)?منحرف/i.test(clean) &&
+    /متساوي\s*الساقين/i.test(clean) &&
+    /ABCD/i.test(clean) &&
+    !/AB\s*\/\/\s*(?:DC|CD)/i.test(clean) &&
+    !/~|تشابه|متشابه/i.test(clean)
   ) {
     return buildTrigIsoscelesTrapezoidFigure(opts);
   }
@@ -100,8 +103,10 @@ export function matchPrepGrade3TrigonometryFigure(
   // 8. شبه المنحرف القائم الزاوية ABCD
   if (
     /شبه\s*(?:ال)?منحرف/i.test(clean) &&
-    (/قائم\s*(?:الزاوية)?\s*في\s*[AB]|(?:m|ق)\s*\(\s*∠?\s*[AB]\s*\)\s*=\s*90/i.test(clean)) &&
-    (hasTrigToken || (/AD\s*\/\/\s*BC/i.test(clean) && /AB\s*=\s*\d+.*AD\s*=\s*\d+.*BC\s*=\s*\d+/i.test(clean)))
+    /ABCD/i.test(clean) &&
+    (/قائم|(?:m|ق)?\s*\(?\s*∠\s*[AB]\s*\)?\s*=\s*90|AB\s*⊥\s*BC/i.test(clean)) &&
+    !/AB\s*\/\/\s*(?:DC|CD)/i.test(clean) &&
+    !/~|تشابه|متشابه|[XY]\s*[+\-]/i.test(clean)
   ) {
     return buildTrigRightTrapezoidFigure(opts);
   }

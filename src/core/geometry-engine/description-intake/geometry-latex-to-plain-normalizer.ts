@@ -20,12 +20,18 @@ export function convertGeometryLatexToPlainText(raw: string): string {
   // أغلفة تُفرَّغ إلى محتواها (قد تكون متداخلة)
   for (let i = 0; i < 3; i++) t = t.replace(WRAPPER_COMMANDS, "$1");
   t = t
+    .replace(/\^\s*\{\s*([^{}]*?)\s*\}/g, "^$1")
+    .replace(/_\s*\{\s*([^{}]*?)\s*\}/g, "_$1");
+  for (let i = 0; i < 3; i++) {
+    t = t.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)");
+  }
+  t = t
     .replace(/\\(?:widehat|hat)\s*\{([^{}]*)\}/g, "∠$1")
     .replace(/\\(?:bigtriangleup|triangle|Delta)\b|[Δ▲△]/g, " مثلث ")
     .replace(/\\(?:measuredangle|angle)\b/g, " ∠ ")
     .replace(/\^\s*(?:\{\s*\\circ\s*\}|\\circ)\b|\\circ\b|°/g, "°")
     .replace(/°(?=[^\s،,;؛|.)])/g, "° ")
-    .replace(/\\(?:parallel|mid)\b|[∥⫽]/g, " // ")
+    .replace(/\\(?:parallel|mid|Vert)\b|\|\||\\\||[∥⫽]/g, " // ")
     .replace(/\\perp\b/g, " ⊥ ")
     .replace(/\\in\b/g, " ∈ ")
     .replace(/\\cap\b/g, " ∩ ")
@@ -34,7 +40,10 @@ export function convertGeometryLatexToPlainText(raw: string): string {
     .replace(/\\(?:cdot|times)\b/g, " × ")
     .replace(/\\sqrt\s*\{([^{}]*)\}/g, "√$1")
     .replace(/\\sqrt\s*(\d+)/g, "√$1")
-    .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)")
+    .replace(/\\(sin|cos|tan|cot|sec|csc)\b/gi, " $1 ")
+    .replace(/\\theta\b/gi, " θ ")
+    .replace(/\\beta\b/gi, " β ")
+    .replace(/\\alpha\b/gi, " α ")
     .replace(/\\(?:ldots|dots|cdots)\b|\.{2,}/g, " ")
     .replace(/\bm\s*\(\s*(?=∠)/g, "ق(")
     .replace(/\bm\s*∠\s*/g, "ق(∠ ").replace(/\bm\s*\(\s*([A-Z]{1,3})\s*\)\s*=/g, "ق(∠ $1) =")

@@ -222,4 +222,39 @@ describe("Grade 3 Prep Trigonometry — Golden Rules & Strict Source-Only Prompt
     expect(items[1].geometryFigure).toBeDefined();
     expect(items[2].geometryFigure).toBeDefined();
   });
+
+  it("10. draws both illustrative examples of Idea 9 (Examples 49 & 50) in Stage 1 with full LaTeX and optional [رسم هندسي] tags", () => {
+    const stage1Idea9Raw = [
+      "الفكرة التاسعة: تطبيقات النسب المثلثية في شبه المنحرف قائم الزاوية والمتساوي الساقين | معرف الفكرة: idea-09",
+      "مفهوم الفكرة: تحويل مسائل شبه المنحرف إلى أشكال بسيطة بإسقاط أعمدة من رؤوس القاعدة الصغرى على القاعدة الكبرى.",
+      "القاعدة الرياضية: إسقاط الأعمدة ينشئ مستطيلاً ومثلثين قائمين متطابقين أو مثلثاً قائماً واحداً.",
+      "المثال 1 | معرف المثال: example-09-01",
+      "نص المسألة: في الشكل المقابل، $ABCD$ شبه منحرف متساوي الساقين فيه $\\overline{AD} || \\overline{BC}$، $AD = 4$ سم، $AB = CD = 5$ سم، $BC = 12$ سم. أثبت أن: $\\frac{5\\tan B \\cdot \\cos C}{\\sin^{2} C + \\cos^{2} B} = 3$. [رسم هندسي: شبه منحرف ABCD متساوي الساقين فيه AD // BC، AD = 4 سم، AB = CD = 5 سم، BC = 12 سم، المطلوب: إثبات أن النسبة = 3]",
+      "خطوات الحل:",
+      "1. نسقط عمودين $\\overline{AE} \\perp \\overline{BC}$ و $\\overline{DF} \\perp \\overline{BC}$.",
+      "2. الشكل $AEFD$ مستطيل فيه $EF = AD = 4$ سم.",
+      "الناتج النهائي: تم إثبات أن النسبة تساوي 3",
+      "المثال 2 | معرف المثال: example-09-02",
+      "نص المسألة: في الشكل المقابل، $ABCD$ شبه منحرف فيه $\\overline{AD} || \\overline{BC}$، $m(\\angle B) = 90^\\circ$، $AB = 3$ سم، $AD = 6$ سم، $BC = 10$ سم. أثبت أن: $\\cos(\\angle DCB) - \\tan(\\angle ACB) = \\frac{1}{2}$. [رسم هندسي: ABCD شبه منحرف قائم في B، AD // BC، AB = 3 سم، AD = 6 سم، BC = 10 سم، المطلوب: إثبات أن المقدار = 1/2]",
+      "خطوات الحل:",
+      "1. نسقط عموداً $\\overline{DH} \\perp \\overline{BC}$ حيث $H \\in \\overline{BC}$.",
+      "الناتج النهائي: تم إثبات أن الناتج يساوي 1/2",
+      "نهاية الفكرة التاسعة",
+    ].join("\n");
+
+    const items = mergeBookletThreeStagesRepliesToPrintableItems({
+      stage1Raw: stage1Idea9Raw,
+      branchId: "numbers",
+      branchNameAr: "الأعداد والعمليات الحسابية",
+      unitId: "u-trig",
+      lessonId: "l-trig-1",
+      lessonTitleArabic: "النسب المثلثية للزاوية الحادة",
+    });
+
+    expect(items).toHaveLength(2);
+    expect(items[0].geometryFigure).toBeDefined();
+    expect(items[0].geometryFigure?.titleArabic).toContain("شبه المنحرف المتساوي الساقين");
+    expect(items[1].geometryFigure).toBeDefined();
+    expect(items[1].geometryFigure?.titleArabic).toContain("شبه المنحرف القائم الزاوية");
+  });
 });

@@ -30,7 +30,7 @@ export const MODULE_ID_PROBLEM_GEOMETRY_CONTEXT_EXTRACTOR =
 function stripGoalClausesForAssertions(text: string): string {
   return text
     .replace(/\b(?:to\s+(?:find|prove|calculate|show|determine|get|obtain)|for|giving)\b[^;\n]*(?=\b(?:where|if|given\s+that)\b|$)/gi, " ")
-    .replace(/(?:أوجد|اوجد|احسب|لإيجاد|لايجاد|لحساب|أثبت\s*أن|اثبت\s*ان|برهن\s*أن)\s+[^؛;\n]*?(?=\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s|$)/gi, " ");
+    .replace(/(?:أوجد|اوجد|احسب|فاحسب|لإيجاد|لايجاد|لحساب|أثبت\s*أن|اثبت\s*ان|إثبات\s*أن|اثبات\s*ان|برهن\s*أن|برهن\s*ان|المطلوب|فإن|فان)(?:\s*[:：]?\s*|\s+)[\s\S]*?(?=\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s|[؛;]|$)/gi, " ");
 }
 
 /**
@@ -192,13 +192,19 @@ export function combineProblemAndTagGeometryContext(
     }
   }
 
-  // إذا وُجد نص مسألة يطابق مباشرة سجل القواعد الذهبية لحساب المثلثات (3ع)، نحتفظ بسياقه الكامل مع الوسم
+  // إذا وُجد نص مسألة يطابق مباشرة سجل القواعد الذهبية لحساب المثلثات (3ع)، نحتفظ بنص المسألة النظيف مباشرةً دون تلويثه بوسم خارجي
   if (effectivePrompt && matchPrepGrade3TrigonometryFigure(effectivePrompt)) {
+    return effectivePrompt
+      .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
+      .replace(/[\[\]]/g, "")
+      .trim();
+  }
+  if (effectivePrompt && effectiveTag && matchPrepGrade3TrigonometryFigure(`${effectivePrompt} ؛ ${effectiveTag}`)) {
     const cleanPromptForTrig = effectivePrompt
       .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
       .replace(/[\[\]]/g, "")
       .trim();
-    return effectiveTag ? `${cleanPromptForTrig} ؛ ${effectiveTag}` : cleanPromptForTrig;
+    return `${cleanPromptForTrig} ؛ ${effectiveTag}`;
   }
 
   const parts: string[] = [];
