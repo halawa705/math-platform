@@ -89,12 +89,29 @@ export function triggerIsolatedA4Print(
       overflow-x: hidden !important;
     }
     .katex .mfrac {
-      margin: 0.1em 0.1em !important;
+      margin: 0.14em 0.12em !important;
+      font-weight: 800 !important;
+    }
+    .katex .mfrac .vlist-t,
+    .katex .mfrac .mord,
+    .katex .mfrac .mathnormal,
+    .katex .mfrac .mathit,
+    .katex .mfrac .textrm,
+    .katex .mfrac .text {
+      font-weight: 800 !important;
+      font-size: 1.06em !important;
+      -webkit-text-stroke: 0.25px currentColor;
     }
     .katex .mfrac .frac-line {
-      border-bottom-width: 0.085em !important;
-      min-height: 0.6pt !important;
+      border-bottom-width: 0.115em !important;
+      min-height: 1.1pt !important;
       border-bottom-color: #000000 !important;
+    }
+    .katex .mathnormal,
+    .katex .mathit,
+    .katex .mop {
+      font-weight: 700 !important;
+      -webkit-text-stroke: 0.18px currentColor;
     }
     .a4-ministerial-sheet {
       width: 210mm !important;

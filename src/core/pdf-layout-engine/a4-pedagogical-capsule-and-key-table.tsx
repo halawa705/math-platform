@@ -139,7 +139,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 <span>💡</span>
                 <span>{isWorksheetSection ? "الفكرة العامة وما يستفيده الطالب:" : "المفهوم الرياضي والشرح:"}</span>
               </div>
-              <div className="font-semibold text-slate-800 break-words leading-relaxed">
+              <div className="font-extrabold text-slate-900 break-words leading-relaxed">
                 <SafeKaTeXBiDiMathRenderer
                   text={item.conceptExplanationAr}
                   numeralMode={numeralMode}

@@ -30,11 +30,14 @@ function stretchColumn(
   deltaPx: number,
   heightOf: (item: FlowItem) => number,
   density: FlowDensityProfile,
-  extra: Map<string, number>
+  extra: Map<string, number>,
+  imbalanceBoost = 1
 ): number {
+  const maxPx = density.maxStretchPerItemPx * imbalanceBoost;
+  const maxRatio = density.maxStretchRatio * imbalanceBoost;
   const open = items.filter(isStretchableFlowItem).map((item) => ({
     id: item.id,
-    room: Math.max(0, Math.min(density.maxStretchPerItemPx, heightOf(item) * density.maxStretchRatio) - (extra.get(item.id) ?? 0)),
+    room: Math.max(0, Math.min(maxPx, heightOf(item) * maxRatio) - (extra.get(item.id) ?? 0)),
   }));
   let remaining = deltaPx;
   let added = 0;
@@ -65,13 +68,13 @@ export function distributePageSlack(p: DistributeParams): FlowPage {
   const extra = new Map<string, number>();
   const gapMin = density.gapMinPx;
 
-  // (١) مساواة العمودين في كل مقطع أعمدة.
+  // (١) مساواة العمودين في كل مقطع أعمدة (بسقف مرن يضمن تساوي العمودين دون الحاجة لكسر نظام العمودين).
   for (const segment of segments) {
     if (segment.kind !== "columns") continue;
     const right = stackHeightPx(segment.rightItems.map(heightOf), gapMin);
     const left = stackHeightPx(segment.leftItems.map(heightOf), gapMin);
     const shorter = right < left ? segment.rightItems : segment.leftItems;
-    stretchColumn(shorter, Math.abs(right - left), heightOf, density, extra);
+    stretchColumn(shorter, Math.abs(right - left), heightOf, density, extra, 2.2);
   }
 
   const heightWithExtra = (item: FlowItem) => heightOf(item) + (extra.get(item.id) ?? 0);

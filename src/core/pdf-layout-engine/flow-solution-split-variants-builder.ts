@@ -40,8 +40,8 @@ export function buildSolutionSplitVariants(
     for (let k = MIN_HEAD_STEPS; k < total; k++) {
       variants.push({
         k,
-        head: { ...item, id: `${item.id}~head${k}`, span: "full", solutionSlice: { from: 0, to: k, total } },
-        tail: { ...item, id: `${item.id}~tail${k}`, span: "full", solutionSlice: { from: k, to: total, total } },
+        head: { ...item, id: `${item.id}~head${k}`, span: item.span, solutionSlice: { from: 0, to: k, total } },
+        tail: { ...item, id: `${item.id}~tail${k}`, span: item.span, solutionSlice: { from: k, to: total, total } },
       });
     }
     if (variants.length > 0) result.set(item.id, variants);

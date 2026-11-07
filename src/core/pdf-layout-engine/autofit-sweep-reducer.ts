@@ -32,24 +32,23 @@ export function autoFitSweepReducer(state: AutoFitSweepState, action: AutoFitSwe
   };
   const probes = [...state.probes, currentProbe];
 
-  // قطع مبكر ذكي (Smart Early-Exit):
   // 1) في وضع تحديد سقف الصفحات (الاختبارات): بمجرد الوصول لدرجة تحقق السقف المطلوب بدون فيض، نتوقف فوراً.
   if (action.targetMaxPages !== undefined && !action.overflow && action.pages <= action.targetMaxPages) {
     const decision = decideBestAutoFitRung(probes, action.targetMaxPages);
     return { phase: "done", probeRungIndex: decision.rungIndex, probes, decision };
   }
 
-  // 2) في وضع ملء المذكرة (booklet_fill): إذا لم يكن هناك فيض وكانت الصفحة الأخيرة ممتلئة بنسبة ممتازة (>= 52%) أو هي صفحة واحدة فقط،
-  // فلا داعي لتصغير الخط أكثر؛ نعتمد هذه الدرجة المريحة فوراً!
-  // وكذلك قبل النزول للدرجة الأخيرة القصوى (11.5pt)، لا ننزل إليها إلا إذا كانت الصفحة الأخيرة في 12pt شبه فارغة (< 22% ذيل يتيم) أو بها فيض.
+  // 2) في وضع ملء المذكرة (booklet_fill): نكمل المسح على درجات الخط المريحة (>= 12pt) لاختيار الدرجة التي تحقق
+  // أقل عدد صفحات وأفضل توازن عمودين بلا فراغات؛ ولا ندخل الدرجة القصوى الأخيرة (11.5pt) إلا عند الضرورة القصوى
+  // (فيض في 12pt أو ذيل يتيم في الصفحة الأخيرة < 25%).
   if (action.targetMaxPages === undefined && !action.overflow) {
-    if (action.pages <= 1 || action.lastPageFill >= 0.52) {
+    if (action.pages <= 1 && action.lastPageFill >= 0.72) {
       const decision = decideBestAutoFitRung(probes, undefined);
       return { phase: "done", probeRungIndex: decision.rungIndex, probes, decision };
     }
     const nextIdx = action.rungIndex + 1;
     const isNextExtremeRung = nextIdx === action.rungCount - 1 && action.rungCount >= 4;
-    if (isNextExtremeRung && action.lastPageFill >= 0.22) {
+    if (isNextExtremeRung && action.lastPageFill >= 0.25) {
       const decision = decideBestAutoFitRung(probes, undefined);
       return { phase: "done", probeRungIndex: decision.rungIndex, probes, decision };
     }

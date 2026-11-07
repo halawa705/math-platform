@@ -34,18 +34,9 @@ export function buildSegmentsForSlice(
     const left = group.slice(split.rightCount);
 
     let useFullStack = false;
-    if (canGoFull) {
-      if (group.length === 1) {
-        useFullStack = true;
-      } else {
-        const rightH = stackHeightPx(right.map(heightOf), gapPx);
-        const leftH = stackHeightPx(left.map(heightOf), gapPx);
-        const shorter = rightH < leftH ? right : left;
-        const absorbable = shorter.reduce((sum, g) => sum + stretchRoomOf(g), 0);
-        const unabsorbed = Math.abs(rightH - leftH) - absorbable;
-        const stackH = stackHeightPx(fullHeights as number[], gapPx);
-        useFullStack = unabsorbed > UNABSORBED_IMBALANCE_TOLERANCE_PX && stackH <= split.heightPx;
-      }
+    if (canGoFull && group.length === 1) {
+      // بطاقة واحدة فقط بين عنصرين بعرض كامل (مثل كبسولة فكرة وفاصل نهاية الفكرة)
+      useFullStack = true;
     }
 
     if (useFullStack) {

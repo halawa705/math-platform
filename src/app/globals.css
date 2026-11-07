@@ -50,13 +50,34 @@ body {
 }
 
 .katex .mfrac {
-  margin: 0.14em 0.1em !important;
+  margin: 0.16em 0.14em !important;
+  font-weight: 800 !important;
 }
 
-/* خط الكسر أسمك قليلاً لوضوح أفضل في الشاشة والاختبارات الإلكترونية */
+/* البسط والمقام في جميع الكسور (الأرقام، الرموز المائلة، والكلمات العربية) بخط سميك وواضح ومقروء */
+.katex .mfrac .vlist-t,
+.katex .mfrac .mord,
+.katex .mfrac .mathnormal,
+.katex .mfrac .mathit,
+.katex .mfrac .textrm,
+.katex .mfrac .text {
+  font-weight: 800 !important;
+  font-size: 1.06em !important;
+  -webkit-text-stroke: 0.25px currentColor;
+}
+
+/* خط الكسر أسمك قليلاً لوضوح أفضل في الشاشة والاختبارات الإلكترونية والطباعة */
 .katex .mfrac .frac-line {
-  border-bottom-width: 0.085em !important;
-  min-height: 1.5px;
+  border-bottom-width: 0.115em !important;
+  min-height: 1.8px !important;
+}
+
+/* زيادة وضوح وسماكة الرموز المائلة والدوال المثلثية في القواعد والحلول */
+.katex .mathnormal,
+.katex .mathit,
+.katex .mop {
+  font-weight: 700 !important;
+  -webkit-text-stroke: 0.18px currentColor;
 }
 
 /* صندوق ملاءمة المعادلة: عند عدم كفاية التصغير يُسمح بالكسر عند علامات العلاقة */
