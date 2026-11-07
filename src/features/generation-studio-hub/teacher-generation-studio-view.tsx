@@ -30,6 +30,7 @@ import StudioBookletGeneratorTab from "./studio-booklet-generator-tab";
 import StudioFinalReviewGeneratorTab from "./studio-final-review-generator-tab";
 import StudioWorksheetGeneratorTab from "./studio-worksheet-generator-tab";
 import StudioVisualGeometryLabTab from "./studio-visual-geometry-lab-tab";
+import StudioFigureHumanReviewTab from "./studio-figure-human-review-tab";
 
 export const MODULE_ID_TEACHER_GENERATION_STUDIO_VIEW = "teacher_generation_studio_view" as const;
 
@@ -40,6 +41,7 @@ const STUDIO_TABS: readonly SegmentedTabItem[] = [
   { id: "review", labelAr: "مراجعة", icon: "🏆" },
   { id: "worksheet", labelAr: "ورقة عمل", icon: "⚡" },
   { id: "geometry_lab", labelAr: "معمل الأشكال", icon: "📐" },
+  { id: "figure_review", labelAr: "مراجعة الأشكال", icon: "✅" },
 ];
 
 export default function TeacherGenerationStudioView() {
@@ -170,7 +172,8 @@ export default function TeacherGenerationStudioView() {
                 onApplyParsedQuestionsToSheet={applyQuestions}
               />
             )}
-            {activeTabId === "geometry_lab" && <StudioVisualGeometryLabTab />}
+            {activeTabId === "geometry_lab" && <StudioVisualGeometryLabTab gradeId={gradeId} branchId={branchId} />}
+            {activeTabId === "figure_review" && <StudioFigureHumanReviewTab />}
           </div>
         ) : (
           <PDFPreviewOrchestrator
@@ -180,7 +183,7 @@ export default function TeacherGenerationStudioView() {
         )}
       </main>
 
-      {activeTabId !== "geometry_lab" && (
+      {activeTabId !== "geometry_lab" && activeTabId !== "figure_review" && (
         <StudioMobilePaneFloatingSwitch activePane={pane} onChangePane={setPane} />
       )}
     </div>

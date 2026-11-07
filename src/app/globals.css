@@ -53,6 +53,12 @@ body {
   margin: 0.14em 0.1em !important;
 }
 
+/* خط الكسر أسمك قليلاً لوضوح أفضل في الشاشة والاختبارات الإلكترونية */
+.katex .mfrac .frac-line {
+  border-bottom-width: 0.085em !important;
+  min-height: 1.5px;
+}
+
 /* صندوق ملاءمة المعادلة: عند عدم كفاية التصغير يُسمح بالكسر عند علامات العلاقة */
 .math-fit-wrap,
 .math-fit-wrap .katex,

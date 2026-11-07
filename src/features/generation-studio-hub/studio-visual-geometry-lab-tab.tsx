@@ -13,6 +13,7 @@ import { useState } from "react";
 import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
+import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { CURRICULUM_QUICK_SAMPLES } from "./studio-geometry-lab-quick-samples-data";
 import StudioGeometryUnderstoodFactsEditor from "./studio-geometry-understood-facts-editor";
 import StudioGeometryRedAdviceCard from "./studio-geometry-red-advice-card";
@@ -22,7 +23,12 @@ import StudioGeometryQualityDashboardCard from "./studio-geometry-quality-dashbo
 export const MODULE_ID_STUDIO_VISUAL_GEOMETRY_LAB_TAB =
   "studio_visual_geometry_lab_tab" as const;
 
-export default function StudioVisualGeometryLabTab() {
+export interface StudioVisualGeometryLabTabProps {
+  readonly gradeId: string;
+  readonly branchId: MathBranchId;
+}
+
+export default function StudioVisualGeometryLabTab({ gradeId, branchId }: StudioVisualGeometryLabTabProps) {
   const [desc, setDesc] = useState<string>(CURRICULUM_QUICK_SAMPLES[0].sampleText);
   const [notation, setNotation] = useState<MathNotationLanguage>("english");
   const [copied, setCopied] = useState(false);
@@ -82,8 +88,8 @@ export default function StudioVisualGeometryLabTab() {
         <StudioGeometryGoldenCaseExporter
           problemText={desc}
           description={desc}
-          gradeId="prep-1"
-          branchId="plane_geometry"
+          gradeId={gradeId}
+          branchId={branchId}
         />
       )}
 

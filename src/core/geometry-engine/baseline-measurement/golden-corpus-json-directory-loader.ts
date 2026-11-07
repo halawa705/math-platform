@@ -38,5 +38,16 @@ export function loadGoldenGeometryCorpus(directory: string = GOLDEN_CORPUS_GEOME
       cases.push(c);
     }
   }
-  return cases;
+  return applyHumanVerdictsOverlay(cases, directory);
+}
+
+/** يطبق أحكام المراجعة البشرية المصدّرة من الاستوديو (tests/golden-corpus/human-verdicts/human-verdicts.json). */
+function applyHumanVerdictsOverlay(cases: GoldenCorpusCase[], directory: string): GoldenCorpusCase[] {
+  const file = path.join(directory, "..", "human-verdicts", "human-verdicts.json");
+  if (!fs.existsSync(file)) return cases;
+  const map = JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, { verdict: GoldenCorpusCase["humanVerdict"]; note?: string; reviewedAtIso?: string }>;
+  return cases.map((c) => {
+    const e = map[c.id];
+    return e ? { ...c, humanVerdict: e.verdict, humanNotes: e.note, reviewedAtIso: e.reviewedAtIso } : c;
+  });
 }

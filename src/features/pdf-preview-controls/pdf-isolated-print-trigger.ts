@@ -91,6 +91,11 @@ export function triggerIsolatedA4Print(
     .katex .mfrac {
       margin: 0.1em 0.1em !important;
     }
+    .katex .mfrac .frac-line {
+      border-bottom-width: 0.085em !important;
+      min-height: 0.6pt !important;
+      border-bottom-color: #000000 !important;
+    }
     .a4-ministerial-sheet {
       width: 210mm !important;
       margin: 0 !important;
