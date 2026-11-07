@@ -79,7 +79,7 @@ export function evaluateFigureTriStateDecision(
     leakCheck.passed;
 
   const hasParallelProofGoal =
-    /(?:أثبت|اثبت|بيّن|بين|برهن).*?(?:توازي|\\parallel|\/\/|\|\|)/i.test(rawPromptOrDescription);
+    /(?:أثبت|اثبت|إثبات|اثبات|بيّن|بين|برهن).*?(?:توازي|\\parallel|\/\/|\|\|)/i.test(rawPromptOrDescription);
   const hasParallelPremise =
     (/(?:[A-Z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*(?:\/\/|\\parallel|\|\|)/i.test(rawPromptOrDescription) ||
       /إذا\s*كان.*?(?:توازي|متوازيان|متوازيين|يوازي)/i.test(rawPromptOrDescription)) &&

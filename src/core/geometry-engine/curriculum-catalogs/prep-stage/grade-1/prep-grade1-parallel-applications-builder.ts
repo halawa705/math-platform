@@ -73,38 +73,58 @@ export function buildParallelBisectorCorrespondingFigure(
  * لإثبات أن n ⊥ l2 وحساب قياس الزاوية القائمة الناتجة 90°
  */
 export function buildParallelPerpendicularTransversalFigure(
-  opts: PrepGrade1ParallelAppOptions
+  opts: PrepGrade1ParallelAppOptions & {
+    readonly transversalLabel?: string;
+    readonly hasL4?: boolean;
+    readonly isProveL1L2Parallel?: boolean;
+  }
 ): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
+  const transLabel = opts.transversalLabel || "n";
+  const hasL4 = Boolean(opts.hasL4);
 
-  const vL1A: CanonicalVertexNode = { id: `${opts.figureId}_vL1A`, label: localizeGeometricVertexLabelSSOT("l1", notation), position: { x: 1.5, y: 7.0 } };
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 5.0, y: 7.0 } };
-  const vL1B: CanonicalVertexNode = { id: `${opts.figureId}_vL1B`, label: "", position: { x: 8.8, y: 7.0 } };
+  const vL1A: CanonicalVertexNode = { id: `${opts.figureId}_vL1A`, label: localizeGeometricVertexLabelSSOT("l1", notation), position: { x: 1.2, y: 7.0 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: hasL4 ? 3.8 : 5.0, y: 7.0 } };
+  const vL1B: CanonicalVertexNode = { id: `${opts.figureId}_vL1B`, label: "", position: { x: 9.0, y: 7.0 } };
 
-  const vL2A: CanonicalVertexNode = { id: `${opts.figureId}_vL2A`, label: localizeGeometricVertexLabelSSOT("l2", notation), position: { x: 1.5, y: 3.0 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 5.0, y: 3.0 } };
-  const vL2B: CanonicalVertexNode = { id: `${opts.figureId}_vL2B`, label: "", position: { x: 8.8, y: 3.0 } };
+  const vL2A: CanonicalVertexNode = { id: `${opts.figureId}_vL2A`, label: localizeGeometricVertexLabelSSOT("l2", notation), position: { x: 1.2, y: 3.0 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: hasL4 ? 3.8 : 5.0, y: 3.0 } };
+  const vL2B: CanonicalVertexNode = { id: `${opts.figureId}_vL2B`, label: "", position: { x: 9.0, y: 3.0 } };
 
-  const vNTop: CanonicalVertexNode = { id: `${opts.figureId}_vNTop`, label: localizeGeometricVertexLabelSSOT("n", notation), position: { x: 5.0, y: 8.8 } };
-  const vNBot: CanonicalVertexNode = { id: `${opts.figureId}_vNBot`, label: "", position: { x: 5.0, y: 1.2 } };
+  const vNTop: CanonicalVertexNode = { id: `${opts.figureId}_vNTop`, label: localizeGeometricVertexLabelSSOT(transLabel, notation), position: { x: hasL4 ? 3.8 : 5.0, y: 8.8 } };
+  const vNBot: CanonicalVertexNode = { id: `${opts.figureId}_vNBot`, label: "", position: { x: hasL4 ? 3.8 : 5.0, y: 1.2 } };
 
+  const vertices: CanonicalVertexNode[] = [vL1A, vA, vL1B, vL2A, vB, vL2B, vNTop, vNBot];
+  const lArrows: 1 | undefined = opts.isProveL1L2Parallel ? undefined : 1;
   const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_sL1`, fromVertexId: vL1A.id, toVertexId: vL1B.id, parallelArrows: 1 },
-    { id: `${opts.figureId}_sL2`, fromVertexId: vL2A.id, toVertexId: vL2B.id, parallelArrows: 1 },
-    { id: `${opts.figureId}_sTransN`, fromVertexId: vNTop.id, toVertexId: vNBot.id },
+    { id: `${opts.figureId}_sL1`, fromVertexId: vL1A.id, toVertexId: vL1B.id, ...(lArrows ? { parallelArrows: lArrows } : {}) },
+    { id: `${opts.figureId}_sL2`, fromVertexId: vL2A.id, toVertexId: vL2B.id, ...(lArrows ? { parallelArrows: lArrows } : {}) },
+    { id: `${opts.figureId}_sTransN`, fromVertexId: vNTop.id, toVertexId: vNBot.id, ...(hasL4 ? { parallelArrows: 2 } : {}) },
   ];
+
+  const angles = [
+    { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vNTop.id, arm2VertexId: vL1B.id, degrees: 90, degreesLabel: "90°", isRightAngle: true },
+    { id: `${opts.figureId}_angB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vL2B.id, degrees: 90, degreesLabel: opts.isProveL1L2Parallel ? "90°" : "؟", isRightAngle: true },
+  ];
+
+  if (hasL4) {
+    const vL4Top: CanonicalVertexNode = { id: `${opts.figureId}_vL4Top`, label: localizeGeometricVertexLabelSSOT("L4", notation), position: { x: 6.8, y: 8.8 } };
+    const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: "", position: { x: 6.8, y: 7.0 } };
+    const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 6.8, y: 3.0 } };
+    const vL4Bot: CanonicalVertexNode = { id: `${opts.figureId}_vL4Bot`, label: "", position: { x: 6.8, y: 1.2 } };
+    vertices.push(vL4Top, vD, vC, vL4Bot);
+    segments.push({ id: `${opts.figureId}_sTransL4`, fromVertexId: vL4Top.id, toVertexId: vL4Bot.id, parallelArrows: 2 });
+    angles.push({ id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vD.id, arm2VertexId: vL2B.id, degrees: 90, degreesLabel: "؟", isRightAngle: true });
+  }
 
   return {
     figureId: opts.figureId,
     familyId: "triangle_family",
     branchId: "triangle_thales_parallel_line",
-    titleArabic: "المستقيم العمودي على أحد مستقيمين متوازيين l1 // l2 يكون عمودياً على الآخر n ⊥ l2",
+    titleArabic: "المستقيم العمودي على أحد مستقيمين متوازيين l1 // l2 يكون عمودياً على الآخر",
     notationLanguage: notation,
-    vertices: [vL1A, vA, vL1B, vL2A, vB, vL2B, vNTop, vNBot],
+    vertices,
     segments,
-    angles: [
-      { id: `${opts.figureId}_angA`, vertexId: vA.id, arm1VertexId: vNTop.id, arm2VertexId: vL1B.id, degrees: 90, degreesLabel: "90°", isRightAngle: true },
-      { id: `${opts.figureId}_angB`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vL2B.id, degrees: 90, degreesLabel: "؟", isRightAngle: true },
-    ],
+    angles,
   };
 }

@@ -93,6 +93,16 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
+  // 4-ب. الزوايا المنعكسة أو المقسمة بالعمل (مثل ق(∠AEC) المنعكسة = 290° أو زاوية تبادل 50° وزاوية تبادل 35°)
+  const reflexMatch = assertionsClean.match(/(?:ق\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|∠\s*([A-Za-z]{3}))\s*المنعكسة\s*=\s*(\d+(?:\.\d+)?)/i);
+  if (reflexMatch) {
+    facts.push(`ق(∠${reflexMatch[1] || reflexMatch[2]}) المنعكسة = ${reflexMatch[3]}°`);
+  }
+  const splitAltMatch = assertionsClean.match(/زاوية\s*تبادل\s*(\d+(?:\.\d+)?)\s*°\s*وزاوية\s*تبادل\s*(\d+(?:\.\d+)?)\s*°/i);
+  if (splitAltMatch) {
+    facts.push(`ق(∠BAE) = ${splitAltMatch[1]}°`, `ق(∠ECD) = ${splitAltMatch[2]}°`);
+  }
+
   // 5. التوازي والتعامد والنقاط: DE // BC أو AD ⊥ BC أو D ∈ AB أو AD عمودي على BC
   const relMatches = clean.matchAll(
     /(?<![A-Za-zء-ي])([A-Za-z]{2}|[A-Za-z])\s*(\/\/|⊥|∈|منتصف|عمودي\s*على|يوازي|ينتمي\s*إلى)\s*([A-Za-z]{2}|[A-Za-z])(?=[\s،,;؛|.)]|$|\n)/gi

@@ -33,6 +33,8 @@ import {
   buildParallelProofCorresponding110Figure,
 } from "./prep-grade1-parallel-proof-conditions-builder";
 import { buildParallelTransversalParametricFromDescription } from "./prep-grade1-parallel-transversal-parametric-builder";
+import { buildParallelBrokenVertexParametricFigure } from "./prep-grade1-parallel-broken-vertex-parametric-builder";
+import { buildParallelBisectorsParametricFigure } from "./prep-grade1-parallel-bisectors-parametric-builder";
 import { normalizeParallelismArabicLettersToLatin } from "./prep-grade1-parallelism-arabic-letters-normalizer";
 import {
   buildParallelBisectorCorrespondingFigure,
@@ -47,25 +49,21 @@ export function matchPrepGrade1ParallelismFigure(
   const d = normalizeParallelismArabicLettersToLatin((arabicDescription || "").trim());
   if (!d) return undefined;
 
-  // حماية: استبعاد المضلعات والرباعيات ونظريات 2ع و 3ع كي لا يحدث التباس في السجل الموحد
-  if (/شكل\s*رباعي|متوازي\s*الأضلاع|متوازي\s*اضلاع|مستطيل|مربع|معين|شبه\s*منحرف|سداسي|خماسي|معادلة|إحداثي|l3|l4|أربعة\s*مستقيمات|متوسطات|مثلث.*قائم/i.test(d)) {
+  // حماية: استبعاد المضلعات والرباعيات العامة ونظريات 2ع و 3ع كي لا يحدث التباس في السجل الموحد
+  if (
+    /شكل\s*رباعي|مستطيل|مربع|معين|شبه\s*منحرف|سداسي|خماسي|معادلة|إحداثي|l1\s*\/\/\s*l2\s*\/\/\s*l3|أربعة\s*مستقيمات|متوسطات|مثلث.*قائم/i.test(d) ||
+    (/متوازي\s*(?:الأضلاع|اضلاع)/i.test(d) && !/DE\s*ينصف\s*∠?\s*ADC/i.test(d))
+  ) {
     return undefined;
   }
 
-  // 0. رسم بارامتري عام: مستقيمان متوازيان وقاطع في نقطتين مع زوايا معطاة (عددية/جبرية) بأي أسماء نقاط
-  const parametricFig = buildParallelTransversalParametricFromDescription(d, figureId, notationLanguage);
-  if (parametricFig) return parametricFig;
-
   // 1. مثال 1 ص 1 ومسائل التبادل الجبري: AB // CD وقاطع EF في G و H مع (9x-5)° و (5x+15)°
-  if (
-    /(?:AGH|GHD|قاطع.*[GH]|قاطع.*[Gز].*[Hح]|تبادل.*(?:AGH|GHD)|متبادلتان.*(?:AGH|GHD)|EF\s*قاطعاً.*[GH])/i.test(d) ||
-    (/(?:9[xX]\s*-\s*5.*5[xX]\s*\+\s*15|5[xX]\s*\+\s*15.*9[xX]\s*-\s*5)/i.test(d) && !/تناظر|متناظر/i.test(d))
-  ) {
+  if (/(?:9[xX]\s*-\s*5.*5[xX]\s*\+\s*15|5[xX]\s*\+\s*15.*9[xX]\s*-\s*5)/i.test(d) && !/تناظر|متناظر/i.test(d)) {
     return buildParallelTransversalAlternateGHFigure({ figureId, notationLanguage });
   }
 
   // 2. مثال 2 ص 2: توازي وتداخل حرف U: مستقيمان BA // CD وقاطع BC مع زاوية داخلة 60°
-  if (/(?:BA\s*(?:\/\/|\\parallel|\|\|)\s*CD.*BC|BC\s*قاطع.*(?:BA|CD)|BA.*CD.*BC.*داخلة|BC.*قاطع.*داخلة)/i.test(d)) {
+  if (/(?:BA\s*(?:\/\/|\\parallel|\|\|)\s*CD.*BC|BC\s*قاطع.*(?:BA|CD)|BA.*CD.*BC.*داخلة|BC.*قاطع.*داخلة)/i.test(d) && /60\s*°/.test(d)) {
     return buildParallelConsecutiveInteriorBCFigure({ figureId, notationLanguage, degC: 60 });
   }
 
@@ -75,7 +73,7 @@ export function matchPrepGrade1ParallelismFigure(
   }
 
   // 4. مثال 4 ص 3: AB // CD مع نقطة E تقع بين المستقيمين و 45° و 130° لحساب AEC = 95°
-  if (/(?:E\s*تقع\s*بين|تقع\s*بين\s*المستقيمين|45°.*130°|130°.*45°|AEC.*45.*130|A\s*=\s*45°.*C\s*=\s*130°)/i.test(d)) {
+  if (/(?:45°.*130°|130°.*45°|AEC.*45.*130|A\s*=\s*45°.*C\s*=\s*130°)/i.test(d)) {
     return buildParallelBrokenThreeRays45And130Figure({ figureId, notationLanguage, degA: 45, degC: 130 });
   }
 
@@ -85,7 +83,7 @@ export function matchPrepGrade1ParallelismFigure(
   }
 
   // 6. مثال 6 ص 4: إثبات AB // CD بمعلومية قاطع EC مع زاويتي تناظر 110° و 110°
-  if (/(?:EC\s*يقطع.*AB.*CD|EBA.*110.*BCD.*110|110°.*110°.*تناظر|EC.*قاطع.*110)/i.test(d)) {
+  if (/(?:EC\s*يقطع.*AB.*CD|EBA.*110.*BCD.*110|110°.*110°.*تناظر.*EC|EC.*قاطع.*110)/i.test(d)) {
     return buildParallelProofCorresponding110Figure({ figureId, notationLanguage, degEBA: 110, degBCD: 110 });
   }
 
@@ -94,17 +92,35 @@ export function matchPrepGrade1ParallelismFigure(
     return buildParallelBisectorCorrespondingFigure({ figureId, notationLanguage, degFBA: 55 });
   }
 
-  // 8. مثال 8 ص 5: نظرية المستقيم العمودي على أحد مستقيمين متوازيين l1 // l2 و n ⊥ l1
+  // 8. مثال 8 ص 5 والفكرة 6: المستقيم العمودي على أحد مستقيمين متوازيين أو المستقيمان العموديان على ثالث
   if (
-    /(?:(?:l1|l_1)\s*(?:\/\/|\\parallel|\|\|)\s*(?:l2|l_2).*(?:⊥|عمود)|n\s*⊥\s*(?:l1|l_1)|عمود(?:ياً|ي)?\s*على\s*أحد\s*مستقيمين\s*متوازيين|المستقيمان\s*الموازيان\s*لثالث)/i.test(d)
+    /(?:(?:l1|l_1)\s*(?:\/\/|\\parallel|\|\|)\s*(?:l2|l_2).*(?:⊥|عمود)|(?:l3|l_3|n)\s*⊥\s*(?:l1|l_1)|(?:l1|l_1)\s*⊥\s*(?:l3|l_3).*(?:l2|l_2)\s*⊥\s*(?:l3|l_3)|عمود(?:ياً|ي)?\s*على\s*أحد\s*مستقيمين\s*متوازيين|المستقيمان\s*الموازيان\s*لثالث)/i.test(d)
   ) {
-    return buildParallelPerpendicularTransversalFigure({ figureId, notationLanguage });
+    return buildParallelPerpendicularTransversalFigure({
+      figureId,
+      notationLanguage,
+      transversalLabel: /l_?3/i.test(d) ? "L3" : "n",
+      hasL4: /l_?4/i.test(d),
+      isProveL1L2Parallel: /(?:أثبت|اثبت|إثبات|اثبات|برهن).*?(?:l1|l_1)\s*(?:\/\/|\\parallel|\|\|)\s*(?:l2|l_2)/i.test(d),
+    });
   }
 
   // 9. مسألة 10 ص 194: AB // CD و EF // CD مع A = 70° و C = 120° لإيجاد AEC = 130°
-  if (/AEC.*130|AB\s*\/\/\s*CD.*EF\s*\/\/\s*CD.*70°.*120°|70°.*120°.*AEC/i.test(d)) {
+  if (/(?:70°.*120°|120°.*70°).*AEC|AB\s*\/\/\s*CD.*EF\s*\/\/\s*CD.*70°.*120°/i.test(d)) {
     return buildParallelBrokenThreeRaysAEC130Figure({ figureId, notationLanguage });
   }
+
+  // 0-أ. منشئ بارامتري عام لمنصفات الزوايا مع التوازي وبراهين التوازي الرباعية
+  const bisectorFig = buildParallelBisectorsParametricFigure(d, figureId, notationLanguage);
+  if (bisectorFig) return bisectorFig;
+
+  // 0-ب. منشئ بارامتري عام للزوايا المنكسرة وثلاثة مستقيمات متوازية وتوازي الضلعين المتعاقبين
+  const brokenFig = buildParallelBrokenVertexParametricFigure(d, figureId, notationLanguage);
+  if (brokenFig) return brokenFig;
+
+  // 0-جـ. منشئ بارامتري عام لمستقيمين متوازيين وقاطع (ممتد أو مباشر بنمط Z أو U)
+  const parametricFig = buildParallelTransversalParametricFromDescription(d, figureId, notationLanguage);
+  if (parametricFig) return parametricFig;
 
   // 10. مسألة 11 ص 194: AB // EF مع D = 100° و E = 115° و DAE = 35° لإثبات AB // DC
   if (/AB\s*\/\/\s*EF.*100°.*115°.*35°|DAE\s*=\s*35°.*AB\s*\/\/\s*DC/i.test(d)) {

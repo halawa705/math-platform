@@ -102,7 +102,7 @@ export function matchPrepSimilarityGeometryFigure(
   }
 
   // 8. مضلعان بهما جذور وزوايا خاصة (60° و 150° وجذور 1.5√3 و √3 - مثال 2)
-  if (/1\.5√3|150°|y\s*-\s*1\/3/i.test(d) || (/(?:^|[^\d])√3/i.test(d) && (/تشابه|متشابه|EFGH|مثال\s*2/i.test(d)))) {
+  if (/1\.5√3|y\s*-\s*1\/3/i.test(d) || ((/150°|(?:^|[^\d])√3/i.test(d)) && (/تشابه|متشابه|EFGH|مضلعان|مثال\s*2/i.test(d)))) {
     return buildSimilarQuadsWithRadicalsAndAnglesFigure({
       figureId,
       notationLanguage,
