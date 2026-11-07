@@ -82,11 +82,13 @@ export interface StudioBookletSettingsState {
   readonly hwEssay: number;
   readonly hwEssayEnabled: boolean;
   readonly customDirectives?: string;
+  readonly savedReplies?: Readonly<Record<BookletPromptStageNumber, string>>;
 }
 
 export const DEFAULT_STUDIO_BOOKLET_SETTINGS: StudioBookletSettingsState = {
   activeStage: 1, examplesPerIdea: 2, examplesEnabled: true, drillsPerIdea: 2,
   drillsEnabled: true, hwMcq: 4, hwMcqEnabled: true, hwEssay: 2, hwEssayEnabled: true, customDirectives: "",
+  savedReplies: { 1: "", 2: "", 3: "" },
 };
 
 export const loadStudioBookletSettingsSSOT = (): StudioBookletSettingsState => safeGet(KEYS.BOOKLET, DEFAULT_STUDIO_BOOKLET_SETTINGS);
@@ -105,11 +107,13 @@ export interface StudioExamSettingsState {
   readonly difficulty: "standard_balanced" | "olympiad_challenge";
   readonly customDirectives?: string;
   readonly unitFocusWeights?: Record<string, number>;
+  readonly savedReply?: string;
 }
 
 export const DEFAULT_STUDIO_EXAM_SETTINGS: StudioExamSettingsState = {
   mcqCount: 6, mcqEnabled: true, proofCount: 3, proofEnabled: true, isOnlineMode: false, difficulty: "standard_balanced", customDirectives: "",
   unitFocusWeights: {},
+  savedReply: "",
 };
 
 export const loadStudioExamSettingsSSOT = (): StudioExamSettingsState => safeGet(KEYS.EXAM, DEFAULT_STUDIO_EXAM_SETTINGS);
@@ -127,10 +131,12 @@ export interface StudioReviewSettingsState {
   readonly essayCount: number;
   readonly essayEnabled: boolean;
   readonly customDirectives?: string;
+  readonly savedReplies?: Readonly<Record<FinalReviewStageNumber, string>>;
 }
 
 export const DEFAULT_STUDIO_REVIEW_SETTINGS: StudioReviewSettingsState = {
   scope: "final_exam_night_capsule", activeStage: 1, mcqCount: 15, mcqEnabled: true, essayCount: 8, essayEnabled: true, customDirectives: "",
+  savedReplies: { 1: "", 2: "", 3: "" },
 };
 
 export const loadStudioReviewSettingsSSOT = (): StudioReviewSettingsState => safeGet(KEYS.REVIEW, DEFAULT_STUDIO_REVIEW_SETTINGS);
@@ -151,6 +157,7 @@ export interface StudioWorksheetSettingsState {
   readonly selectedUnitIds?: readonly string[];
   readonly selectedLessonIds?: readonly string[];
   readonly targetedUnitsOrLessons?: string;
+  readonly savedReply?: string;
 }
 
 export const DEFAULT_STUDIO_WORKSHEET_SETTINGS: StudioWorksheetSettingsState = {
@@ -164,6 +171,7 @@ export const DEFAULT_STUDIO_WORKSHEET_SETTINGS: StudioWorksheetSettingsState = {
   selectedUnitIds: [],
   selectedLessonIds: [],
   targetedUnitsOrLessons: "",
+  savedReply: "",
 };
 
 export const loadStudioWorksheetSettingsSSOT = (): StudioWorksheetSettingsState => safeGet(KEYS.WORKSHEET, DEFAULT_STUDIO_WORKSHEET_SETTINGS);
@@ -187,6 +195,7 @@ export interface StudioExamFormsSettingsState {
   readonly proofEnabled: boolean;
   readonly difficulty: "standard_balanced" | "olympiad_challenge";
   readonly customDirectives?: string;
+  readonly savedReply?: string;
 }
 
 export const DEFAULT_STUDIO_EXAM_FORMS_SETTINGS: StudioExamFormsSettingsState = {
@@ -201,6 +210,7 @@ export const DEFAULT_STUDIO_EXAM_FORMS_SETTINGS: StudioExamFormsSettingsState = 
   proofEnabled: true,
   difficulty: "standard_balanced",
   customDirectives: "",
+  savedReply: "",
 };
 
 export const loadStudioExamFormsSettingsSSOT = (): StudioExamFormsSettingsState =>

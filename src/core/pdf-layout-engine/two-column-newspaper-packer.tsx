@@ -97,7 +97,8 @@ export default function TwoColumnNewspaperPacker({
     [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
-  const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}`, measureStamp);
+  const [isSweepingState, setIsSweepingState] = React.useState(false);
+  const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}:${isSweepingState ? "s" : "d"}`, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = React.useMemo(
     () =>
@@ -106,26 +107,36 @@ export default function TwoColumnNewspaperPacker({
         : (FLOW_DENSITY_PROFILES[effSettings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact),
     [isSchoolExam, effSettings.densityMode]
   );
-  const discretePages = React.useMemo(
-    () => packFlowItemsIntoPages(flowItems, measured.heights, { budgets: pageBudgets, density: densityProfile }),
+  const basePages = React.useMemo(
+    () => packFlowItemsIntoPages(flowItems, measured.heights, { budgets: pageBudgets, density: densityProfile, skipSolutionSplits: true }),
     [flowItems, measured.heights, pageBudgets, densityProfile]
   );
 
   const inputSignature = `${questions.map((q) => q.id).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.numeralMode}|${settings.notationLanguage}|${settings.customDocumentTitle}`;
   const sweep = useAutoFitSweepController({
-    mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: discretePages,
+    mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: basePages,
   });
 
+  const isSweeping = sweep.phase === "sweeping";
+  useEffect(() => { setIsSweepingState(isSweeping); }, [isSweeping]);
+  const discretePages = React.useMemo(
+    () =>
+      isSweeping
+        ? basePages
+        : packFlowItemsIntoPages(flowItems, measured.heights, { budgets: pageBudgets, density: densityProfile, skipSolutionSplits: false }),
+    [isSweeping, basePages, flowItems, measured.heights, pageBudgets, densityProfile]
+  );
+
   useEffect(() => { setActiveRung(sweep.phase === "idle" ? 0 : sweep.probeRungIndex); }, [sweep.phase, sweep.probeRungIndex]);
-  useEffect(() => { if (sweep.phase !== "sweeping") onPagesCountChange?.(discretePages.length); }, [discretePages.length, sweep.phase, onPagesCountChange]);
+  useEffect(() => { if (!isSweeping) onPagesCountChange?.(discretePages.length); }, [discretePages.length, isSweeping, onPagesCountChange]);
 
   const stableRef = useRef({ pages: discretePages, settings: effSettings, heights: measured.heights });
-  if (sweep.phase !== "sweeping" || stableRef.current.pages.length === 0) {
+  if (!isSweeping || stableRef.current.pages.length === 0) {
     stableRef.current = { pages: discretePages, settings: effSettings, heights: measured.heights };
   }
-  const viewPages = sweep.phase === "sweeping" ? stableRef.current.pages : discretePages;
-  const viewSettings = sweep.phase === "sweeping" ? stableRef.current.settings : effSettings;
-  const viewHeights = sweep.phase === "sweeping" ? stableRef.current.heights : measured.heights;
+  const viewPages = isSweeping ? stableRef.current.pages : discretePages;
+  const viewSettings = isSweeping ? stableRef.current.settings : effSettings;
+  const viewHeights = isSweeping ? stableRef.current.heights : measured.heights;
 
   const renderStagingItem = (item: FlowItem) => (
     <FlowItemRenderer key={item.id} item={item} settings={effSettings} palette={palette} identity={identity} questions={questions} />
@@ -151,6 +162,7 @@ export default function TwoColumnNewspaperPacker({
         stagingRef={stagingRef} flowItems={flowItems} renderFlowItem={renderStagingItem} settings={effSettings}
         identity={identity} palette={palette} activeFont={activeFont} subtitleAr={subtitleAr} isSolvedMode={isSolvedMode}
         totalIdeasCount={totalIdeasCount} totalQuestionsCount={questions.length} totalMarks={totalMarks}
+        skipSplitVariants={isSweeping}
       />
 
       {sweep.phase === "sweeping" && (

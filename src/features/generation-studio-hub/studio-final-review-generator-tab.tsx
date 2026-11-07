@@ -61,7 +61,11 @@ export default function StudioFinalReviewGeneratorTab({
   const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled);
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
-  const [replies, setReplies] = useState<Record<FinalReviewStageNumber, string>>({ 1: "", 2: "", 3: "" });
+  const [replies, setReplies] = useState<Record<FinalReviewStageNumber, string>>(() => ({
+    1: initial.savedReplies?.[1] || "",
+    2: initial.savedReplies?.[2] || "",
+    3: initial.savedReplies?.[3] || "",
+  }));
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
@@ -159,7 +163,14 @@ export default function StudioFinalReviewGeneratorTab({
         opensNotebook={activeStage === 1}
         onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId, { openNotebook: activeStage === 1 }); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
         isPromptCopied={copied} replyValue={replies[activeStage]}
-        onChangeReply={(val) => { setNotice(null); setReplies((prev) => ({ ...prev, [activeStage]: val })); }}
+        onChangeReply={(val) => {
+          setNotice(null);
+          setReplies((prev) => {
+            const next = { ...prev, [activeStage]: val };
+            persist({ savedReplies: next });
+            return next;
+          });
+        }}
         replyPlaceholderAr={stage.placeholder}
         contextNoteAr={activeStage === 3 && essays.length > 0 ? `تمت قراءة ${essays.length} مسألة مقالية من المرحلة ٢` : undefined}
       />

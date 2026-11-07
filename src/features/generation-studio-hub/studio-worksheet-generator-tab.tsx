@@ -75,7 +75,7 @@ export default function StudioWorksheetGeneratorTab({
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
 
   const [prompt, setPrompt] = useState("");
-  const [reply, setReply] = useState("");
+  const [reply, setReply] = useState(initial.savedReply || "");
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -216,6 +216,7 @@ export default function StudioWorksheetGeneratorTab({
         onChangeReply={(v) => {
           setNotice(null);
           setReply(v);
+          persist({ savedReply: v });
         }}
         replyPlaceholderAr="الصق رد ورقة العمل هنا..."
       />

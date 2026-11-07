@@ -47,6 +47,7 @@ function isMcqQuestion(q: PrintableMathQuestionItem): boolean {
 }
 
 function shouldGenerateAnswerCard(q: PrintableMathQuestionItem): boolean {
+  if (isSolvedExample(q)) return false;
   const hasSteps = Boolean(q.solutionStepsAr?.some((s) => s.trim().length > 0));
   const hasModelAnswer = Boolean(q.modelAnswerAr && q.modelAnswerAr.trim().length > 0);
   if (!isMcqQuestion(q)) {
@@ -72,8 +73,9 @@ export function buildFlowItems(params: {
     answerVisibilityMode,
   } = params;
   const questionSpan = columnsCount === 2 ? "column" : "full";
-  const hasMcqs = questions.some((q) => isMcqQuestion(q) && q.correctMcqIndex !== undefined);
-  const answerableQuestions = questions.filter(shouldGenerateAnswerCard);
+  const nonExampleQuestions = questions.filter((q) => !isSolvedExample(q));
+  const hasMcqs = nonExampleQuestions.some((q) => isMcqQuestion(q) && q.correctMcqIndex !== undefined);
+  const answerableQuestions = nonExampleQuestions.filter(shouldGenerateAnswerCard);
 
   const isParentEdition = answerVisibilityMode === "questions_with_answers";
   const isAnswerKeyOnly = answerVisibilityMode === "answer_key_only";
@@ -194,12 +196,13 @@ export function buildFlowItems(params: {
         ...group.items.filter((q) => !isSolvedExample(q)),
       ];
       for (const question of ordered) {
+        const workedExample = isSolvedExample(question);
         items.push({
           id: `flow-q-${ideaIndex}-${question.id}`,
           kind: "question",
           span: questionSpan,
           question,
-          forceHideSolution: forceHideSolutionInQuestionsFlow,
+          forceHideSolution: workedExample ? false : forceHideSolutionInQuestionsFlow,
         });
       }
 
@@ -211,7 +214,7 @@ export function buildFlowItems(params: {
     });
   }
 
-  if (showAnswersSection) {
+  if (showAnswersSection && (hasMcqs || answerableQuestions.length > 0)) {
     items.push({
       id: "flow-answer-section-banner",
       kind: "answer_section_banner",

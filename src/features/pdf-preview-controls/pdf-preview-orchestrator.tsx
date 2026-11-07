@@ -33,6 +33,7 @@ export interface PDFPreviewOrchestratorProps {
   readonly customForms?: readonly PrintableExamFormGroup[];
   readonly gradeNameAr?: string;
   readonly branchNameAr?: string;
+  readonly onClosePreview?: () => void;
   readonly children?: React.ReactNode;
 }
 
@@ -62,6 +63,7 @@ export default function PDFPreviewOrchestrator({
   customForms,
   gradeNameAr = "",
   branchNameAr = "",
+  onClosePreview,
   children,
 }: PDFPreviewOrchestratorProps) {
   const userChangedAutoFitRef = useRef<boolean>(false);
@@ -180,6 +182,22 @@ export default function PDFPreviewOrchestrator({
   return (
     <div className="flex flex-col gap-3 w-full">
       <div className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+        {onClosePreview && (
+          <button
+            type="button"
+            onClick={onClosePreview}
+            className="w-full min-h-[44px] rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border-2 border-amber-300 dark:border-amber-700/70 text-amber-950 dark:text-amber-200 text-xs font-black cursor-pointer flex items-center justify-between px-3 shadow-2xs transition-all"
+          >
+            <span className="flex items-center gap-1.5">
+              <span>↩️</span>
+              <span>العودة إلى المراحل وتعديل الردود المحفوظة</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-lg bg-amber-200/80 dark:bg-amber-900/60 text-[11px] font-black">
+              ✕ إغلاق المعاينة
+            </span>
+          </button>
+        )}
+
         {/* شريط التبديل السريع بين نسخة الطالب (أسئلة فقط) ونسخة ولي الأمر (الأسئلة بالإجابات) */}
         <PDFDocumentEditionSegmentedSwitch
           currentMode={settings.answerVisibilityMode}

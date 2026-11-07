@@ -69,7 +69,7 @@ export default function StudioExamGeneratorTab({
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [weights, setWeights] = useState<Record<string, number>>(initial.unitFocusWeights || {});
   const [prompt, setPrompt] = useState("");
-  const [reply, setReply] = useState("");
+  const [reply, setReply] = useState(initial.savedReply || "");
   const [parsedQuestions, setParsedQuestions] = useState<readonly QuestionAssessmentIR[]>([]);
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -149,6 +149,7 @@ export default function StudioExamGeneratorTab({
   const handleReplyChange = (raw: string) => {
     setNotice(null);
     setReply(raw);
+    persist({ savedReply: raw });
     if (!raw.trim()) {
       setParsedQuestions([]);
       setDiagRows([]);

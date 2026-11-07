@@ -210,6 +210,7 @@ export default function SideBySideDiagramDocker({
       </div>
 
       {!isAnswerCardMode &&
+        !isBookletSolvedExample &&
         (forceHideSolution || settings.answerVisibilityMode === "questions_only" || isBookletDrillOrHomework) && (
         <StudentAnswerSpaceDocker
           isBookletDrill={isBookletDrill}

@@ -32,7 +32,14 @@ export function OfficialMcqAnswerKeySummaryTable({
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
 }) {
-  const mcqItems = questions.filter((q) => q.kind === "mcq" && q.mcqChoicesAr);
+  const mcqItems = questions.filter(
+    (q) =>
+      q.kind === "mcq" &&
+      q.mcqChoicesAr &&
+      !q.isWorkedExample &&
+      !q.id.startsWith("ws-concept-") &&
+      !(q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-"))
+  );
   if (mcqItems.length === 0) return null;
 
   const gridCols = mcqItems.length > 36 ? 4 : 4;

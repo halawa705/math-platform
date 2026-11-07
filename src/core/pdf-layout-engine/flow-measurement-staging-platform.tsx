@@ -41,17 +41,18 @@ export interface FlowMeasurementStagingPlatformProps {
   readonly totalIdeasCount: number;
   readonly totalQuestionsCount: number;
   readonly totalMarks: number;
+  readonly skipSplitVariants?: boolean;
 }
 
 const WRAPPER_BASE_STYLE: React.CSSProperties = { display: "flow-root" };
 
 export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlatformProps) {
-  const { stagingRef, flowItems, renderFlowItem, settings, identity, palette, activeFont } = props;
+  const { stagingRef, flowItems, renderFlowItem, settings, identity, palette, activeFont, skipSplitVariants = false } = props;
   const numeralMode = settings.numeralMode;
-  // نسخ رأس/ذيل الأمثلة المحلولة (تقسيم الحل بين صفحتين) تُقاس بعرض الصفحة الكامل مثل بقية الكائنات.
+  // نسخ رأس/ذيل الأمثلة المحلولة (تقسيم الحل بين صفحتين) تُقاس بعرض الصفحة الكامل عند استقرار الدرجة النهائية.
   const splitVariantItems = React.useMemo(
-    () => [...buildSolutionSplitVariants(flowItems).values()].flatMap((vs) => vs.flatMap((v) => [v.head, v.tail])),
-    [flowItems]
+    () => (skipSplitVariants ? [] : [...buildSolutionSplitVariants(flowItems).values()].flatMap((vs) => vs.flatMap((v) => [v.head, v.tail]))),
+    [flowItems, skipSplitVariants]
   );
   return (
     <div

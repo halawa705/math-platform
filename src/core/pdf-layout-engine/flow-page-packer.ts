@@ -22,6 +22,7 @@ export const MODULE_ID_FLOW_PAGE_PACKER = "flow_page_packer" as const;
 export interface FlowPackOptions {
   readonly budgets: FlowPageBudgetsPx;
   readonly density: FlowDensityProfile;
+  readonly skipSolutionSplits?: boolean;
 }
 
 interface BreakNode {
@@ -54,6 +55,7 @@ export function packFlowItemsIntoPages(
   options: FlowPackOptions
 ): readonly FlowPage[] {
   const base = packFlowItemsIndivisible(items, heights, options);
+  if (options.skipSolutionSplits) return base;
   return optimizePagesWithSolutionSplits(items, heights, base, (candidate) =>
     packFlowItemsIndivisible(candidate, heights, options)
   ).pages;

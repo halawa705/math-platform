@@ -95,19 +95,36 @@ export default function StudioSingleStagePastePanel({
 
       {/* الخطوة ٢: لصق الرد */}
       <div className="space-y-2">
-        <div className="text-xs font-black text-teal-800 dark:text-teal-300">
-          ٢. الصق رد NotebookLM لهذه المرحلة هنا
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-xs font-black text-teal-800 dark:text-teal-300">
+            ٢. الصق رد NotebookLM لهذه المرحلة هنا (اضغط مرة لتحديد الكل)
+          </div>
+          {replyValue.trim().length > 0 && (
+            <button
+              type="button"
+              onClick={() => onChangeReply("")}
+              className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-[11px] font-black cursor-pointer hover:bg-rose-100"
+            >
+              🗑️ مسح الرد
+            </button>
+          )}
         </div>
         <textarea
           rows={6}
           value={replyValue}
           onChange={(e) => onChangeReply(e.target.value)}
+          onClick={(e) => {
+            const el = e.currentTarget;
+            if (el.value.length > 0 && el.selectionStart === el.selectionEnd) {
+              el.select();
+            }
+          }}
           placeholder={replyPlaceholderAr}
           className="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold leading-relaxed"
         />
         {replyValue.trim().length > 5 && (
           <p className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">
-            ✓ تم استلام الرد ({replyValue.trim().length} حرفاً)
+            ✓ تم استلام وحفظ الرد ({replyValue.trim().length} حرفاً) — اضغط داخل الصندوق لتحديده بالكامل واستبداله
           </p>
         )}
       </div>

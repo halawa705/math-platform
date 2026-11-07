@@ -112,6 +112,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
           kind: ex.mcqChoicesAr ? "mcq" : geoMatch || graphSpec ? "essay_geometry" : "essay_algebra",
           branchBadgeAr: params.branchNameAr,
           marks: 2,
+          isWorkedExample: true,
           promptAr: ex.promptAr,
           mcqChoicesAr: ex.mcqChoicesAr,
           correctMcqIndex: resolveCorrectChoiceIndex(ex.rawFinal || ex.steps.join(" "), ex.mcqChoicesAr),

@@ -118,67 +118,68 @@ export default function TeacherGenerationStudioView() {
           />
         </StudioCollapsibleSectionCard>
 
-        {pane === "builder" ? (
-          <div>
-            {activeTabId === "exam" && (
-              <StudioExamGeneratorTab
-                gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
-                unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
-                branchNameAr={branch.nameArabic}
-                selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
-                targetedScopeText={targetedScopeText}
-                onApplyExamTitleToSheet={applyTitle}
-                onApplyParsedQuestionsToSheet={applyQuestions}
-                onSyncQuestionsToSheet={syncQuestions}
-              />
-            )}
-            {activeTabId === "forms" && (
-              <StudioExamFormsGeneratorTab
-                gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
-                unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
-                branchNameAr={branch.nameArabic}
-                selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
-                targetedScopeText={targetedScopeText}
-                onApplyFormsTitleToSheet={applyTitle}
-                onApplyParsedQuestionsToSheet={setSheetQuestions}
-                onApplyExamFormsToSheet={applyForms}
-              />
-            )}
-            {activeTabId === "booklet" && (
-              <StudioBookletGeneratorTab
-                gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
-                unitTitleAr={unitTitle || "الوحدة الثالثة"} lessonTitle={lessonTitle}
-                lessonOrder={lessonOrder} branchNameAr={branch.nameArabic}
-                targetedScopeText={targetedScopeText}
-                onApplyBookletTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
-              />
-            )}
-            {activeTabId === "review" && (
-              <StudioFinalReviewGeneratorTab
-                gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
-                unitTitleAr={unitTitle || "جميع وحدات المنهج"} branchNameAr={branch.nameArabic}
-                targetedScopeText={targetedScopeText}
-                onApplyReviewTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
-              />
-            )}
-            {activeTabId === "worksheet" && (
-              <StudioWorksheetGeneratorTab
-                gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
-                branchNameAr={branch.nameArabic} unitTitleAr={unitTitle || "الوحدة الأولى"}
-                lessonTitle={lessonTitle} notationLanguage={notationLanguage}
-                selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
-                targetedScopeText={targetedScopeText}
-                onApplyWorksheetTitleToSheet={applyTitle}
-                onApplyParsedQuestionsToSheet={applyQuestions}
-              />
-            )}
-            {activeTabId === "geometry_lab" && <StudioVisualGeometryLabTab gradeId={gradeId} branchId={branchId} />}
-            {activeTabId === "figure_review" && <StudioFigureHumanReviewTab />}
-          </div>
-        ) : (
+        <div className={pane === "builder" ? "block" : "hidden"}>
+          {activeTabId === "exam" && (
+            <StudioExamGeneratorTab
+              gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
+              unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
+              branchNameAr={branch.nameArabic}
+              selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+              targetedScopeText={targetedScopeText}
+              onApplyExamTitleToSheet={applyTitle}
+              onApplyParsedQuestionsToSheet={applyQuestions}
+              onSyncQuestionsToSheet={syncQuestions}
+            />
+          )}
+          {activeTabId === "forms" && (
+            <StudioExamFormsGeneratorTab
+              gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
+              unitTitleAr={unitTitle || "الوحدة الأولى"} lessonTitle={lessonTitle}
+              branchNameAr={branch.nameArabic}
+              selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+              targetedScopeText={targetedScopeText}
+              onApplyFormsTitleToSheet={applyTitle}
+              onApplyParsedQuestionsToSheet={setSheetQuestions}
+              onApplyExamFormsToSheet={applyForms}
+            />
+          )}
+          {activeTabId === "booklet" && (
+            <StudioBookletGeneratorTab
+              gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
+              unitTitleAr={unitTitle || "الوحدة الثالثة"} lessonTitle={lessonTitle}
+              lessonOrder={lessonOrder} branchNameAr={branch.nameArabic}
+              targetedScopeText={targetedScopeText}
+              onApplyBookletTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
+            />
+          )}
+          {activeTabId === "review" && (
+            <StudioFinalReviewGeneratorTab
+              gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
+              unitTitleAr={unitTitle || "جميع وحدات المنهج"} branchNameAr={branch.nameArabic}
+              targetedScopeText={targetedScopeText}
+              onApplyReviewTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
+            />
+          )}
+          {activeTabId === "worksheet" && (
+            <StudioWorksheetGeneratorTab
+              gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
+              branchNameAr={branch.nameArabic} unitTitleAr={unitTitle || "الوحدة الأولى"}
+              lessonTitle={lessonTitle} notationLanguage={notationLanguage}
+              selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+              targetedScopeText={targetedScopeText}
+              onApplyWorksheetTitleToSheet={applyTitle}
+              onApplyParsedQuestionsToSheet={applyQuestions}
+            />
+          )}
+          {activeTabId === "geometry_lab" && <StudioVisualGeometryLabTab gradeId={gradeId} branchId={branchId} />}
+          {activeTabId === "figure_review" && <StudioFigureHumanReviewTab />}
+        </div>
+
+        {pane === "preview" && (
           <PDFPreviewOrchestrator
             key={sheetTitle} customTitle={sheetTitle} customQuestions={sheetQuestions}
             customForms={sheetForms} gradeNameAr={grade.nameArabic} branchNameAr={branch.nameArabic}
+            onClosePreview={() => setPane("builder")}
           />
         )}
       </main>

@@ -88,4 +88,51 @@ describe("final review section banners", () => {
     const { items } = buildFlowItems({ questions: qs, columnsCount: 2, includeAnswerKey: false });
     expect(items.some((i) => i.kind === "idea_divider")).toBe(false);
   });
+
+  it("keeps booklet solved examples visible inline in both Student and Parent editions while placing drill/homework answers at the end in Parent edition only", () => {
+    const qs: PrintableMathQuestionItem[] = [
+      q("booklet-s1-example-1-1", 1, {
+        isWorkedExample: true,
+        ideaBannerTitleAr: "الفكرة الأولى: تشابه المضلعات",
+        conceptExplanationAr: "شرح",
+        framedRuleAr: "قاعدة",
+        solutionStepsAr: ["خطوة ١", "الناتج النهائي: 5 سم"],
+      }),
+      q("booklet-s1-drill-1-1", 2, {
+        solutionStepsAr: ["حل حاول بنفسك"],
+      }),
+      q("booklet-s2-hw-1", 3, {
+        ideaBannerTitleAr: "📚 تمارين الواجب المنزلي الشاملة على الدرس",
+        solutionStepsAr: ["حل الواجب"],
+      }),
+    ];
+
+    const studentFlow = buildFlowItems({
+      questions: qs,
+      columnsCount: 2,
+      includeAnswerKey: false,
+      answerVisibilityMode: "questions_only",
+    });
+    const studentQuestions = studentFlow.items.filter((i): i is Extract<FlowItem, { kind: "question" }> => i.kind === "question");
+    const studentExample = studentQuestions.find((i) => i.question.id === "booklet-s1-example-1-1");
+    const studentDrill = studentQuestions.find((i) => i.question.id === "booklet-s1-drill-1-1");
+    expect(studentExample?.forceHideSolution).toBe(false);
+    expect(studentDrill?.forceHideSolution).toBe(true);
+    expect(studentFlow.items.some((i) => i.kind === "answer_section_banner")).toBe(false);
+
+    const parentFlow = buildFlowItems({
+      questions: qs,
+      columnsCount: 2,
+      includeAnswerKey: true,
+      answerVisibilityMode: "questions_with_answers",
+    });
+    const parentQuestions = parentFlow.items.filter((i): i is Extract<FlowItem, { kind: "question" }> => i.kind === "question");
+    const parentBodyExample = parentQuestions.find((i) => !i.isAnswerCard && i.question.id === "booklet-s1-example-1-1");
+    const parentBodyDrill = parentQuestions.find((i) => !i.isAnswerCard && i.question.id === "booklet-s1-drill-1-1");
+    const parentAnswerCards = parentQuestions.filter((i) => i.isAnswerCard);
+    expect(parentBodyExample?.forceHideSolution).toBe(false);
+    expect(parentBodyDrill?.forceHideSolution).toBe(true);
+    // الأمثلة المحلولة لا تتكرر في كراسة الإجابة النهائية، فقط حاول بنفسك والواجب
+    expect(parentAnswerCards.map((c) => c.question.id)).toEqual(["booklet-s1-drill-1-1", "booklet-s2-hw-1"]);
+  });
 });

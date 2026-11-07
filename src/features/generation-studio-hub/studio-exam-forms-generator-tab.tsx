@@ -87,7 +87,7 @@ export default function StudioExamFormsGeneratorTab({
   });
 
   const [prompt, setPrompt] = useState("");
-  const [reply, setReply] = useState("");
+  const [reply, setReply] = useState(initial.savedReply || "");
   const [parsedForms, setParsedForms] = useState<readonly ParsedExamFormBlock[]>([]);
   const [selectedInspectorFormIndex, setSelectedInspectorFormIndex] = useState<number>(0);
   const [copied, setCopied] = useState(false);
@@ -120,6 +120,7 @@ export default function StudioExamFormsGeneratorTab({
   const handleReplyChange = (raw: string) => {
     setNotice(null);
     setReply(raw);
+    persist({ savedReply: raw });
     if (!raw.trim()) {
       setParsedForms([]);
       setDiagRows([]);
