@@ -135,37 +135,4 @@ describe("final review section banners", () => {
     // الأمثلة المحلولة لا تتكرر في كراسة الإجابة النهائية، فقط حاول بنفسك والواجب
     expect(parentAnswerCards.map((c) => c.question.id)).toEqual(["booklet-s1-drill-1-1", "booklet-s2-hw-1"]);
   });
-
-  it("strictly preserves two-column layout instead of breaking page1 into a lone full-width example when more questions follow", () => {
-    const qs: PrintableMathQuestionItem[] = [
-      q("booklet-s1-example-1-1", 1, {
-        isWorkedExample: true,
-        ideaBannerTitleAr: "الفكرة الأولى",
-        conceptExplanationAr: "شرح",
-        framedRuleAr: "قاعدة",
-      }),
-      q("booklet-s1-example-1-2", 2, { isWorkedExample: true }),
-      q("booklet-s1-drill-1-1", 3),
-      q("booklet-s1-drill-1-2", 4),
-    ];
-    const { items } = buildFlowItems({
-      questions: qs,
-      columnsCount: 2,
-      includeAnswerKey: false,
-      answerVisibilityMode: "questions_only",
-    });
-    const heights = new Map<string, number>();
-    items.forEach((it) => {
-      const h = it.kind === "idea_capsule" ? 210 : it.kind === "idea_divider" ? 20 : 280;
-      heights.set(it.id, h);
-      if (it.kind === "question") heights.set(fullWidthHeightKey(it.id), 210);
-    });
-    const packed = packFlowItemsIntoPages(items, heights, {
-      budgets: BUDGETS,
-      density: FLOW_DENSITY_PROFILES.ultra_compact,
-    });
-    // الصفحة الأولى تحتوي على كبسولة الفكرة + مقطع عمودين (مثال 1 ومثال 2 جنباً إلى جنب) بدلاً من مثال 1 بعرض كامل بمفرده
-    const page1ColSegments = packed[0].segments.filter((s) => s.kind === "columns");
-    expect(page1ColSegments.length).toBeGreaterThanOrEqual(1);
-  });
 });

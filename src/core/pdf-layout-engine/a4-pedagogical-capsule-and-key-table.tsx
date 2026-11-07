@@ -35,12 +35,14 @@ export function PedagogicalIdeaAndRuleCapsule({
   numeralMode,
   notationLanguage,
   ideaIndex,
+  boldProseText = false,
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
   readonly ideaIndex?: number;
+  readonly boldProseText?: boolean;
 }) {
   if (!item.ideaBannerTitleAr && !item.conceptExplanationAr && !item.framedRuleAr) {
     return null;
@@ -139,7 +141,11 @@ export function PedagogicalIdeaAndRuleCapsule({
                 <span>💡</span>
                 <span>{isWorksheetSection ? "الفكرة العامة وما يستفيده الطالب:" : "المفهوم الرياضي والشرح:"}</span>
               </div>
-              <div className="font-extrabold text-slate-900 break-words leading-relaxed">
+              <div
+                className={`text-slate-900 break-words leading-relaxed ${
+                  boldProseText ? "font-extrabold" : "font-normal"
+                }`}
+              >
                 <SafeKaTeXBiDiMathRenderer
                   text={item.conceptExplanationAr}
                   numeralMode={numeralMode}
@@ -186,7 +192,11 @@ export function PedagogicalIdeaAndRuleCapsule({
                     <span>📐</span>
                     <span>{isWorksheetSection ? "القوانين الذكية ومفاتيح الحل (بذكاء وليس بجفاء):" : "القاعدة والقانون المعتمد:"}</span>
                   </div>
-                  <div className="font-extrabold text-slate-900 max-w-full overflow-hidden break-words space-y-1">
+                  <div
+                    className={`text-slate-900 max-w-full overflow-hidden break-words space-y-1 ${
+                      boldProseText ? "font-extrabold" : "font-normal"
+                    }`}
+                  >
                     <SafeKaTeXBiDiMathRenderer
                       text={item.framedRuleAr}
                       numeralMode={numeralMode}

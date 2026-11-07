@@ -70,14 +70,18 @@ export default function SafeKaTeXBiDiMathRenderer({
       if (node.kind === "newline") return <br key={idx} />;
       if (node.kind === "text") {
         const localized = localizeGeometricEntitiesInPlainText(node.value, notationLanguage);
-        return <React.Fragment key={idx}>{formatNumeralsByModeSSOT(localized, numeralMode)}</React.Fragment>;
+        return (
+          <span key={idx} className="math-prose-segment">
+            {formatNumeralsByModeSSOT(localized, numeralMode)}
+          </span>
+        );
       }
       if (node.kind === "math") return <React.Fragment key={idx}>{renderFormula(node.latex)}</React.Fragment>;
       return (
         <span key={idx} className="whitespace-nowrap">
           {renderFormula(node.latex)}
           {"\u00A0"}
-          {node.unit}
+          <span className="math-prose-segment">{node.unit}</span>
         </span>
       );
     });

@@ -8,6 +8,7 @@ export interface AutoFitProbe {
   readonly rungIndex: number;
   readonly pages: number;
   readonly lastPageFill: number; // 0..1+
+  readonly avgFill?: number;      // 0..1+ متوسط امتلاء جميع الصفحات
   readonly overflow: boolean;
 }
 
@@ -27,16 +28,21 @@ export function decideBestAutoFitRung(probes: readonly AutoFitProbe[], targetMax
     const best = pool.find((p) => p.pages === minPages)!;
     return { rungIndex: best.rungIndex, pages: best.pages, status: "cannot_fit", overBy: minPages - targetMaxPages };
   }
-  if (targetMaxPages === undefined && pool.length >= 2) {
-    // تفضيل عدم النزول إلى آخر درجة قصوى (11.5pt) إذا كانت الدرجة التي تسبقها (12pt+) لا تعاني من ذيل يتيم (< 22%)
-    const nonExtreme = pool.slice(0, -1);
-    const minNonExtremePages = Math.min(...nonExtreme.map((p) => p.pages));
-    const bestNonExtreme = nonExtreme.find((p) => p.pages === minNonExtremePages)!;
-    if (bestNonExtreme.pages === minPages || bestNonExtreme.lastPageFill >= 0.22) {
-      return { rungIndex: bestNonExtreme.rungIndex, pages: bestNonExtreme.pages, status: "fill", overBy: 0 };
-    }
-  }
   const limit = targetMaxPages !== undefined ? targetMaxPages : minPages;
-  const chosen = pool.find((p) => p.pages <= limit)!;
+  const candidates = pool.filter((p) => p.pages <= limit);
+  if (targetMaxPages === undefined && candidates.length > 1) {
+    // من بين الدرجات التي تعطي أقل عدد صفحات، نختار الدرجة صاحبة أعلى متوسط امتلاء للصفحات (لتقليل الفراغات في كل الصفحات)
+    // مع تجنب الدرجة القصوى الأخيرة (11.5pt) إذا كانت هناك درجة >= 12pt تحقق نفس عدد الصفحات.
+    const nonExtreme = candidates.filter((c) => c.rungIndex < probes.length - 1);
+    const activeCandidates = nonExtreme.length > 0 ? nonExtreme : candidates;
+    const bestFill = activeCandidates.slice().sort((a, b) => {
+      const fillA = a.avgFill ?? a.lastPageFill;
+      const fillB = b.avgFill ?? b.lastPageFill;
+      if (Math.abs(fillB - fillA) > 0.03) return fillB - fillA;
+      return a.rungIndex - b.rungIndex;
+    })[0];
+    return { rungIndex: bestFill.rungIndex, pages: bestFill.pages, status: "fill", overBy: 0 };
+  }
+  const chosen = candidates[0] ?? pool[0];
   return { rungIndex: chosen.rungIndex, pages: chosen.pages, status: targetMaxPages !== undefined ? "fit" : "fill", overBy: 0 };
 }

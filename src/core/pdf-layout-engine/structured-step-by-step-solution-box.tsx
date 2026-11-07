@@ -120,7 +120,7 @@ export function StructuredStepByStepSolutionBox({
               >
                 {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(absIdx + 1, numeralMode)}`}
               </span>
-              <div className="min-w-0 flex-1 break-words">
+              <div className="min-w-0 flex-1 break-words font-normal">
                 <SafeKaTeXBiDiMathRenderer
                   text={cleanStepText}
                   numeralMode={numeralMode}

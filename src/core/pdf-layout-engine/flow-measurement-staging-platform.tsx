@@ -59,6 +59,9 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
       ref={stagingRef}
       dir="rtl"
       aria-hidden="true"
+      className={`${settings.boldProseText ? "pdf-bold-prose" : "pdf-normal-prose"} ${
+        settings.boldMathExpressions !== false ? "pdf-bold-math" : "pdf-normal-math"
+      }`}
       style={{
         width: `${FLOW_PAGE_INNER_WIDTH_PX}px`,
         position: "absolute",
@@ -136,24 +139,9 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
         </React.Fragment>
       ))}
       {splitVariantItems.map((item) => (
-        <React.Fragment key={item.id}>
-          <div
-            data-flow-item-id={item.id}
-            className="min-w-0"
-            style={{ ...WRAPPER_BASE_STYLE, width: item.span === "column" ? `${FLOW_COLUMN_WIDTH_PX}px` : `${FLOW_PAGE_INNER_WIDTH_PX}px` }}
-          >
-            {renderFlowItem(item)}
-          </div>
-          {item.span === "column" && (
-            <div
-              data-flow-item-id={fullWidthHeightKey(item.id)}
-              className="min-w-0"
-              style={{ ...WRAPPER_BASE_STYLE, width: `${FLOW_PAGE_INNER_WIDTH_PX}px` }}
-            >
-              {renderFlowItem(item)}
-            </div>
-          )}
-        </React.Fragment>
+        <div key={item.id} data-flow-item-id={item.id} className="min-w-0" style={{ ...WRAPPER_BASE_STYLE, width: `${FLOW_PAGE_INNER_WIDTH_PX}px` }}>
+          {renderFlowItem(item)}
+        </div>
       ))}
     </div>
   );

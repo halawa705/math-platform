@@ -33,7 +33,6 @@ interface BreakNode {
 
 const ORPHAN_PENALTY = 1e5;
 const LONE_FOOTER_PENALTY = 30;
-const SINGLE_COLUMN_ITEM_PENALTY = 140;
 const SLACK_WEIGHT = 10;
 const IMBALANCE_WEIGHT = 8;
 const OVERSIZED_PENALTY = 1e7;
@@ -99,18 +98,6 @@ function packFlowItemsIndivisible(
       if (slice[0].kind === "idea_divider") cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "accreditation_footer" && start > 0) cost += LONE_FOOTER_PENALTY;
-      // منع ترك بطاقة سؤال واحدة بمفردها في الصفحة تتمدد بعرض كامل عندما يكون العنصر التالي سؤالاً أيضاً (احترام قاعدة العمودين)
-      const trailingColumnCount = (() => {
-        let c = 0;
-        for (let i = slice.length - 1; i >= 0; i--) {
-          if (slice[i].kind === "question" && slice[i].span === "column") c++;
-          else break;
-        }
-        return c;
-      })();
-      if (trailingColumnCount === 1 && !isLastPage && items[end]?.kind === "question" && items[end]?.span === "column") {
-        cost += SINGLE_COLUMN_ITEM_PENALTY;
-      }
       if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - used) / budget) ** 2;
       cost += (IMBALANCE_WEIGHT * columnsImbalancePx(segments, heightOf, gapMinPx) / budget) ** 2;
 

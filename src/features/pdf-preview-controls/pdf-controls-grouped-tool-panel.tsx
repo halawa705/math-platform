@@ -25,6 +25,7 @@ import PDFNotationDirectionSwitch from "./pdf-notation-direction-switch";
 import PDFHeaderBrandingEditor from "./pdf-header-branding-editor";
 import PDFAutoFitModeSelector from "./pdf-autofit-mode-selector";
 import PDFPaperTemplateSelector from "./pdf-paper-template-selector";
+import PDFBoldWeightToggles from "./pdf-bold-weight-toggles";
 
 export const MODULE_ID_PDF_CONTROLS_GROUPED_TOOL_PANEL =
   "pdf_controls_grouped_tool_panel" as const;
@@ -59,6 +60,42 @@ export default function PDFControlsGroupedToolPanel({
 
   return (
     <div className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+        {/* اختصارات سريعة دائمة الظهور في أعلى التخصيص: حجم الخط + أزرار B للسمك */}
+        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <PDFExactFontSizeControl
+              currentSizePt={settings.exactFontSizePt}
+              onChangeSizePt={(exactFontSizePt) =>
+                set({ exactFontSizePt, autoFitMode: "off" })
+              }
+            />
+            <button
+              type="button"
+              onClick={() =>
+                set({
+                  autoFitMode:
+                    settings.autoFitMode === "off" ? "booklet_fill" : "off",
+                })
+              }
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer transition-all ${
+                settings.autoFitMode !== "off"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200"
+              }`}
+            >
+              {settings.autoFitMode !== "off"
+                ? "✨ حجم الخط: تلقائي ذكي (مفعّل)"
+                : "✋ حجم الخط: يدوي (اضغط لتفعيل التلقائي)"}
+            </button>
+          </div>
+          <PDFBoldWeightToggles
+            boldProseText={settings.boldProseText ?? false}
+            boldMathExpressions={settings.boldMathExpressions ?? true}
+            onChangeBoldProse={(boldProseText) => set({ boldProseText })}
+            onChangeBoldMath={(boldMathExpressions) => set({ boldMathExpressions })}
+          />
+        </div>
+
       <SegmentedWorkspaceTabsBar tabs={GROUP_TABS} activeTabId={activeGroup} onSelectTab={setActiveGroup} />
 
       {activeGroup === "look" && (
@@ -73,12 +110,6 @@ export default function PDFControlsGroupedToolPanel({
             <PDFFontFamilySelector
               selectedFontId={settings.fontFamilyId}
               onSelectFont={(fontFamilyId) => set({ fontFamilyId })}
-            />
-          </ToolRow>
-          <ToolRow labelAr="حجم الخط">
-            <PDFExactFontSizeControl
-              currentSizePt={settings.exactFontSizePt}
-              onChangeSizePt={(exactFontSizePt) => set({ exactFontSizePt })}
             />
           </ToolRow>
           <ToolRow labelAr="السمة اللونية">

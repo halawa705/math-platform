@@ -108,6 +108,8 @@ export interface PDFPrintSettingsStateSSOT {
   readonly answerSpaceLines?: 1 | 2 | 3;
   readonly compactHeader?: boolean;
   readonly hideAccreditation?: boolean;
+  readonly boldProseText?: boolean;
+  readonly boldMathExpressions?: boolean;
   readonly customDocumentTitle: string;
   readonly customDurationText: string;
 }
@@ -125,6 +127,8 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
   answerSpaceStyle: "dotted",
   colorThemeId: "math_teal",
   autoFitMode: "booklet_fill",
+  boldProseText: false,
+  boldMathExpressions: true,
   customDocumentTitle: "مستند رياضيات",
   customDurationText: "ساعة ونصف",
 };
@@ -171,6 +175,14 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
           : DEFAULT_PDF_PRINT_SETTINGS_SSOT.exactFontSizePt,
       colorThemeId:
         parsed.colorThemeId || DEFAULT_PDF_PRINT_SETTINGS_SSOT.colorThemeId,
+      boldProseText:
+        typeof parsed.boldProseText === "boolean"
+          ? parsed.boldProseText
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.boldProseText,
+      boldMathExpressions:
+        typeof parsed.boldMathExpressions === "boolean"
+          ? parsed.boldMathExpressions
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.boldMathExpressions,
     };
   } catch {
     return DEFAULT_PDF_PRINT_SETTINGS_SSOT;

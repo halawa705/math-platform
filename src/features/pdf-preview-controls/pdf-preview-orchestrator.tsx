@@ -22,6 +22,8 @@ import MultiFormNewspaperPacker from "@/core/pdf-layout-engine/multi-form-newspa
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
 import PDFControlsGroupedToolPanel from "./pdf-controls-grouped-tool-panel";
 import PDFDocumentEditionSegmentedSwitch from "./pdf-document-edition-segmented-switch";
+import PDFExactFontSizeControl from "./pdf-exact-fontsize-control";
+import PDFBoldWeightToggles from "./pdf-bold-weight-toggles";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
 import {
   saveDocumentToOvermathDriveVault,
@@ -87,9 +89,7 @@ export default function PDFPreviewOrchestrator({
           : persisted.answerVisibilityMode,
       autoFitMode: isExamDoc
         ? "exam_max_pages"
-        : isBookletOrReview
-          ? "booklet_fill"
-          : (persisted.autoFitMode ?? "booklet_fill"),
+        : (persisted.autoFitMode ?? "booklet_fill"),
       targetMaxPages: isExamDoc ? 2 : isBookletOrReview ? undefined : persisted.targetMaxPages,
       customDocumentTitle:
         customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
@@ -120,9 +120,7 @@ export default function PDFPreviewOrchestrator({
         ? prev.autoFitMode
         : isExamDoc
           ? "exam_max_pages"
-          : isBookletOrReview
-            ? "booklet_fill"
-            : (persisted.autoFitMode ?? "booklet_fill"),
+          : (persisted.autoFitMode ?? "booklet_fill"),
       targetMaxPages: userChangedAutoFitRef.current
         ? prev.targetMaxPages
         : isExamDoc
@@ -137,7 +135,8 @@ export default function PDFPreviewOrchestrator({
   const handleUpdateSettings = (next: PDFPrintSettingsStateSSOT) => {
     if (
       next.autoFitMode !== settings.autoFitMode ||
-      next.targetMaxPages !== settings.targetMaxPages
+      next.targetMaxPages !== settings.targetMaxPages ||
+      next.exactFontSizePt !== settings.exactFontSizePt
     ) {
       userChangedAutoFitRef.current = true;
     }
@@ -203,6 +202,42 @@ export default function PDFPreviewOrchestrator({
           currentMode={settings.answerVisibilityMode}
           onChangeMode={(nextMode) => handleUpdateSettings({ ...settings, answerVisibilityMode: nextMode })}
         />
+
+        {/* شريط التحكم الفوري في حجم الخط (تلقائي / يدوي) وأزرار السمك (B للكلام / B للكسور والمعادلات) */}
+        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <PDFExactFontSizeControl
+              currentSizePt={settings.exactFontSizePt}
+              onChangeSizePt={(exactFontSizePt) =>
+                handleUpdateSettings({ ...settings, exactFontSizePt, autoFitMode: "off" })
+              }
+            />
+            <button
+              type="button"
+              onClick={() =>
+                handleUpdateSettings({
+                  ...settings,
+                  autoFitMode: settings.autoFitMode === "off" ? "booklet_fill" : "off",
+                })
+              }
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer transition-all ${
+                settings.autoFitMode !== "off"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300"
+              }`}
+            >
+              {settings.autoFitMode !== "off"
+                ? "✨ حجم الخط: تلقائي ذكي (مفعّل)"
+                : "✋ يدوي — اضغط لإعادة الضبط التلقائي"}
+            </button>
+          </div>
+          <PDFBoldWeightToggles
+            boldProseText={settings.boldProseText ?? false}
+            boldMathExpressions={settings.boldMathExpressions ?? true}
+            onChangeBoldProse={(boldProseText) => handleUpdateSettings({ ...settings, boldProseText })}
+            onChangeBoldMath={(boldMathExpressions) => handleUpdateSettings({ ...settings, boldMathExpressions })}
+          />
+        </div>
 
         <button
           type="button"

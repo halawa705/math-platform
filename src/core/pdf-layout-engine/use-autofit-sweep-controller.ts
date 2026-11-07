@@ -28,11 +28,17 @@ export function useAutoFitSweepController(params: {
     if (state.phase !== "sweeping" || pages.length === 0) return;
     if (measureStamp !== `rung-${state.probeRungIndex}`) return;
     const last = pages[pages.length - 1];
+    const avgFill =
+      pages.reduce(
+        (sum, p) => sum + (p.budgetHeightPx > 0 ? p.usedHeightPx / p.budgetHeightPx : 0),
+        0
+      ) / pages.length;
     dispatch({
       type: "MEASURED",
       rungIndex: state.probeRungIndex,
       pages: pages.length,
       lastPageFill: last.budgetHeightPx > 0 ? last.usedHeightPx / last.budgetHeightPx : 0,
+      avgFill,
       overflow: pages.some((p) => p.overflowsBudget),
       rungCount,
       targetMaxPages,

@@ -102,6 +102,8 @@ export function SovereignDiscretePageView({
         borderRadius: isSchoolExam ? "4pt" : undefined,
       }}
       className={`sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl ${
+        settings.boldProseText ? "pdf-bold-prose" : "pdf-normal-prose"
+      } ${settings.boldMathExpressions !== false ? "pdf-bold-math" : "pdf-normal-math"} ${
         isSchoolExam ? "px-[16px] py-[14px]" : "px-[20px] py-[18px]"
       } flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none`}
     >

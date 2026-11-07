@@ -61,6 +61,7 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
           numeralMode={settings.numeralMode}
           notationLanguage={settings.notationLanguage}
           ideaIndex={item.ideaIndex}
+          boldProseText={settings.boldProseText}
         />
       );
     case "question":

@@ -15,7 +15,7 @@ export interface AutoFitSweepState {
 
 export type AutoFitSweepAction =
   | { readonly type: "START" }
-  | { readonly type: "MEASURED"; readonly rungIndex: number; readonly pages: number; readonly lastPageFill: number; readonly overflow: boolean; readonly rungCount: number; readonly targetMaxPages?: number }
+  | { readonly type: "MEASURED"; readonly rungIndex: number; readonly pages: number; readonly lastPageFill: number; readonly avgFill?: number; readonly overflow: boolean; readonly rungCount: number; readonly targetMaxPages?: number }
   | { readonly type: "STOP" };
 
 export const INITIAL_AUTOFIT_SWEEP_STATE: AutoFitSweepState = { phase: "idle", probeRungIndex: 0, probes: [], decision: null };
@@ -24,36 +24,7 @@ export function autoFitSweepReducer(state: AutoFitSweepState, action: AutoFitSwe
   if (action.type === "STOP") return INITIAL_AUTOFIT_SWEEP_STATE;
   if (action.type === "START") return { phase: "sweeping", probeRungIndex: 0, probes: [], decision: null };
   if (state.phase !== "sweeping" || action.rungIndex !== state.probeRungIndex) return state; // قياس قديم: تجاهل
-  const currentProbe: AutoFitProbe = {
-    rungIndex: action.rungIndex,
-    pages: action.pages,
-    lastPageFill: action.lastPageFill,
-    overflow: action.overflow,
-  };
-  const probes = [...state.probes, currentProbe];
-
-  // 1) في وضع تحديد سقف الصفحات (الاختبارات): بمجرد الوصول لدرجة تحقق السقف المطلوب بدون فيض، نتوقف فوراً.
-  if (action.targetMaxPages !== undefined && !action.overflow && action.pages <= action.targetMaxPages) {
-    const decision = decideBestAutoFitRung(probes, action.targetMaxPages);
-    return { phase: "done", probeRungIndex: decision.rungIndex, probes, decision };
-  }
-
-  // 2) في وضع ملء المذكرة (booklet_fill): نكمل المسح على درجات الخط المريحة (>= 12pt) لاختيار الدرجة التي تحقق
-  // أقل عدد صفحات وأفضل توازن عمودين بلا فراغات؛ ولا ندخل الدرجة القصوى الأخيرة (11.5pt) إلا عند الضرورة القصوى
-  // (فيض في 12pt أو ذيل يتيم في الصفحة الأخيرة < 25%).
-  if (action.targetMaxPages === undefined && !action.overflow) {
-    if (action.pages <= 1 && action.lastPageFill >= 0.72) {
-      const decision = decideBestAutoFitRung(probes, undefined);
-      return { phase: "done", probeRungIndex: decision.rungIndex, probes, decision };
-    }
-    const nextIdx = action.rungIndex + 1;
-    const isNextExtremeRung = nextIdx === action.rungCount - 1 && action.rungCount >= 4;
-    if (isNextExtremeRung && action.lastPageFill >= 0.25) {
-      const decision = decideBestAutoFitRung(probes, undefined);
-      return { phase: "done", probeRungIndex: decision.rungIndex, probes, decision };
-    }
-  }
-
+  const probes = [...state.probes, { rungIndex: action.rungIndex, pages: action.pages, lastPageFill: action.lastPageFill, avgFill: action.avgFill, overflow: action.overflow }];
   const next = action.rungIndex + 1;
   if (next < action.rungCount) return { phase: "sweeping", probeRungIndex: next, probes, decision: null };
   const decision = decideBestAutoFitRung(probes, action.targetMaxPages);

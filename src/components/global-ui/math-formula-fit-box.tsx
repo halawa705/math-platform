@@ -61,7 +61,7 @@ export default function MathFormulaFitBox({ html, isBlock = false }: MathFormula
     >
       <span
         ref={boxRef}
-        className="math-fit-box inline-block max-w-full align-middle font-bold"
+        className="math-fit-box inline-block max-w-full align-middle"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </bdi>

@@ -133,7 +133,11 @@ export default function SideBySideDiagramDocker({
                   : "block min-w-0"
               }
             >
-              <div className="flex-1 min-w-0 space-y-1 text-[0.96em] font-extrabold text-slate-900 leading-relaxed break-words">
+              <div
+                className={`flex-1 min-w-0 space-y-1 text-[0.96em] text-slate-900 leading-relaxed break-words ${
+                  settings.boldProseText ? "font-extrabold" : "font-normal"
+                }`}
+              >
                 <div>
                   <SafeKaTeXBiDiMathRenderer
                     text={cleanStudentFacingMathPromptSSOT(question.promptAr)}
