@@ -62,10 +62,10 @@ describe("flow page packer — fill quality", () => {
     });
   });
 
-  it("fills non-last pages (items are indivisible, so some slack is unavoidable) and equalises columns", () => {
+  it("fills non-last pages to >= 90% and equalises columns", () => {
     const body = audit.slice(0, -1);
-    body.forEach((row) => expect(row.fillRatio).toBeGreaterThan(0.6));
-    expect(body.reduce((sum, row) => sum + row.fillRatio, 0) / body.length).toBeGreaterThan(0.85);
+    body.forEach((row) => expect(row.fillRatio).toBeGreaterThanOrEqual(0.9));
+    expect(body.reduce((sum, row) => sum + row.fillRatio, 0) / body.length).toBeGreaterThanOrEqual(0.92);
     audit.forEach((row) => expect(row.worstColumnImbalancePx).toBeLessThan(70));
   });
 

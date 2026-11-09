@@ -11,10 +11,10 @@ export const MODULE_ID_FLOW_PAGE_GEOMETRY_CONSTANTS =
 
 const FLOW_PAGE_WIDTH_PX = 794;
 const FLOW_PAGE_HEIGHT_PX = 1123;
-const FLOW_PAGE_PADDING_X_PX = 20;
-const FLOW_PAGE_PADDING_Y_PX = 18;
+const FLOW_PAGE_PADDING_X_PX = 18;
+const FLOW_PAGE_PADDING_Y_PX = 14;
 
-/** عرض المحتوى الداخلي = عرض الورقة − الهامشين الأفقيين (يطابق px-[20px] في الصفحة وفي الطباعة). */
+/** عرض المحتوى الداخلي = عرض الورقة − الهامشين الأفقيين (يطابق px-[18px] في الصفحة وفي الطباعة). */
 export const FLOW_PAGE_INNER_WIDTH_PX = FLOW_PAGE_WIDTH_PX - FLOW_PAGE_PADDING_X_PX * 2;
 export const FLOW_COLUMN_GAP_PX = 8;
 export const FLOW_COLUMN_WIDTH_PX = (FLOW_PAGE_INNER_WIDTH_PX - FLOW_COLUMN_GAP_PX) / 2;
@@ -23,14 +23,14 @@ export const FLOW_COLUMN_WIDTH_PX = (FLOW_PAGE_INNER_WIDTH_PX - FLOW_COLUMN_GAP_
 export const FLOW_PAGE_INNER_HEIGHT_PX = FLOW_PAGE_HEIGHT_PX - FLOW_PAGE_PADDING_Y_PX * 2;
 
 /** هامش أمان لتقريب البكسلات الجزئية وفروق الطباعة (لا يُترك أقل منه تحت المحتوى). */
-export const FLOW_PAGE_SAFETY_PX = 8;
+export const FLOW_PAGE_SAFETY_PX = 6;
 
 /** ميزانيات احتياطية تُستعمل فقط قبل اكتمال أول قياس حي للترويسة والتذييل. */
-export const FLOW_FALLBACK_FIRST_PAGE_BUDGET_PX = 915;
-export const FLOW_FALLBACK_NEXT_PAGE_BUDGET_PX = 1020;
+export const FLOW_FALLBACK_FIRST_PAGE_BUDGET_PX = 930;
+export const FLOW_FALLBACK_NEXT_PAGE_BUDGET_PX = 1035;
 
 /** صفحة لا تُمدَّد بطاقاتها إن قلّ امتلاؤها عن هذه النسبة (تجنباً لبطاقات متضخمة). */
-export const FLOW_MIN_FILL_RATIO_FOR_STRETCH = 0.62;
+export const FLOW_MIN_FILL_RATIO_FOR_STRETCH = 0.5;
 
 export interface FlowDensityProfile {
   /** أقل مسافة بين كائنين: تحدد أقصى ضغط ممكن (أقل عدد أوراق). */
@@ -44,7 +44,7 @@ export interface FlowDensityProfile {
 }
 
 export const FLOW_DENSITY_PROFILES: Record<PageDensityBudgetMode, FlowDensityProfile> = {
-  ultra_compact: { gapMinPx: 2, gapMaxPx: 8, maxStretchPerItemPx: 90, maxStretchRatio: 0.4 },
-  standard_balanced: { gapMinPx: 4, gapMaxPx: 12, maxStretchPerItemPx: 130, maxStretchRatio: 0.5 },
-  booklet_relaxed: { gapMinPx: 6, gapMaxPx: 16, maxStretchPerItemPx: 170, maxStretchRatio: 0.6 },
+  ultra_compact: { gapMinPx: 2, gapMaxPx: 10, maxStretchPerItemPx: 165, maxStretchRatio: 0.62 },
+  standard_balanced: { gapMinPx: 3, gapMaxPx: 12, maxStretchPerItemPx: 180, maxStretchRatio: 0.65 },
+  booklet_relaxed: { gapMinPx: 5, gapMaxPx: 16, maxStretchPerItemPx: 210, maxStretchRatio: 0.7 },
 };

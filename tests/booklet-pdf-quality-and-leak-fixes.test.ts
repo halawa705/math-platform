@@ -6,6 +6,8 @@ import {
   extractConceptAndRule,
   parseSolvedExamplesFromSection,
 } from "../src/core/ingestion/notebooklm-stage-parsers-helper";
+import { matchPrepGrade1ParallelismFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
+import { projectGeometryFigureToSVGMarkup } from "../src/core/geometry-engine/vector-svg-figure-projector";
 
 const NBSP = "\u00A0";
 
@@ -72,5 +74,41 @@ AB/XY = BC/YZ = k
     expect(examples[1].promptAr).not.toContain("خطوات الحل");
     expect(examples[0].rawFinal).toBe("متساوية");
     expect(examples[1].rawFinal).toBe("4 سم");
+  });
+
+  it("Purifies geometry SVG: never draws thin 0.8px connecting lines or fake polygons on parallel transversal figures", () => {
+    const zFig = matchPrepGrade1ParallelismFigure(
+      "في الشكل المقابل، إذا كان AB // CD والقطعة AC قاطعة لهما، وكان m(∠BAC) = 55° فأوجد بالبرهان m(∠ACD)",
+      "test_z_fig",
+      "english"
+    );
+    expect(zFig).toBeDefined();
+    const zSvg = projectGeometryFigureToSVGMarkup(zFig!);
+    expect(zSvg).not.toContain("geometry-surface-tints");
+    expect(zSvg).not.toContain('stroke-width="0.8"');
+
+    const efFig = matchPrepGrade1ParallelismFigure(
+      "في الشكل المقابل، إذا كان AB // CD والمستقيم EF يقطع AB في G ويقطع CD في H، وكان m(∠EGB) = 75° فأوجد قياس ∠GHD",
+      "test_ef_fig",
+      "english"
+    );
+    expect(efFig).toBeDefined();
+    const efSvg = projectGeometryFigureToSVGMarkup(efFig!);
+    expect(efSvg).not.toContain("geometry-surface-tints");
+    expect(efSvg).not.toContain('stroke-width="0.8"');
+  });
+
+  it("Never splits prompt on 'فأوجد بالبرهان' or leaks [رسم هندسي: ...] into solution steps", () => {
+    const rawSection = `المثال 2 | معرف المثال: ex-1-2
+نص المسألة: في الشكل المقابل، إذا كان AB // CD، والقطعة AC قاطعة لهما، وكان m(∠BAC) = 55°، فأوجد بالبرهان m(∠ACD)
+[رسم هندسي: AB // CD ; AC قاطع لهما ; m(∠BAC) = 55° ; المطلوب: m(∠ACD)]
+خطوات الحل: ∵ AB // CD والقطعة AC قاطعة لهما ∴ m(∠ACD) = m(∠BAC) = 55° (بالتبادل الداخلي).
+الناتج النهائي: m(∠ACD) = 55°`;
+
+    const parsed = parseSolvedExamplesFromSection(rawSection, "الفكرة الأولى", "");
+    expect(parsed.length).toBe(1);
+    expect(parsed[0].promptAr).toContain("فأوجد بالبرهان");
+    expect(parsed[0].steps.some((s) => s.includes("رسم هندسي"))).toBe(false);
+    expect(parsed[0].steps[0]).not.toBe("$m(\\angle ACD)$");
   });
 });

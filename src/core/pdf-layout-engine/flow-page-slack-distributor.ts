@@ -75,7 +75,12 @@ export function distributePageSlack(p: DistributeParams): FlowPage {
   }
 
   const heightWithExtra = (item: FlowItem) => heightOf(item) + (extra.get(item.id) ?? 0);
-  const contentAt = (gap: number) => pageContentHeightPx(segments, heightWithExtra, gap);
+  const contentAt = (gap: number) =>
+    pageContentHeightPx(
+      segments.map((s) => (s.kind === "full" ? { ...s, heightPx: s.heightPx + (extra.get(s.item.id) ?? 0) } : s)),
+      heightWithExtra,
+      gap
+    );
   const fitsAt = (gap: number) => contentAt(gap) <= budgetPx;
 
   // (٢) أكبر مسافة ≤ حدّ الكثافة تتسع في الميزانية.
@@ -110,6 +115,19 @@ export function distributePageSlack(p: DistributeParams): FlowPage {
       }
       slack -= used;
       if (used < 0.5) break;
+    }
+
+    // (٤) في الصفحات غير الأخيرة، إن بقي الامتلاء أقل من 91% بعد سقف البطاقات، نوسع المسافة البينية تدريجياً حتى 92% دون تجاوز الميزانية.
+    if (!p.isLastPage && contentAt(gapPx) < budgetPx * 0.91 && segments.length >= 2) {
+      const maxSecondaryGap = Math.min(20, density.gapMaxPx + 10);
+      for (let g = gapPx + 1; g <= maxSecondaryGap; g++) {
+        if (fitsAt(g)) {
+          gapPx = g;
+          if (contentAt(gapPx) >= budgetPx * 0.92) break;
+        } else {
+          break;
+        }
+      }
     }
   }
 

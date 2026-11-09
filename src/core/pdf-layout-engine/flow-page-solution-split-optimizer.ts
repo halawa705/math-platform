@@ -6,12 +6,13 @@
  */
 
 import type { FlowItem, FlowPage } from "./flow-item-model";
+import { pageContentHeightPx } from "./flow-page-segments-builder";
 import { buildSolutionSplitVariants } from "./flow-solution-split-variants-builder";
 
 export const MODULE_ID_FLOW_PAGE_SOLUTION_SPLIT_OPTIMIZER = "flow_page_solution_split_optimizer" as const;
 
-/** أقل نسبة فراغ سفلي في الصفحة تستحق محاولة التقسيم. */
-const MIN_SLACK_RATIO_TO_TRY_SPLIT = 0.06;
+/** أقل نسبة فراغ فعلي (قبل التمديد الصناعي للبطاقات) في الصفحة تستحق محاولة التقسيم لملء الصفحة بالمعلومات. */
+const MIN_RAW_SLACK_RATIO_TO_TRY_SPLIT = 0.06;
 const MAX_ACCEPTED_SPLITS = 80;
 
 export type FlowPackOnce = (items: readonly FlowItem[]) => readonly FlowPage[];
@@ -25,11 +26,19 @@ function flattenPageItems(page: FlowPage): FlowItem[] {
   return page.segments.flatMap((s) => (s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]));
 }
 
-/** مجموع مربعات الفراغ السفلي للصفحات غير الأخيرة (أصغر = توزيع أفضل). */
-function slackScore(pages: readonly FlowPage[]): number {
+/** الارتفاع الفعلي للمحتوى في الصفحة قبل أي تمديد صناعي للبطاقات. */
+function rawPageContentHeightPx(page: FlowPage, heights: ReadonlyMap<string, number>): number {
+  const rawHeightOf = (item: FlowItem) => heights.get(item.id) ?? 0;
+  return pageContentHeightPx(page.segments, rawHeightOf, Math.min(page.gapPx, 4));
+}
+
+/** مجموع مربعات الفراغ الفعلي (قبل التمديد) والفراغ النهائي للصفحات غير الأخيرة (أصغر = معلومات أكثر وفراغ أقل). */
+function slackScore(pages: readonly FlowPage[], heights: ReadonlyMap<string, number>): number {
   return pages.slice(0, -1).reduce((sum, p) => {
-    const slack = Math.max(0, 1 - p.usedHeightPx / Math.max(1, p.budgetHeightPx));
-    return sum + slack * slack;
+    const budget = Math.max(1, p.budgetHeightPx);
+    const rawSlack = Math.max(0, 1 - rawPageContentHeightPx(p, heights) / budget);
+    const finalSlack = Math.max(0, 1 - p.usedHeightPx / budget);
+    return sum + rawSlack * rawSlack + finalSlack * finalSlack * 0.5;
   }, 0);
 }
 
@@ -55,15 +64,23 @@ export function optimizePagesWithSolutionSplits(
 
     for (let p = 0; p < pages.length - 1 && !progressed; p++) {
       const page = pages[p];
-      if (1 - page.usedHeightPx / Math.max(1, page.budgetHeightPx) < MIN_SLACK_RATIO_TO_TRY_SPLIT) continue;
-      const nextPageItems = flattenPageItems(pages[p + 1]).slice(0, 3);
-      const next = nextPageItems.find((cand) => !tried.has(cand.id) && variantsById.has(cand.id));
-      if (!next) continue;
+      const rawFill = rawPageContentHeightPx(page, heights) / Math.max(1, page.budgetHeightPx);
+      if (1 - rawFill < MIN_RAW_SLACK_RATIO_TO_TRY_SPLIT) continue;
+      const nextPageItems = flattenPageItems(pages[p + 1]);
+      const firstOnNext = nextPageItems[0];
+      const next =
+        firstOnNext &&
+        (firstOnNext.kind === "idea_capsule" ||
+          firstOnNext.kind === "answer_section_banner" ||
+          firstOnNext.kind === "exam_section_banner")
+          ? nextPageItems[1]
+          : firstOnNext;
+      if (!next || tried.has(next.id)) continue;
       const variants = variantsById.get(next.id);
       if (!variants) continue;
       tried.add(next.id);
 
-      const baseScore = slackScore(pages);
+      const baseScore = slackScore(pages, heights);
       let best: SplitOptimizationResult | undefined;
       let bestPagesCount = pages.length;
       let bestScore = baseScore - 1e-9;
@@ -77,7 +94,7 @@ export function optimizePagesWithSolutionSplits(
         const headPage = pageIndexOfItem(candidatePages, v.head.id);
         const tailPage = pageIndexOfItem(candidatePages, v.tail.id);
         if (headPage < 0 || tailPage <= headPage) continue;
-        const score = slackScore(candidatePages);
+        const score = slackScore(candidatePages, heights);
         if (candidatePages.length < bestPagesCount || score < bestScore) {
           bestPagesCount = candidatePages.length;
           bestScore = score;

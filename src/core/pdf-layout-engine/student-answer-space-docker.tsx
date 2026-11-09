@@ -42,13 +42,15 @@ export function StudentAnswerSpaceDocker({
         : "bg-white border border-slate-200";
 
   return (
-    <div className="px-2.5 pb-2.5 pt-1.5 bg-white border-t border-dashed border-slate-300 space-y-1.5">
-      <div style={{ color: labelColor }} className="text-[0.8em] font-black text-left">
+    <div className="px-2 pb-2 pt-1 bg-white border-t border-dashed border-slate-300 flex-1 flex flex-col justify-between gap-1">
+      <div style={{ color: labelColor }} className="text-[0.78em] font-black text-left">
         {labelText}
       </div>
-      {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) => (
-        <div key={lineIdx} className={`h-3.5 w-full ${lineStyleClass}`} />
-      ))}
+      <div className="flex-1 flex flex-col justify-evenly gap-1">
+        {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) => (
+          <div key={lineIdx} className={`h-3 w-full ${lineStyleClass}`} />
+        ))}
+      </div>
     </div>
   );
 }
