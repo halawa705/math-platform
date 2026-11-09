@@ -164,10 +164,19 @@ export function CompactTextbookMcqRow({
 
   const renderChoicesStrip = () => {
     if (choices.length === 0) return null;
-    const isEmeraldTheme = palette.primaryHex.toUpperCase() === "#064E3B";
-    const choiceTextHex = isEmeraldTheme ? "#0369a1" : "#0f766e";
-    const choiceBorderHex = isEmeraldTheme ? "#0284c7" : "#0d9488";
-    const choiceCircleGradient = "linear-gradient(135deg, #432818 0%, #7f1d1d 100%)";
+    const isRedChoicesMode =
+      settings.colorThemeId === "amber_gold" ||
+      settings.colorThemeId === "navy_gold" ||
+      settings.colorThemeId === "photocopy_black";
+
+    // القاعدة اللونية المتقابلة:
+    // ١) خط الاختيارات أزرق فاتح (#0284c7) ← خلفية دائرة الحرف (أ، ب، جـ، د) حمراء (#dc2626)
+    // ٢) خط الاختيارات أحمر (#dc2626) ← خلفية دائرة الحرف (أ، ب، جـ، د) سوداء غامقة (#111827)
+    const choiceTextHex = isRedChoicesMode ? "#dc2626" : "#0284c7";
+    const choiceBorderHex = isRedChoicesMode ? "#dc2626" : "#0284c7";
+    const choiceCircleBg = isRedChoicesMode ? "#111827" : "#dc2626";
+    const choiceCircleBorder = isRedChoicesMode ? "#000000" : "#991b1b";
+    const choiceCircleShadow = isRedChoicesMode ? "0 1.5px 0 #000000" : "0 1.5px 0 #7f1d1d";
 
     return (
       <div
@@ -185,7 +194,7 @@ export function CompactTextbookMcqRow({
                 backgroundColor: "#ffffff",
                 border: isCorrect
                   ? "1.8px solid #059669"
-                  : `1.1px solid ${choiceBorderHex}66`,
+                  : `1.1px solid ${choiceBorderHex}55`,
                 borderRadius: "6px",
                 padding: "1.5px 5px",
                 boxShadow: isCorrect
@@ -196,12 +205,10 @@ export function CompactTextbookMcqRow({
             >
               <span
                 style={{
-                  background: isCorrect ? "#059669" : choiceCircleGradient,
+                  backgroundColor: isCorrect ? "#059669" : choiceCircleBg,
                   color: "#ffffff",
-                  border: `1px solid ${isCorrect ? "#047857" : "#b45309"}`,
-                  boxShadow: isCorrect
-                    ? "0 1.5px 0 #064e3b"
-                    : "0 1.5px 0 #451a03",
+                  border: `1px solid ${isCorrect ? "#047857" : choiceCircleBorder}`,
+                  boxShadow: isCorrect ? "0 1.5px 0 #064e3b" : choiceCircleShadow,
                   width: "18px",
                   height: "18px",
                   borderRadius: "9999px",
