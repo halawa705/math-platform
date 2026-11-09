@@ -73,7 +73,7 @@ export default function SideBySideDiagramDocker({
   const isAnswerKeyOnlyMode = settings.answerVisibilityMode === "answer_key_only";
   const isEffectiveAnswerCard = isAnswerCardMode || isAnswerKeyOnlyMode;
   const isOddQuestion = question.questionNumber % 2 === 1;
-  const { cardSurfaceBgHex, cardBorderColorHex, badgeBgColorHex, exampleRoleLabel } =
+  const { cardSurfaceBgHex, cardBorderColorHex, badgeBgColorHex, badgeGradientCss, exampleRoleLabel } =
     resolveQuestionCardColorScheme({
       isBookletSolvedExample,
       isBookletDrill,
@@ -81,6 +81,7 @@ export default function SideBySideDiagramDocker({
       isOddQuestion,
       palette,
       isAnswerCard: isEffectiveAnswerCard,
+      themeId: settings.colorThemeId,
     });
 
   const mcqCols = resolveAdaptiveMCQColumnsCount(
@@ -101,26 +102,29 @@ export default function SideBySideDiagramDocker({
       style={{
         backgroundColor: cardSurfaceBgHex,
         borderColor: cardBorderColorHex,
-        boxShadow: "0 2px 6px rgba(15, 23, 42, 0.05)",
+        boxShadow: "0 1px 4px rgba(15, 23, 42, 0.05)",
         breakInside: "avoid",
       }}
-      className="min-w-0 w-full flex-1 rounded-xl border-2 flex flex-col justify-between break-inside-avoid print:break-inside-avoid"
+      className="min-w-0 w-full flex-1 rounded-xl border-2 bg-white flex flex-col break-inside-avoid print:break-inside-avoid"
     >
-      <div className="p-2.5 pb-2 min-w-0">
-        <QuestionCardBadgeHeader
-          isBookletSolvedExample={isBookletSolvedExample}
-          isBookletDrill={isBookletDrill}
-          isBookletHomework={isBookletHomework}
-          isAnswerCard={isEffectiveAnswerCard}
-          formattedQNum={formattedQNum}
-          formattedMarks={formatNumeralsByModeSSOT(question.marks, settings.numeralMode)}
-          exampleRoleLabel={exampleRoleLabel}
-          badgeBgColorHex={badgeBgColorHex}
-          cardBorderColorHex={cardBorderColorHex}
-          palette={palette}
-          citationBadgeAr={question.citationBadgeAr ? formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode) : undefined}
-          formattedIdeaIndex={formattedIdeaIndex}
-        />
+      <div className="p-2 pb-1.5 min-w-0">
+        {!isContinuation && (
+          <QuestionCardBadgeHeader
+            isBookletSolvedExample={isBookletSolvedExample}
+            isBookletDrill={isBookletDrill}
+            isBookletHomework={isBookletHomework}
+            isAnswerCard={isEffectiveAnswerCard}
+            formattedQNum={formattedQNum}
+            formattedMarks={formatNumeralsByModeSSOT(question.marks, settings.numeralMode)}
+            exampleRoleLabel={exampleRoleLabel}
+            badgeBgColorHex={badgeBgColorHex}
+            badgeGradientCss={badgeGradientCss}
+            cardBorderColorHex={cardBorderColorHex}
+            palette={palette}
+            citationBadgeAr={question.citationBadgeAr ? formatNumeralsByModeSSOT(question.citationBadgeAr, settings.numeralMode) : undefined}
+            formattedIdeaIndex={formattedIdeaIndex}
+          />
+        )}
 
         {(!isAnswerKeyOnlyMode || isAnswerCardMode) && !isContinuation && (
           <div className="min-w-0" style={{ breakAfter: "avoid" }}>
@@ -128,13 +132,13 @@ export default function SideBySideDiagramDocker({
               className={
                 question.geometryFigure || question.graphSpec
                   ? settings.columnsCount === 2 && question.promptAr.length > 220
-                    ? "flex flex-col items-start gap-2.5 min-w-0"
-                    : "flex items-start justify-between gap-2.5 min-w-0"
+                    ? "flex flex-col items-start gap-2 min-w-0"
+                    : "flex items-start justify-between gap-2 min-w-0"
                   : "block min-w-0"
               }
             >
               <div
-                className={`flex-1 min-w-0 space-y-1 text-[0.96em] text-slate-900 leading-relaxed break-words ${
+                className={`flex-1 min-w-0 space-y-1 text-[0.95em] text-slate-900 leading-snug break-words ${
                   settings.boldProseText ? "font-extrabold" : "font-normal"
                 }`}
               >
@@ -191,6 +195,7 @@ export default function SideBySideDiagramDocker({
           <StructuredStepByStepSolutionBox
             item={question}
             palette={palette}
+            themeId={settings.colorThemeId}
             numeralMode={settings.numeralMode}
             notationLanguage={settings.notationLanguage}
             compactScale={autoCompactScale}
@@ -198,10 +203,10 @@ export default function SideBySideDiagramDocker({
           />
         )}
 
-        {question.studentDrillPromptAr && (
+        {question.studentDrillPromptAr && (!solutionSlice || solutionSlice.to >= solutionSlice.total) && (
           <div
             style={{ backgroundColor: "#FFFFFF", borderColor: palette.ruleBorderHex }}
-            className="mt-2 px-2.5 py-1.5 rounded-lg border border-r-4 bg-white text-[0.86em] font-bold text-slate-900 shadow-2xs"
+            className="mt-1.5 px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.84em] font-bold text-slate-900 shadow-2xs"
           >
             <span style={{ color: palette.accentHex }} className="font-black ml-1.5">✍️ حاول بنفسك:</span>
             <SafeKaTeXBiDiMathRenderer

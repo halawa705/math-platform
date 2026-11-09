@@ -18,6 +18,7 @@ export interface QuestionCardBadgeHeaderProps {
   readonly formattedMarks?: string;
   readonly exampleRoleLabel: string;
   readonly badgeBgColorHex: string;
+  readonly badgeGradientCss?: string;
   readonly cardBorderColorHex: string;
   readonly palette: PrintThemePaletteTokens;
   readonly citationBadgeAr?: string;
@@ -33,6 +34,7 @@ export function QuestionCardBadgeHeader({
   formattedMarks,
   exampleRoleLabel,
   badgeBgColorHex,
+  badgeGradientCss,
   cardBorderColorHex,
   palette,
   citationBadgeAr,
@@ -40,10 +42,13 @@ export function QuestionCardBadgeHeader({
 }: QuestionCardBadgeHeaderProps) {
   if (isAnswerCard) {
     return (
-      <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">
+      <div style={{ breakAfter: "avoid" }} className="mb-1 flex items-center justify-between gap-1.5">
         <span
-          style={{ backgroundColor: badgeBgColorHex }}
-          className="px-3 py-1 rounded-lg text-white text-[0.88em] font-black inline-flex items-center gap-1.5 shadow-xs"
+          style={{
+            background: badgeGradientCss || badgeBgColorHex,
+            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.12)",
+          }}
+          className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1.5"
         >
           <span>✍️</span>
           <span>إجابة سؤال {formattedQNum}</span>
@@ -51,7 +56,7 @@ export function QuestionCardBadgeHeader({
         {citationBadgeAr && (
           <span
             style={{ color: badgeBgColorHex, borderColor: cardBorderColorHex }}
-            className="px-2 py-0.5 rounded bg-white border text-[0.75em] font-black truncate"
+            className="px-1.5 py-0.2 rounded bg-white border text-[0.72em] font-black truncate shadow-2xs"
           >
             📍 {citationBadgeAr}
           </span>
@@ -62,10 +67,10 @@ export function QuestionCardBadgeHeader({
 
   if (isBookletSolvedExample) {
     return (
-      <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">
+      <div style={{ breakAfter: "avoid" }} className="mb-1 flex items-center justify-between gap-1.5">
         <span
           style={{ backgroundColor: badgeBgColorHex }}
-          className="px-3 py-1 rounded-lg text-white text-[0.86em] font-black inline-flex items-center gap-1.5 shadow-xs"
+          className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1 shadow-2xs"
         >
           <span>✍️</span>
           <span>
@@ -75,7 +80,7 @@ export function QuestionCardBadgeHeader({
         {citationBadgeAr && (
           <span
             style={{ color: palette.secondaryHex, borderColor: cardBorderColorHex }}
-            className="px-2 py-0.5 rounded bg-white border text-[0.75em] font-black truncate"
+            className="px-1.5 py-0.2 rounded bg-white border text-[0.72em] font-black truncate"
           >
             📍 {citationBadgeAr}
           </span>
@@ -86,17 +91,17 @@ export function QuestionCardBadgeHeader({
 
   if (isBookletDrill) {
     return (
-      <div style={{ breakAfter: "avoid" }} className="mb-2 flex items-center justify-between gap-2">
+      <div style={{ breakAfter: "avoid" }} className="mb-1 flex items-center justify-between gap-1.5">
         <span
           style={{ backgroundColor: "#4338CA" }}
-          className="px-3 py-1 rounded-lg text-white text-[0.86em] font-black inline-flex items-center gap-1.5 shadow-xs"
+          className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1 shadow-2xs"
         >
           <span>🎯</span>
           <span>حاول بنفسك ({formattedQNum})</span>
         </span>
         <span
-          style={{ color: "#4338CA", borderColor: "#C7D2FE" }}
-          className="px-2 py-0.5 rounded bg-indigo-50 border text-[0.78em] font-black"
+          style={{ color: "#4338CA", borderColor: "#C7D2FE", backgroundColor: "#FFFFFF" }}
+          className="px-1.5 py-0.2 rounded bg-white border text-[0.74em] font-black"
         >
           تدريب فهم مباشر
         </span>
@@ -112,7 +117,7 @@ export function QuestionCardBadgeHeader({
         boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
         breakAfter: "avoid",
       }}
-      className="px-2.5 py-1 mb-2 rounded-lg border-r-4 border bg-white flex flex-wrap items-center justify-between gap-1.5"
+      className="px-2 py-0.5 mb-1 rounded-md border-r-4 border bg-white flex flex-wrap items-center justify-between gap-1"
     >
       <div className="flex items-center gap-1.5 min-w-0">
         <span

@@ -18,6 +18,8 @@ import type {
   PrintThemePaletteTokens,
 } from "./a4-vector-html-sheet-renderer";
 import type { FlowSolutionSlice } from "./flow-item-model";
+import type { PrintColorThemeId } from "../ssot/pdf-print-settings-ssot";
+import { resolveAnswerThemeTokens } from "./question-card-palette-resolver";
 
 export const MODULE_ID_STRUCTURED_STEP_BY_STEP_SOLUTION_BOX =
   "structured_step_by_step_solution_box" as const;
@@ -25,6 +27,7 @@ export const MODULE_ID_STRUCTURED_STEP_BY_STEP_SOLUTION_BOX =
 export function StructuredStepByStepSolutionBox({
   item,
   palette,
+  themeId,
   numeralMode,
   notationLanguage,
   compactScale = 1,
@@ -32,6 +35,7 @@ export function StructuredStepByStepSolutionBox({
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
+  readonly themeId?: PrintColorThemeId;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage: MathNotationLanguage;
   readonly compactScale?: number;
@@ -52,35 +56,40 @@ export function StructuredStepByStepSolutionBox({
   const continuesNextPage = slice !== undefined && slice.to < allSteps.length;
 
   const effectiveEm = Number((0.86 * compactScale).toFixed(2));
-  const useTwoColShortSteps = steps.length >= 4;
+  const useTwoColShortSteps = steps.length >= 2;
   const isOddQuestion = item.questionNumber % 2 === 1;
-  const badgeBg = isOddQuestion ? "#0D9488" : "#4338CA";
+  const answerTokens = resolveAnswerThemeTokens(themeId, isOddQuestion);
 
   return (
     <div
       style={{ fontSize: `${effectiveEm}em` }}
-      className="mt-1 pt-1 border-t border-slate-200/90 space-y-1 min-w-0"
+      className="mt-1 pt-0.5 border-t border-slate-200/90 space-y-0.5 min-w-0"
     >
-      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.9em]">
-        <span className="inline-flex items-center gap-1.5">
+      <div className="font-black flex flex-wrap items-center justify-between gap-1 text-slate-900 text-[0.86em]">
+        <span className="inline-flex items-center gap-1">
           <span
-            style={{ backgroundColor: badgeBg }}
-            className="px-2 py-0.5 rounded-md text-white text-[0.84em] font-black shadow-2xs shrink-0"
+            style={{
+              background: answerTokens.badgeGradientCss,
+              boxShadow: "0 1.5px 4px rgba(0, 0, 0, 0.12)",
+            }}
+            className="px-1.5 py-0.2 rounded text-white text-[0.82em] font-black shrink-0"
           >
-            ✍️ {isContinuation ? "تابع الحل" : `إجابة سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
+            ✍️ {isContinuation ? `تابع حل سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}` : `إجابة سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
           </span>
-          <span className="text-slate-600 font-bold text-[0.82em]">
-            {isContinuation ? "" : "خطوات الحل والشرح بالتفصيل:"}
-          </span>
+          {!isContinuation && (
+            <span className="text-slate-600 font-bold text-[0.8em]">
+              خطوات الحل والشرح:
+            </span>
+          )}
         </span>
         {!isContinuation && item.kind === "mcq" && item.correctMcqIndex !== undefined && (
           <span
             style={{
-              backgroundColor: palette.primaryHex,
+              background: answerTokens.badgeGradientCss,
               color: "#ffffff",
-              borderColor: palette.borderHex,
+              boxShadow: "0 1.5px 4px rgba(0, 0, 0, 0.12)",
             }}
-            className="px-2 py-0.5 rounded-md border text-[0.82em] font-black shadow-2xs"
+            className="px-2 py-0.2 rounded text-[0.8em] font-black"
           >
             الإجابة الصحيحة: ({getChoiceLetterByNotationSSOT(item.correctMcqIndex, notationLanguage)})
           </span>
@@ -93,28 +102,33 @@ export function StructuredStepByStepSolutionBox({
           const isLast = (absIdx === allSteps.length - 1 && allSteps.length > 1) || isExplicitFinal;
           const cleanStepText = rawStepText
             .replace(/^الناتج\s*النهائي\s*:\s*/i, "")
+            .replace(/^(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|الحل|البرهان)\s*[:：]\s*/i, "")
             .replace(/^\d+[\.\-–]\s*/, "")
             .trim();
 
           const visualLen = cleanStepText.replace(/\$[^$]*\$/g, "______").length;
-          const isShortStep = useTwoColShortSteps && !isLast && visualLen <= 38;
+          const isShortStep = useTwoColShortSteps && !isLast && visualLen <= 54;
 
           return (
             <div
               key={idx}
+              style={{
+                borderColor: isLast ? answerTokens.accentStepBorderHex : undefined,
+                borderRightColor: isLast ? answerTokens.accentStepBorderHex : undefined,
+              }}
               className={`py-0.5 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs bg-white ${
                 useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
               } ${
                 isLast
-                  ? "border-emerald-500 border-r-4 font-black text-slate-950"
+                  ? "border-r-4 font-black text-slate-950"
                   : "border-slate-200 font-bold text-slate-900"
               }`}
             >
               <span
                 style={{
-                  backgroundColor: isLast ? palette.primaryHex : "#ffffff",
-                  color: isLast ? "#ffffff" : palette.primaryHex,
-                  borderColor: isLast ? palette.primaryHex : "#CBD5E1",
+                  background: isLast ? answerTokens.badgeGradientCss : "#ffffff",
+                  color: isLast ? "#ffffff" : answerTokens.badgeBgColorHex,
+                  borderColor: isLast ? answerTokens.badgeBgColorHex : "#CBD5E1",
                 }}
                 className="shrink-0 px-1 py-0.2 rounded text-[0.74em] font-black border shadow-2xs mt-0.5"
               >
