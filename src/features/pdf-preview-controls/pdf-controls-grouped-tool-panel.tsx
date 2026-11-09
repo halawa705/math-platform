@@ -20,6 +20,7 @@ import PDFExactFontSizeControl from "./pdf-exact-fontsize-control";
 import PDFDensityBudgetSelector from "./pdf-density-budget-selector";
 import PDFColumnsLayoutToggle from "./pdf-columns-layout-toggle";
 import PDFAnswerSpaceStyleSelector from "./pdf-answer-space-style-selector";
+import PDFEssayAnswerLinesControl from "./pdf-essay-answer-lines-control";
 import PDFColorThemeSelector from "./pdf-color-theme-selector";
 import PDFNotationDirectionSwitch from "./pdf-notation-direction-switch";
 import PDFHeaderBrandingEditor from "./pdf-header-branding-editor";
@@ -169,6 +170,14 @@ export default function PDFControlsGroupedToolPanel({
               onChangeStyle={(answerSpaceStyle) => set({ answerSpaceStyle })}
             />
           </ToolRow>
+          {settings.answerSpaceStyle !== "hidden" && (
+            <ToolRow labelAr="عدد سطور المقالي والبرهان">
+              <PDFEssayAnswerLinesControl
+                currentCount={settings.essayAnswerLinesCount ?? 3}
+                onChangeCount={(essayAnswerLinesCount) => set({ essayAnswerLinesCount })}
+              />
+            </ToolRow>
+          )}
         </div>
       )}
 

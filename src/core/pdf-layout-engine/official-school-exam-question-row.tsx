@@ -60,14 +60,36 @@ export function OfficialSchoolExamQuestionRow({
 
   const hasDottedDivider = question.hasDottedDivider !== false;
 
+  // تنظيم المساحة التلقائي الذكي حسب عدد السطور المختار
+  const lineHeightClass =
+    effectiveLinesCount <= 3
+      ? "h-6"
+      : effectiveLinesCount <= 7
+        ? "h-5"
+        : "h-4.5";
+
+  const spacingClass =
+    effectiveLinesCount <= 4
+      ? "space-y-1.5 pt-2 pb-1"
+      : effectiveLinesCount <= 8
+        ? "space-y-1 pt-1.5 pb-0.5"
+        : "space-y-0.5 pt-1 pb-0.5";
+
+  const lineStyleClass =
+    settings.answerSpaceStyle === "lined"
+      ? "border-b border-solid border-slate-400 print:border-slate-600"
+      : settings.answerSpaceStyle === "grid"
+        ? "border-b border-dashed border-slate-300 print:border-slate-400 bg-slate-50/50"
+        : "border-b border-dotted border-slate-400 print:border-slate-500";
+
   const renderEssayAnswerLines = () => {
     if (isSolvedMode || effectiveLinesCount <= 0 || settings.answerSpaceStyle === "hidden") return null;
     return (
-      <div className="space-y-1.5 pt-2 pb-1 w-full" aria-label="سطور مساحة الحل">
+      <div className={`${spacingClass} w-full`} aria-label="سطور مساحة الحل">
         {Array.from({ length: effectiveLinesCount }).map((_, lineIdx) => (
           <div
             key={lineIdx}
-            className="w-full border-b border-dotted border-slate-400 h-6 print:border-slate-500"
+            className={`w-full ${lineStyleClass} ${lineHeightClass}`}
           />
         ))}
       </div>

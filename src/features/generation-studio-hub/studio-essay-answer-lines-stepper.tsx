@@ -3,8 +3,8 @@
 /**
  * @file studio-essay-answer-lines-stepper.tsx
  * @description مكون ذري مستقل للتحكم في عدد سطور مساحة إجابة أسئلة المقالي والبرهان
- * (حتمي: تسري حصراً على الأسئلة المقالية وتكون صفراً تلقائياً لأسئلة الاختيار من متعدد).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 110 سطور).
+ * عبر عداد حر مفتوح (+ / - أو كتابة مباشرة) دون خيارات مسبقة حاصرة (MCQ = صفر تلقائياً).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 90 سطراً).
  */
 
 import React from "react";
@@ -19,19 +19,26 @@ export interface StudioEssayAnswerLinesStepperProps {
   readonly compact?: boolean;
 }
 
-const LINE_PRESETS = [0, 2, 3, 4, 6] as const;
-
 export default function StudioEssayAnswerLinesStepper({
   value,
   onChange,
   labelAr = "سطور إجابة المقالي",
   compact = false,
 }: StudioEssayAnswerLinesStepperProps) {
-  const safeCount = Math.max(0, Math.min(20, value ?? 3));
+  const safeCount = Math.max(0, value ?? 3);
 
   const handleStep = (delta: number) => {
-    onChange(Math.max(0, Math.min(20, safeCount + delta)));
+    onChange(Math.max(0, safeCount + delta));
   };
+
+  const badgeText =
+    safeCount === 0
+      ? "بدون أسطر"
+      : safeCount === 1
+        ? "سطر واحد"
+        : safeCount === 2
+          ? "سطران"
+          : `${safeCount} أسطر`;
 
   return (
     <div className={`rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 ${compact ? "p-2 space-y-1.5" : "p-2.5 space-y-2"}`}>
@@ -46,35 +53,34 @@ export default function StudioEssayAnswerLinesStepper({
               ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
               : "bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300"
           }`}>
-            {safeCount === 0 ? "بدون أسطر" : `${safeCount} ${safeCount === 1 ? "سطر" : safeCount === 2 ? "سطران" : "سطور"}`}
+            {badgeText}
           </span>
         </div>
 
-        {/* أزرار الزيادة والنقصان */}
+        {/* أزرار الزيادة والنقصان والكتابة المباشرة */}
         <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden shadow-2xs">
           <button
             type="button"
             onClick={() => handleStep(-1)}
             disabled={safeCount <= 0}
             className="w-8 h-8 flex items-center justify-center font-black text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
-            title="تقليل سطر"
+            title="إنقاص سطر"
           >
             -
           </button>
           <input
             type="number"
             min={0}
-            max={20}
+            max={100}
             value={safeCount}
-            onChange={(e) => onChange(Math.max(0, Math.min(20, parseInt(e.target.value || "0", 10))))}
-            className="w-10 h-8 text-center font-black text-xs bg-transparent border-x border-slate-200 dark:border-slate-700 focus:outline-none"
-            title="عدد السطور المباشر"
+            onChange={(e) => onChange(Math.max(0, parseInt(e.target.value || "0", 10)))}
+            className="w-12 h-8 text-center font-black text-xs bg-transparent border-x border-slate-200 dark:border-slate-700 focus:outline-none"
+            title="اكتب عدد السطور بحرية (0 أو أكثر)"
           />
           <button
             type="button"
             onClick={() => handleStep(1)}
-            disabled={safeCount >= 20}
-            className="w-8 h-8 flex items-center justify-center font-black text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center font-black text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
             title="زيادة سطر"
           >
             +
@@ -82,28 +88,9 @@ export default function StudioEssayAnswerLinesStepper({
         </div>
       </div>
 
-      {/* خيارات سريعة وتنويه استثناء MCQ */}
-      <div className="flex items-center justify-between gap-1.5 flex-wrap pt-0.5">
-        <div className="flex items-center gap-1">
-          {LINE_PRESETS.map((cnt) => (
-            <button
-              key={cnt}
-              type="button"
-              onClick={() => onChange(cnt)}
-              className={`px-2 py-0.5 rounded-md text-[10px] font-black cursor-pointer transition-all ${
-                safeCount === cnt
-                  ? "bg-teal-700 text-white shadow-2xs"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              {cnt === 0 ? "بدون" : `${cnt}س`}
-            </button>
-          ))}
-        </div>
-
-        <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500">
-          🔒 للمقالي فقط (اختر = 0)
-        </span>
+      <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-400 dark:text-slate-500 pt-0.5">
+        <span>تحكم حر مفتوح بالسطور (+ / - أو كتابة مباشرة)</span>
+        <span>🔒 للمقالي فقط (اختر = 0)</span>
       </div>
     </div>
   );

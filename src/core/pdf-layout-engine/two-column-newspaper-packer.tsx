@@ -69,9 +69,10 @@ export default function TwoColumnNewspaperPacker({
             ...settings,
             exactFontSizePt: rung.fontPt as PDFPrintSettingsStateSSOT["exactFontSizePt"],
             figureScale: rung.figureScale,
-            answerSpaceLines: rung.answerLines,
             compactHeader: rung.compactHeader,
             hideAccreditation: rung.hideAccreditation,
+            essayAnswerLinesCount: settings.essayAnswerLinesCount !== undefined ? settings.essayAnswerLinesCount : rung.answerLines,
+            answerSpaceLines: rung.answerLines,
           }
         : settings,
     [settings, rung]
@@ -111,7 +112,7 @@ export default function TwoColumnNewspaperPacker({
     [flowItems, measured.heights, pageBudgets, densityProfile]
   );
 
-  const inputSignature = `${questions.map((q) => q.id).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}`;
+  const inputSignature = `${questions.map((q) => `${q.id}:${q.answerLinesCount ?? ""}`).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.essayAnswerLinesCount ?? ""}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}`;
   const sweep = useAutoFitSweepController({
     mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: discretePages,
   });

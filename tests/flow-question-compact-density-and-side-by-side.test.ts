@@ -56,6 +56,22 @@ describe("Intelligent Question Card Density & Adaptive Lines", () => {
       promptAr: "حل المعادلة التالية في ح: ٢س + ٥ = ١٣ واكتب مجموعة الحل م.ح.",
     });
     expect(resolveAdaptiveAnswerLinesCount({ question: stdQ })).toBe(2);
+
+    // 5. تخصيص يدوي حر لعدد السطور (مثال: 0، 7، 15 سطراً)
+    const customLinesQ = makeQuestion("q-custom", 5, {
+      answerLinesCount: 7,
+    });
+    expect(resolveAdaptiveAnswerLinesCount({ question: customLinesQ })).toBe(7);
+
+    const zeroLinesQ = makeQuestion("q-zero", 6, {
+      answerLinesCount: 0,
+    });
+    expect(resolveAdaptiveAnswerLinesCount({ question: zeroLinesQ })).toBe(0);
+
+    const bigLinesQ = makeQuestion("q-big", 7, {
+      answerLinesCount: 15,
+    });
+    expect(resolveAdaptiveAnswerLinesCount({ question: bigLinesQ })).toBe(15);
   });
 
   it("resolves question density grade and compact padding correctly", () => {
