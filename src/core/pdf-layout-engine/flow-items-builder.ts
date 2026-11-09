@@ -11,7 +11,6 @@ import type {
   DocumentAnswerVisibilityMode,
   PrintPaperTemplateId,
 } from "../ssot/pdf-print-settings-ssot";
-import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
 import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
 import type { FlowItem } from "./flow-item-model";
 
@@ -206,12 +205,6 @@ export function buildFlowItems(params: {
           question,
           forceHideSolution: workedExample ? false : forceHideSolutionInQuestionsFlow,
         });
-      }
-
-      const isIdeaGroup =
-        group.anchorQuestion && resolveFlowBannerKind(group.anchorQuestion.ideaBannerTitleAr) === "idea";
-      if (isIdeaGroup) {
-        items.push({ id: `flow-divider-${ideaIndex}`, kind: "idea_divider", span: "full", ideaIndex });
       }
     });
   }

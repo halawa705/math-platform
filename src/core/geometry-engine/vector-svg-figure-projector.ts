@@ -70,10 +70,12 @@ export function projectGeometryFigureToSVGMarkup(
     (width - padding * 2) / spanX,
     (height - padding * 2) / spanY
   );
+  const offsetX = (width - spanX * scale) / 2;
+  const offsetY = (height - spanY * scale) / 2;
 
   const toScreen = (x: number, y: number) => ({
-    sx: Number((padding + (x - minX) * scale).toFixed(1)),
-    sy: Number((height - padding - (y - minY) * scale).toFixed(1)),
+    sx: Number((offsetX + (x - minX) * scale).toFixed(1)),
+    sy: Number((height - offsetY - (y - minY) * scale).toFixed(1)),
   });
 
   const vertexMap = new Map(

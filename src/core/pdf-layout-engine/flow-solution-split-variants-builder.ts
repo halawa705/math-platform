@@ -10,7 +10,7 @@ import type { FlowItem } from "./flow-item-model";
 export const MODULE_ID_FLOW_SOLUTION_SPLIT_VARIANTS_BUILDER = "flow_solution_split_variants_builder" as const;
 
 /** أقل عدد خطوات يبقى في الصفحة الأولى من البطاقة المقسومة. */
-export const MIN_HEAD_STEPS = 2;
+export const MIN_HEAD_STEPS = 1;
 
 export interface SolutionSplitVariant {
   readonly k: number;
@@ -20,12 +20,17 @@ export interface SolutionSplitVariant {
 
 type QuestionFlowItem = Extract<FlowItem, { readonly kind: "question" }>;
 
-/** المثال المحلول الكامل فقط (حلّه ظاهر دائماً) وبلا فقرة «حاول بنفسك» الملتصقة به. */
+/** أي مثال محلول أو بطاقة إجابة خطواتها ظاهرة (خطوتان فأكثر) قابلة للتقسيم النظيف بين صفحتين دون تجزئة الخطوة. */
 function isSplittableSolvedExample(item: FlowItem): item is QuestionFlowItem {
   if (item.kind !== "question" || item.solutionSlice) return false;
+  if (item.forceHideSolution) return false;
   const q = item.question;
-  if (!q.id.startsWith("booklet-s1-") || q.id.includes("-drill-")) return false;
-  if (q.studentDrillPromptAr) return false;
+  const isWorked =
+    Boolean(q.isWorkedExample) ||
+    Boolean(item.isAnswerCard) ||
+    q.id.startsWith("ws-concept-") ||
+    (q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-"));
+  if (!isWorked) return false;
   return (q.solutionStepsAr?.length ?? 0) >= MIN_HEAD_STEPS + 1;
 }
 

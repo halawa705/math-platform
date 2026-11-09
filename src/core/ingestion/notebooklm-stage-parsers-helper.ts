@@ -156,7 +156,7 @@ export function parseSolvedExamplesFromSection(
     .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل|الحل)/i.test(b));
 
   return (exSplits.length > 0 ? exSplits : [cleanSection]).map((exBody) => {
-    const promptMatch = exBody.match(/(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل|البرهان|الخطوة\s*[0-9٠-٩:]|الناتج\s*النهائي|المثال|$))/i);
+    const promptMatch = exBody.match(/(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان\s*[:：]|الخطوة\s*[0-9٠-٩:]|الناتج\s*النهائي|المثال|$))/i);
     const rawProblem = promptMatch?.[1] ||
       exBody.split(/(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان\s*[:：]|الخطوة\s*[0-9٠-٩:]))/i)[0]?.trim() || concept || ideaTitle;
     const baseProblem = rawProblem
@@ -165,7 +165,7 @@ export function parseSolvedExamplesFromSection(
     const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
     const mcqChoices = parseChoicesTupleFromBlock(cleanProblem);
     const finalPrompt = mcqChoices ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
-    const stepsMatch = exBody.match(/(?:\*\*|__)?(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|خطوات_الحل|الحل(?:\s*بالتفصيل)?|البرهان(?:\s*والخطوات)?)(?:\*\*|__)?\s*[:：]?\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i);
+    const stepsMatch = exBody.match(/(?:\*\*|__)?(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|خطوات_الحل|الحل(?:\s*بالتفصيل)?(?:\*\*|__)?\s*[:：]|البرهان(?:\s*والخطوات)?(?:\*\*|__)?\s*[:：])(?:\*\*|__)?\s*[:：]?\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i);
     const rawFinal = exBody.match(/(?:\*\*|__)?(?:الناتج\s*النهائي(?:\s*المعتمد)?|الإجابة\s*النهائية)(?:\*\*|__)?\s*[:：]\s*([^\r\n]+)/i)?.[1]?.replace(/^\*\*|\*\*$/g, "").trim() || "";
     const fallbackStepsLines = !stepsMatch?.[1]
       ? exBody
@@ -173,8 +173,9 @@ export function parseSolvedExamplesFromSection(
           .filter((line) => /^\s*(?:\d+[.\-–)]|\([0-9٠-٩]+\)|(?:الخطوة|خطوة)\s*\S+)\s+/.test(line))
           .join("\n")
       : "";
-    const steps = mergeLogicalSolutionSteps(stepsMatch?.[1] || fallbackStepsLines).filter(
-      (l) => !/^(?:معرف\s*المثال|معرف\s*الفكرة|نص\s*المسألة|نوع\s*المسألة|المثال\s*\d+|مثال\s*\d+|الفكرة\s*\S+)/i.test(l) &&
+    const cleanedStepsSource = (stepsMatch?.[1] || fallbackStepsLines).replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)\s*:[^\]]*\]/gi, "");
+    const steps = mergeLogicalSolutionSteps(cleanedStepsSource).filter(
+      (l) => !/^(?:معرف\s*المثال|معرف\s*الفكرة|نص\s*المسألة|نوع\s*المسألة|المثال\s*\d+|مثال\s*\d+|الفكرة\s*\S+|\[?\s*رسم\s*(?:هندسي|توضيحي|بياني))/i.test(l) &&
         !/example-\d+-\d+/i.test(l) && !/(?:مفهوم\s*الفكرة|القاعدة\s*الرياضية|حاول\s*بنفسك|الواجب\s*المنزلي)/i.test(l)
     );
     if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);

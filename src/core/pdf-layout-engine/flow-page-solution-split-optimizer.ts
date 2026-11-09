@@ -11,7 +11,7 @@ import { buildSolutionSplitVariants } from "./flow-solution-split-variants-build
 export const MODULE_ID_FLOW_PAGE_SOLUTION_SPLIT_OPTIMIZER = "flow_page_solution_split_optimizer" as const;
 
 /** أقل نسبة فراغ سفلي في الصفحة تستحق محاولة التقسيم. */
-const MIN_SLACK_RATIO_TO_TRY_SPLIT = 0.12;
+const MIN_SLACK_RATIO_TO_TRY_SPLIT = 0.06;
 const MAX_ACCEPTED_SPLITS = 80;
 
 export type FlowPackOnce = (items: readonly FlowItem[]) => readonly FlowPage[];
@@ -56,27 +56,30 @@ export function optimizePagesWithSolutionSplits(
     for (let p = 0; p < pages.length - 1 && !progressed; p++) {
       const page = pages[p];
       if (1 - page.usedHeightPx / Math.max(1, page.budgetHeightPx) < MIN_SLACK_RATIO_TO_TRY_SPLIT) continue;
-      const next = flattenPageItems(pages[p + 1])[0];
-      if (!next || tried.has(next.id)) continue;
+      const nextPageItems = flattenPageItems(pages[p + 1]).slice(0, 3);
+      const next = nextPageItems.find((cand) => !tried.has(cand.id) && variantsById.has(cand.id));
+      if (!next) continue;
       const variants = variantsById.get(next.id);
       if (!variants) continue;
       tried.add(next.id);
 
       const baseScore = slackScore(pages);
       let best: SplitOptimizationResult | undefined;
+      let bestPagesCount = pages.length;
       let bestScore = baseScore - 1e-9;
 
       for (const v of variants) {
         if (!heights.has(v.head.id) || !heights.has(v.tail.id)) continue;
         const candidateItems = currentItems.flatMap((i) => (i.id === next.id ? [v.head, v.tail] : [i]));
         const candidatePages = packOnce(candidateItems);
-        if (candidatePages.length > pages.length) continue;
+        if (candidatePages.length > bestPagesCount) continue;
         if (candidatePages.some((cp) => cp.overflowsBudget)) continue;
         const headPage = pageIndexOfItem(candidatePages, v.head.id);
         const tailPage = pageIndexOfItem(candidatePages, v.tail.id);
         if (headPage < 0 || tailPage <= headPage) continue;
         const score = slackScore(candidatePages);
-        if (score < bestScore) {
+        if (candidatePages.length < bestPagesCount || score < bestScore) {
+          bestPagesCount = candidatePages.length;
           bestScore = score;
           best = { items: candidateItems, pages: candidatePages };
         }

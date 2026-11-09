@@ -168,7 +168,10 @@ export function composeFigureFromGeometryDescription(description: string, figure
   for (const f of facts) {
     if (f.k === "length" && P(f.seg[0]) && P(f.seg[1]) && !isPolygonSide(f.seg[0], f.seg[1])) {
       const h0 = host.get(f.seg[0]); const h1 = host.get(f.seg[1]);
-      const onSameHostSide = (h0 && (h0[0] === f.seg[1] || h0[1] === f.seg[1])) || (h1 && (h1[0] === f.seg[0] || h1[1] === f.seg[0]));
+      const onSameHostSide =
+        (h0 && (h0[0] === f.seg[1] || h0[1] === f.seg[1])) ||
+        (h1 && (h1[0] === f.seg[0] || h1[1] === f.seg[0])) ||
+        Boolean(h0 && h1 && pairKey(h0[0], h0[1]) === pairKey(h1[0], h1[1]));
       if (!onSameHostSide) addExtra(f.seg[0], f.seg[1]);
     }
   }
