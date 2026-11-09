@@ -4,6 +4,9 @@ import {
   loadPersistedPDFPrintSettingsSSOT,
 } from "../ssot/pdf-print-settings-ssot";
 import { buildFlowItems } from "./flow-items-builder";
+import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
+import { packFlowItemsIntoPages } from "./flow-page-packer";
+import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
 import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
 
 const SAMPLE_QUESTIONS: readonly PrintableMathQuestionItem[] = [
@@ -68,8 +71,48 @@ describe("Official School Exam Template & Flow Items Builder", () => {
       includeAccreditation: true,
       paperTemplateId: "classic_sovereign",
     });
-    const col2Q = col2Items.find((it) => it.kind === "question");
-    expect(col2Q?.span).toBe("column");
+    const col2Mcq = col2Items.find((it) => it.kind === "question" && it.question.kind === "mcq");
+    const col2Essay = col2Items.find((it) => it.kind === "question" && it.question.kind !== "mcq");
+    expect(col2Mcq?.span).toBe("full");
+    expect(col2Essay?.span).toBe("column");
+  });
+
+  it("packs 13 to 15 compact MCQs onto a single A4 page for Exams, Reviews, and Worksheets while leaving Booklets untouched", () => {
+    const fourteenReviewMcqs: PrintableMathQuestionItem[] = Array.from({ length: 14 }, (_, idx) => ({
+      id: `rev-mcq-${idx + 1}`,
+      questionNumber: idx + 1,
+      kind: "mcq",
+      branchBadgeAr: "الجبر",
+      marks: 1,
+      promptAr: `الوقت المستغرق في النشاط رقم ${idx + 1} = ...`,
+      mcqChoicesAr: ["دقائق", "ثوانٍ", "ساعات", "أيام"],
+      correctMcqIndex: 2,
+      modelAnswerAr: "ساعات",
+    }));
+
+    expect(isCompactTextbookMcqQuestion(fourteenReviewMcqs[0])).toBe(true);
+    expect(
+      isCompactTextbookMcqQuestion({
+        ...fourteenReviewMcqs[0],
+        id: "booklet-s2-hw-1",
+      })
+    ).toBe(false);
+
+    const { items } = buildFlowItems({
+      questions: fourteenReviewMcqs,
+      columnsCount: 2,
+      includeAnswerKey: false,
+      includeAccreditation: false,
+      paperTemplateId: "classic_sovereign",
+      answerVisibilityMode: "questions_only",
+    });
+
+    const pages = packFlowItemsIntoPages(items, new Map(), {
+      budgets: { firstPagePx: 915, nextPagePx: 1020 },
+      density: FLOW_DENSITY_PROFILES.ultra_compact,
+    });
+
+    expect(pages.length).toBe(1);
   });
 
   it("builds official school exam sections and local question numbers in official_school_exam mode, strictly full width (span=full)", () => {

@@ -12,6 +12,7 @@ import type {
   PrintPaperTemplateId,
 } from "../ssot/pdf-print-settings-ssot";
 import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
+import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
 import type { FlowItem } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_ITEMS_BUILDER = "flow_items_builder" as const;
@@ -197,10 +198,11 @@ export function buildFlowItems(params: {
       ];
       for (const question of ordered) {
         const workedExample = isSolvedExample(question);
+        const isCompactMcq = isCompactTextbookMcqQuestion(question, false);
         items.push({
           id: `flow-q-${ideaIndex}-${question.id}`,
           kind: "question",
-          span: questionSpan,
+          span: isCompactMcq ? "full" : questionSpan,
           question,
           forceHideSolution: workedExample ? false : forceHideSolutionInQuestionsFlow,
         });

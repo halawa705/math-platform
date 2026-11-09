@@ -5,6 +5,7 @@
  */
 
 import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
+import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
 
 export const MODULE_ID_FLOW_ITEM_MODEL = "flow_item_model" as const;
 
@@ -86,9 +87,11 @@ export function fullWidthHeightKey(itemId: string): string {
   return `${itemId}::full`;
 }
 
-/** البطاقات التي يجوز تمديدها لملء الفراغ: الأسئلة فقط (الكبسولات والفواصل والجداول تبقى كما هي). */
+/** البطاقات التي يجوز تمديدها لملء الفراغ: الأسئلة البطاقية فقط (أسطر اختر المدمجة والكبسولات والفواصل والجداول تبقى بارتفاعها الرشيق). */
 export function isStretchableFlowItem(item: FlowItem): boolean {
-  return item.kind === "question";
+  if (item.kind !== "question") return false;
+  if (isCompactTextbookMcqQuestion(item.question, item.isAnswerCard)) return false;
+  return true;
 }
 
 /** ارتفاع تقديري قبل اكتمال القياس الحي فقط. */
@@ -101,6 +104,8 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
     case "answer_section_banner": return 48;
     case "mcq_answer_key": return 260;
     case "accreditation_footer": return 95;
+    case "question":
+      return isCompactTextbookMcqQuestion(item.question, item.isAnswerCard) ? 56 : 190;
     default: return 190;
   }
 }
