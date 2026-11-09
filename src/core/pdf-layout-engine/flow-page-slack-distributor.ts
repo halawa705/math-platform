@@ -119,7 +119,7 @@ export function distributePageSlack(p: DistributeParams): FlowPage {
 
     // (٤) في الصفحات غير الأخيرة، إن بقي الامتلاء أقل من 91% بعد سقف البطاقات، نوسع المسافة البينية تدريجياً حتى 92% دون تجاوز الميزانية.
     if (!p.isLastPage && contentAt(gapPx) < budgetPx * 0.91 && segments.length >= 2) {
-      const maxSecondaryGap = Math.min(20, density.gapMaxPx + 10);
+      const maxSecondaryGap = segments.length <= 3 ? 36 : Math.min(24, density.gapMaxPx + 12);
       for (let g = gapPx + 1; g <= maxSecondaryGap; g++) {
         if (fitsAt(g)) {
           gapPx = g;

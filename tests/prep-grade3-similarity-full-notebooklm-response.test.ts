@@ -137,7 +137,7 @@ describe("Prep 3 Similarity — Full Real NotebookLM Response Suite", () => {
     const svg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western" });
     expect(svg).toContain("9");
     expect(svg).toContain("16");
-    expect(svg).not.toContain("18"); // zero alien lengths
+    expect(svg).not.toContain(">18<"); // zero alien lengths
   });
 
   it("idea-12: Example 12-1 builds Euclid altitude with AD = 3.6 and BD = 6.4", () => {

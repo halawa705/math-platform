@@ -38,6 +38,10 @@ export type FlowItem =
       readonly forceHideSolution?: boolean;
       /** بطاقة حل منفصلة في نهاية المذكرة (تظهر شارة إجابة سؤال X). */
       readonly isAnswerCard?: boolean;
+      /** مثال توضيحي محلول (مصحوب بحل مفصل). */
+      readonly isWorkedExample?: boolean;
+      /** رقم الفكرة التابع لها السؤال/المثال إن وجد. */
+      readonly ideaIndex?: number;
     }
   | { readonly id: string; readonly kind: "idea_divider"; readonly span: "full"; readonly ideaIndex: number }
   | {

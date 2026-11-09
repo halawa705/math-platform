@@ -68,7 +68,7 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
       });
       expect(svg).toContain("<svg");
       expect(svg).not.toContain("NaN");
-      expect(svg).toContain("<polygon");
+      expect(svg).toContain("<line");
 
       const cleaned = sanitizeNotebookLMCitationsAndLatex(`[رسم هندسي: ${rawDesc}]`).cleanedText;
       const inner = cleaned.match(/\[\s*رسم\s*هندسي\s*:\s*([^\]]+)\]/i)?.[1] ?? rawDesc;

@@ -33,7 +33,7 @@ interface BreakNode {
 
 const ORPHAN_PENALTY = 1e5;
 const LONE_FOOTER_PENALTY = 30;
-const SLACK_WEIGHT = 10;
+const SLACK_WEIGHT = 22;
 const IMBALANCE_WEIGHT = 8;
 const OVERSIZED_PENALTY = 1e7;
 
@@ -98,6 +98,20 @@ function packFlowItemsIndivisible(
       if (slice[0].kind === "idea_divider") cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "accreditation_footer" && start > 0) cost += LONE_FOOTER_PENALTY;
+
+      // منع فصل ثنائية الأمثلة المحلولة للفكرة بين صفحتين لضمان بقائهما متجاورين يميناً ويساراً
+      const nextItem = end < count ? items[end] : undefined;
+      if (
+        !isLastPage &&
+        last.kind === "question" &&
+        last.isWorkedExample &&
+        nextItem?.kind === "question" &&
+        nextItem.isWorkedExample &&
+        last.ideaIndex !== undefined &&
+        last.ideaIndex === nextItem.ideaIndex
+      ) {
+        cost += ORPHAN_PENALTY;
+      }
       if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - used) / budget) ** 2;
       cost += (IMBALANCE_WEIGHT * columnsImbalancePx(segments, heightOf, gapMinPx) / budget) ** 2;
 

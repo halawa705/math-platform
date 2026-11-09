@@ -52,6 +52,36 @@ export function buildSegmentsForSlice(
 
   const closeGroup = () => {
     if (group.length === 0) return;
+
+    // حالة خاصة لثنائية الأمثلة المحلولة في الفكرة: المثال ١ يميناً والمثال ٢ يساراً متجاورين
+    if (
+      group.length >= 2 &&
+      group[0].kind === "question" &&
+      group[0].isWorkedExample &&
+      group[1].kind === "question" &&
+      group[1].isWorkedExample &&
+      group[0].ideaIndex !== undefined &&
+      group[0].ideaIndex === group[1].ideaIndex
+    ) {
+      const exRight = group[0];
+      const exLeft = group[1];
+      const pairHeight = Math.max(heightOf(exRight), heightOf(exLeft));
+      segments.push({
+        kind: "columns",
+        rightItems: [exRight],
+        leftItems: [exLeft],
+        heightPx: pairHeight,
+      });
+
+      const remainder = group.slice(2);
+      group = [];
+      if (remainder.length > 0) {
+        group = [...remainder];
+        closeGroup();
+      }
+      return;
+    }
+
     const fullHeights = group.map((g) => fullWidthHeights.get(fullWidthHeightKey(g.id)));
     const canGoFull = fullHeights.every((h): h is number => h !== undefined);
 

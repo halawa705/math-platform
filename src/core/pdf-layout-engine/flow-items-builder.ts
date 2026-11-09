@@ -204,6 +204,8 @@ export function buildFlowItems(params: {
           span: isCompactMcq ? "full" : questionSpan,
           question,
           forceHideSolution: workedExample ? false : forceHideSolutionInQuestionsFlow,
+          isWorkedExample: workedExample,
+          ideaIndex,
         });
       }
     });

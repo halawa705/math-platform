@@ -2,11 +2,14 @@
 
 /**
  * @file student-answer-space-docker.tsx
- * @description مصير مساحات إجابة الطالب (الأسطر المنقطة أو المصمتة) لتدريبات حاول بنفسك وتمارين الواجب.
+ * @description مصير مساحات إجابة الطالب (الأسطر المنقطة أو المسطرة) لتدريبات حاول بنفسك وتمارين الواجب.
+ * يضمن بقاء أسطر الإجابة مدمجة ورشيقة وبارتفاع محدد دون تمدد رأسي يلتهم مساحة الورقة.
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 70 سطراً).
  */
 
 import type { AnswerSpaceStyleMode } from "../ssot/pdf-print-settings-ssot";
+
+export const MODULE_ID_STUDENT_ANSWER_SPACE_DOCKER = "student_answer_space_docker" as const;
 
 export interface StudentAnswerSpaceDockerProps {
   readonly isBookletDrill: boolean;
@@ -42,11 +45,11 @@ export function StudentAnswerSpaceDocker({
         : "bg-white border border-slate-200";
 
   return (
-    <div className="px-2 pb-2 pt-1 bg-white border-t border-dashed border-slate-300 flex-1 flex flex-col justify-between gap-1">
-      <div style={{ color: labelColor }} className="text-[0.78em] font-black text-left">
+    <div className="mt-auto px-2 pb-1.5 pt-1 bg-white border-t border-dashed border-slate-300 flex flex-col gap-1">
+      <div style={{ color: labelColor }} className="text-[0.74em] font-black text-left select-none">
         {labelText}
       </div>
-      <div className="flex-1 flex flex-col justify-evenly gap-1">
+      <div className="flex flex-col gap-1.5">
         {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) => (
           <div key={lineIdx} className={`h-3 w-full ${lineStyleClass}`} />
         ))}

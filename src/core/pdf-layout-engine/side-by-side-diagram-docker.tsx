@@ -25,6 +25,8 @@ import { QuestionGivenRequiredBadges } from "./question-given-required-badges";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
 import { resolveQuestionCardColorScheme } from "./question-card-palette-resolver";
 import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
+import { resolveQuestionCardDensity } from "./question-card-compact-density-resolver";
+import { resolveAdaptiveAnswerLinesCount } from "./question-answer-lines-adaptive-resolver";
 import type { FlowSolutionSlice } from "./flow-item-model";
 
 export const MODULE_ID_SIDE_BY_SIDE_DIAGRAM_DOCKER = "side_by_side_diagram_docker" as const;
@@ -91,6 +93,18 @@ export default function SideBySideDiagramDocker({
   );
   const mcqGridClass = resolveMCQGridTailwindClass(mcqCols);
 
+  const densityMetrics = resolveQuestionCardDensity({
+    question,
+    isBookletSolvedExample,
+    isAnswerCard: isEffectiveAnswerCard,
+    columnsCount: settings.columnsCount === 2 ? 2 : 1,
+  });
+  const effectiveFigureScale = (settings.figureScale ?? 1) * densityMetrics.figureScaleFactor;
+  const adaptiveLines = resolveAdaptiveAnswerLinesCount({
+    question,
+    defaultSettingsLines: settings.answerSpaceLines,
+  });
+
   const stepsCount = question.solutionStepsAr?.length ?? 0;
   const totalStepsLength = (question.solutionStepsAr ?? []).reduce((sum, s) => sum + s.length, 0);
   const autoCompactScale =
@@ -105,9 +119,9 @@ export default function SideBySideDiagramDocker({
         boxShadow: "0 1px 4px rgba(15, 23, 42, 0.05)",
         breakInside: "avoid",
       }}
-      className="min-w-0 w-full flex-1 rounded-xl border-2 bg-white flex flex-col break-inside-avoid print:break-inside-avoid"
+      className="min-w-0 w-full rounded-xl border-2 bg-white flex flex-col break-inside-avoid print:break-inside-avoid"
     >
-      <div className="p-2 pb-1.5 min-w-0">
+      <div className={`${densityMetrics.cardPaddingClass} min-w-0`}>
         {!isContinuation && (
           <QuestionCardBadgeHeader
             isBookletSolvedExample={isBookletSolvedExample}
@@ -171,7 +185,7 @@ export default function SideBySideDiagramDocker({
                 accentHex={palette.accentHex}
                 numeralMode={settings.numeralMode}
                 notationLanguage={settings.notationLanguage}
-                figureScale={settings.figureScale ?? 1}
+                figureScale={effectiveFigureScale}
                 columnsCount={settings.columnsCount}
               />
             </div>
@@ -227,7 +241,7 @@ export default function SideBySideDiagramDocker({
           primaryHex={palette.primaryHex}
           answerSpaceStyle={settings.answerSpaceStyle}
           isMcq={Boolean(question.mcqChoicesAr && question.mcqChoicesAr.length > 0)}
-          lineCount={question.answerLinesCount ?? settings.answerSpaceLines}
+          lineCount={adaptiveLines}
         />
       )}
     </article>
