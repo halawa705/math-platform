@@ -164,6 +164,11 @@ export function CompactTextbookMcqRow({
 
   const renderChoicesStrip = () => {
     if (choices.length === 0) return null;
+    const isEmeraldTheme = palette.primaryHex.toUpperCase() === "#064E3B";
+    const choiceTextHex = isEmeraldTheme ? "#0369a1" : "#0f766e";
+    const choiceBorderHex = isEmeraldTheme ? "#0284c7" : "#0d9488";
+    const choiceCircleGradient = "linear-gradient(135deg, #432818 0%, #7f1d1d 100%)";
+
     return (
       <div
         dir="rtl"
@@ -180,23 +185,23 @@ export function CompactTextbookMcqRow({
                 backgroundColor: "#ffffff",
                 border: isCorrect
                   ? "1.8px solid #059669"
-                  : `1px solid ${palette.borderHex}55`,
+                  : `1.1px solid ${choiceBorderHex}66`,
                 borderRadius: "6px",
                 padding: "1.5px 5px",
                 boxShadow: isCorrect
                   ? "0 1.5px 0 #05966955"
-                  : `0 1px 0 ${palette.borderHex}25`,
+                  : `0 1px 0 ${choiceBorderHex}28`,
               }}
               className="min-w-0 flex items-center gap-1.5"
             >
               <span
                 style={{
-                  background: isCorrect ? "#059669" : palette.headerGradientCss,
+                  background: isCorrect ? "#059669" : choiceCircleGradient,
                   color: "#ffffff",
-                  border: `1px solid ${isCorrect ? "#047857" : palette.primaryHex}`,
+                  border: `1px solid ${isCorrect ? "#047857" : "#b45309"}`,
                   boxShadow: isCorrect
                     ? "0 1.5px 0 #064e3b"
-                    : `0 1.5px 0 ${palette.primaryHex}88`,
+                    : "0 1.5px 0 #451a03",
                   width: "18px",
                   height: "18px",
                   borderRadius: "9999px",
@@ -212,7 +217,7 @@ export function CompactTextbookMcqRow({
                 {letter}
               </span>
               <div
-                style={{ color: isCorrect ? "#064e3b" : palette.primaryHex }}
+                style={{ color: isCorrect ? "#064e3b" : choiceTextHex }}
                 className="flex-1 min-w-0 text-right font-extrabold text-[0.92em] break-words leading-tight"
               >
                 <SafeKaTeXBiDiMathRenderer
