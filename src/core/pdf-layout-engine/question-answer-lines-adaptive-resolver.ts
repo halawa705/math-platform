@@ -21,8 +21,9 @@ const DIRECT_CALC_KEYWORDS_REGEX = /(?:أوجد\s*قياس|أوجد\s*قيمة|�
 export function resolveAdaptiveAnswerLinesCount(params: {
   readonly question: PrintableMathQuestionItem;
   readonly defaultSettingsLines?: number;
+  readonly hasManualEssayLinesLock?: boolean;
 }): number {
-  const { question, defaultSettingsLines } = params;
+  const { question, defaultSettingsLines, hasManualEssayLinesLock } = params;
 
   // أسئلة الاختيار من متعدد لا تحتاج أسطر كتابة نهائياً (حتمي: 0)
   if (question.kind === "mcq" || (question.mcqChoicesAr && question.mcqChoicesAr.length > 0)) {
@@ -34,7 +35,7 @@ export function resolveAdaptiveAnswerLinesCount(params: {
     return question.answerLinesCount;
   }
 
-  // إذا تم تحديد عدد سطور المقالي صراحة في إعدادات المعاينة أو AutoFit
+  // إذا تم تحديد عدد سطور المقالي صراحة (من قفل المعلم أو محرك AutoFit)
   if (typeof defaultSettingsLines === "number") {
     return defaultSettingsLines;
   }
@@ -58,11 +59,11 @@ export function resolveAdaptiveAnswerLinesCount(params: {
   }
 
   // المسائل الحسابية المباشرة السريعة (سطر واحد لكتابة الناتج والوحدة)
-  const isDirectCalc = DIRECT_CALC_KEYWORDS_REGEX.test(prompt) || prompt.length <= 45;
+  const isDirectCalc = DIRECT_CALC_KEYWORDS_REGEX.test(prompt) || prompt.length <= 65;
   if (isDirectCalc) {
     return 1;
   }
 
   // الوضع القياسي المتوازن
-  return defaultSettingsLines ?? 2;
+  return 2;
 }

@@ -41,7 +41,7 @@ export function resolveQuestionCardDensity(params: {
       grade: "standard",
       cardPaddingClass: "p-2 pb-2",
       badgeSizeClass: "px-2.5 py-0.5 text-[0.82em]",
-      figureScaleFactor: 1.0,
+      figureScaleFactor: columnsCount === 2 ? 0.92 : 1.0,
     };
   }
 
@@ -51,7 +51,7 @@ export function resolveQuestionCardDensity(params: {
       grade: "compact",
       cardPaddingClass: columnsCount === 2 ? "p-2 pb-1.5" : "p-2 pb-2",
       badgeSizeClass: "px-2 py-0.5 text-[0.80em]",
-      figureScaleFactor: columnsCount === 2 ? 0.94 : 1.0,
+      figureScaleFactor: columnsCount === 2 ? 0.88 : 1.0,
     };
   }
 
@@ -60,6 +60,6 @@ export function resolveQuestionCardDensity(params: {
     grade: "ultra_compact",
     cardPaddingClass: "p-1.5 pb-1",
     badgeSizeClass: "px-1.5 py-0.2 text-[0.76em]",
-    figureScaleFactor: 0.90,
+    figureScaleFactor: columnsCount === 2 ? 0.82 : 0.90,
   };
 }

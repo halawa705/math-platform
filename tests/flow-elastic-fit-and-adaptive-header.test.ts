@@ -109,8 +109,8 @@ describe("Knuth-Plass Micro-Elasticity Resolver", () => {
   });
 });
 
-describe("Page Packer Integration with Flexible Introductory Capsule", () => {
-  it("allows idea capsule to serve as introductory concept at page bottom when large void would otherwise occur", () => {
+describe("Page Packer Integration with Idea Capsule Invariants", () => {
+  it("never isolates a capsule at the bottom of a page without its worked examples", () => {
     // 4 تدريبات من الفكرة 1 تملأ حوالي 400px، ثم تأتي كبسولة الفكرة 2 (~120px)
     // ومثالا الفكرة 2 طويلان جداً (لا يتسعان معاً في الصفحة)
     const questions: PrintableMathQuestionItem[] = [
@@ -141,10 +141,12 @@ describe("Page Packer Integration with Flexible Introductory Capsule", () => {
       density: FLOW_DENSITY_PROFILES.standard_balanced,
     });
 
-    // بدلاً من ترك الصفحة الأولى فارغة تماماً بالتدريبات فقط ورمي الكبسولة للصفحة التالية،
-    // تُقبل الكبسولة في أسفل الصفحة الأولى كتمهيد نظري راقٍ
+    // لا تُترك الكبسولة يتيمة في قاع الصفحة بدون أمثلتها بل تنتقل متصدرة في الصفحة التالية مع أمثلتها
     const firstPageItems = pages[0].segments.flatMap((s) => s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]);
-    const hasIntroductoryCapsule = firstPageItems.some((it) => it.kind === "idea_capsule" && (it as any).ideaIndex === 2);
-    expect(hasIntroductoryCapsule).toBe(true);
+    const hasOrphanCapsuleOnPage1 = firstPageItems.some((it) => it.kind === "idea_capsule" && (it as any).ideaIndex === 2);
+    expect(hasOrphanCapsuleOnPage1).toBe(false);
+
+    const secondPageItems = pages[1].segments.flatMap((s) => s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]);
+    expect(secondPageItems[0].kind).toBe("idea_capsule");
   });
 });

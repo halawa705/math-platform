@@ -14,8 +14,8 @@ import type { FlowItem, FlowPageSegment } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_ELASTIC_FIT_RESOLVER = "flow_elastic_fit_resolver" as const;
 
-/** أقصى فيض بكسلي يمكن للمرونة الميكروية امتصاصه دون أي تشويه بصري. */
-export const MAX_ELASTIC_ABSORPTION_LIMIT_PX = 55;
+/** أقصى فيض بكسلي يمكن للمرونة الميكروية امتصاصه دون أي تشويه بصري (حوالي 12-15px لكل بطاقة في الصفحات متعددة المسائل). */
+export const MAX_ELASTIC_ABSORPTION_LIMIT_PX = 90;
 
 export interface ElasticFitResult {
   readonly fits: boolean;
@@ -70,8 +70,8 @@ export function resolveElasticPageFit(params: {
     }
   }
 
-  const paddingSavings = Math.min(25, questionCardsCount * 4);
-  const diagramSavings = Math.min(25, diagramCardsCount * 8);
+  const paddingSavings = Math.min(45, questionCardsCount * 6);
+  const diagramSavings = Math.min(45, diagramCardsCount * 8);
 
   const totalElasticCapacityPx = Math.min(
     MAX_ELASTIC_ABSORPTION_LIMIT_PX,

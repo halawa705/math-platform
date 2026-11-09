@@ -103,6 +103,7 @@ export default function SideBySideDiagramDocker({
   const adaptiveLines = resolveAdaptiveAnswerLinesCount({
     question,
     defaultSettingsLines: settings.essayAnswerLinesCount ?? settings.answerSpaceLines,
+    hasManualEssayLinesLock: settings.hasManualEssayLinesLock,
   });
 
   const stepsCount = question.solutionStepsAr?.length ?? 0;
@@ -119,9 +120,9 @@ export default function SideBySideDiagramDocker({
         boxShadow: "0 1px 4px rgba(15, 23, 42, 0.05)",
         breakInside: "avoid",
       }}
-      className="min-w-0 w-full rounded-xl border-2 bg-white flex flex-col break-inside-avoid print:break-inside-avoid"
+      className="min-w-0 w-full rounded-xl border-2 bg-white flex flex-col flex-1 h-full justify-between break-inside-avoid print:break-inside-avoid"
     >
-      <div className={`${densityMetrics.cardPaddingClass} min-w-0`}>
+      <div className={`${densityMetrics.cardPaddingClass} min-w-0 flex-1 flex flex-col justify-between`}>
         {!isContinuation && (
           <QuestionCardBadgeHeader
             isBookletSolvedExample={isBookletSolvedExample}

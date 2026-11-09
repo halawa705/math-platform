@@ -108,14 +108,8 @@ function packFlowItemsIndivisible(
       let cost = 0;
       if (oversized) cost += OVERSIZED_PENALTY;
 
-      // التعامل المرن مع كبسولة الفكرة: تمنع فقط إذا انفردت بالصفحة كاملة، بينما يُسمح بها كتمهيد راقٍ إن أتت بعد تدريبات
-      if (last.kind === "idea_capsule" && !isLastPage) {
-        if (slice.length === 1) {
-          cost += ORPHAN_PENALTY;
-        } else {
-          cost += 35;
-        }
-      }
+      // كبسولة الفكرة لا تنتهي بها صفحة مطلقاً لضمان بقائها دائماً مع أمثلتها المحلولة
+      if (last.kind === "idea_capsule" && !isLastPage) cost += ORPHAN_PENALTY;
       if (last.kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice[0].kind === "idea_divider") cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
@@ -156,6 +150,20 @@ function packFlowItemsIndivisible(
       ) {
         cost += ORPHAN_PENALTY;
       }
+
+      // تفضيل تماسك الفكرة الرياضية (Idea Cohesion): تفضيل استيعاب تدريبات الفكرة مع أمثلتها في نفس الورقة
+      if (
+        !isLastPage &&
+        last.kind === "question" &&
+        last.isWorkedExample &&
+        nextItem?.kind === "question" &&
+        !nextItem.isWorkedExample &&
+        last.ideaIndex !== undefined &&
+        last.ideaIndex === nextItem.ideaIndex
+      ) {
+        cost += 18;
+      }
+
       if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - effectiveUsed) / budget) ** 2;
       cost += (IMBALANCE_WEIGHT * columnsImbalancePx(segments, heightOf, gapMinPx) / budget) ** 2;
 
