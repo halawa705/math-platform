@@ -47,8 +47,8 @@ export function OfficialMcqAnswerKeySummaryTable({
   return (
     <div style={{ borderColor: palette.primaryHex }} className="mt-2 pt-1 border-t-2 break-inside-avoid print:break-inside-avoid">
       <div
-        style={{ backgroundColor: palette.badgeBgHex, color: palette.primaryHex }}
-        className="px-2 py-0.5 rounded-t-md font-black text-[0.82em] flex items-center justify-between border border-b-0 border-slate-300 shadow-2xs"
+        style={{ backgroundColor: "#FFFFFF", color: palette.primaryHex }}
+        className="px-2 py-0.5 rounded-t-md bg-white font-black text-[0.82em] flex items-center justify-between border border-b-0 border-slate-300 shadow-2xs"
       >
         <span>🔑 جدول مفتاح إجابات الاختيار من متعدد السريع</span>
         <span>إجمالي الأسئلة الموضوعية: {formatNumeralsByModeSSOT(mcqItems.length, numeralMode)}</span>

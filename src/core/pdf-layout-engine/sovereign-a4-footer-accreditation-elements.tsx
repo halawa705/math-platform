@@ -28,8 +28,8 @@ export function SovereignPageNumberFooterBar({
 }) {
   return (
     <div
-      style={{ borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" }}
-      className="mt-auto pt-1 border-t flex items-center justify-between px-2 py-0.5 rounded-md text-[7.5pt] font-black text-slate-600 shrink-0"
+      style={{ borderColor: "#CBD5E1", backgroundColor: "#FFFFFF" }}
+      className="mt-auto pt-1 border-t bg-white flex items-center justify-between px-2 py-0.5 rounded-md text-[7.5pt] font-black text-slate-600 shrink-0"
     >
       <span>
         إعداد: {identity.teacherFullName}
@@ -62,9 +62,10 @@ export function SovereignDocumentAccreditationBox({
     <div
       style={{
         borderColor: palette.primaryHex,
-        backgroundColor: "#FAF8FF",
+        backgroundColor: "#FFFFFF",
+        boxShadow: "0 1px 3px rgba(15, 23, 42, 0.05)",
       }}
-      className="p-1.5 rounded-xl border-2 break-inside-avoid"
+      className="p-1.5 rounded-xl border-2 bg-white break-inside-avoid"
     >
       <div
         style={{ borderColor: palette.solvedBorderHex }}

@@ -42,7 +42,7 @@ export function StudentAnswerSpaceDocker({
         : "bg-white border border-slate-200";
 
   return (
-    <div className="px-2.5 pb-2.5 pt-1.5 bg-slate-50/70 border-t border-dashed border-slate-300 space-y-1.5">
+    <div className="px-2.5 pb-2.5 pt-1.5 bg-white border-t border-dashed border-slate-300 space-y-1.5">
       <div style={{ color: labelColor }} className="text-[0.8em] font-black text-left">
         {labelText}
       </div>

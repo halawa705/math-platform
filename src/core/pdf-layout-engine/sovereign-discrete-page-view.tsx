@@ -107,7 +107,10 @@ export function SovereignDiscretePageView({
         isSchoolExam ? "px-[16px] py-[14px]" : "px-[20px] py-[18px]"
       } flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none`}
     >
-      {isSchoolExam && <OfficialSchoolCornerCropMarks />}
+      <OfficialSchoolCornerCropMarks
+        primaryHex={isSchoolExam ? "#1e3a8a" : palette.primaryHex}
+        accentHex={isSchoolExam ? "#93c5fd" : palette.borderHex}
+      />
 
       <div className="w-full min-w-0 flex-1 flex flex-col relative z-10">
         {isSchoolExam ? (

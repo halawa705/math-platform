@@ -14,16 +14,42 @@ import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numer
 export const MODULE_ID_OFFICIAL_SCHOOL_EXAM_PAGE_CHROME =
   "official_school_exam_page_chrome" as const;
 
-export function OfficialSchoolCornerCropMarks() {
+export function OfficialSchoolCornerCropMarks({
+  primaryHex = "#1e3a8a",
+  accentHex = "#93c5fd",
+}: {
+  readonly primaryHex?: string;
+  readonly accentHex?: string;
+}) {
   return (
     <div
-      className="page-frame pointer-events-none absolute inset-[12px] border border-indigo-200/60 print:border-indigo-300"
+      style={{
+        borderColor: `${primaryHex}55`,
+        boxShadow: "inset 0 0 0 2px #ffffff, inset 0 0 10px rgba(15, 23, 42, 0.03)",
+      }}
+      className="page-frame pointer-events-none absolute inset-[7px] rounded-[6px] border-[1.5px]"
       aria-hidden="true"
     >
-      <span className="frame-corner absolute -top-[1px] -right-[1px] w-[16px] h-[16px] border-t-2 border-r-2 border-indigo-800" />
-      <span className="frame-corner absolute -top-[1px] -left-[1px] w-[16px] h-[16px] border-t-2 border-l-2 border-indigo-800" />
-      <span className="frame-corner absolute -bottom-[1px] -right-[1px] w-[16px] h-[16px] border-b-2 border-r-2 border-indigo-800" />
-      <span className="frame-corner absolute -bottom-[1px] -left-[1px] w-[16px] h-[16px] border-b-2 border-l-2 border-indigo-800" />
+      <div
+        style={{ borderColor: `${accentHex}88` }}
+        className="pointer-events-none absolute inset-[3px] rounded-[4px] border border-dashed"
+      />
+      <span
+        style={{ borderColor: primaryHex }}
+        className="frame-corner absolute -top-[1.5px] -right-[1.5px] w-[18px] h-[18px] rounded-tr-[5px] border-t-[2.5px] border-r-[2.5px]"
+      />
+      <span
+        style={{ borderColor: primaryHex }}
+        className="frame-corner absolute -top-[1.5px] -left-[1.5px] w-[18px] h-[18px] rounded-tl-[5px] border-t-[2.5px] border-l-[2.5px]"
+      />
+      <span
+        style={{ borderColor: primaryHex }}
+        className="frame-corner absolute -bottom-[1.5px] -right-[1.5px] w-[18px] h-[18px] rounded-br-[5px] border-b-[2.5px] border-r-[2.5px]"
+      />
+      <span
+        style={{ borderColor: primaryHex }}
+        className="frame-corner absolute -bottom-[1.5px] -left-[1.5px] w-[18px] h-[18px] rounded-bl-[5px] border-b-[2.5px] border-l-[2.5px]"
+      />
     </div>
   );
 }
@@ -56,7 +82,7 @@ export function OfficialSchoolFirstPageHeader({
       {/* 1. الصف الأول: الأكاديمية والمادة (يمين) | عنوان الاختبار والمدة (وسط) | المعلم والهاتف (يسار) */}
       <div className="grid grid-cols-12 items-center text-xs font-bold border-b border-indigo-200/80 pb-1.5 mb-1.5">
         <div className="col-span-4 flex items-center gap-1.5 text-right">
-          <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-300 text-indigo-950 font-black text-[11px]">
+          <span className="px-2 py-0.5 rounded bg-white border border-indigo-400 text-indigo-950 font-black text-[11px] shadow-2xs">
             {academyName}
           </span>
           <span className="text-[11px] text-slate-700 font-bold">
@@ -68,7 +94,7 @@ export function OfficialSchoolFirstPageHeader({
           <h1 className="text-xs sm:text-sm font-black text-indigo-950 tracking-tight leading-tight">
             {isSolvedMode ? `${documentTitle} (نموذج الإجابة)` : documentTitle}
           </h1>
-          <span className="inline-block mt-0.5 px-2 py-0.2 rounded-full bg-slate-100 border border-slate-300 text-[10px] font-black text-slate-700">
+          <span className="inline-block mt-0.5 px-2 py-0.2 rounded-full bg-white border border-slate-300 text-[10px] font-black text-slate-800 shadow-2xs">
             مدة الاختبار: {duration}
           </span>
         </div>
@@ -160,11 +186,11 @@ export function OfficialSchoolPageFooterBar({
 
       <div className="flex items-center gap-1.5">
         {isLastPage && (
-          <span className="text-center font-black text-[10px] text-indigo-950 px-2 py-0.2 rounded bg-slate-100 border border-slate-300">
+          <span className="text-center font-black text-[10px] text-indigo-950 px-2 py-0.2 rounded bg-white border border-slate-300 shadow-2xs">
             ✨ مع أطيب تمنياتي لكم بالتفوق والدرجة النهائية ✨
           </span>
         )}
-        <span className="font-black text-[10px] text-slate-800 px-2 py-0.2 rounded bg-slate-100 border border-slate-300 font-mono">
+        <span className="font-black text-[10px] text-slate-800 px-2 py-0.2 rounded bg-white border border-slate-300 font-mono shadow-2xs">
           صفحة {formatNumeralsByModeSSOT(pageNumber, numeralMode)} من {formatNumeralsByModeSSOT(totalPages, numeralMode)}
         </span>
       </div>
@@ -183,7 +209,7 @@ export function OfficialSchoolPageFooterBar({
 
 export function OfficialSchoolEndWishBanner() {
   return (
-    <div className="w-full my-1 py-1 px-2.5 rounded border border-indigo-950/30 bg-slate-50 text-center text-[10.5px] font-bold text-slate-900 flex items-center justify-center gap-1.5 break-inside-avoid print:break-inside-avoid">
+    <div className="w-full my-1 py-1 px-2.5 rounded-md border border-indigo-950/35 bg-white text-center text-[10.5px] font-bold text-slate-900 flex items-center justify-center gap-1.5 shadow-2xs break-inside-avoid print:break-inside-avoid">
       <span>✨ مع أطيب تمنياتي لكم بالتفوق والدرجة النهائية ✨</span>
     </div>
   );

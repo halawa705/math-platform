@@ -47,8 +47,8 @@ export function SovereignFirstPageHeader({
       className={`rounded-xl border-2 bg-white overflow-hidden ${compact ? "mb-1" : "mb-2"} shrink-0`}
     >
       <div
-        style={{ backgroundColor: "#F8FAFC" }}
-        className={`grid grid-cols-12 items-center ${compact ? "p-1" : "p-2"} gap-2 border-b border-slate-200`}
+        style={{ backgroundColor: "#FFFFFF" }}
+        className={`grid grid-cols-12 items-center ${compact ? "p-1" : "p-2"} gap-2 border-b border-slate-200 bg-white`}
       >
         <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2 min-w-0">
           <div
@@ -114,8 +114,8 @@ export function SovereignFirstPageHeader({
       </div>
 
       <div
-        style={{ backgroundColor: palette.badgeBgHex }}
-        className="px-3 py-1 flex flex-wrap items-center justify-between gap-2 text-[8pt] font-black text-slate-800"
+        style={{ backgroundColor: "#FFFFFF" }}
+        className="px-3 py-1 bg-white flex flex-wrap items-center justify-between gap-2 text-[8pt] font-black text-slate-800"
       >
         <span>اسم الطالب: ....................................</span>
         <span>المجموعة: ...................</span>
@@ -147,8 +147,12 @@ export function SovereignRunningPageHeader({
 }) {
   return (
     <div
-      style={{ borderColor: palette.primaryHex, backgroundColor: "#F8FAFC" }}
-      className="rounded-lg border px-2.5 py-1 mb-1.5 flex items-center justify-between gap-2 text-[7.8pt] font-black text-slate-700 shrink-0"
+      style={{
+        borderColor: palette.primaryHex,
+        backgroundColor: "#FFFFFF",
+        boxShadow: "0 1px 3px rgba(15, 23, 42, 0.05)",
+      }}
+      className="rounded-lg border px-2.5 py-1 mb-1.5 bg-white flex items-center justify-between gap-2 text-[7.8pt] font-black text-slate-700 shrink-0"
     >
       <div className="flex items-center gap-1.5 min-w-0 truncate">
         <span

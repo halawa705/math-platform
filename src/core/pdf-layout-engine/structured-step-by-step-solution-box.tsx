@@ -102,12 +102,12 @@ export function StructuredStepByStepSolutionBox({
           return (
             <div
               key={idx}
-              className={`py-0.5 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs ${
+              className={`py-0.5 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs bg-white ${
                 useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
               } ${
                 isLast
-                  ? "bg-emerald-50/70 border-emerald-300 font-black text-slate-950"
-                  : "bg-slate-50/70 border-slate-200 font-bold text-slate-900"
+                  ? "border-emerald-500 border-r-4 font-black text-slate-950"
+                  : "border-slate-200 font-bold text-slate-900"
               }`}
             >
               <span

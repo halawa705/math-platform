@@ -25,20 +25,14 @@ export function resolveQuestionCardColorScheme(params: {
 
   if (isAnswerCard) {
     return {
-      cardSurfaceBgHex: isOddQuestion ? "#F0FDF4" : "#F5F3FF",
+      cardSurfaceBgHex: "#FFFFFF",
       cardBorderColorHex: isOddQuestion ? "#14B8A6" : "#818CF8",
       badgeBgColorHex: isOddQuestion ? "#0D9488" : "#4338CA",
       exampleRoleLabel: "إجابة معتمدة",
     };
   }
 
-  const cardSurfaceBgHex = isBookletSolvedExample
-    ? isOddQuestion
-      ? "#F2FBF7"
-      : "#F0F9FF"
-    : isBookletDrill
-      ? "#F8FAFC"
-      : "#FFFFFF";
+  const cardSurfaceBgHex = "#FFFFFF";
 
   const cardBorderColorHex = isBookletSolvedExample
     ? isOddQuestion

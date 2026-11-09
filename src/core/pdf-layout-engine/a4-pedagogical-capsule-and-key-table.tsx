@@ -129,10 +129,11 @@ export function PedagogicalIdeaAndRuleCapsule({
           {item.conceptExplanationAr && (
             <div
               style={{
-                backgroundColor: isWorksheetSection ? "#F0FDF4" : "#FFFDF5",
+                backgroundColor: "#FFFFFF",
                 borderColor: isWorksheetSection ? "#10B981" : "#F59E0B",
+                boxShadow: "0 1px 3px rgba(15, 23, 42, 0.04)",
               }}
-              className="px-2.5 py-1.5 rounded-lg border text-[0.82em] text-slate-900 leading-normal min-w-0 shadow-2xs"
+              className="px-2.5 py-1.5 rounded-lg border border-r-4 bg-white text-[0.82em] text-slate-900 leading-normal min-w-0"
             >
               <div
                 style={{ color: isWorksheetSection ? "#065F46" : "#92400E" }}
@@ -166,8 +167,12 @@ export function PedagogicalIdeaAndRuleCapsule({
                     .map((cardContent, cIdx) => (
                       <div
                         key={cIdx}
-                        style={{ backgroundColor: "#F8FAFC", borderColor: "#818CF8" }}
-                        className="p-1.5 rounded-lg border text-[0.80em] font-medium text-slate-900 min-w-0 shadow-2xs flex flex-col justify-between"
+                        style={{
+                          backgroundColor: "#FFFFFF",
+                          borderColor: "#818CF8",
+                          boxShadow: "0 1px 3px rgba(15, 23, 42, 0.04)",
+                        }}
+                        className="p-1.5 rounded-lg border border-r-4 bg-white text-[0.80em] font-medium text-slate-900 min-w-0 flex flex-col justify-between"
                       >
                         <SafeKaTeXBiDiMathRenderer
                           text={cardContent}
@@ -180,10 +185,11 @@ export function PedagogicalIdeaAndRuleCapsule({
               ) : (
                 <div
                   style={{
-                    backgroundColor: isWorksheetSection ? "#F8FAFC" : "#F5F7FF",
+                    backgroundColor: "#FFFFFF",
                     borderColor: isWorksheetSection ? "#3B82F6" : "#818CF8",
+                    boxShadow: "0 1px 3px rgba(15, 23, 42, 0.04)",
                   }}
-                  className="p-2 rounded-xl border text-[0.82em] sm:text-[0.85em] font-bold text-slate-900 leading-snug min-w-0 shadow-2xs overflow-hidden"
+                  className="p-2 rounded-xl border border-r-4 bg-white text-[0.82em] sm:text-[0.85em] font-bold text-slate-900 leading-snug min-w-0 overflow-hidden"
                 >
                   <div
                     style={{ color: palette.primaryHex }}

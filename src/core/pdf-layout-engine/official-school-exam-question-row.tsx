@@ -116,7 +116,7 @@ export function OfficialSchoolExamQuestionRow({
   const renderEssaySolvedModelAnswer = () => {
     if (isMcq || !isSolvedMode || !question.modelAnswerAr) return null;
     return (
-      <div className="mt-1.5 p-2 rounded-lg bg-emerald-50/90 border border-emerald-400 text-emerald-950 text-xs font-bold shadow-xs">
+      <div className="mt-1.5 p-2 rounded-lg bg-white border border-r-4 border-emerald-500 text-emerald-950 text-xs font-bold shadow-xs">
         <span className="font-black text-emerald-800 ml-1.5">الحل النموذجي:</span>
         <SafeKaTeXBiDiMathRenderer
           text={question.modelAnswerAr}

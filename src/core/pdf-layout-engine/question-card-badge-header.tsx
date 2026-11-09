@@ -107,11 +107,12 @@ export function QuestionCardBadgeHeader({
   return (
     <div
       style={{
-        background: `linear-gradient(90deg, ${palette.softSurfaceHex} 0%, ${palette.badgeBgHex} 100%)`,
+        backgroundColor: "#FFFFFF",
         borderColor: cardBorderColorHex,
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
         breakAfter: "avoid",
       }}
-      className="px-2.5 py-1 mb-2 rounded-lg border-r-4 border flex flex-wrap items-center justify-between gap-1.5"
+      className="px-2.5 py-1 mb-2 rounded-lg border-r-4 border bg-white flex flex-wrap items-center justify-between gap-1.5"
     >
       <div className="flex items-center gap-1.5 min-w-0">
         <span

@@ -62,9 +62,10 @@ export function EmbeddedGeometrySVGDocker({
         width: `${box.boxWidthPx}px`,
         minWidth: `${box.boxWidthPx}px`,
         borderColor: borderHex,
-        backgroundColor: softSurfaceHex,
+        backgroundColor: "#ffffff",
+        boxShadow: "0 1px 3px rgba(15, 23, 42, 0.05)",
       }}
-      className="border rounded-lg p-1 flex items-center justify-center shrink-0 overflow-hidden"
+      className="border rounded-lg p-1 bg-white flex items-center justify-center shrink-0 overflow-hidden"
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
     />
   );

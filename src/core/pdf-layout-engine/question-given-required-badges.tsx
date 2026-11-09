@@ -35,7 +35,7 @@ export function QuestionGivenRequiredBadges({
   return (
     <div className="flex flex-wrap gap-1.5 pt-0.5 text-[0.84em]">
       {givenDataAr && (
-        <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold border border-slate-200">
+        <span className="px-2 py-0.5 rounded bg-white text-slate-800 font-bold border border-slate-200 shadow-2xs">
           <strong style={{ color: primaryHex }}>المعطيات: </strong>
           <SafeKaTeXBiDiMathRenderer
             text={givenDataAr}
@@ -46,8 +46,8 @@ export function QuestionGivenRequiredBadges({
       )}
       {requiredToFindAr && (
         <span
-          style={{ backgroundColor: softSurfaceHex, borderColor: solvedBorderHex }}
-          className="px-2 py-0.5 rounded text-slate-900 font-bold border"
+          style={{ backgroundColor: "#FFFFFF", borderColor: solvedBorderHex }}
+          className="px-2 py-0.5 rounded bg-white text-slate-900 font-bold border shadow-2xs"
         >
           <strong style={{ color: secondaryHex }}>المطلوب: </strong>
           <SafeKaTeXBiDiMathRenderer

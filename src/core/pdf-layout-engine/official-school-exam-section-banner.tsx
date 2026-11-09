@@ -29,7 +29,13 @@ export function OfficialSchoolExamSectionBanner({
     questionsCount > 2 && questionsCount <= 10 ? "أسئلة" : "سؤال";
 
   return (
-    <div className="w-full my-1 px-2.5 py-1 rounded-md bg-slate-100 print:bg-slate-100 border-r-4 border-indigo-950 text-slate-900 flex items-center justify-between break-inside-avoid print:break-inside-avoid shadow-2xs">
+    <div
+      style={{
+        backgroundColor: "#ffffff",
+        boxShadow: "0 1.5px 3px rgba(15, 23, 42, 0.05)",
+      }}
+      className="w-full my-1 px-2.5 py-1 rounded-md bg-white print:bg-white border border-slate-300 border-r-4 border-r-indigo-950 text-slate-900 flex items-center justify-between break-inside-avoid print:break-inside-avoid"
+    >
       <span className="text-xs sm:text-sm font-black italic print:text-[12pt] text-indigo-950">
         السؤال {sectionOrdinalArabic} : {sectionTitleArabic}
       </span>

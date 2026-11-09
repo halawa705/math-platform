@@ -46,7 +46,7 @@ export function AdaptiveMCQChoicesCard({
             key={cIdx}
             style={{
               borderColor: isCorrect ? palette.primaryHex : palette.solvedBorderHex,
-              backgroundColor: isCorrect ? palette.badgeBgHex : "#FAF5FF",
+              backgroundColor: "#FFFFFF",
               boxShadow: isCorrect
                 ? `0 0 0 1px ${palette.primaryHex} inset`
                 : "0 1px 2px rgba(76, 29, 149, 0.04)",

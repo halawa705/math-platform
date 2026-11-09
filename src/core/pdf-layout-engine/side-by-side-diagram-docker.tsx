@@ -200,8 +200,8 @@ export default function SideBySideDiagramDocker({
 
         {question.studentDrillPromptAr && (
           <div
-            style={{ backgroundColor: palette.ruleBgHex, borderColor: palette.ruleBorderHex }}
-            className="mt-2 px-2.5 py-1.5 rounded-lg border text-[0.86em] font-bold text-slate-900"
+            style={{ backgroundColor: "#FFFFFF", borderColor: palette.ruleBorderHex }}
+            className="mt-2 px-2.5 py-1.5 rounded-lg border border-r-4 bg-white text-[0.86em] font-bold text-slate-900 shadow-2xs"
           >
             <span style={{ color: palette.accentHex }} className="font-black ml-1.5">✍️ حاول بنفسك:</span>
             <SafeKaTeXBiDiMathRenderer
