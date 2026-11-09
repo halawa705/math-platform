@@ -20,12 +20,12 @@ const DIRECT_CALC_KEYWORDS_REGEX = /(?:أوجد\s*قياس|أوجد\s*قيمة|�
  */
 export function resolveAdaptiveAnswerLinesCount(params: {
   readonly question: PrintableMathQuestionItem;
-  readonly defaultSettingsLines?: 1 | 2 | 3;
+  readonly defaultSettingsLines?: number;
 }): number {
   const { question, defaultSettingsLines } = params;
 
-  // أسئلة الاختيار من متعدد لا تحتاج أسطر كتابة
-  if (question.mcqChoicesAr && question.mcqChoicesAr.length > 0) {
+  // أسئلة الاختيار من متعدد لا تحتاج أسطر كتابة نهائياً (حتمي: 0)
+  if (question.kind === "mcq" || (question.mcqChoicesAr && question.mcqChoicesAr.length > 0)) {
     return 0;
   }
 

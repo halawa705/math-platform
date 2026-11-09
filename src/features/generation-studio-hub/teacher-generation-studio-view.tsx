@@ -58,9 +58,19 @@ export default function TeacherGenerationStudioView() {
   const [sheetQuestions, setSheetQuestions] = useState<readonly PrintableMathQuestionItem[] | undefined>(undefined);
   const [sheetForms, setSheetForms] = useState<readonly PrintableExamFormGroup[] | undefined>(undefined);
   const [pane, setPane] = useState<StudioActivePane>("builder");
+  const [essayAnswerLinesCount, setEssayAnswerLinesCount] = useState<number>(() => {
+    return loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3;
+  });
   const [notationLanguage, setNotationLanguage] = useState<MathNotationLanguage>(() => {
     return loadPersistedPDFPrintSettingsSSOT().notationLanguage ?? "english";
   });
+
+  const updateEssayAnswerLinesCount = (cnt: number) => {
+    setEssayAnswerLinesCount(cnt);
+    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
+    const curr = loadPersistedPDFPrintSettingsSSOT();
+    savePersistedPDFPrintSettingsSSOT({ ...curr, essayAnswerLinesCount: cnt });
+  };
 
   const updateNotationLanguage = (lang: MathNotationLanguage) => {
     setNotationLanguage(lang);
@@ -112,6 +122,8 @@ export default function TeacherGenerationStudioView() {
             selectedLessonTitle={lessonTitle} selectedLessonOrder={lessonOrder}
             notationLanguage={notationLanguage} onChangeNotationLanguage={updateNotationLanguage}
             selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
+            essayAnswerLinesCount={essayAnswerLinesCount}
+            onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
             onChangeGrade={updateGrade} onChangeBranch={updateBranch} onChangeUnitTitle={updateUnit}
             onChangeLessonTitle={updateLesson} onChangeLessonOrder={updateOrder}
             onChangeScopeSelection={handleScopeSelection}

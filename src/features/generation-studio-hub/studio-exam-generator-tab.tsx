@@ -2,21 +2,20 @@
 
 /**
  * @file studio-exam-generator-tab.tsx
- * @description تبويب الاختبار التقييمي الرسمي والإلكتروني مع المعاينة الفورية للأسئلة المستخرجة وتعديلها ونشرها وطباعتها.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * @description تبويب الاختبار التقييمي الرسمي والإلكتروني مع المعاينة الفورية للأسئلة ونشرها وطباعتها،
+ * وضبط نسب التركيز للوحدات والدروس المختارة، وسطور إجابة المقالي حصراً دون MCQ.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 270 سطراً).
  */
 
 import { useEffect, useState, useMemo } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
-import {
-  buildStandardDocumentTitleSSOT,
-  loadActiveCurriculumUnitsSSOT,
-} from "@/core/ssot/curriculum-hierarchy-ssot";
+import { buildStandardDocumentTitleSSOT, loadActiveCurriculumUnitsSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { buildOnlineExamNotebookLMPrompt } from "@/core/prompts/online-exam-prompt-builder";
-import type { UnitFocusWeightItem } from "./studio-curriculum-units-checklist";
 import StudioExamUnitFocusWeightsCard from "./studio-exam-unit-focus-weights-card";
+import { useStudioExamUnitFocusWeights } from "./use-studio-exam-unit-focus-weights";
+import StudioEssayAnswerLinesStepper from "./studio-essay-answer-lines-stepper";
 import { parseNotebookLMExamQuestionsToIR } from "@/core/ingestion/notebooklm-exam-questions-parser";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
@@ -25,7 +24,12 @@ import {
   publishOnlineExamSSOT,
   refreshPublishedExamsFromSupabaseSSOT,
 } from "@/features/electronic-exams-hub/published-online-exams-store";
-import { loadStudioExamSettingsSSOT, saveStudioExamSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
+import {
+  loadStudioExamSettingsSSOT,
+  saveStudioExamSettingsSSOT,
+  loadStudioGlobalContextSSOT,
+  saveStudioGlobalContextSSOT,
+} from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
@@ -67,7 +71,6 @@ export default function StudioExamGeneratorTab({
   const [isOnlineMode, setIsOnlineMode] = useState(initial.isOnlineMode);
   const [difficulty, setDifficulty] = useState(initial.difficulty);
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
-  const [weights, setWeights] = useState<Record<string, number>>(initial.unitFocusWeights || {});
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState(initial.savedReply || "");
   const [parsedQuestions, setParsedQuestions] = useState<readonly QuestionAssessmentIR[]>([]);
@@ -77,57 +80,55 @@ export default function StudioExamGeneratorTab({
   const [publishedInfo, setPublishedInfo] = useState<PublishedExamSummaryInfo | null>(null);
   const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
+  // سطور إجابة المقالي العالمية (المقالي فقط)
+  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
+    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
+  );
+
   const persist = (p: Partial<ReturnType<typeof loadStudioExamSettingsSSOT>>) => saveStudioExamSettingsSSOT(p);
 
   const effectiveMcq = mcqEnabled ? mcqCount : 0;
   const effectiveProof = proofEnabled ? proofCount : 0;
 
-  // جلب الوحدات المحددة حالياً من مستكشف المنهج
+  // جلب كافة وحدات الصف الدراسي المعتمدة
   const allCurriculumUnits = useMemo(() => loadActiveCurriculumUnitsSSOT(gradeId), [gradeId]);
-  const activeSelectedUnits = useMemo(() => {
-    if (!selectedUnitIds || selectedUnitIds.length === 0) return [];
-    return allCurriculumUnits.filter((u) => selectedUnitIds.includes(u.id));
-  }, [allCurriculumUnits, selectedUnitIds]);
 
-  // إعداد أو تحديث الأوزان الافتراضية المتساوية للوحدات المختارة إن لم تكن محددة مسبقاً
-  useEffect(() => {
-    if (activeSelectedUnits.length > 1) {
-      const missing = activeSelectedUnits.some((u) => typeof weights[u.id] !== "number");
-      if (missing) {
-        const count = activeSelectedUnits.length;
-        const base = Math.floor(100 / count);
-        const remainder = 100 - base * count;
-        const next: Record<string, number> = { ...weights };
-        activeSelectedUnits.forEach((u, idx) => {
-          if (typeof next[u.id] !== "number") {
-            next[u.id] = base + (idx < remainder ? 1 : 0);
-          }
-        });
-        setWeights(next);
-        persist({ unitFocusWeights: next });
-      }
+  // إدارة هوك أوزان التركيز مع دعم اختيار الدروس الجزئية وتشيك بوكس البرومبت
+  const {
+    activeSelectedUnits,
+    weights,
+    includeInPrompt,
+    focusWeightItems,
+    handleWeightsChange,
+    handleToggleIncludeInPrompt,
+  } = useStudioExamUnitFocusWeights({
+    allCurriculumUnits,
+    selectedUnitIds,
+    selectedLessonIds,
+    initialWeights: initial.unitFocusWeights,
+    initialIncludeInPrompt: initial.includeUnitFocusWeightsInPrompt ?? true,
+    totalQuestionsCount: effectiveMcq + effectiveProof,
+    onPersist: persist,
+  });
+
+  const handleEssayLinesChange = (cnt: number) => {
+    setEssayAnswerLines(cnt);
+    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
+    // مزامنة فورية للأسئلة الحالية في الذاكرة
+    if (parsedQuestions.length > 0) {
+      onSyncQuestionsToSheet?.(parsedQuestions.map((q) => mapToPrintable(q, cnt)));
     }
-  }, [activeSelectedUnits]);
-
-  const handleWeightsChange = (newWeights: Record<string, number>) => {
-    setWeights(newWeights);
-    persist({ unitFocusWeights: newWeights });
   };
 
-  const focusWeightItems: readonly UnitFocusWeightItem[] = useMemo(() => {
-    if (activeSelectedUnits.length <= 1) return [];
-    const totalQ = effectiveMcq + effectiveProof;
-    return activeSelectedUnits.map((u) => {
-      const pct = weights[u.id] ?? 0;
-      return {
-        unitId: u.id,
-        unitTitle: `الوحدة ${u.orderIndex} (${u.titleArabic})`,
-        unitOrderIndex: u.orderIndex,
-        percentage: pct,
-        questionCount: Math.round((pct / 100) * totalQ),
-      };
-    });
-  }, [activeSelectedUnits, weights, effectiveMcq, effectiveProof]);
+  const mapToPrintable = (q: QuestionAssessmentIR, linesCount = essayAnswerLines): PrintableMathQuestionItem => {
+    const item = convertQuestionAssessmentIRToPrintableItem(q, branchNameAr);
+    const isMcq = q.patternKind === "mcq" || (item.mcqChoicesAr && item.mcqChoicesAr.length > 0);
+    return {
+      ...item,
+      // حتمي: أسئلة الاختيار من متعدد MCQ تأخذ دائماً صفراً، والأسئلة المقالية تأخذ سطور المقالي المعتمدة
+      answerLinesCount: isMcq ? 0 : (typeof q.answerLinesCount === "number" && q.answerLinesCount > 0 ? q.answerLinesCount : linesCount),
+    };
+  };
 
   useEffect(() => {
     const baseCfg = {
@@ -159,10 +160,7 @@ export default function StudioExamGeneratorTab({
       rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
     });
     setParsedQuestions(extracted);
-    // فقط مزامنة الأسئلة في الذاكرة دون تحويل الشاشة تلقائياً للـ PDF لتمكين المعلم من اختيار نشر أونلاين أو تصيير PDF
-    onSyncQuestionsToSheet?.(
-      extracted.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
-    );
+    onSyncQuestionsToSheet?.(extracted.map((q) => mapToPrintable(q)));
     setDiagRows(
       extracted
         .filter((q) => q.figureDiagnosticsAr?.length)
@@ -172,10 +170,7 @@ export default function StudioExamGeneratorTab({
 
   const handleUpdateQuestions = (nextQs: readonly QuestionAssessmentIR[]) => {
     setParsedQuestions(nextQs);
-    // مزامنة فورية ولحظية للأسئلة في الذاكرة مع الحفاظ على بقاء المعلم في صفحة الإعداد والتحكم
-    onSyncQuestionsToSheet?.(
-      nextQs.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr))
-    );
+    onSyncQuestionsToSheet?.(nextQs.map((q) => mapToPrintable(q)));
   };
 
   const getActiveQuestions = (): readonly QuestionAssessmentIR[] => {
@@ -191,7 +186,7 @@ export default function StudioExamGeneratorTab({
     const qs = getActiveQuestions();
     if (qs.length === 0) { setNotice("⚠️ الصق رد NotebookLM أولاً ثم اضغط تصيير."); return; }
     setNotice(null);
-    onApplyParsedQuestionsToSheet?.(qs.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)));
+    onApplyParsedQuestionsToSheet?.(qs.map((q) => mapToPrintable(q)));
     const activeScope = targetedScopeText || lessonTitle;
     const stdTitle = buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScope, promptText: prompt, rawReplyText: reply });
     onApplyExamTitleToSheet(stdTitle.includes("اختبار") ? stdTitle : `اختبار — ${stdTitle}`);
@@ -210,13 +205,8 @@ export default function StudioExamGeneratorTab({
         body: JSON.stringify({ examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: finalTitle, durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, revealAnswers: p.revealAnswers, questions: qs }),
       });
       const data = (await res.json()) as { success: boolean; examCode?: string; excludedQuestionNumbers?: readonly number[]; };
-      if (res.ok && data.success && data.examCode) {
-        examCode = data.examCode;
-        excl = data.excludedQuestionNumbers ?? [];
-      }
-    } catch {
-      // المتابعة بالحفظ المحلي حتى لا يتعطل المعلم
-    }
+      if (res.ok && data.success && data.examCode) { examCode = data.examCode; excl = data.excludedQuestionNumbers ?? []; }
+    } catch { /* المتابعة بالحفظ المحلي */ }
 
     const created = publishOnlineExamSSOT({
       examId: examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: finalTitle,
@@ -251,6 +241,15 @@ export default function StudioExamGeneratorTab({
               onChange={(v) => { setProofCount(v); persist({ proofCount: v }); }}
             />
           </div>
+
+          {!isOnlineMode && (
+            <StudioEssayAnswerLinesStepper
+              value={essayAnswerLines}
+              onChange={handleEssayLinesChange}
+              compact
+            />
+          )}
+
           <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
             {([{ id: "standard_balanced", label: "متوازن" }, { id: "olympiad_challenge", label: "متفوقين" }] as const).map((o) => (
               <button
@@ -269,6 +268,9 @@ export default function StudioExamGeneratorTab({
         totalQuestionsCount={effectiveMcq + effectiveProof}
         weights={weights}
         onChangeWeights={handleWeightsChange}
+        includeInPrompt={includeInPrompt}
+        onToggleIncludeInPrompt={handleToggleIncludeInPrompt}
+        selectedLessonIds={selectedLessonIds}
       />
 
       <StudioCustomDirectivesCard customDirectives={customDirectives} onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }} />

@@ -18,9 +18,15 @@ import {
 import { mergeBookletThreeStagesRepliesToPrintableItems } from "@/core/ingestion/notebooklm-booklet-stages-merger";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
-import { loadStudioBookletSettingsSSOT, saveStudioBookletSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
+import {
+  loadStudioBookletSettingsSSOT,
+  saveStudioBookletSettingsSSOT,
+  loadStudioGlobalContextSSOT,
+  saveStudioGlobalContextSSOT,
+} from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
+import StudioEssayAnswerLinesStepper from "./studio-essay-answer-lines-stepper";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
@@ -64,6 +70,9 @@ export default function StudioBookletGeneratorTab({
   const [hwMcqEnabled, setHwMcqEnabled] = useState(initial.hwMcqEnabled);
   const [hwEssay, setHwEssay] = useState(initial.hwEssay);
   const [hwEssayEnabled, setHwEssayEnabled] = useState(initial.hwEssayEnabled);
+  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
+    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
+  );
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<BookletPromptStageNumber, string>>(() => ({
@@ -108,7 +117,14 @@ export default function StudioBookletGeneratorTab({
     if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);
     setDiagRows(items.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! })));
-    onApplyParsedQuestionsToSheet?.(items);
+    const withLines = items.map((item) => {
+      const isMcq = item.kind === "mcq" || (item.mcqChoicesAr && item.mcqChoicesAr.length > 0);
+      return {
+        ...item,
+        answerLinesCount: isMcq ? 0 : (typeof item.answerLinesCount === "number" && item.answerLinesCount > 0 ? item.answerLinesCount : essayAnswerLines),
+      };
+    });
+    onApplyParsedQuestionsToSheet?.(withLines);
     onApplyBookletTitleToSheet(
       buildStandardDocumentTitleSSOT({
         gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScope, lessonOrderIndex: lessonOrder,
@@ -151,6 +167,17 @@ export default function StudioBookletGeneratorTab({
             labelAr="واجب: مقالي" value={hwEssay} min={0} max={20} enabled={hwEssayEnabled}
             onToggleEnabled={(v) => { setHwEssayEnabled(v); persist({ hwEssayEnabled: v }); }}
             onChange={(v) => { setHwEssay(v); persist({ hwEssay: v }); }}
+          />
+        </div>
+
+        <div className="pt-2">
+          <StudioEssayAnswerLinesStepper
+            value={essayAnswerLines}
+            onChange={(cnt) => {
+              setEssayAnswerLines(cnt);
+              saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
+            }}
+            compact
           />
         </div>
       </StudioCollapsibleSectionCard>

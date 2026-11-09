@@ -7,6 +7,7 @@
  */
 
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
+import StudioEssayAnswerLinesStepper from "./studio-essay-answer-lines-stepper";
 
 export const MODULE_ID_STUDIO_WORKSHEET_QUESTIONS_COUNT_CARD =
   "studio_worksheet_questions_count_card" as const;
@@ -18,12 +19,14 @@ export interface StudioWorksheetQuestionsCountCardProps {
   readonly essayEnabled: boolean;
   readonly durationMinutes: number;
   readonly includeAnswerLines: boolean;
+  readonly essayAnswerLinesCount?: number;
   readonly onToggleMcq: (enabled: boolean) => void;
   readonly onChangeMcqCount: (count: number) => void;
   readonly onToggleEssay: (enabled: boolean) => void;
   readonly onChangeEssayCount: (count: number) => void;
   readonly onChangeDuration: (duration: number) => void;
   readonly onToggleAnswerLines: (include: boolean) => void;
+  readonly onChangeEssayAnswerLinesCount?: (count: number) => void;
 }
 
 export default function StudioWorksheetQuestionsCountCard({
@@ -33,12 +36,14 @@ export default function StudioWorksheetQuestionsCountCard({
   essayEnabled,
   durationMinutes,
   includeAnswerLines,
+  essayAnswerLinesCount = 3,
   onToggleMcq,
   onChangeMcqCount,
   onToggleEssay,
   onChangeEssayCount,
   onChangeDuration,
   onToggleAnswerLines,
+  onChangeEssayAnswerLinesCount,
 }: StudioWorksheetQuestionsCountCardProps) {
   const effectiveMcq = mcqEnabled ? mcqCount : 0;
   const effectiveEssay = essayEnabled ? essayCount : 0;
@@ -102,7 +107,7 @@ export default function StudioWorksheetQuestionsCountCard({
           </div>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
           <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-700 dark:text-slate-200">
             <input
               type="checkbox"
@@ -112,6 +117,14 @@ export default function StudioWorksheetQuestionsCountCard({
             />
             <span>✍️ تضمين مساحات أسطر منقطة للحل داخل الورقة المطبوعة (Answer Lines)</span>
           </label>
+
+          {includeAnswerLines && (
+            <StudioEssayAnswerLinesStepper
+              value={essayAnswerLinesCount}
+              onChange={(cnt) => onChangeEssayAnswerLinesCount?.(cnt)}
+              compact
+            />
+          )}
         </div>
       </div>
     </StudioCollapsibleSectionCard>

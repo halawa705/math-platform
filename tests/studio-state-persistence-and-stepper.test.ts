@@ -26,6 +26,7 @@ describe("Studio State Persistence SSOT — Browser State Memory", () => {
     expect(globalState.gradeId).toBe(DEFAULT_STUDIO_GLOBAL_CONTEXT.gradeId);
     expect(globalState.unitTitle).toBe(DEFAULT_STUDIO_GLOBAL_CONTEXT.unitTitle);
     expect(globalState.lessonTitle).toBe(DEFAULT_STUDIO_GLOBAL_CONTEXT.lessonTitle);
+    expect(globalState.essayAnswerLinesCount).toBe(3);
 
     const bookletState = loadStudioBookletSettingsSSOT();
     expect(bookletState.examplesPerIdea).toBe(DEFAULT_STUDIO_BOOKLET_SETTINGS.examplesPerIdea);
@@ -79,6 +80,7 @@ describe("Studio State Persistence SSOT — Browser State Memory", () => {
       proofEnabled: false,
       isOnlineMode: true,
       difficulty: "olympiad_challenge",
+      includeUnitFocusWeightsInPrompt: false,
     });
 
     const exam = loadStudioExamSettingsSSOT();
@@ -86,6 +88,7 @@ describe("Studio State Persistence SSOT — Browser State Memory", () => {
     expect(exam.proofEnabled).toBe(false);
     expect(exam.isOnlineMode).toBe(true);
     expect(exam.difficulty).toBe("olympiad_challenge");
+    expect(exam.includeUnitFocusWeightsInPrompt).toBe(false);
   });
 
   it("persists review and worksheet settings", () => {

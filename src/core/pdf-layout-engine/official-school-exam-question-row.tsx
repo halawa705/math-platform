@@ -47,14 +47,24 @@ export function OfficialSchoolExamQuestionRow({
   const marksStr = `[${formatNumeralsByModeSSOT(marksNum, numeralMode)} ${marksNum > 2 ? "درجات" : "درجة"}]`;
 
   const hasFigure = Boolean(question.geometryFigure || question.graphSpec);
-  const answerLinesCount = question.answerLinesCount ?? 0;
+  const isMcqQuestion =
+    question.kind === "mcq" ||
+    (question.mcqChoicesAr !== undefined && question.mcqChoicesAr.length > 0);
+
+  // حتمي صارم: أسئلة الاختيار من متعدد MCQ لا تأخذ أي أسطر إجابة إطلاقاً
+  const effectiveLinesCount = isMcqQuestion
+    ? 0
+    : (typeof question.answerLinesCount === "number" && question.answerLinesCount >= 0
+        ? question.answerLinesCount
+        : (settings.essayAnswerLinesCount ?? settings.answerSpaceLines ?? 3));
+
   const hasDottedDivider = question.hasDottedDivider !== false;
 
   const renderEssayAnswerLines = () => {
-    if (isSolvedMode || answerLinesCount <= 0) return null;
+    if (isSolvedMode || effectiveLinesCount <= 0 || settings.answerSpaceStyle === "hidden") return null;
     return (
       <div className="space-y-1.5 pt-2 pb-1 w-full" aria-label="سطور مساحة الحل">
-        {Array.from({ length: answerLinesCount }).map((_, lineIdx) => (
+        {Array.from({ length: effectiveLinesCount }).map((_, lineIdx) => (
           <div
             key={lineIdx}
             className="w-full border-b border-dotted border-slate-400 h-6 print:border-slate-500"
@@ -148,7 +158,7 @@ export function OfficialSchoolExamQuestionRow({
                 numeralMode={numeralMode}
                 notationLanguage={notationLanguage}
               />
-              {!isSolvedMode && answerLinesCount === 0 && settings.answerSpaceStyle !== "hidden" && (
+              {!isSolvedMode && effectiveLinesCount === 0 && settings.answerSpaceStyle !== "hidden" && !isMcqQuestion && (
                 <span
                   className="inline-block border-b border-dotted border-slate-400 min-w-[80px] w-24 mr-2 h-3.5 align-middle print:border-slate-500"
                   aria-label="مساحة الحل"

@@ -151,4 +151,41 @@ describe("استوديو التوليد: التحديد المتعدد للوح�
     expect(prompt).toContain("ممنوع أسئلة البرهان والمقالي");
     expect(prompt.length).toBeLessThanOrEqual(2400);
   });
+
+  it("تستبعد كتلة نسب التركيز تماماً من البرومبت عند إلغاء التشيك بوكس ليكون الاختبار متوازناً طبيعياً", () => {
+    const prompt = buildOfficialExamNotebookLMPrompt({
+      gradeNameArabic: "الصف الثالث الإعدادي",
+      termNumber: 1,
+      branchId: "algebra",
+      targetedLessonTitlesArabic: [],
+      targetedScopeArabic: "الوحدة 1 (العلاقات والدوال) [دروس: حاصل الضرب الديكارتي] + الوحدة 2 (النسبة والتناسب) [دروس: النسبة والتناسب]",
+      unitFocusWeights: [], // فارغ عند إلغاء التشيك بوكس
+      mcqQuestionsCount: 6,
+      essayAndProofQuestionsCount: 4,
+      totalMarks: 20,
+      durationTextArabic: "ساعتان",
+      difficultyProfile: "standard_balanced",
+    });
+
+    // لا تحتوي على أي كتل نسب مئوية أو أوزان إلزامية
+    expect(prompt).not.toContain("نسب التركيز وتوزيع الأسئلة الإلزامي");
+    expect(prompt).not.toContain("⚖️");
+    // تحتوي على النطاق الدقيق متوازناً
+    expect(prompt).toContain("🎯 النطاق الحصري (ممنوع الخروج عنه): [الوحدة 1 (العلاقات والدوال) [دروس: حاصل الضرب الديكارتي] + الوحدة 2 (النسبة والتناسب) [دروس: النسبة والتناسب]]");
+  });
+
+  it("تحتسب الوحدة ضمن الوحدات النشطة إذا تم اختيار درس واحد فقط منها", () => {
+    // محاكاة منطق فحص الوحدات النشطة
+    const selectedLessonIds = ["l1", "l5"]; // l1 من u1 و l5 من u2
+    const selectedUnitIds: string[] = []; // لا توجد وحدات محددة كلياً
+
+    const activeUnits = sampleCurriculum.filter((u) => {
+      const isExplicit = selectedUnitIds.includes(u.id);
+      const hasAnySelectedLesson = u.lessons.some((l) => selectedLessonIds.includes(l.id));
+      return isExplicit || hasAnySelectedLesson;
+    });
+
+    expect(activeUnits.length).toBe(2);
+    expect(activeUnits.map((u) => u.id)).toEqual(["u1", "u2"]);
+  });
 });

@@ -31,12 +31,13 @@ function makeQuestion(id: string, n: number, partial: Partial<PrintableMathQuest
 
 describe("Intelligent Question Card Density & Adaptive Lines", () => {
   it("resolves adaptive answer lines correctly based on question complexity", () => {
-    // 1. سؤال اختيار من متعدد لا يحتاج أسطر
+    // 1. سؤال اختيار من متعدد لا يحتاج أسطر إطلاقاً حتى مع تمرير سطور عامة
     const mcqQ = makeQuestion("q-mcq", 1, {
       kind: "mcq",
       mcqChoicesAr: ["1", "2", "3", "4"],
     });
     expect(resolveAdaptiveAnswerLinesCount({ question: mcqQ })).toBe(0);
+    expect(resolveAdaptiveAnswerLinesCount({ question: mcqQ, defaultSettingsLines: 5 })).toBe(0);
 
     // 2. سؤال حساب مباشر قصير يحتاج سطر واحد فقط
     const directQ = makeQuestion("q-direct", 2, {

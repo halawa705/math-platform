@@ -17,6 +17,7 @@ import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identi
 import {
   loadStudioExamFormsSettingsSSOT,
   saveStudioExamFormsSettingsSSOT,
+  loadStudioGlobalContextSSOT,
   type ExamFormsScopeKind,
 } from "@/core/ssot/studio-state-persistence-ssot";
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
@@ -181,13 +182,21 @@ export default function StudioExamFormsGeneratorTab({
 
     const finalBaseTitle = `${scopeTitle} — ${baseStdTitle}`;
 
+    const globalEssayLines = loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3;
     const printableForms: PrintableExamFormGroup[] = parsedForms.map((f) => ({
       formId: f.formId,
       formIndex: f.formIndex,
       formLetterAr: f.formLetterAr,
       formTitleAr: f.formTitleAr,
       fullDocumentTitleAr: `${finalBaseTitle} — ${f.formTitleAr}`,
-      questions: f.questions.map((q) => convertQuestionAssessmentIRToPrintableItem(q, branchNameAr)),
+      questions: f.questions.map((q) => {
+        const item = convertQuestionAssessmentIRToPrintableItem(q, branchNameAr);
+        const isMcq = q.patternKind === "mcq" || (item.mcqChoicesAr && item.mcqChoicesAr.length > 0);
+        return {
+          ...item,
+          answerLinesCount: isMcq ? 0 : (typeof q.answerLinesCount === "number" && q.answerLinesCount > 0 ? q.answerLinesCount : globalEssayLines),
+        };
+      }),
     }));
 
     onApplyParsedQuestionsToSheet?.(printableForms.flatMap((f) => f.questions));

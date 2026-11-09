@@ -106,6 +106,7 @@ export interface PDFPrintSettingsStateSSOT {
   readonly autoFitMode?: "off" | "booklet_fill" | "exam_max_pages";
   readonly figureScale?: number;
   readonly answerSpaceLines?: 1 | 2 | 3;
+  readonly essayAnswerLinesCount?: number;
   readonly compactHeader?: boolean;
   readonly hideAccreditation?: boolean;
   readonly boldProseText?: boolean;
@@ -125,6 +126,7 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
   columnsCount: 2,
   showColumnDivider: true,
   answerSpaceStyle: "dotted",
+  essayAnswerLinesCount: 3,
   colorThemeId: "math_teal",
   autoFitMode: "booklet_fill",
   boldProseText: false,

@@ -2,8 +2,9 @@
 
 /**
  * @file studio-exam-unit-focus-weights-card.tsx
- * @description بطاقة ذرية مستقلة للتحكم في نسب وأوزان تركيز أسئلة الاختبار على الوحدات المختارة (مثال: 20%، 30%، 50%).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * @description بطاقة ذرية مستقلة للتحكم في نسب وأوزان تركيز أسئلة الاختبار على الوحدات المختارة (مثال: 20%، 30%، 50%)
+ * مع دعم تشيك بوكس إدراجها بالبرومبت من عدمه وبيان الدروس المختارة بالوحدة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
 import React, { useMemo } from "react";
@@ -17,6 +18,9 @@ export interface StudioExamUnitFocusWeightsCardProps {
   readonly totalQuestionsCount: number;
   readonly weights: Record<string, number>;
   readonly onChangeWeights: (newWeights: Record<string, number>) => void;
+  readonly includeInPrompt?: boolean;
+  readonly onToggleIncludeInPrompt?: (include: boolean) => void;
+  readonly selectedLessonIds?: readonly string[];
 }
 
 export default function StudioExamUnitFocusWeightsCard({
@@ -24,8 +28,11 @@ export default function StudioExamUnitFocusWeightsCard({
   totalQuestionsCount,
   weights,
   onChangeWeights,
+  includeInPrompt = true,
+  onToggleIncludeInPrompt,
+  selectedLessonIds = [],
 }: StudioExamUnitFocusWeightsCardProps) {
-  // تظهر هذه البطاقة فقط عند اختيار وحدتين فأكثر
+  // تظهر هذه البطاقة فقط عند اختيار وحدتين فأكثر (سواء وحدات كاملة أو وحدات بها دروس مختارة)
   if (selectedUnits.length <= 1) {
     return null;
   }
@@ -63,36 +70,58 @@ export default function StudioExamUnitFocusWeightsCard({
       aria-label="نسب تركيز الأسئلة على الوحدات"
       className="p-3 rounded-2xl bg-indigo-50/50 dark:bg-slate-900/60 border border-indigo-100 dark:border-indigo-900/40 space-y-2.5"
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={includeInPrompt}
+            onChange={(e) => onToggleIncludeInPrompt?.(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600 shrink-0"
+          />
           <span className="text-sm">⚖️</span>
           <span className="text-xs font-black text-slate-800 dark:text-slate-100">
             نسب تركيز الأسئلة على الوحدات:
           </span>
+        </label>
+
+        <div className="flex items-center gap-2">
           <span
             className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-              isExact100
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300"
-                : "bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300"
+              !includeInPrompt
+                ? "bg-slate-200/90 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                : isExact100
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300"
+                  : "bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300"
             }`}
           >
-            المجموع: {totalPercentage}% {isExact100 ? "✓" : `(متبقي ${100 - totalPercentage}%)`}
+            {!includeInPrompt
+              ? "توزيع متوازن تلقائي (غير مدرجة بالبرومبت)"
+              : `المجموع: ${totalPercentage}% ${isExact100 ? "✓" : `(متبقي ${100 - totalPercentage}%)`}`}
           </span>
-        </div>
 
-        <button
-          type="button"
-          onClick={handleEqualize}
-          className="min-h-[32px] px-2.5 py-1 rounded-xl text-[10px] font-black bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer transition-colors shadow-2xs"
-        >
-          توزيع متساوٍ
-        </button>
+          {includeInPrompt && (
+            <button
+              type="button"
+              onClick={handleEqualize}
+              className="min-h-[30px] px-2.5 py-1 rounded-xl text-[10px] font-black bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer transition-colors shadow-2xs"
+            >
+              توزيع متساوٍ
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="space-y-2">
+      <div className={`space-y-2 transition-opacity ${includeInPrompt ? "opacity-100" : "opacity-60"}`}>
         {selectedUnits.map((unit) => {
           const currentPct = weights[unit.id] ?? 0;
           const questionsCount = Math.round((currentPct / 100) * totalQuestionsCount);
+          const chosenInUnit = unit.lessons.filter((l) => selectedLessonIds.includes(l.id));
+          const lessonBadge =
+            chosenInUnit.length > 0 && chosenInUnit.length < unit.lessons.length
+              ? chosenInUnit.length === 1
+                ? `(درس: ${chosenInUnit[0].titleArabic})`
+                : `(${chosenInUnit.length} من ${unit.lessons.length} دروس)`
+              : "";
 
           return (
             <div
@@ -102,9 +131,16 @@ export default function StudioExamUnitFocusWeightsCard({
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
                   الوحدة {unit.orderIndex}: {unit.titleArabic}
+                  {lessonBadge && (
+                    <span className="text-[10px] font-bold text-indigo-600 dark:text-teal-400 ms-1.5 inline-block">
+                      {lessonBadge}
+                    </span>
+                  )}
                 </p>
                 <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  {totalQuestionsCount > 0 ? `يعادل حوالي ${questionsCount} أسئلة من أصل ${totalQuestionsCount}` : "حدد عدد الأسئلة"}
+                  {totalQuestionsCount > 0
+                    ? `يعادل حوالي ${questionsCount} أسئلة من أصل ${totalQuestionsCount}`
+                    : "حدد عدد الأسئلة"}
                 </p>
               </div>
 
@@ -112,7 +148,7 @@ export default function StudioExamUnitFocusWeightsCard({
                 <button
                   type="button"
                   onClick={() => updateUnitWeight(unit.id, currentPct - 5)}
-                  disabled={currentPct <= 0}
+                  disabled={!includeInPrompt || currentPct <= 0}
                   className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-xs disabled:opacity-30 cursor-pointer"
                   title="إنقاص 5%"
                 >
@@ -125,9 +161,10 @@ export default function StudioExamUnitFocusWeightsCard({
                     min={0}
                     max={100}
                     step={5}
+                    disabled={!includeInPrompt}
                     value={currentPct}
                     onChange={(e) => updateUnitWeight(unit.id, parseInt(e.target.value || "0", 10))}
-                    className="w-14 min-h-[34px] px-1.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-xs font-black text-center"
+                    className="w-14 min-h-[34px] px-1.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-xs font-black text-center disabled:opacity-50"
                   />
                   <span className="absolute left-1 text-[10px] font-bold text-slate-400 pointer-events-none">%</span>
                 </div>
@@ -135,7 +172,7 @@ export default function StudioExamUnitFocusWeightsCard({
                 <button
                   type="button"
                   onClick={() => updateUnitWeight(unit.id, currentPct + 5)}
-                  disabled={currentPct >= 100}
+                  disabled={!includeInPrompt || currentPct >= 100}
                   className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-xs disabled:opacity-30 cursor-pointer"
                   title="زيادة 5%"
                 >
@@ -147,11 +184,15 @@ export default function StudioExamUnitFocusWeightsCard({
         })}
       </div>
 
-      {!isExact100 && (
+      {!includeInPrompt ? (
+        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+          💡 تم إلغاء إدراج أوزان التركيز: سيصاغ الاختبار بتوزيع متوازن تلقائياً بين كافة الوحدات والدروس المختارة دون التقيد بنسب مئوية.
+        </p>
+      ) : !isExact100 ? (
         <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
           💡 يُفضل أن يكون مجموع النسب 100% لضمان توزيع درجات وأسئلة الاختبار بدقة متناهية.
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

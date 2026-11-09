@@ -18,9 +18,15 @@ import {
 import { mergeFinalReviewThreeStagesToPrintableItems } from "@/core/ingestion/notebooklm-final-review-parser";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
-import { loadStudioReviewSettingsSSOT, saveStudioReviewSettingsSSOT } from "@/core/ssot/studio-state-persistence-ssot";
+import {
+  loadStudioReviewSettingsSSOT,
+  saveStudioReviewSettingsSSOT,
+  loadStudioGlobalContextSSOT,
+  saveStudioGlobalContextSSOT,
+} from "@/core/ssot/studio-state-persistence-ssot";
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
+import StudioEssayAnswerLinesStepper from "./studio-essay-answer-lines-stepper";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioStageStepperPills from "./studio-stage-stepper-pills";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
@@ -59,6 +65,9 @@ export default function StudioFinalReviewGeneratorTab({
   const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled);
   const [essayCount, setEssayCount] = useState(initial.essayCount);
   const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled);
+  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
+    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
+  );
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<FinalReviewStageNumber, string>>(() => ({
@@ -99,7 +108,14 @@ export default function StudioFinalReviewGeneratorTab({
     if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);
     setDiagRows(items.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.questionNumber, warnings: q.figureDiagnosticsAr! })));
-    onApplyParsedQuestionsToSheet?.(items);
+    const withLines = items.map((item) => {
+      const isMcq = item.kind === "mcq" || (item.mcqChoicesAr && item.mcqChoicesAr.length > 0);
+      return {
+        ...item,
+        answerLinesCount: isMcq ? 0 : (typeof item.answerLinesCount === "number" && item.answerLinesCount > 0 ? item.answerLinesCount : essayAnswerLines),
+      };
+    });
+    onApplyParsedQuestionsToSheet?.(withLines);
     const standardTitle = buildStandardDocumentTitleSSOT({
       gradeId,
       unitTitleInput: unitTitleAr,
@@ -149,6 +165,17 @@ export default function StudioFinalReviewGeneratorTab({
             labelAr="أسئلة مقالية" value={essayCount} min={0} max={40} enabled={essayEnabled}
             onToggleEnabled={(v) => { setEssayEnabled(v); persist({ essayEnabled: v }); }}
             onChange={(v) => { setEssayCount(v); persist({ essayCount: v }); }}
+          />
+        </div>
+
+        <div className="pt-2">
+          <StudioEssayAnswerLinesStepper
+            value={essayAnswerLines}
+            onChange={(cnt) => {
+              setEssayAnswerLines(cnt);
+              saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
+            }}
+            compact
           />
         </div>
       </StudioCollapsibleSectionCard>

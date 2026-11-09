@@ -29,6 +29,7 @@ export interface StudioContextRibbonBarProps {
   readonly notationLanguage?: MathNotationLanguage;
   readonly selectedUnitIds?: readonly string[];
   readonly selectedLessonIds?: readonly string[];
+  readonly essayAnswerLinesCount?: number;
   readonly onChangeGrade: (gradeId: string) => void;
   readonly onChangeBranch: (branchId: MathBranchId) => void;
   readonly onChangeUnitTitle?: (unitTitle: string) => void;
@@ -36,6 +37,7 @@ export interface StudioContextRibbonBarProps {
   readonly onChangeLessonOrder?: (order: number) => void;
   readonly onChangeNotationLanguage?: (lang: MathNotationLanguage) => void;
   readonly onChangeScopeSelection?: (unitIds: readonly string[], lessonIds: readonly string[]) => void;
+  readonly onChangeEssayAnswerLinesCount?: (count: number) => void;
 }
 
 export default function StudioContextRibbonBar({
@@ -46,6 +48,7 @@ export default function StudioContextRibbonBar({
   notationLanguage = "english",
   selectedUnitIds = [],
   selectedLessonIds = [],
+  essayAnswerLinesCount = 3,
   onChangeGrade,
   onChangeBranch,
   onChangeUnitTitle,
@@ -53,6 +56,7 @@ export default function StudioContextRibbonBar({
   onChangeLessonOrder,
   onChangeNotationLanguage,
   onChangeScopeSelection,
+  onChangeEssayAnswerLinesCount,
 }: StudioContextRibbonBarProps) {
   const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
@@ -153,7 +157,7 @@ export default function StudioContextRibbonBar({
   return (
     <section aria-label="سياق الصف والوحدات والدروس المستهدفة" className="space-y-3 pt-2">
       {/* الصف الدراسي والخيارات الأساسية */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div className="col-span-1">
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
             الصف الدراسي
@@ -187,7 +191,7 @@ export default function StudioContextRibbonBar({
           />
         </div>
 
-        <div className="col-span-2 sm:col-span-1 flex flex-col justify-end">
+        <div className="col-span-1 flex flex-col justify-end">
           <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1">
             رموز المعادلات
           </label>
@@ -201,7 +205,7 @@ export default function StudioContextRibbonBar({
                   : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
-              $x, y$ (افتراضي)
+              $x, y$
             </button>
             <button
               type="button"
@@ -212,7 +216,36 @@ export default function StudioContextRibbonBar({
                   : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
-              $س، ص$ (عربي)
+              $س، ص$
+            </button>
+          </div>
+        </div>
+
+        <div className="col-span-1 flex flex-col justify-end">
+          <label className="block text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-1 truncate" title="سطور حل المقالي والبرهان فقط (اختر = 0 تلقائياً)">
+            📝 سطور المقالي
+          </label>
+          <div className="flex items-center justify-between gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[44px]">
+            <button
+              type="button"
+              onClick={() => onChangeEssayAnswerLinesCount?.(Math.max(0, essayAnswerLinesCount - 1))}
+              disabled={essayAnswerLinesCount <= 0}
+              className="w-7 h-7 flex items-center justify-center font-black text-xs rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+              title="تقليل سطر"
+            >
+              -
+            </button>
+            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 px-1 truncate">
+              {essayAnswerLinesCount === 0 ? "بدون" : `${essayAnswerLinesCount}س`}
+            </span>
+            <button
+              type="button"
+              onClick={() => onChangeEssayAnswerLinesCount?.(Math.min(20, essayAnswerLinesCount + 1))}
+              disabled={essayAnswerLinesCount >= 20}
+              className="w-7 h-7 flex items-center justify-center font-black text-xs rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+              title="زيادة سطر"
+            >
+              +
             </button>
           </div>
         </div>

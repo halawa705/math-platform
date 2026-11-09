@@ -22,6 +22,8 @@ import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identi
 import {
   loadStudioWorksheetSettingsSSOT,
   saveStudioWorksheetSettingsSSOT,
+  loadStudioGlobalContextSSOT,
+  saveStudioGlobalContextSSOT,
 } from "@/core/ssot/studio-state-persistence-ssot";
 import {
   loadPersistedPDFPrintSettingsSSOT,
@@ -72,6 +74,9 @@ export default function StudioWorksheetGeneratorTab({
   const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled ?? true);
   const [durationMinutes, setDurationMinutes] = useState(initial.durationMinutes ?? 25);
   const [includeAnswerLines, setIncludeAnswerLines] = useState(initial.includeAnswerLines ?? true);
+  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
+    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
+  );
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
 
   const [prompt, setPrompt] = useState("");
@@ -81,6 +86,11 @@ export default function StudioWorksheetGeneratorTab({
 
   const persist = (p: Partial<ReturnType<typeof loadStudioWorksheetSettingsSSOT>>) =>
     saveStudioWorksheetSettingsSSOT(p);
+
+  const handleEssayLinesChange = (cnt: number) => {
+    setEssayAnswerLines(cnt);
+    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
+  };
 
   const activeScopeDisplay = targetedScopeText?.trim() || lessonTitle;
 
@@ -119,7 +129,14 @@ export default function StudioWorksheetGeneratorTab({
     }
 
     setNotice(null);
-    onApplyParsedQuestionsToSheet?.(parsed);
+    const withLines = parsed.map((item) => {
+      const isMcq = item.kind === "mcq" || (item.mcqChoicesAr && item.mcqChoicesAr.length > 0);
+      return {
+        ...item,
+        answerLinesCount: isMcq ? 0 : (includeAnswerLines ? essayAnswerLines : 0),
+      };
+    });
+    onApplyParsedQuestionsToSheet?.(withLines);
 
     // مزامنة نمط مساحات الحل وقالب الورقة السيادي لورقة العمل
     const currentPrint = loadPersistedPDFPrintSettingsSSOT();
@@ -127,6 +144,7 @@ export default function StudioWorksheetGeneratorTab({
       ...currentPrint,
       paperTemplateId: "classic_sovereign",
       answerSpaceStyle: includeAnswerLines ? "dotted" : "hidden",
+      essayAnswerLinesCount: essayAnswerLines,
     });
 
     const allUnits = loadActiveCurriculumUnitsSSOT(gradeId);
@@ -162,6 +180,8 @@ export default function StudioWorksheetGeneratorTab({
         essayEnabled={essayEnabled}
         durationMinutes={durationMinutes}
         includeAnswerLines={includeAnswerLines}
+        essayAnswerLinesCount={essayAnswerLines}
+        onChangeEssayAnswerLinesCount={handleEssayLinesChange}
         onToggleMcq={(v) => {
           setMcqEnabled(v);
           persist({ mcqEnabled: v });
