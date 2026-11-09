@@ -42,10 +42,11 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
           sectionTitleArabic={item.sectionTitleArabic}
           questionsCount={item.questionsCount}
           numeralMode={settings.numeralMode}
+          palette={palette}
         />
       );
     case "exam_wish_banner":
-      return <OfficialSchoolEndWishBanner />;
+      return <OfficialSchoolEndWishBanner palette={palette} />;
     case "answer_section_banner":
       return (
         <AnswerSectionBanner

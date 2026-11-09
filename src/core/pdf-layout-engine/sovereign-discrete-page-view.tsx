@@ -108,8 +108,8 @@ export function SovereignDiscretePageView({
       } flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none`}
     >
       <OfficialSchoolCornerCropMarks
-        primaryHex={isSchoolExam ? "#1e3a8a" : palette.primaryHex}
-        accentHex={isSchoolExam ? "#93c5fd" : palette.borderHex}
+        primaryHex={palette.primaryHex}
+        accentHex={palette.borderHex}
       />
 
       <div className="w-full min-w-0 flex-1 flex flex-col relative z-10">
@@ -122,6 +122,7 @@ export function SovereignDiscretePageView({
               durationText={settings.customDurationText}
               numeralMode={settings.numeralMode}
               isSolvedMode={isSolvedMode}
+              palette={palette}
             />
           ) : (
             <OfficialSchoolRunningPageHeader
@@ -131,6 +132,7 @@ export function SovereignDiscretePageView({
               pageNumber={page.pageNumber}
               totalPages={totalPagesCount}
               numeralMode={settings.numeralMode}
+              palette={palette}
             />
           )
         ) : page.isFirstPage ? (
@@ -201,6 +203,7 @@ export function SovereignDiscretePageView({
             pageNumber={page.pageNumber}
             totalPages={totalPagesCount}
             numeralMode={settings.numeralMode}
+            palette={palette}
           />
         ) : (
           <SovereignPageNumberFooterBar

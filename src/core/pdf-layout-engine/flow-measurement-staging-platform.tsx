@@ -83,6 +83,7 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
             durationText={settings.customDurationText}
             numeralMode={numeralMode}
             isSolvedMode={props.isSolvedMode}
+            palette={palette}
           />
         ) : (
           <SovereignFirstPageHeader
@@ -102,6 +103,7 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
             pageNumber={88}
             totalPages={88}
             numeralMode={numeralMode}
+            palette={palette}
           />
         ) : (
           <SovereignRunningPageHeader
@@ -112,7 +114,7 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
       </div>
       <div data-flow-chrome="footer" style={WRAPPER_BASE_STYLE}>
         {settings.paperTemplateId === "official_school_exam" ? (
-          <OfficialSchoolPageFooterBar identity={identity} pageNumber={88} totalPages={88} numeralMode={numeralMode} />
+          <OfficialSchoolPageFooterBar identity={identity} pageNumber={88} totalPages={88} numeralMode={numeralMode} palette={palette} />
         ) : (
           <SovereignPageNumberFooterBar identity={identity} palette={palette} pageNumber={88} totalPages={88} numeralMode={numeralMode} />
         )}

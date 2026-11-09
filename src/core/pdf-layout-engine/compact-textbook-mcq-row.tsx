@@ -2,11 +2,11 @@
 
 /**
  * @file compact-textbook-mcq-row.tsx
- * @description مصيّر ذري مستقل لأسئلة الاختيار من متعدد (MCQ) بنمط الكتاب المدمج عالي الكثافة (١٢–١٥+ سؤالاً في الصفحة):
+ * @description مصيّر ذري مستقل لأسئلة الاختيار من متعدد (MCQ) بنمط الكتاب المدرسي المزخرف عالي الكثافة (١٢–١٥+ سؤالاً في الصفحة):
  * - يُطبق حصرياً على مسائل الاختيار من متعدد في: (١) الاختبارات، (٢) المراجعات، (٣) أوراق العمل.
  * - لا يمس المذكرات الدراسية (Booklets) ولا الأسئلة المقالية.
- * - خلفية بيضاء ناصعة (#ffffff) مثالية للتصوير الليزري مع لمسات رسومية وتظليل ثلاثي الأبعاد خفيف للشارات والفواصل.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 240 سطراً).
+ * - يجمع بين الأرضية البيضاء الناصعة (#ffffff) للتصوير الليزري، والإطارات الملونة الواضحة والشارات ثلاثية الأبعاد (Inline Styles) التي لا تختفي أبداً.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 250 سطراً).
  */
 
 import React from "react";
@@ -61,13 +61,13 @@ function estimateVisualChoiceLength(choiceText: string): number {
 }
 
 /**
- * يفصل نص السؤال خارج كتل `$...$` عند مواضع النقاط (`...` أو `____`) ليرسم مكانها مستطيل فراغ مزدوج الإطار بخلفية بيضاء ناصعة.
+ * يفصل نص السؤال خارج كتل `$...$` عند مواضع النقاط (`...` أو `____`) ليرسم مكانها مستطيل فراغ ملون مزدوج الإطار بخلفية بيضاء ناصعة.
  */
 function renderPromptWithInlineBlankBoxes(
   rawPrompt: string,
   numeralMode: NumeralDisplayMode,
   notationLanguage: MathNotationLanguage,
-  borderHex: string
+  palette: PrintThemePaletteTokens
 ): React.ReactNode {
   const cleaned = cleanStudentFacingMathPromptSSOT(rawPrompt).replace(
     /=\s*(?:\.{2,}|\\dots|\\ldots)\s*\$/g,
@@ -87,7 +87,7 @@ function renderPromptWithInlineBlankBoxes(
           text={token}
           numeralMode={numeralMode}
           notationLanguage={notationLanguage}
-          className="!leading-[1.35]"
+          className="!leading-[1.32]"
         />
       );
       continue;
@@ -102,13 +102,26 @@ function renderPromptWithInlineBlankBoxes(
             key={`b-${keySeq++}`}
             aria-label="فراغ الإجابة"
             style={{
-              borderColor: borderHex,
               backgroundColor: "#ffffff",
-              boxShadow: "0 1.5px 0 rgba(15, 23, 42, 0.10), inset 0 1px 2px rgba(15, 23, 42, 0.05)",
+              border: `1.5px solid ${palette.accentHex}`,
+              borderRadius: "6px",
+              boxShadow: `0 1.5px 0 ${palette.borderHex}55, inset 0 1px 2px rgba(15, 23, 42, 0.05)`,
+              minWidth: "52px",
+              height: "18px",
+              padding: "0 7px",
+              margin: "0 4px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
             }}
-            className="inline-flex items-center justify-center min-w-[50px] h-[19px] px-2 mx-1 align-middle rounded-[6px] border-[1.5px] select-none"
           >
-            <span className="w-7 border-b border-dotted border-slate-400" />
+            <span
+              style={{
+                width: "28px",
+                borderBottom: `1.4px dashed ${palette.primaryHex}99`,
+              }}
+            />
           </span>
         );
       } else {
@@ -118,7 +131,7 @@ function renderPromptWithInlineBlankBoxes(
             text={part}
             numeralMode={numeralMode}
             notationLanguage={notationLanguage}
-            className="!leading-[1.35]"
+            className="!leading-[1.32]"
           />
         );
       }
@@ -146,66 +159,74 @@ export function CompactTextbookMcqRow({
 
   const useFourColumns = !hasFigure ? maxChoiceVisualLen <= 34 : maxChoiceVisualLen <= 16;
   const gridColsClass = useFourColumns
-    ? "grid-cols-4 gap-x-2.5 gap-y-1"
-    : "grid-cols-2 gap-x-4 gap-y-1";
+    ? "grid-cols-4 gap-x-2 gap-y-1"
+    : "grid-cols-2 gap-x-3 gap-y-1";
 
   const renderChoicesStrip = () => {
     if (choices.length === 0) return null;
     return (
-      <div dir="rtl" className={`grid ${gridColsClass} items-center pt-1 pr-7 w-full`}>
+      <div
+        dir="rtl"
+        style={{ paddingTop: "3px", paddingRight: "4px" }}
+        className={`grid ${gridColsClass} items-center w-full`}
+      >
         {choices.slice(0, 4).map((choiceText, optIdx) => {
           const isCorrect = isSolvedMode && question.correctMcqIndex === optIdx;
           const letter = getChoiceLetterByNotationSSOT(optIdx, notationLanguage);
           return (
             <div
               key={optIdx}
-              style={
-                isCorrect
-                  ? {
-                      backgroundColor: "#ffffff",
-                      borderColor: "#059669",
-                      boxShadow: "0 1px 2px rgba(5, 150, 105, 0.14)",
-                    }
-                  : undefined
-              }
-              className={`min-w-0 flex items-center gap-1.5 py-0.5 transition-colors ${
-                isCorrect
-                  ? "px-1.5 rounded-md border-[1.5px] text-emerald-950 font-black"
-                  : isSolvedMode
-                    ? "text-slate-500 opacity-80"
-                    : "text-slate-900"
-              }`}
+              style={{
+                backgroundColor: "#ffffff",
+                border: isCorrect
+                  ? "1.8px solid #059669"
+                  : `1px solid ${palette.borderHex}55`,
+                borderRadius: "6px",
+                padding: "1.5px 5px",
+                boxShadow: isCorrect
+                  ? "0 1.5px 0 #05966955"
+                  : `0 1px 0 ${palette.borderHex}25`,
+              }}
+              className="min-w-0 flex items-center gap-1.5"
             >
               <span
-                style={
-                  isCorrect
-                    ? {
-                        backgroundColor: "#059669",
-                        color: "#ffffff",
-                        boxShadow: "0 1.5px 0 #064e3b",
-                      }
-                    : {
-                        backgroundColor: "#2d2623",
-                        color: "#ffffff",
-                        boxShadow: `0 1.5px 0 ${palette.primaryHex}66`,
-                      }
-                }
-                className="shrink-0 w-[19px] h-[19px] rounded-full ring-1 ring-slate-300 flex items-center justify-center text-[0.76em] font-black leading-none select-none"
+                style={{
+                  background: isCorrect ? "#059669" : palette.headerGradientCss,
+                  color: "#ffffff",
+                  border: `1px solid ${isCorrect ? "#047857" : palette.primaryHex}`,
+                  boxShadow: isCorrect
+                    ? "0 1.5px 0 #064e3b"
+                    : `0 1.5px 0 ${palette.primaryHex}88`,
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "9999px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.75em",
+                  fontWeight: 900,
+                  lineHeight: 1,
+                }}
+                className="shrink-0 select-none"
               >
                 {letter}
               </span>
               <div
                 style={{ color: isCorrect ? "#064e3b" : palette.primaryHex }}
-                className="flex-1 min-w-0 text-right font-extrabold text-[0.93em] break-words leading-tight"
+                className="flex-1 min-w-0 text-right font-extrabold text-[0.92em] break-words leading-tight"
               >
                 <SafeKaTeXBiDiMathRenderer
                   text={choiceText}
                   numeralMode={numeralMode}
                   notationLanguage={notationLanguage}
-                  className="!leading-[1.3]"
+                  className="!leading-[1.28]"
                 />
               </div>
-              {isCorrect && <span className="text-emerald-700 font-black text-[0.8em] shrink-0">✓</span>}
+              {isCorrect && (
+                <span style={{ color: "#059669" }} className="font-black text-[0.82em] shrink-0">
+                  ✓
+                </span>
+              )}
             </div>
           );
         })}
@@ -217,10 +238,14 @@ export function CompactTextbookMcqRow({
     <article
       style={{
         backgroundColor: "#ffffff",
-        borderRightColor: `${palette.primaryHex}40`,
+        border: `1.2px solid ${palette.borderHex}66`,
+        borderRight: `4px solid ${palette.primaryHex}`,
+        borderRadius: "8px",
+        boxShadow: `0 1.5px 3px ${palette.primaryHex}12`,
+        padding: "3.5px 7px 3.5px 6px",
         breakInside: "avoid",
       }}
-      className="w-full min-w-0 py-[3.5px] pr-1.5 border-r-2 border-b border-dashed border-slate-200/90 last:border-b-0 break-inside-avoid print:break-inside-avoid text-slate-950 relative"
+      className="w-full min-w-0 break-inside-avoid print:break-inside-avoid text-slate-950 relative"
     >
       <div className={hasFigure ? "flex flex-row items-start justify-between gap-3 w-full" : "w-full"}>
         <div className="flex-1 min-w-0">
@@ -229,15 +254,26 @@ export function CompactTextbookMcqRow({
             <span
               style={{
                 background: palette.headerGradientCss,
-                borderColor: palette.primaryHex,
-                boxShadow: "0 2px 0 rgba(15, 23, 42, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.30)",
+                color: "#ffffff",
+                border: `1.2px solid ${palette.primaryHex}`,
+                borderRadius: "6px",
+                boxShadow: `0 2px 0 ${palette.primaryHex}, inset 0 1px 0 rgba(255, 255, 255, 0.35)`,
+                minWidth: "24px",
+                height: "19px",
+                padding: "0 5px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.80em",
+                fontWeight: 900,
+                lineHeight: 1,
               }}
-              className="shrink-0 min-w-[24px] h-[20px] px-1.5 rounded-[5px] border inline-flex items-center justify-center text-white text-[0.82em] font-black leading-none select-none"
+              className="shrink-0 select-none"
             >
               {formattedQNum}
             </span>
             <div
-              className={`flex-1 min-w-0 text-[0.97em] text-slate-950 break-words leading-[1.35] ${
+              className={`flex-1 min-w-0 text-[0.96em] text-slate-950 break-words leading-[1.32] ${
                 settings.boldProseText !== false ? "font-extrabold" : "font-bold"
               }`}
             >
@@ -245,20 +281,26 @@ export function CompactTextbookMcqRow({
                 question.promptAr,
                 numeralMode,
                 notationLanguage,
-                palette.borderHex
+                palette
               )}
             </div>
             {question.citationBadgeAr && (
               <span
-                style={{ borderColor: `${palette.borderHex}66`, color: palette.secondaryHex }}
-                className="shrink-0 px-1.5 py-0.2 rounded border bg-white text-[0.70em] font-black whitespace-nowrap shadow-2xs"
+                style={{
+                  backgroundColor: "#ffffff",
+                  border: `1px solid ${palette.borderHex}88`,
+                  color: palette.secondaryHex,
+                  borderRadius: "5px",
+                  padding: "0 5px",
+                }}
+                className="shrink-0 text-[0.70em] font-black whitespace-nowrap"
               >
                 📍 {formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}
               </span>
             )}
           </div>
 
-          {/* السطر الثاني: البدائل الأربعة (أ، ب، جـ، د) بدوائر ثلاثية الأبعاد وبدون صناديق مزدحمة */}
+          {/* السطر الثاني: البدائل الأربعة (أ، ب، جـ، د) بكبسولات ودوائر ملونة ثلاثية الأبعاد */}
           {renderChoicesStrip()}
         </div>
 
