@@ -15,8 +15,6 @@ export interface StudioQuestionSolutionLinesControllerProps {
   readonly onChangeHasDottedDivider: (hasDivider: boolean) => void;
 }
 
-const LINE_PRESETS = [0, 3, 5, 8, 12] as const;
-
 export default function StudioQuestionSolutionLinesController({
   answerLinesCount,
   hasDottedDivider,
@@ -31,7 +29,7 @@ export default function StudioQuestionSolutionLinesController({
           <span>سطور مساحة الحل:</span>
         </span>
 
-        {/* Stepper buttons - and + */}
+        {/* Stepper buttons - and + مع إدخال رقمي حر */}
         <div className="inline-flex items-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs">
           <button
             type="button"
@@ -44,11 +42,11 @@ export default function StudioQuestionSolutionLinesController({
           <input
             type="number"
             min={0}
-            max={30}
+            max={100}
             value={answerLinesCount}
             onChange={(e) => onChangeLinesCount(Math.max(0, Number(e.target.value) || 0))}
             className="w-12 h-7 text-center font-black text-xs bg-transparent border-x border-slate-300 dark:border-slate-600 focus:outline-none"
-            title="اكتب عدد السطور مباشرة (حتى 30 سطراً)"
+            title="اكتب عدد السطور بحرية (0 أو أكثر)"
           />
           <button
             type="button"
@@ -60,23 +58,9 @@ export default function StudioQuestionSolutionLinesController({
           </button>
         </div>
 
-        {/* Quick presets */}
-        <div className="flex items-center gap-1">
-          {LINE_PRESETS.map((cnt) => (
-            <button
-              key={cnt}
-              type="button"
-              onClick={() => onChangeLinesCount(cnt)}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-all ${
-                answerLinesCount === cnt
-                  ? "bg-teal-700 text-white shadow-2xs"
-                  : "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-500"
-              }`}
-            >
-              {cnt === 0 ? "بدون سطور" : `${cnt} سطور`}
-            </button>
-          ))}
-        </div>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          {answerLinesCount === 0 ? "(بدون سطور)" : `(${answerLinesCount} سطر)`}
+        </span>
       </div>
 
       <label className="flex items-center gap-1.5 cursor-pointer text-slate-700 dark:text-slate-300 font-bold">
