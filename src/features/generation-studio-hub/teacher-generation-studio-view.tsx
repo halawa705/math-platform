@@ -65,11 +65,41 @@ export default function TeacherGenerationStudioView() {
     return loadPersistedPDFPrintSettingsSSOT().notationLanguage ?? "english";
   });
 
-  const updateEssayAnswerLinesCount = (cnt: number) => {
+  const updateEssayAnswerLinesCount = (cnt: number, isManual = true) => {
     setEssayAnswerLinesCount(cnt);
-    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
+    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt, hasManualEssayLinesLock: isManual });
     const curr = loadPersistedPDFPrintSettingsSSOT();
-    savePersistedPDFPrintSettingsSSOT({ ...curr, essayAnswerLinesCount: cnt });
+    savePersistedPDFPrintSettingsSSOT({ ...curr, essayAnswerLinesCount: cnt, hasManualEssayLinesLock: isManual });
+    setSheetQuestions((prev) =>
+      prev
+        ? prev.map((q) => {
+            const isMcq = q.kind === "mcq" || (q.mcqChoicesAr !== undefined && q.mcqChoicesAr.length > 0);
+            return {
+              ...q,
+              answerLinesCount: isMcq ? 0 : cnt,
+            };
+          })
+        : prev
+    );
+    setSheetForms((prev) =>
+      prev
+        ? prev.map((form) => ({
+            ...form,
+            questions: form.questions.map((q) => {
+              const isMcq = q.kind === "mcq" || (q.mcqChoicesAr !== undefined && q.mcqChoicesAr.length > 0);
+              return {
+                ...q,
+                answerLinesCount: isMcq ? 0 : cnt,
+              };
+            }),
+          }))
+        : prev
+    );
+  };
+
+  const handleAutoFitResolvedLines = (resolvedLines: number) => {
+    setEssayAnswerLinesCount(resolvedLines);
+    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
   };
 
   const updateNotationLanguage = (lang: MathNotationLanguage) => {
@@ -191,6 +221,8 @@ export default function TeacherGenerationStudioView() {
           <PDFPreviewOrchestrator
             key={sheetTitle} customTitle={sheetTitle} customQuestions={sheetQuestions}
             customForms={sheetForms} gradeNameAr={grade.nameArabic} branchNameAr={branch.nameArabic}
+            essayAnswerLinesCount={essayAnswerLinesCount}
+            onAutoFitResolvedLines={handleAutoFitResolvedLines}
             onClosePreview={() => setPane("builder")}
           />
         )}

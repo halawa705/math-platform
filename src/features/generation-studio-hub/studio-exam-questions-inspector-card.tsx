@@ -224,7 +224,7 @@ export default function StudioExamQuestionsInspectorCard({
                     <StudioQuestionSolutionLinesController
                       answerLinesCount={q.answerLinesCount ?? 0}
                       hasDottedDivider={q.hasDottedDivider !== false}
-                      onChangeLinesCount={(cnt) => updateQuestion(q.questionId, { answerLinesCount: cnt })}
+                      onChangeLinesCount={(cnt) => updateQuestion(q.questionId, { answerLinesCount: cnt, hasCustomAnswerLines: true })}
                       onChangeHasDottedDivider={(hasDiv) => updateQuestion(q.questionId, { hasDottedDivider: hasDiv })}
                     />
                   )}
@@ -251,7 +251,7 @@ export default function StudioExamQuestionsInspectorCard({
                     <StudioQuestionSolutionLinesController
                       answerLinesCount={q.answerLinesCount ?? 0}
                       hasDottedDivider={q.hasDottedDivider !== false}
-                      onChangeLinesCount={(cnt) => updateQuestion(q.questionId, { answerLinesCount: cnt })}
+                      onChangeLinesCount={(cnt) => updateQuestion(q.questionId, { answerLinesCount: cnt, hasCustomAnswerLines: true })}
                       onChangeHasDottedDivider={(hasDiv) => updateQuestion(q.questionId, { hasDottedDivider: hasDiv })}
                     />
                   )}

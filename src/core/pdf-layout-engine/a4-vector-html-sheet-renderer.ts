@@ -35,6 +35,7 @@ export interface PrintableMathQuestionItem {
   readonly rawSvgMarkup?: string;
   readonly figureDiagnosticsAr?: readonly string[];
   readonly answerLinesCount?: number;
+  readonly hasCustomAnswerLines?: boolean;
   readonly hasDottedDivider?: boolean;
   /** حقول إضافية اختيارية خاصة بالمذكرات التعليمية والمراجعات النهائية */
   readonly ideaBannerTitleAr?: string;
@@ -198,6 +199,7 @@ export function convertQuestionAssessmentIRToPrintableItem(
     graphSpec: q.graphSpec,
     figureDiagnosticsAr: q.figureDiagnosticsAr,
     answerLinesCount: q.answerLinesCount,
+    hasCustomAnswerLines: q.hasCustomAnswerLines,
     hasDottedDivider: q.hasDottedDivider,
   };
 }

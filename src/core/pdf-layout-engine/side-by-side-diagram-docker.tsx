@@ -102,7 +102,7 @@ export default function SideBySideDiagramDocker({
   const effectiveFigureScale = (settings.figureScale ?? 1) * densityMetrics.figureScaleFactor;
   const adaptiveLines = resolveAdaptiveAnswerLinesCount({
     question,
-    defaultSettingsLines: settings.answerSpaceLines,
+    defaultSettingsLines: settings.essayAnswerLinesCount ?? settings.answerSpaceLines,
   });
 
   const stepsCount = question.solutionStepsAr?.length ?? 0;

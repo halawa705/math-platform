@@ -174,7 +174,7 @@ export default function PDFControlsGroupedToolPanel({
             <ToolRow labelAr="عدد سطور المقالي والبرهان">
               <PDFEssayAnswerLinesControl
                 currentCount={settings.essayAnswerLinesCount ?? 3}
-                onChangeCount={(essayAnswerLinesCount) => set({ essayAnswerLinesCount })}
+                onChangeCount={(essayAnswerLinesCount) => set({ essayAnswerLinesCount, hasManualEssayLinesLock: true })}
               />
             </ToolRow>
           )}

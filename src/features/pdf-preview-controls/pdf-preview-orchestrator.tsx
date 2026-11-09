@@ -8,7 +8,6 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import {
   DEFAULT_PDF_PRINT_SETTINGS_SSOT,
   loadPersistedPDFPrintSettingsSSOT,
@@ -16,14 +15,13 @@ import {
   savePersistedPDFPrintSettingsSSOT,
   type PDFPrintSettingsStateSSOT,
 } from "@/core/ssot/pdf-print-settings-ssot";
+import { saveStudioGlobalContextSSOT } from "@/core/ssot/studio-state-persistence-ssot";
 import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import TwoColumnNewspaperPacker from "@/core/pdf-layout-engine/two-column-newspaper-packer";
 import MultiFormNewspaperPacker from "@/core/pdf-layout-engine/multi-form-newspaper-packer";
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
+import PDFPreviewTopActionBar from "./pdf-preview-top-action-bar";
 import PDFControlsGroupedToolPanel from "./pdf-controls-grouped-tool-panel";
-import PDFDocumentEditionSegmentedSwitch from "./pdf-document-edition-segmented-switch";
-import PDFExactFontSizeControl from "./pdf-exact-fontsize-control";
-import PDFBoldWeightToggles from "./pdf-bold-weight-toggles";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
 import {
   saveDocumentToOvermathDriveVault,
@@ -35,6 +33,8 @@ export interface PDFPreviewOrchestratorProps {
   readonly customForms?: readonly PrintableExamFormGroup[];
   readonly gradeNameAr?: string;
   readonly branchNameAr?: string;
+  readonly essayAnswerLinesCount?: number;
+  readonly onAutoFitResolvedLines?: (lines: number) => void;
   readonly onClosePreview?: () => void;
   readonly children?: React.ReactNode;
 }
@@ -65,6 +65,8 @@ export default function PDFPreviewOrchestrator({
   customForms,
   gradeNameAr = "",
   branchNameAr = "",
+  essayAnswerLinesCount,
+  onAutoFitResolvedLines,
   onClosePreview,
   children,
 }: PDFPreviewOrchestratorProps) {
@@ -132,6 +134,23 @@ export default function PDFPreviewOrchestrator({
     }));
   }, [customTitle, customQuestions]);
 
+  useEffect(() => {
+    if (typeof essayAnswerLinesCount === "number" && essayAnswerLinesCount !== settings.essayAnswerLinesCount) {
+      setSettings((prev) => ({ ...prev, essayAnswerLinesCount, hasManualEssayLinesLock: true }));
+    }
+  }, [essayAnswerLinesCount, settings.essayAnswerLinesCount]);
+
+  const handleAutoFitResolvedLines = (resolvedLines: number) => {
+    setSettings((prev) => {
+      if (prev.hasManualEssayLinesLock || prev.essayAnswerLinesCount === resolvedLines) return prev;
+      const updated = { ...prev, essayAnswerLinesCount: resolvedLines };
+      savePersistedPDFPrintSettingsSSOT(updated);
+      saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
+      return updated;
+    });
+    onAutoFitResolvedLines?.(resolvedLines);
+  };
+
   const handleUpdateSettings = (next: PDFPrintSettingsStateSSOT) => {
     if (
       next.autoFitMode !== settings.autoFitMode ||
@@ -140,8 +159,17 @@ export default function PDFPreviewOrchestrator({
     ) {
       userChangedAutoFitRef.current = true;
     }
-    setSettings(next);
-    savePersistedPDFPrintSettingsSSOT(next);
+    const withLock = next.essayAnswerLinesCount !== settings.essayAnswerLinesCount
+      ? { ...next, hasManualEssayLinesLock: true }
+      : next;
+    setSettings(withLock);
+    savePersistedPDFPrintSettingsSSOT(withLock);
+    if (next.essayAnswerLinesCount !== undefined) {
+      saveStudioGlobalContextSSOT({
+        essayAnswerLinesCount: next.essayAnswerLinesCount,
+        hasManualEssayLinesLock: withLock.hasManualEssayLinesLock,
+      });
+    }
   };
 
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
@@ -180,98 +208,16 @@ export default function PDFPreviewOrchestrator({
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      <div className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-        {onClosePreview && (
-          <button
-            type="button"
-            onClick={onClosePreview}
-            className="w-full min-h-[44px] rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border-2 border-amber-300 dark:border-amber-700/70 text-amber-950 dark:text-amber-200 text-xs font-black cursor-pointer flex items-center justify-between px-3 shadow-2xs transition-all"
-          >
-            <span className="flex items-center gap-1.5">
-              <span>↩️</span>
-              <span>العودة إلى المراحل وتعديل الردود المحفوظة</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-lg bg-amber-200/80 dark:bg-amber-900/60 text-[11px] font-black">
-              ✕ إغلاق المعاينة
-            </span>
-          </button>
-        )}
-
-        {/* شريط التبديل السريع بين نسخة الطالب (أسئلة فقط) ونسخة ولي الأمر (الأسئلة بالإجابات) */}
-        <PDFDocumentEditionSegmentedSwitch
-          currentMode={settings.answerVisibilityMode}
-          onChangeMode={(nextMode) => handleUpdateSettings({ ...settings, answerVisibilityMode: nextMode })}
-        />
-
-        {/* شريط التحكم الفوري في حجم الخط (تلقائي / يدوي) وأزرار السمك (B للكلام / B للكسور والمعادلات) */}
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <PDFExactFontSizeControl
-              currentSizePt={settings.exactFontSizePt}
-              onChangeSizePt={(exactFontSizePt) =>
-                handleUpdateSettings({ ...settings, exactFontSizePt, autoFitMode: "off" })
-              }
-            />
-            <button
-              type="button"
-              onClick={() =>
-                handleUpdateSettings({
-                  ...settings,
-                  autoFitMode: settings.autoFitMode === "off" ? "booklet_fill" : "off",
-                })
-              }
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer transition-all ${
-                settings.autoFitMode !== "off"
-                  ? "bg-emerald-700 text-white shadow-2xs"
-                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300"
-              }`}
-            >
-              {settings.autoFitMode !== "off"
-                ? "✨ حجم الخط: تلقائي ذكي (مفعّل)"
-                : "✋ يدوي — اضغط لإعادة الضبط التلقائي"}
-            </button>
-          </div>
-          <PDFBoldWeightToggles
-            boldProseText={settings.boldProseText ?? false}
-            boldMathExpressions={settings.boldMathExpressions ?? true}
-            onChangeBoldProse={(boldProseText) => handleUpdateSettings({ ...settings, boldProseText })}
-            onChangeBoldMath={(boldMathExpressions) => handleUpdateSettings({ ...settings, boldMathExpressions })}
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handlePrintNow}
-          className="w-full min-h-[50px] rounded-xl bg-gradient-to-l from-purple-800 via-violet-700 to-indigo-800 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-black cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-        >
-          <span>🖨️</span>
-          <span>طباعة / تصدير A4 PDF</span>
-        </button>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => setIsToolsOpen((v) => !v)}
-            aria-expanded={isToolsOpen}
-            className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-black cursor-pointer px-2 truncate"
-          >
-            🎛️ {isToolsOpen ? "إخفاء التخصيص" : "تخصيص الورقة"}
-          </button>
-          <button
-            type="button"
-            onClick={handleSaveToDrive}
-            className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-black cursor-pointer truncate px-2"
-          >
-            💾 {driveFeedback || "حفظ في الخزينة"}
-          </button>
-          <Link
-            href="/library?tab=archive"
-            className="min-h-[44px] rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 text-teal-900 dark:text-teal-300 text-xs font-black flex items-center justify-center gap-1 px-2 truncate"
-          >
-            <span>🗂️</span>
-            <span>عرض المحفوظات</span>
-          </Link>
-        </div>
-      </div>
+      <PDFPreviewTopActionBar
+        settings={settings}
+        isToolsOpen={isToolsOpen}
+        driveFeedback={driveFeedback}
+        onClosePreview={onClosePreview}
+        onUpdateSettings={handleUpdateSettings}
+        onPrintNow={handlePrintNow}
+        onSaveToDrive={handleSaveToDrive}
+        onToggleTools={() => setIsToolsOpen((v) => !v)}
+      />
 
       {isToolsOpen && (
         <PDFControlsGroupedToolPanel
@@ -334,6 +280,7 @@ export default function PDFPreviewOrchestrator({
                 subtitleAr={gradeNameAr}
                 sheetContainerRef={sheetContainerRef}
                 onPagesCountChange={setPagesCount}
+                onAutoFitResolvedLines={handleAutoFitResolvedLines}
               >
                 {children}
               </TwoColumnNewspaperPacker>
@@ -347,6 +294,7 @@ export default function PDFPreviewOrchestrator({
           subtitleAr={gradeNameAr}
           sheetContainerRef={sheetContainerRef}
           onPagesCountChange={setPagesCount}
+          onAutoFitResolvedLines={handleAutoFitResolvedLines}
         >
           {children}
         </TwoColumnNewspaperPacker>

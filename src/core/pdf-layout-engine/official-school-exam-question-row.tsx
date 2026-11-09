@@ -52,11 +52,13 @@ export function OfficialSchoolExamQuestionRow({
     (question.mcqChoicesAr !== undefined && question.mcqChoicesAr.length > 0);
 
   // حتمي صارم: أسئلة الاختيار من متعدد MCQ لا تأخذ أي أسطر إجابة إطلاقاً
+  // بالنسبة للأسئلة المقالية: إعدادات السطور من المعلم أو AutoFit (settings.essayAnswerLinesCount) تحكم وتنعكس فورياً
+  // ما لم يكن للسؤال تخصيص فردي صريح من المعلم (hasCustomAnswerLines)
   const effectiveLinesCount = isMcqQuestion
     ? 0
-    : (typeof question.answerLinesCount === "number" && question.answerLinesCount >= 0
+    : (question.hasCustomAnswerLines && typeof question.answerLinesCount === "number"
         ? question.answerLinesCount
-        : (settings.essayAnswerLinesCount ?? settings.answerSpaceLines ?? 3));
+        : (settings.essayAnswerLinesCount ?? settings.answerSpaceLines ?? question.answerLinesCount ?? 3));
 
   const hasDottedDivider = question.hasDottedDivider !== false;
 

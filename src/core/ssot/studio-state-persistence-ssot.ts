@@ -56,6 +56,7 @@ export interface StudioGlobalContextState {
   readonly selectedLessonIds?: readonly string[];
   readonly targetedScopeText?: string;
   readonly essayAnswerLinesCount?: number;
+  readonly hasManualEssayLinesLock?: boolean;
 }
 
 export const DEFAULT_STUDIO_GLOBAL_CONTEXT: StudioGlobalContextState = {

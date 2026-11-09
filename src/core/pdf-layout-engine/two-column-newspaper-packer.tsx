@@ -34,6 +34,7 @@ export interface TwoColumnNewspaperPackerProps {
   readonly subtitleAr?: string;
   readonly sheetContainerRef: React.RefObject<HTMLDivElement | null>;
   readonly onPagesCountChange?: (n: number) => void;
+  readonly onAutoFitResolvedLines?: (lines: number) => void;
   readonly children?: React.ReactNode;
 }
 
@@ -43,6 +44,7 @@ export default function TwoColumnNewspaperPacker({
   subtitleAr = "",
   sheetContainerRef,
   onPagesCountChange,
+  onAutoFitResolvedLines,
   children,
 }: TwoColumnNewspaperPackerProps) {
   const [identity, setIdentity] = useState(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
@@ -62,6 +64,7 @@ export default function TwoColumnNewspaperPacker({
   const ladder = React.useMemo(() => getLadderForMode(mode), [mode]);
   const [activeRung, setActiveRung] = React.useState(0);
   const rung = mode === "off" ? undefined : ladder[Math.min(activeRung, Math.max(0, ladder.length - 1))];
+  const hasManualLines = settings.hasManualEssayLinesLock === true;
   const effSettings = React.useMemo(
     () =>
       rung
@@ -71,11 +74,13 @@ export default function TwoColumnNewspaperPacker({
             figureScale: rung.figureScale,
             compactHeader: rung.compactHeader,
             hideAccreditation: rung.hideAccreditation,
-            essayAnswerLinesCount: settings.essayAnswerLinesCount !== undefined ? settings.essayAnswerLinesCount : rung.answerLines,
+            essayAnswerLinesCount: hasManualLines && settings.essayAnswerLinesCount !== undefined
+              ? settings.essayAnswerLinesCount
+              : rung.answerLines,
             answerSpaceLines: rung.answerLines,
           }
         : settings,
-    [settings, rung]
+    [settings, rung, hasManualLines]
   );
   const measureStamp = rung ? `rung-${activeRung}` : "off";
 
@@ -98,7 +103,8 @@ export default function TwoColumnNewspaperPacker({
     [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
-  const measured = useFlowStagingLiveMeasurer(stagingRef, `${flowItems.length}:${effSettings.exactFontSizePt}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}`, measureStamp);
+  const stagingStamp = `${flowItems.length}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}`;
+  const measured = useFlowStagingLiveMeasurer(stagingRef, stagingStamp, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = React.useMemo(
     () =>
@@ -112,13 +118,18 @@ export default function TwoColumnNewspaperPacker({
     [flowItems, measured.heights, pageBudgets, densityProfile]
   );
 
-  const inputSignature = `${questions.map((q) => `${q.id}:${q.answerLinesCount ?? ""}`).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.essayAnswerLinesCount ?? ""}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}`;
+  const inputSignature = `${questions.map((q) => `${q.id}:${q.answerLinesCount ?? ""}`).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.essayAnswerLinesCount ?? ""}|${settings.hasManualEssayLinesLock ? 1 : 0}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}`;
   const sweep = useAutoFitSweepController({
     mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: discretePages,
   });
 
   useEffect(() => { setActiveRung(sweep.phase === "idle" ? 0 : sweep.probeRungIndex); }, [sweep.phase, sweep.probeRungIndex]);
   useEffect(() => { if (sweep.phase !== "sweeping") onPagesCountChange?.(discretePages.length); }, [discretePages.length, sweep.phase, onPagesCountChange]);
+  useEffect(() => {
+    if (sweep.phase === "done" && rung && !hasManualLines && typeof onAutoFitResolvedLines === "function") {
+      onAutoFitResolvedLines(rung.answerLines);
+    }
+  }, [sweep.phase, rung?.answerLines, hasManualLines, onAutoFitResolvedLines]);
 
   const stableRef = useRef({ pages: discretePages, settings: effSettings, heights: measured.heights });
   if (sweep.phase !== "sweeping" || stableRef.current.pages.length === 0) {

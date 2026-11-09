@@ -87,7 +87,7 @@ export default function MultiFormNewspaperPacker({
 
   const measured = useFlowStagingLiveMeasurer(
     stagingRef,
-    `${allStagingItems.length}:${settings.exactFontSizePt}:${settings.fontFamilyId}`,
+    `${allStagingItems.length}:${settings.exactFontSizePt}:${settings.essayAnswerLinesCount ?? ""}:${settings.fontFamilyId}`,
     "multi-forms"
   );
 

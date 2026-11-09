@@ -18,8 +18,8 @@ const r = (fontPt: number, figureScale: number, answerLines: 1 | 2 | 3, compactH
   ({ fontPt, figureScale, answerLines, compactHeader, hideAccreditation });
 
 const BOOKLET_FILL_LADDER: readonly AutoFitRung[] = [
-  r(14, 1, 2, false, false),
-  r(13.5, 1, 2, false, false),
+  r(14, 1, 3, false, false),
+  r(13.5, 1, 3, false, false),
   r(13, 1, 2, false, false),
   r(12.5, 1, 2, false, false),
   r(12, 1, 2, false, false),

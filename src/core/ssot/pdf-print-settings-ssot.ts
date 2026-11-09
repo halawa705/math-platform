@@ -107,6 +107,7 @@ export interface PDFPrintSettingsStateSSOT {
   readonly figureScale?: number;
   readonly answerSpaceLines?: 1 | 2 | 3;
   readonly essayAnswerLinesCount?: number;
+  readonly hasManualEssayLinesLock?: boolean;
   readonly compactHeader?: boolean;
   readonly hideAccreditation?: boolean;
   readonly boldProseText?: boolean;

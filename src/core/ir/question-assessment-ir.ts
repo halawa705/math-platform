@@ -115,6 +115,11 @@ export interface QuestionAssessmentIR {
   readonly answerLinesCount?: number;
 
   /**
+   * هل تم تعديل عدد السطور يدوياً لهذا السؤال بعينه في بطاقة فحص الأسئلة.
+   */
+  readonly hasCustomAnswerLines?: boolean;
+
+  /**
    * خط منقط فاصل أسفل السؤال المقالي في الطباعة (افتراضياً true).
    */
   readonly hasDottedDivider?: boolean;

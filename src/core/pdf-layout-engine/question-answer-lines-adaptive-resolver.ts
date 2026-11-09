@@ -29,7 +29,17 @@ export function resolveAdaptiveAnswerLinesCount(params: {
     return 0;
   }
 
-  // إذا حُدد عدد الأسطر صراحة في السؤال
+  // إذا تم تخصيص عدد الأسطر صراحة لهذا السؤال بعينه من المعلم
+  if (question.hasCustomAnswerLines && typeof question.answerLinesCount === "number") {
+    return question.answerLinesCount;
+  }
+
+  // إذا تم تحديد عدد سطور المقالي صراحة في إعدادات المعاينة أو AutoFit
+  if (typeof defaultSettingsLines === "number") {
+    return defaultSettingsLines;
+  }
+
+  // إذا حُدد عدد الأسطر سابقاً في السؤال
   if (typeof question.answerLinesCount === "number" && question.answerLinesCount >= 0) {
     return question.answerLinesCount;
   }
