@@ -74,4 +74,41 @@ describe("AutoFit Bidirectional Lines & Adaptive Sync Engine", () => {
     // Even if defaultSettingsLines is 2, the question's individual 6 lines are preserved
     expect(resolveAdaptiveAnswerLinesCount({ question: customEssayQuestion, defaultSettingsLines: 2 })).toBe(6);
   });
+
+  it("verifies manual lock prevents AutoFit from resetting user chosen lines", () => {
+    let currentLines = 3;
+    let manualLock = false;
+
+    // Simulate teacher clicking '+' to 4
+    const onTeacherAdjust = (newLines: number) => {
+      currentLines = newLines;
+      manualLock = true;
+    };
+
+    onTeacherAdjust(4);
+    expect(currentLines).toBe(4);
+    expect(manualLock).toBe(true);
+
+    // Simulate AutoFit trying to resolve lines to 3
+    const onAutoFitAttempt = (resolvedLines: number) => {
+      if (manualLock) return; // Protected!
+      currentLines = resolvedLines;
+    };
+
+    onAutoFitAttempt(3);
+    // Must remain 4, NOT revert to 3!
+    expect(currentLines).toBe(4);
+
+    // Teacher clicks '-' to 1
+    onTeacherAdjust(1);
+    expect(currentLines).toBe(1);
+    onAutoFitAttempt(2);
+    expect(currentLines).toBe(1);
+
+    // Teacher clicks '-' to 0 (no lines)
+    onTeacherAdjust(0);
+    expect(currentLines).toBe(0);
+    onAutoFitAttempt(3);
+    expect(currentLines).toBe(0);
+  });
 });

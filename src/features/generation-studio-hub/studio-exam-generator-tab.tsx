@@ -52,6 +52,8 @@ export interface StudioExamGeneratorTabProps {
   readonly selectedUnitIds?: readonly string[];
   readonly selectedLessonIds?: readonly string[];
   readonly targetedScopeText?: string;
+  readonly essayAnswerLinesCount?: number;
+  readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
   readonly onSyncQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
@@ -61,6 +63,7 @@ export default function StudioExamGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "", lessonTitle, branchNameAr,
   selectedUnitIds = [], selectedLessonIds = [], targetedScopeText,
+  essayAnswerLinesCount, onChangeEssayAnswerLinesCount,
   onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet, onSyncQuestionsToSheet,
 }: StudioExamGeneratorTabProps) {
   const [initial] = useState(() => loadStudioExamSettingsSSOT());
@@ -80,10 +83,9 @@ export default function StudioExamGeneratorTab({
   const [publishedInfo, setPublishedInfo] = useState<PublishedExamSummaryInfo | null>(null);
   const [diagRows, setDiagRows] = useState<readonly FigureDiagnosticRow[]>([]);
 
-  // سطور إجابة المقالي العالمية (المقالي فقط)
-  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
-    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
-  );
+  // سطور إجابة المقالي الموحدة عالمياً
+  const [localLines, setLocalLines] = useState<number>(() => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3);
+  const essayAnswerLines = essayAnswerLinesCount ?? localLines;
 
   const persist = (p: Partial<ReturnType<typeof loadStudioExamSettingsSSOT>>) => saveStudioExamSettingsSSOT(p);
 
@@ -112,7 +114,8 @@ export default function StudioExamGeneratorTab({
   });
 
   const handleEssayLinesChange = (cnt: number) => {
-    setEssayAnswerLines(cnt);
+    setLocalLines(cnt);
+    onChangeEssayAnswerLinesCount?.(cnt);
     saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
     // مزامنة فورية للأسئلة الحالية في الذاكرة
     if (parsedQuestions.length > 0) {

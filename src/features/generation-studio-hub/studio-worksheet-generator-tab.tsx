@@ -48,6 +48,8 @@ export interface StudioWorksheetGeneratorTabProps {
   readonly selectedUnitIds?: readonly string[];
   readonly selectedLessonIds?: readonly string[];
   readonly targetedScopeText?: string;
+  readonly essayAnswerLinesCount?: number;
+  readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
   readonly onApplyWorksheetTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
@@ -63,6 +65,8 @@ export default function StudioWorksheetGeneratorTab({
   selectedUnitIds = [],
   selectedLessonIds = [],
   targetedScopeText,
+  essayAnswerLinesCount,
+  onChangeEssayAnswerLinesCount,
   onApplyWorksheetTitleToSheet,
   onApplyParsedQuestionsToSheet,
 }: StudioWorksheetGeneratorTabProps) {
@@ -74,9 +78,8 @@ export default function StudioWorksheetGeneratorTab({
   const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled ?? true);
   const [durationMinutes, setDurationMinutes] = useState(initial.durationMinutes ?? 25);
   const [includeAnswerLines, setIncludeAnswerLines] = useState(initial.includeAnswerLines ?? true);
-  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
-    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
-  );
+  const [localLines, setLocalLines] = useState<number>(() => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3);
+  const essayAnswerLines = essayAnswerLinesCount ?? localLines;
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
 
   const [prompt, setPrompt] = useState("");
@@ -88,7 +91,8 @@ export default function StudioWorksheetGeneratorTab({
     saveStudioWorksheetSettingsSSOT(p);
 
   const handleEssayLinesChange = (cnt: number) => {
-    setEssayAnswerLines(cnt);
+    setLocalLines(cnt);
+    onChangeEssayAnswerLinesCount?.(cnt);
     saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
   };
 

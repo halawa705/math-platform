@@ -44,6 +44,8 @@ export interface StudioBookletGeneratorTabProps {
   readonly lessonOrder?: number;
   readonly branchNameAr: string;
   readonly targetedScopeText?: string;
+  readonly essayAnswerLinesCount?: number;
+  readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
   readonly onApplyBookletTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
@@ -58,6 +60,7 @@ export default function StudioBookletGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "الوحدة الثالثة", lessonTitle, lessonOrder = 15, branchNameAr,
   targetedScopeText,
+  essayAnswerLinesCount, onChangeEssayAnswerLinesCount,
   onApplyBookletTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioBookletGeneratorTabProps) {
   const [initial] = useState(() => loadStudioBookletSettingsSSOT());
@@ -70,9 +73,8 @@ export default function StudioBookletGeneratorTab({
   const [hwMcqEnabled, setHwMcqEnabled] = useState(initial.hwMcqEnabled);
   const [hwEssay, setHwEssay] = useState(initial.hwEssay);
   const [hwEssayEnabled, setHwEssayEnabled] = useState(initial.hwEssayEnabled);
-  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
-    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
-  );
+  const [localLines, setLocalLines] = useState<number>(() => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3);
+  const essayAnswerLines = essayAnswerLinesCount ?? localLines;
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<BookletPromptStageNumber, string>>(() => ({
@@ -174,7 +176,8 @@ export default function StudioBookletGeneratorTab({
           <StudioEssayAnswerLinesStepper
             value={essayAnswerLines}
             onChange={(cnt) => {
-              setEssayAnswerLines(cnt);
+              setLocalLines(cnt);
+              onChangeEssayAnswerLinesCount?.(cnt);
               saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
             }}
             compact

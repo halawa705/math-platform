@@ -125,9 +125,13 @@ export default function TwoColumnNewspaperPacker({
 
   useEffect(() => { setActiveRung(sweep.phase === "idle" ? 0 : sweep.probeRungIndex); }, [sweep.phase, sweep.probeRungIndex]);
   useEffect(() => { if (sweep.phase !== "sweeping") onPagesCountChange?.(discretePages.length); }, [discretePages.length, sweep.phase, onPagesCountChange]);
+  const sweepDoneReportedRef = useRef<boolean>(false);
   useEffect(() => {
-    if (sweep.phase === "done" && rung && !hasManualLines && typeof onAutoFitResolvedLines === "function") {
-      onAutoFitResolvedLines(rung.answerLines);
+    if (sweep.phase === "sweeping") {
+      sweepDoneReportedRef.current = false;
+    } else if (sweep.phase === "done" && rung && !hasManualLines && !sweepDoneReportedRef.current) {
+      sweepDoneReportedRef.current = true;
+      onAutoFitResolvedLines?.(rung.answerLines);
     }
   }, [sweep.phase, rung?.answerLines, hasManualLines, onAutoFitResolvedLines]);
 

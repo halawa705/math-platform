@@ -7,7 +7,7 @@
  * في ٣ مجموعات، ثم ورقة A4 الحية بالتحجيم التلقائي للهاتف.
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   DEFAULT_PDF_PRINT_SETTINGS_SSOT,
   loadPersistedPDFPrintSettingsSSOT,
@@ -135,21 +135,24 @@ export default function PDFPreviewOrchestrator({
   }, [customTitle, customQuestions]);
 
   useEffect(() => {
-    if (typeof essayAnswerLinesCount === "number" && essayAnswerLinesCount !== settings.essayAnswerLinesCount) {
-      setSettings((prev) => ({ ...prev, essayAnswerLinesCount, hasManualEssayLinesLock: true }));
+    if (typeof essayAnswerLinesCount === "number") {
+      setSettings((prev) => {
+        if (prev.essayAnswerLinesCount === essayAnswerLinesCount) return prev;
+        return { ...prev, essayAnswerLinesCount, hasManualEssayLinesLock: true };
+      });
     }
-  }, [essayAnswerLinesCount, settings.essayAnswerLinesCount]);
+  }, [essayAnswerLinesCount]);
 
-  const handleAutoFitResolvedLines = (resolvedLines: number) => {
+  const handleAutoFitResolvedLines = useCallback((resolvedLines: number) => {
     setSettings((prev) => {
       if (prev.hasManualEssayLinesLock || prev.essayAnswerLinesCount === resolvedLines) return prev;
       const updated = { ...prev, essayAnswerLinesCount: resolvedLines };
       savePersistedPDFPrintSettingsSSOT(updated);
       saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
+      onAutoFitResolvedLines?.(resolvedLines);
       return updated;
     });
-    onAutoFitResolvedLines?.(resolvedLines);
-  };
+  }, [onAutoFitResolvedLines]);
 
   const handleUpdateSettings = (next: PDFPrintSettingsStateSSOT) => {
     if (

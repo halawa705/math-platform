@@ -42,6 +42,8 @@ export interface StudioFinalReviewGeneratorTabProps {
   readonly unitTitleAr?: string;
   readonly branchNameAr: string;
   readonly targetedScopeText?: string;
+  readonly essayAnswerLinesCount?: number;
+  readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
   readonly onApplyReviewTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
 }
@@ -56,6 +58,7 @@ export default function StudioFinalReviewGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "جميع وحدات المنهج", branchNameAr,
   targetedScopeText,
+  essayAnswerLinesCount, onChangeEssayAnswerLinesCount,
   onApplyReviewTitleToSheet, onApplyParsedQuestionsToSheet,
 }: StudioFinalReviewGeneratorTabProps) {
   const [initial] = useState(() => loadStudioReviewSettingsSSOT());
@@ -65,9 +68,8 @@ export default function StudioFinalReviewGeneratorTab({
   const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled);
   const [essayCount, setEssayCount] = useState(initial.essayCount);
   const [essayEnabled, setEssayEnabled] = useState(initial.essayEnabled);
-  const [essayAnswerLines, setEssayAnswerLines] = useState<number>(
-    () => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3
-  );
+  const [localLines, setLocalLines] = useState<number>(() => loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3);
+  const essayAnswerLines = essayAnswerLinesCount ?? localLines;
   const [customDirectives, setCustomDirectives] = useState(initial.customDirectives || "");
   const [prompt, setPrompt] = useState("");
   const [replies, setReplies] = useState<Record<FinalReviewStageNumber, string>>(() => ({
@@ -172,7 +174,8 @@ export default function StudioFinalReviewGeneratorTab({
           <StudioEssayAnswerLinesStepper
             value={essayAnswerLines}
             onChange={(cnt) => {
-              setEssayAnswerLines(cnt);
+              setLocalLines(cnt);
+              onChangeEssayAnswerLinesCount?.(cnt);
               saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt });
             }}
             compact

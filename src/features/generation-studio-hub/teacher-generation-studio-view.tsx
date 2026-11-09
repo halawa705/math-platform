@@ -6,7 +6,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import TopFourCentersNavigationBar from "@/components/global-ui/top-four-centers-navigation-bar";
 import SegmentedWorkspaceTabsBar, { type SegmentedTabItem } from "@/components/global-ui/segmented-workspace-tabs-bar";
 import { MATH_BRANCHES_SSOT, type MathBranchId } from "@/core/ssot/math-branches-ssot";
@@ -61,12 +61,18 @@ export default function TeacherGenerationStudioView() {
   const [essayAnswerLinesCount, setEssayAnswerLinesCount] = useState<number>(() => {
     return loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3;
   });
+  const [hasManualLinesLock, setHasManualLinesLock] = useState<boolean>(() => {
+    return Boolean(loadStudioGlobalContextSSOT().hasManualEssayLinesLock);
+  });
   const [notationLanguage, setNotationLanguage] = useState<MathNotationLanguage>(() => {
     return loadPersistedPDFPrintSettingsSSOT().notationLanguage ?? "english";
   });
 
-  const updateEssayAnswerLinesCount = (cnt: number, isManual = true) => {
+  const updateEssayAnswerLinesCount = useCallback((cnt: number, isManual = true) => {
     setEssayAnswerLinesCount(cnt);
+    if (isManual) {
+      setHasManualLinesLock(true);
+    }
     saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt, hasManualEssayLinesLock: isManual });
     const curr = loadPersistedPDFPrintSettingsSSOT();
     savePersistedPDFPrintSettingsSSOT({ ...curr, essayAnswerLinesCount: cnt, hasManualEssayLinesLock: isManual });
@@ -95,12 +101,16 @@ export default function TeacherGenerationStudioView() {
           }))
         : prev
     );
-  };
+  }, []);
 
-  const handleAutoFitResolvedLines = (resolvedLines: number) => {
-    setEssayAnswerLinesCount(resolvedLines);
-    saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
-  };
+  const handleAutoFitResolvedLines = useCallback((resolvedLines: number) => {
+    setHasManualLinesLock((locked) => {
+      if (locked) return locked;
+      setEssayAnswerLinesCount(resolvedLines);
+      saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
+      return false;
+    });
+  }, []);
 
   const updateNotationLanguage = (lang: MathNotationLanguage) => {
     setNotationLanguage(lang);
@@ -168,6 +178,8 @@ export default function TeacherGenerationStudioView() {
               branchNameAr={branch.nameArabic}
               selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
               targetedScopeText={targetedScopeText}
+              essayAnswerLinesCount={essayAnswerLinesCount}
+              onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
               onApplyExamTitleToSheet={applyTitle}
               onApplyParsedQuestionsToSheet={applyQuestions}
               onSyncQuestionsToSheet={syncQuestions}
@@ -191,6 +203,8 @@ export default function TeacherGenerationStudioView() {
               unitTitleAr={unitTitle || "الوحدة الثالثة"} lessonTitle={lessonTitle}
               lessonOrder={lessonOrder} branchNameAr={branch.nameArabic}
               targetedScopeText={targetedScopeText}
+              essayAnswerLinesCount={essayAnswerLinesCount}
+              onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
               onApplyBookletTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
             />
           )}
@@ -199,6 +213,8 @@ export default function TeacherGenerationStudioView() {
               gradeId={gradeId} gradeNameAr={grade.nameArabic} branchId={branchId}
               unitTitleAr={unitTitle || "جميع وحدات المنهج"} branchNameAr={branch.nameArabic}
               targetedScopeText={targetedScopeText}
+              essayAnswerLinesCount={essayAnswerLinesCount}
+              onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
               onApplyReviewTitleToSheet={applyTitle} onApplyParsedQuestionsToSheet={applyQuestions}
             />
           )}
@@ -209,6 +225,8 @@ export default function TeacherGenerationStudioView() {
               lessonTitle={lessonTitle} notationLanguage={notationLanguage}
               selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
               targetedScopeText={targetedScopeText}
+              essayAnswerLinesCount={essayAnswerLinesCount}
+              onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
               onApplyWorksheetTitleToSheet={applyTitle}
               onApplyParsedQuestionsToSheet={applyQuestions}
             />
