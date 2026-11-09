@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildFlowItems } from "@/core/pdf-layout-engine/flow-items-builder";
 import { FLOW_DENSITY_PROFILES } from "@/core/pdf-layout-engine/flow-page-geometry-constants";
 import { packFlowItemsIntoPages } from "@/core/pdf-layout-engine/flow-page-packer";

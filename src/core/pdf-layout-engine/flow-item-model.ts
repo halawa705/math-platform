@@ -75,6 +75,8 @@ export type FlowPageSegment =
 export interface FlowPage {
   readonly pageNumber: number;
   readonly isFirstPage: boolean;
+  /** ما إذا كانت الترويسة الأولى في وضعها الرشيق الموفر للمساحة تلقائياً. */
+  readonly isHeaderCompact?: boolean;
   readonly segments: readonly FlowPageSegment[];
   readonly usedHeightPx: number;
   readonly budgetHeightPx: number;

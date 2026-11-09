@@ -114,8 +114,13 @@ export default function TwoColumnNewspaperPacker({
     [isSchoolExam, effSettings.densityMode]
   );
   const discretePages = React.useMemo(
-    () => packFlowItemsIntoPages(flowItems, measured.heights, { budgets: pageBudgets, density: densityProfile }),
-    [flowItems, measured.heights, pageBudgets, densityProfile]
+    () =>
+      packFlowItemsIntoPages(flowItems, measured.heights, {
+        budgets: pageBudgets,
+        density: densityProfile,
+        manualCompactHeader: effSettings.compactHeader,
+      }),
+    [flowItems, measured.heights, pageBudgets, densityProfile, effSettings.compactHeader]
   );
 
   const inputSignature = `${questions.map((q) => `${q.id}:${q.answerLinesCount ?? ""}`).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.essayAnswerLinesCount ?? ""}|${settings.hasManualEssayLinesLock ? 1 : 0}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}`;

@@ -146,7 +146,7 @@ export function SovereignDiscretePageView({
             totalQuestionsCount={totalQuestionsCount}
             totalMarks={totalMarks}
             numeralMode={settings.numeralMode}
-            compact={settings.compactHeader}
+            compact={page.isHeaderCompact ?? settings.compactHeader}
           />
         ) : (
           <SovereignRunningPageHeader

@@ -22,6 +22,7 @@ interface DistributeParams {
   readonly heightOf: (item: FlowItem) => number;
   readonly density: FlowDensityProfile;
   readonly isLastPage: boolean;
+  readonly isHeaderCompact?: boolean;
 }
 
 /** يضيف `deltaPx` إلى عمود بتقاسمه بين بطاقاته القابلة للتمديد (ملء بالماء مع سقف لكل بطاقة). يعيد ما أُضيف فعلاً. */
@@ -149,6 +150,7 @@ export function distributePageSlack(p: DistributeParams): FlowPage {
   return {
     pageNumber: p.pageNumber,
     isFirstPage: p.pageNumber === 1,
+    isHeaderCompact: p.isHeaderCompact,
     segments,
     usedHeightPx: Math.round(finalHeight),
     budgetHeightPx: budgetPx,

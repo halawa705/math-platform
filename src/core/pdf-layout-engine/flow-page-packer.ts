@@ -16,6 +16,8 @@ import { fallbackFlowItemHeightPx, isStretchableFlowItem, type FlowItem, type Fl
 import type { FlowDensityProfile } from "./flow-page-geometry-constants";
 import type { FlowPageBudgetsPx } from "./flow-page-budget-resolver";
 import { optimizePagesWithSolutionSplits } from "./flow-page-solution-split-optimizer";
+import { resolveElasticPageFit } from "./flow-elastic-fit-resolver";
+import { resolveAdaptiveFirstPageHeader } from "./adaptive-page-header-budget-resolver";
 
 export const MODULE_ID_FLOW_PAGE_PACKER = "flow_page_packer" as const;
 
@@ -23,6 +25,7 @@ export interface FlowPackOptions {
   readonly budgets: FlowPageBudgetsPx;
   readonly density: FlowDensityProfile;
   readonly skipSolutionSplits?: boolean;
+  readonly manualCompactHeader?: boolean;
 }
 
 interface BreakNode {
@@ -72,7 +75,16 @@ function packFlowItemsIndivisible(
   const heightOf = (item: FlowItem) => heights.get(item.id) ?? fallbackFlowItemHeightPx(item);
   const stretchRoomOf = (item: FlowItem) =>
     isStretchableFlowItem(item) ? Math.min(options.density.maxStretchPerItemPx, heightOf(item) * options.density.maxStretchRatio) : 0;
-  const budgetFor = (startIndex: number) => (startIndex === 0 ? options.budgets.firstPagePx : options.budgets.nextPagePx);
+  const budgetFor = (startIndex: number, requiredH: number) => {
+    if (startIndex !== 0) return { budget: options.budgets.nextPagePx, isHeaderCompact: false };
+    const decision = resolveAdaptiveFirstPageHeader({
+      standardFirstPageBudgetPx: options.budgets.firstPagePx,
+      compactFirstPageBudgetPx: options.budgets.firstPageCompactPx,
+      requiredFirstPageHeightPx: requiredH,
+      manualCompactHeaderSetting: options.manualCompactHeader,
+    });
+    return { budget: decision.effectiveFirstPageBudgetPx, isHeaderCompact: decision.isHeaderCompact };
+  };
 
   const best: Array<BreakNode | undefined> = new Array(count + 1).fill(undefined);
   best[0] = { pages: 0, cost: 0, from: -1 };
@@ -80,39 +92,71 @@ function packFlowItemsIndivisible(
   for (let start = 0; start < count; start++) {
     const base = best[start];
     if (!base) continue;
-    const budget = budgetFor(start);
 
     for (let end = start + 1; end <= count; end++) {
       const slice = items.slice(start, end);
       const segments = buildSegmentsForSlice(slice, heightOf, heights, gapMinPx, stretchRoomOf);
       const used = pageContentHeightPx(segments, heightOf, gapMinPx);
-      const oversized = used > budget;
+      const { budget } = budgetFor(start, used);
+      const elastic = resolveElasticPageFit({ segments, usedHeightPx: used, budgetPx: budget, gapPx: gapMinPx });
+      const oversized = !elastic.fits;
       if (oversized && end > start + 1) break;
 
+      const effectiveUsed = Math.min(budget, used - elastic.absorbedPx);
       const last = slice[slice.length - 1];
       const isLastPage = end === count;
       let cost = 0;
       if (oversized) cost += OVERSIZED_PENALTY;
-      if (last.kind === "idea_capsule" && !isLastPage) cost += ORPHAN_PENALTY;
+
+      // التعامل المرن مع كبسولة الفكرة: تمنع فقط إذا انفردت بالصفحة كاملة، بينما يُسمح بها كتمهيد راقٍ إن أتت بعد تدريبات
+      if (last.kind === "idea_capsule" && !isLastPage) {
+        if (slice.length === 1) {
+          cost += ORPHAN_PENALTY;
+        } else {
+          cost += 35;
+        }
+      }
       if (last.kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice[0].kind === "idea_divider") cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "accreditation_footer" && start > 0) cost += LONE_FOOTER_PENALTY;
 
-      // منع فصل ثنائية الأمثلة المحلولة للفكرة بين صفحتين لضمان بقائهما متجاورين يميناً ويساراً
+      // منع جمع شطري مسألة واحدة منشطرة (الرأس والذيل) في نفس الصفحة: الانشطار مخصص حصراً للعبور بين صفحتين
+      const hasHeadAndTailOfSameQuestion = slice.some(
+        (i) =>
+          i.kind === "question" &&
+          i.solutionSlice?.from === 0 &&
+          slice.some(
+            (j) =>
+              j !== i &&
+              j.kind === "question" &&
+              j.question.id === i.question.id &&
+              j.solutionSlice &&
+              j.solutionSlice.from > 0
+          )
+      );
+      if (hasHeadAndTailOfSameQuestion) {
+        cost += OVERSIZED_PENALTY;
+      }
+
+      // منع فصل ثنائية الأمثلة المحلولة للفكرة بين صفحتين لضمان بقائهما متجاورين يميناً ويساراً في تخطيط العمودين
       const nextItem = end < count ? items[end] : undefined;
       if (
         !isLastPage &&
         last.kind === "question" &&
+        last.span === "column" &&
         last.isWorkedExample &&
+        !last.solutionSlice &&
         nextItem?.kind === "question" &&
+        nextItem.span === "column" &&
         nextItem.isWorkedExample &&
+        !nextItem.solutionSlice &&
         last.ideaIndex !== undefined &&
         last.ideaIndex === nextItem.ideaIndex
       ) {
         cost += ORPHAN_PENALTY;
       }
-      if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - used) / budget) ** 2;
+      if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - effectiveUsed) / budget) ** 2;
       cost += (IMBALANCE_WEIGHT * columnsImbalancePx(segments, heightOf, gapMinPx) / budget) ** 2;
 
       const candidate: BreakNode = { pages: base.pages + 1, cost: base.cost + cost, from: start };
@@ -126,8 +170,10 @@ function packFlowItemsIndivisible(
   const pages: FlowPage[] = [];
   let startIndex = 0;
   cuts.forEach((endIndex, pageIdx) => {
-    const budget = budgetFor(startIndex);
-    const segments = buildSegmentsForSlice(items.slice(startIndex, endIndex), heightOf, heights, gapMinPx, stretchRoomOf);
+    const slice = items.slice(startIndex, endIndex);
+    const segments = buildSegmentsForSlice(slice, heightOf, heights, gapMinPx, stretchRoomOf);
+    const used = pageContentHeightPx(segments, heightOf, gapMinPx);
+    const { budget, isHeaderCompact } = budgetFor(startIndex, used);
     pages.push(
       distributePageSlack({
         pageNumber: pageIdx + 1,
@@ -136,6 +182,7 @@ function packFlowItemsIndivisible(
         heightOf,
         density: options.density,
         isLastPage: endIndex === count,
+        isHeaderCompact,
       })
     );
     startIndex = endIndex;
