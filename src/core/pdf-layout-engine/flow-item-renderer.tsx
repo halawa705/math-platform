@@ -10,7 +10,8 @@ import type { PDFPrintSettingsStateSSOT } from "../ssot/pdf-print-settings-ssot"
 import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";
 import type { PrintThemePaletteTokens, PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
-import { OfficialMcqAnswerKeySummaryTable, PedagogicalIdeaAndRuleCapsule } from "./a4-pedagogical-capsule-and-key-table";
+import { PedagogicalIdeaAndRuleCapsule } from "./a4-pedagogical-capsule-and-key-table";
+import { OfficialMcqAnswerKeySummaryTable } from "./official-mcq-answer-key-summary-table";
 import SideBySideDiagramDocker from "./side-by-side-diagram-docker";
 import type { FlowItem } from "./flow-item-model";
 import { SovereignDocumentAccreditationBox } from "./sovereign-a4-page-chrome-elements";

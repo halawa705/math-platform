@@ -252,6 +252,3 @@ export function PedagogicalIdeaAndRuleCapsule({
     </div>
   );
 }
-
-export { StructuredStepByStepSolutionBox } from "./structured-step-by-step-solution-box";
-export { OfficialMcqAnswerKeySummaryTable } from "./official-mcq-answer-key-summary-table";

@@ -16,7 +16,7 @@ import {
   resolveAdaptiveMCQColumnsCount,
   resolveMCQGridTailwindClass,
 } from "./adaptive-mcq-options-grid-solver";
-import { StructuredStepByStepSolutionBox } from "./a4-pedagogical-capsule-and-key-table";
+import { StructuredStepByStepSolutionBox } from "./structured-step-by-step-solution-box";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import { QuestionCardBadgeHeader } from "./question-card-badge-header";
 import { AdaptiveMCQChoicesCard } from "./adaptive-mcq-choices-card";
