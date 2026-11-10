@@ -153,7 +153,7 @@ export default function SideBySideDiagramDocker({
               }
             >
               <div
-                className={`flex-1 min-w-0 space-y-1 text-[0.95em] text-slate-900 leading-snug break-words ${
+                className={`flex-1 min-w-0 space-y-1 text-[0.95em] text-slate-900 leading-[1.75] break-words ${
                   settings.boldProseText ? "font-extrabold" : "font-normal"
                 }`}
               >

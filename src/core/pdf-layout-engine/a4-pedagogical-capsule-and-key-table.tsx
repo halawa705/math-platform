@@ -159,7 +159,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 borderColor: isWorksheetSection ? "#10B981" : "#F59E0B",
                 boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
               }}
-              className="px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.82em] text-slate-900 leading-snug min-w-0"
+              className="px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.82em] text-slate-900 leading-[1.85] min-w-0"
             >
               <span
                 style={{
@@ -167,13 +167,13 @@ export function PedagogicalIdeaAndRuleCapsule({
                   color: isWorksheetSection ? "#047857" : "#B45309",
                   borderColor: isWorksheetSection ? "#6EE7B7" : "#FCD34D",
                 }}
-                className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-baseline"
+                className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-middle"
               >
                 <span>💡</span>
                 <span>{isWorksheetSection ? "الفكرة العامة:" : "المفهوم والشرح:"}</span>
               </span>
               <span
-                className={`text-slate-900 break-words leading-snug ${
+                className={`text-slate-900 break-words leading-[1.85] ${
                   boldProseText ? "font-extrabold" : "font-normal"
                 }`}
               >
@@ -202,7 +202,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                           borderColor: "#6366F1",
                           boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
                         }}
-                        className="p-1.5 rounded-lg border border-r-4 bg-white text-[0.80em] font-medium text-slate-900 min-w-0 flex flex-col justify-between"
+                        className="p-1.5 rounded-lg border border-r-4 bg-white text-[0.80em] font-medium text-slate-900 min-w-0 flex flex-col justify-between leading-[1.85]"
                       >
                         <SafeKaTeXBiDiMathRenderer
                           text={cardContent}
@@ -219,7 +219,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                     borderColor: isWorksheetSection ? "#2563EB" : "#6366F1",
                     boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
                   }}
-                  className="px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.82em] font-bold text-slate-900 leading-snug min-w-0 overflow-hidden"
+                  className="px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.82em] font-bold text-slate-900 leading-[1.85] min-w-0 overflow-hidden"
                 >
                   <span
                     style={{
@@ -227,13 +227,13 @@ export function PedagogicalIdeaAndRuleCapsule({
                       color: palette.primaryHex,
                       borderColor: "#A5B4FC",
                     }}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-baseline"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-middle"
                   >
                     <span>📐</span>
                     <span>{isWorksheetSection ? "مفاتيح الحل:" : "القاعدة والقانون:"}</span>
                   </span>
                   <span
-                    className={`text-slate-900 max-w-full overflow-hidden break-words ${
+                    className={`text-slate-900 max-w-full overflow-hidden break-words leading-[1.85] ${
                       boldProseText ? "font-extrabold" : "font-normal"
                     }`}
                   >

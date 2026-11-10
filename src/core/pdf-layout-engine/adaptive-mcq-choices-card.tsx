@@ -51,7 +51,7 @@ export function AdaptiveMCQChoicesCard({
                 ? `0 0 0 1px ${palette.primaryHex} inset`
                 : "0 1px 2px rgba(76, 29, 149, 0.04)",
             }}
-            className="min-w-0 px-2 py-1 rounded-lg border-2 flex items-center justify-between gap-1.5"
+            className="min-w-0 px-2 py-1 rounded-lg border-2 flex items-center justify-between gap-1.5 min-h-[2.35rem]"
           >
             <span
               style={{
@@ -62,7 +62,7 @@ export function AdaptiveMCQChoicesCard({
             >
               {getChoiceLetterByNotationSSOT(cIdx, notationLanguage)}
             </span>
-            <div className="flex-1 min-w-0 text-center font-extrabold text-slate-900 break-normal leading-tight">
+            <div className="flex-1 min-w-0 flex items-center justify-center text-center font-extrabold text-slate-900 break-normal leading-normal py-0.5">
               <SafeKaTeXBiDiMathRenderer
                 text={choice}
                 numeralMode={numeralMode}

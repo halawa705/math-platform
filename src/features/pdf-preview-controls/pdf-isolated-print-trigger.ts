@@ -89,11 +89,12 @@ export function triggerIsolatedA4Print(
       overflow-x: hidden !important;
     }
     .katex .mfrac {
-      margin: 0.14em 0.12em !important;
+      margin: 0.12em 0.12em !important;
+      vertical-align: -0.28em !important;
     }
     .katex .mfrac .frac-line {
-      border-bottom-width: 0.085em !important;
-      min-height: 0.8pt !important;
+      border-bottom-width: 0.08em !important;
+      min-height: 0.75pt !important;
       border-bottom-color: #000000 !important;
     }
     .pdf-normal-prose .math-prose-segment {
@@ -108,11 +109,27 @@ export function triggerIsolatedA4Print(
     .pdf-normal-math .katex .mathnormal,
     .pdf-normal-math .katex .mathit,
     .pdf-normal-math .katex .mop,
+    .pdf-normal-math .katex .mbin,
+    .pdf-normal-math .katex .mrel {
+      font-weight: 500 !important;
+      -webkit-text-stroke: 0px transparent !important;
+    }
+    .pdf-normal-math .katex .mfrac {
+      font-size: 0.90em !important;
+    }
     .pdf-normal-math .katex .mfrac .vlist-t,
+    .pdf-normal-math .katex .mfrac .mord,
+    .pdf-normal-math .katex .mfrac .mathnormal,
+    .pdf-normal-math .katex .mfrac .mathit,
     .pdf-normal-math .katex .mfrac .textrm,
     .pdf-normal-math .katex .mfrac .text {
       font-weight: 500 !important;
       -webkit-text-stroke: 0px transparent !important;
+    }
+    .pdf-normal-math .katex .mfrac .frac-line {
+      border-bottom-width: 0.07em !important;
+      min-height: 0.65pt !important;
+      border-bottom-color: #000000 !important;
     }
     .pdf-bold-math .math-fit-box,
     .pdf-bold-math .katex,
@@ -125,19 +142,21 @@ export function triggerIsolatedA4Print(
       font-weight: 700 !important;
       -webkit-text-stroke: 0.16px currentColor;
     }
+    .pdf-bold-math .katex .mfrac {
+      font-size: 0.90em !important;
+    }
     .pdf-bold-math .katex .mfrac .vlist-t,
     .pdf-bold-math .katex .mfrac .mord,
     .pdf-bold-math .katex .mfrac .mathnormal,
     .pdf-bold-math .katex .mfrac .mathit,
     .pdf-bold-math .katex .mfrac .textrm,
     .pdf-bold-math .katex .mfrac .text {
-      font-weight: 800 !important;
-      font-size: 1.04em !important;
-      -webkit-text-stroke: 0.22px currentColor;
+      font-weight: 700 !important;
+      -webkit-text-stroke: 0.12px currentColor;
     }
     .pdf-bold-math .katex .mfrac .frac-line {
-      border-bottom-width: 0.11em !important;
-      min-height: 1.1pt !important;
+      border-bottom-width: 0.085em !important;
+      min-height: 0.85pt !important;
       border-bottom-color: #000000 !important;
     }
     .a4-ministerial-sheet {

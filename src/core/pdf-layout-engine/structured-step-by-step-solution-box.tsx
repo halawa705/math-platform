@@ -116,7 +116,7 @@ export function StructuredStepByStepSolutionBox({
                 borderColor: isLast ? answerTokens.accentStepBorderHex : undefined,
                 borderRightColor: isLast ? answerTokens.accentStepBorderHex : undefined,
               }}
-              className={`py-0.5 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-snug break-inside-avoid shadow-2xs bg-white ${
+              className={`py-0.5 px-1.5 rounded border min-w-0 flex items-start gap-1 text-[0.88em] leading-[1.75] break-inside-avoid shadow-2xs bg-white ${
                 useTwoColShortSteps ? (isShortStep ? "col-span-1" : "col-span-2") : ""
               } ${
                 isLast
@@ -134,7 +134,7 @@ export function StructuredStepByStepSolutionBox({
               >
                 {isLast ? "الناتج" : `خطوة ${formatNumeralsByModeSSOT(absIdx + 1, numeralMode)}`}
               </span>
-              <div className="min-w-0 flex-1 break-words font-normal [&_.katex-display]:my-0.5 [&_.katex-display]:py-0 [&_.katex]:leading-snug">
+              <div className="min-w-0 flex-1 break-words font-normal [&_.katex-display]:my-0.5 [&_.katex-display]:py-0 [&_.katex]:leading-[1.75]">
                 <SafeKaTeXBiDiMathRenderer
                   text={cleanStepText}
                   numeralMode={numeralMode}
