@@ -37,11 +37,13 @@ export function buildTrigIsoscelesTrapezoidFigure(
   const notation = opts.notationLanguage || "english";
   const clean = convertGeometryLatexToPlainText(toWesternNumeralsSSOT(opts.description));
 
-  const adMatch = clean.match(/AD\s*=\s*(\d+(?:\.\d+)?)/i);
+  const adMatch =
+    clean.match(/(?:^|[^\w])AD\s*=\s*(\d+(?:\.\d+)?)/i) ??
+    clean.match(/AB\s*=\s*AD\s*=\s*(?:DC|CD)\s*=\s*(\d+(?:\.\d+)?)/i);
   const bcMatch = clean.match(/BC\s*=\s*(\d+(?:\.\d+)?)/i);
   const legMatch =
-    clean.match(/AB\s*=\s*CD\s*=\s*(\d+(?:\.\d+)?)/i) ??
-    clean.match(/(?:AB|CD)\s*=\s*(\d+(?:\.\d+)?)/i);
+    clean.match(/AB\s*=\s*(?:AD\s*=\s*)?(?:CD|DC)\s*=\s*(\d+(?:\.\d+)?)/i) ??
+    clean.match(/(?:AB|CD|DC)\s*=\s*(\d+(?:\.\d+)?)/i);
 
   const wTop = adMatch ? Number(adMatch[1]) : 4;
   const wBot = bcMatch ? Number(bcMatch[1]) : 12;

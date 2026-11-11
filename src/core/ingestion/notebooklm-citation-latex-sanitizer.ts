@@ -166,7 +166,7 @@ export function healFourRaysHallucination(text: string): string {
 export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
   if (!rawText) return "";
   const healed = healFourRaysHallucination(rawText);
-  return healed
+  const withoutDiagram = healed
     .replace(/\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)[\s\S]*?\]\.?\s*/gi, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")
@@ -182,6 +182,24 @@ export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
     .replace(/^(?:معرف\s*(?:السؤال|المثال|الفكرة))\s*:\s*[^\n]+/gim, "")
     .replace(/\[\s*(?:أكمل|اختر|مقالي|مسألة|تطبيق|متقدم)\s*\]/gi, "")
     .replace(/\bidea[-_]\d+\b/i, "")
+    .replace(/^[*\s\-•—]+/gm, "")
+    .replace(/[*\s\-•—]+$/gm, "")
     .replace(/(?<=[^\n])\s*(?=(?:أولاً|ثانياً|ثالثاً|رابعاً)\s*:)/g, "\n\n• ")
     .trim();
+
+  const meaningfulChars = withoutDiagram.replace(/[-*#_\s:.\(\)\/\\|]+/g, "");
+
+  // إذا كان نص المسألة كاملاً موضوعاً داخل وسم [رسم هندسي: ...] ولم يتبق نص خارجي
+  if (!meaningfulChars || meaningfulChars.length < 4) {
+    const geoMatch = healed.match(/\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)\s*:\s*([^\]]+)\]/i);
+    if (geoMatch?.[1]) {
+      const desc = geoMatch[1]
+        .replace(/;\s*/g, "، ")
+        .replace(/\bالمطلوب\s*:\s*/i, "والمطلوب: ")
+        .trim();
+      return desc ? `في الشكل المقابل: ${desc}` : "";
+    }
+  }
+
+  return withoutDiagram;
 }

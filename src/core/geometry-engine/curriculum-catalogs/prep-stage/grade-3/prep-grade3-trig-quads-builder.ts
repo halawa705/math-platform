@@ -150,8 +150,14 @@ export function buildTrigRectangleDiagonalFigure(
   const clean = convertGeometryLatexToPlainText(toWesternNumeralsSSOT(opts.description));
   const abMatch = clean.match(/AB\s*=\s*(\d+(?:\.\d+)?)/i);
   const bcMatch = clean.match(/BC\s*=\s*(\d+(?:\.\d+)?)/i);
+  const acMatch = clean.match(/AC\s*=\s*(\d+(?:\.\d+)?)/i);
   const h = abMatch ? Number(abMatch[1]) : 6;
-  const w = bcMatch ? Number(bcMatch[1]) : 8;
+  const w = bcMatch
+    ? Number(bcMatch[1])
+    : acMatch && Number(acMatch[1]) > h
+      ? Math.round(Math.sqrt(Number(acMatch[1]) ** 2 - h ** 2))
+      : 8;
+  const diagVal = acMatch ? Number(acMatch[1]) : Math.round(Math.sqrt(h * h + w * w));
 
   const vB: CanonicalVertexNode = { id: `${opts.figureId}_v_B`, label: vLabel("B", notation), position: { x: 0, y: 0 } };
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_v_C`, label: vLabel("C", notation), position: { x: w, y: 0 } };
@@ -167,10 +173,10 @@ export function buildTrigRectangleDiagonalFigure(
     vertices: [vA, vB, vC, vD],
     segments: [
       { id: `${opts.figureId}_s_AB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: { value: h, unit: "سم" } },
-      { id: `${opts.figureId}_s_BC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: { value: w, unit: "سم" } },
+      { id: `${opts.figureId}_s_BC`, fromVertexId: vB.id, toVertexId: vC.id, lengthLabel: bcMatch ? { value: w, unit: "سم" } : undefined },
       { id: `${opts.figureId}_s_CD`, fromVertexId: vC.id, toVertexId: vD.id },
       { id: `${opts.figureId}_s_DA`, fromVertexId: vD.id, toVertexId: vA.id },
-      { id: `${opts.figureId}_s_AC`, fromVertexId: vA.id, toVertexId: vC.id },
+      { id: `${opts.figureId}_s_AC`, fromVertexId: vA.id, toVertexId: vC.id, lengthLabel: acMatch ? { value: diagVal, unit: "سم" } : undefined },
     ],
     angles: [
       { id: `${opts.figureId}_ang_B`, vertexId: vB.id, arm1VertexId: vA.id, arm2VertexId: vC.id, isRightAngle: true, degrees: 90 },

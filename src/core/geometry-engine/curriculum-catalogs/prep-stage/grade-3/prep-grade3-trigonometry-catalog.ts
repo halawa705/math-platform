@@ -38,6 +38,7 @@ import {
   buildTrigIsoscelesTrapezoidFigure,
   buildTrigRightTrapezoidFigure,
 } from "./prep-grade3-trig-trapezoids-and-applied-builder";
+import { buildTrigTwoConnectedRightTrianglesFigure } from "./prep-grade3-trig-shared-hypotenuse-triangles-builder";
 
 export const MODULE_ID_PREP_GRADE3_TRIGONOMETRY_CATALOG =
   "prep_grade3_trigonometry_catalog" as const;
@@ -80,7 +81,11 @@ export function matchPrepGrade3TrigonometryFigure(
   }
 
   // 5. المستطيل ABCD المعلوم البعدين مع النسب المثلثية لزاوية القطر
-  if (/مستطيل\s*ABCD/i.test(clean) && hasTrigToken && /AB\s*=\s*\d+/i.test(clean)) {
+  if (
+    /(?:مستطيل\s*ABCD|ABCD\s*مستطيل)/i.test(clean) &&
+    (/AB\s*=\s*\d+/i.test(clean) || /BC\s*=\s*\d+/i.test(clean)) &&
+    (hasTrigToken || /AC\s*=\s*\d+/i.test(clean) || /ACB/i.test(clean))
+  ) {
     return buildTrigRectangleDiagonalFigure(opts);
   }
 
@@ -89,18 +94,7 @@ export function matchPrepGrade3TrigonometryFigure(
     return buildTrigRhombusDiagonalsFigure(opts);
   }
 
-  // 7. شبه المنحرف المتساوي الساقين ABCD
-  if (
-    /شبه\s*(?:ال)?منحرف/i.test(clean) &&
-    /متساوي\s*الساقين/i.test(clean) &&
-    /ABCD/i.test(clean) &&
-    !/AB\s*\/\/\s*(?:DC|CD)/i.test(clean) &&
-    !/~|تشابه|متشابه/i.test(clean)
-  ) {
-    return buildTrigIsoscelesTrapezoidFigure(opts);
-  }
-
-  // 8. شبه المنحرف القائم الزاوية ABCD
+  // 7. شبه المنحرف القائم الزاوية ABCD
   if (
     /شبه\s*(?:ال)?منحرف/i.test(clean) &&
     /ABCD/i.test(clean) &&
@@ -109,6 +103,29 @@ export function matchPrepGrade3TrigonometryFigure(
     !/~|تشابه|متشابه|[XY]\s*[+\-]/i.test(clean)
   ) {
     return buildTrigRightTrapezoidFigure(opts);
+  }
+
+  // 8. شبه المنحرف المتساوي الساقين ABCD
+  if (
+    /شبه\s*(?:ال)?منحرف/i.test(clean) &&
+    /ABCD/i.test(clean) &&
+    (/متساوي\s*الساقين/i.test(clean) ||
+      /AB\s*=\s*(?:AD\s*=\s*)?CD/i.test(clean) ||
+      /AB\s*=\s*(?:AD\s*=\s*)?DC/i.test(clean) ||
+      /AD\s*\/\/\s*BC/i.test(clean)) &&
+    !/AB\s*\/\/\s*(?:DC|CD)/i.test(clean) &&
+    !/~|تشابه|متشابه/i.test(clean)
+  ) {
+    return buildTrigIsoscelesTrapezoidFigure(opts);
+  }
+
+  // 9. مثلثان قائمان مشتركان في الضلع BD
+  if (
+    (/مثلثان.*مشتركان\s*في\s*الضلع\s*BD/i.test(clean) ||
+      (/مشتركان\s*في\s*الضلع\s*BD/i.test(clean) && /قائم/i.test(clean))) &&
+    !/~|تشابه|متشابه/i.test(clean)
+  ) {
+    return buildTrigTwoConnectedRightTrianglesFigure(opts);
   }
 
   // 9. مثلثان قائمان متداخلان يشتركان في زاوية حادة (ΔADE قائم في D و ΔABC قائم في B)

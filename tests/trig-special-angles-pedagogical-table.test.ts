@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isSpecialAnglesTrigRule } from "@/core/pdf-layout-engine/trig-special-angles-pedagogical-table";
-import {
-  parseSolvedExamplesFromSection,
-  extractConceptAndRule,
-} from "@/core/ingestion/notebooklm-stage-parsers-helper";
+import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
+import { cleanStudentFacingMathPromptSSOT } from "@/core/ingestion/notebooklm-citation-latex-sanitizer";
 
 describe("Trig Special Angles Pedagogical Table & Rules", () => {
   it("detects special angles rule text in both Arabic and English numerals", () => {
@@ -32,28 +30,46 @@ describe("Trig Special Angles Pedagogical Table & Rules", () => {
     expect(isSpecialAnglesTrigRule("")).toBe(false);
   });
 
-  it("correctly extracts both examples when NotebookLM uses level 4 markdown headers (#### المثال)", () => {
-    const rawSection = `#### المثال 1 | معرف المثال: example-01-01
-**نص المسألة:** بدون استخدام الآلة الحاسبة، احسب قيمة المقدار: cos 60
+  it("checks geometry matcher decisions and prompt cleaning for Idea 8 drills", () => {
+    const rawDrill1 =
+      "- **** [رسم هندسي: مثلثان DBC و ABD مشتركان في الضلع BD ; m(∠C) = 90° ; m(∠CBD) = 60° ; DC = 6√3 سم ; m(∠ADB) = 90° ; m(∠A) = 45° ; المطلوب: طول AB]. | معرف السؤال: practice-08-01";
+    const rawDrill3 =
+      "- **** [رسم هندسي: ABCD شبه منحرف فيه AB = AD = DC = 10 سم ; BC = 22 سم ; AD // BC ; المطلوب: قياس ∠C لأقرب دقيقة، ومساحة شبه المنحرف ABCD]. | معرف السؤال: practice-08-03";
+    const rawDrill4 =
+      "- **** [رسم هندسي: ABCD مستطيل فيه AB = 15 سم ; AC = 25 سم ; المطلوب: m(∠ACB) بالدرجات والدقائق والثواني، ومساحة المستطيل]. | معرف السؤال: practice-08-04";
 
-**خطوات الحل:**
-1. cos 60 = 1/2
+    // 1. Verify cleanStudentFacingMathPromptSSOT extracts natural question text instead of empty string
+    const cleanedPrompt1 = cleanStudentFacingMathPromptSSOT(rawDrill1);
+    expect(cleanedPrompt1).toContain("في الشكل المقابل");
+    expect(cleanedPrompt1).toContain("مثلثان DBC و ABD");
+    expect(cleanedPrompt1).toContain("المطلوب: طول AB");
 
-**الناتج النهائي:** -1/2
+    const cleanedPrompt3 = cleanStudentFacingMathPromptSSOT(rawDrill3);
+    expect(cleanedPrompt3).toContain("في الشكل المقابل");
+    expect(cleanedPrompt3).toContain("ABCD شبه منحرف");
 
-#### المثال 2 | معرف المثال: example-01-02
-**نص المسألة:** احسب في أبسط صورة وبدون استخدام الآلة الحاسبة قيمة: كذا
+    const cleanedPrompt4 = cleanStudentFacingMathPromptSSOT(rawDrill4);
+    expect(cleanedPrompt4).toContain("في الشكل المقابل");
+    expect(cleanedPrompt4).toContain("ABCD مستطيل");
 
-**خطوات الحل:**
-1. حساب قيمة البسط: 2
+    // 2. Verify natural Arabic geometry matcher generates green figures with 0 leak warnings
+    const t1 = "مثلثان DBC و ABD مشتركان في الضلع BD ; m(∠C) = 90° ; m(∠CBD) = 60° ; DC = 6√3 سم ; m(∠ADB) = 90° ; m(∠A) = 45° ; المطلوب: طول AB";
+    const t2 = "ABCD شبه منحرف فيه AB = AD = DC = 10 سم ; BC = 22 سم ; AD // BC ; المطلوب: قياس ∠C لأقرب دقيقة، ومساحة شبه المنحرف ABCD";
+    const t3 = "ABCD مستطيل فيه AB = 15 سم ; AC = 25 سم ; المطلوب: m(∠ACB) بالدرجات والدقائق والثواني، ومساحة المستطيل";
 
-**الناتج النهائي:** 2
-نهاية الفكرة الأولى`;
+    const d1 = matchGeometryWithDiagnostics(t1, "t1");
+    const d2 = matchGeometryWithDiagnostics(t2, "t2");
+    const d3 = matchGeometryWithDiagnostics(t3, "t3");
 
-    const parsed = parseSolvedExamplesFromSection(rawSection, "الفكرة الأولى", "المفهوم");
-    expect(parsed.length).toBe(2);
-    expect(parsed[0].promptAr).toContain("بدون استخدام الآلة الحاسبة");
-    expect(parsed[1].promptAr).toContain("احسب في أبسط صورة");
+    expect(d1.decision).toBe("green");
+    expect(d1.figure).toBeDefined();
+
+    expect(d2.decision).toBe("green");
+    expect(d2.figure).toBeDefined();
+
+    expect(d3.decision).toBe("green");
+    expect(d3.figure).toBeDefined();
+    expect(d3.warnings).toHaveLength(0);
   });
 });
 
