@@ -31,9 +31,9 @@ function cleanBracketedField(val: string): string {
 }
 
 export function extractConceptAndRule(block: string): { concept: string; rule: string; examplesPart: string } {
-  let splitIdx = block.search(/(?=(?:^|\n|\s{2,}|\.\s+)(?:###?\s*)?(?:\*\*|__)?(?:المثال\s*(?:[0-9٠-٩]+|[أ-ي]+)?|مثال\s*(?:[0-9٠-٩]+|[أ-ي]+|\([0-9٠-٩]+\))?|المثال\s*\||معرف\s*المثال|نص\s*(?:المسألة|المثال))(?:\*\*|__)?(?:\s*[:|]|\s+[0-9٠-٩]|\s*$))/i);
+  let splitIdx = block.search(/(?=(?:^|\n|\s{2,}|\.\s+)(?:#{1,6}\s*)?(?:\*\*|__)?(?:المثال\s*(?:[0-9٠-٩]+|[أ-ي]+)?|مثال\s*(?:[0-9٠-٩]+|[أ-ي]+|\([0-9٠-٩]+\))?|المثال\s*\||معرف\s*المثال|نص\s*(?:المسألة|المثال))(?:\*\*|__)?(?:\s*[:|]|\s+[0-9٠-٩]|\s*$))/i);
   if (splitIdx === -1) {
-    const fb = block.match(/(?:^|\n|\s+)(?:###?\s*)?(?:\*\*|__)?(?:المثال\s*[0-9٠-٩]+|المثال\s*\||معرف\s*المثال|نص\s*المسألة)/i);
+    const fb = block.match(/(?:^|\n|\s+)(?:#{1,6}\s*)?(?:\*\*|__)?(?:المثال\s*[0-9٠-٩]+|المثال\s*\||معرف\s*المثال|نص\s*المسألة)/i);
     if (fb?.index !== undefined) splitIdx = fb.index;
   }
   const header = splitIdx !== -1 ? block.slice(0, splitIdx) : block;
@@ -152,7 +152,7 @@ export function parseSolvedExamplesFromSection(
 }> {
   const cleanSection = examplesSection.split(/(?:^|\n)\s*نهاية\s*الفكرة/i)[0] || "";
   const exSplits = cleanSection
-    .split(/(?=(?:^|\n|\s{2,}|\.\s+)(?:###?\s*)?(?:\*\*|__)?(?:المثال\s*(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)?|مثال\s*(?:[0-9٠-٩]+|[أ-ي]+|\([0-9٠-٩]+\))|المثال\s*\||معرف\s*المثال|المثال-[0-9٠-٩]+-[0-9٠-٩]+)(?:\*\*|__)?(?:\s*[:|]|\s+[0-9٠-٩]|\s*\||\s*$))/i)
+    .split(/(?=(?:^|\n|\s{2,}|\.\s+)(?:#{1,6}\s*)?(?:\*\*|__)?(?:المثال\s*(?:الأول|الاول|الثاني|الثالث|الرابع|الخامس|[0-9٠-٩]+)?|مثال\s*(?:[0-9٠-٩]+|[أ-ي]+|\([0-9٠-٩]+\))|المثال\s*\||معرف\s*المثال|المثال-[0-9٠-٩]+-[0-9٠-٩]+)(?:\*\*|__)?(?:\s*[:|]|\s+[0-9٠-٩]|\s*\||\s*$))/i)
     .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل|الحل)/i.test(b));
 
   return (exSplits.length > 0 ? exSplits : [cleanSection]).map((exBody) => {
@@ -160,7 +160,7 @@ export function parseSolvedExamplesFromSection(
     const rawProblem = promptMatch?.[1] ||
       exBody.split(/(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان\s*[:：]|الخطوة\s*[0-9٠-٩:]))/i)[0]?.trim() || concept || ideaTitle;
     const baseProblem = rawProblem
-      .replace(/^(?:###\s*)?(?:\*\*|__)?(?:المثال\s*\S+|مثال\s*\S+)(?:\*\*|__)?\s*|^(?:\|\s*)?معرف\s*المثال\s*:\s*\S+\s*|^(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*/gi, "")
+      .replace(/^(?:#{1,6}\s*)?(?:\*\*|__)?(?:المثال\s*\S+|مثال\s*\S+)(?:\*\*|__)?\s*|^(?:\|\s*)?معرف\s*المثال\s*:\s*\S+\s*|^(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*/gi, "")
       .split(/(?=(?:المثال|مثال|معرف\s*المثال))/i)[0].trim();
     const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
     const mcqChoices = parseChoicesTupleFromBlock(cleanProblem);

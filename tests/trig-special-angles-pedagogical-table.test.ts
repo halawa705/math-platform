@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { isSpecialAnglesTrigRule } from "@/core/pdf-layout-engine/trig-special-angles-pedagogical-table";
+import {
+  parseSolvedExamplesFromSection,
+  extractConceptAndRule,
+} from "@/core/ingestion/notebooklm-stage-parsers-helper";
 
 describe("Trig Special Angles Pedagogical Table & Rules", () => {
   it("detects special angles rule text in both Arabic and English numerals", () => {
@@ -27,4 +31,29 @@ describe("Trig Special Angles Pedagogical Table & Rules", () => {
     expect(isSpecialAnglesTrigRule(undefined)).toBe(false);
     expect(isSpecialAnglesTrigRule("")).toBe(false);
   });
+
+  it("correctly extracts both examples when NotebookLM uses level 4 markdown headers (#### المثال)", () => {
+    const rawSection = `#### المثال 1 | معرف المثال: example-01-01
+**نص المسألة:** بدون استخدام الآلة الحاسبة، احسب قيمة المقدار: cos 60
+
+**خطوات الحل:**
+1. cos 60 = 1/2
+
+**الناتج النهائي:** -1/2
+
+#### المثال 2 | معرف المثال: example-01-02
+**نص المسألة:** احسب في أبسط صورة وبدون استخدام الآلة الحاسبة قيمة: كذا
+
+**خطوات الحل:**
+1. حساب قيمة البسط: 2
+
+**الناتج النهائي:** 2
+نهاية الفكرة الأولى`;
+
+    const parsed = parseSolvedExamplesFromSection(rawSection, "الفكرة الأولى", "المفهوم");
+    expect(parsed.length).toBe(2);
+    expect(parsed[0].promptAr).toContain("بدون استخدام الآلة الحاسبة");
+    expect(parsed[1].promptAr).toContain("احسب في أبسط صورة");
+  });
 });
+

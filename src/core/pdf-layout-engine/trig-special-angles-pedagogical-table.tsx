@@ -76,31 +76,31 @@ export function TrigSpecialAnglesPedagogicalTable({
   const isArabicNotation = notationLanguage === "arabic";
 
   return (
-    <div className="w-full my-0.5 rounded-md border border-slate-200/90 bg-white overflow-hidden shadow-2xs">
+    <div className="w-full my-0.5 rounded-md border-2 border-slate-300 bg-white overflow-hidden shadow-2xs">
       <table className="w-full text-center border-collapse text-[0.82em]">
         <thead>
           <tr
             style={{
               backgroundColor: "#F8FAFC",
-              borderBottom: "1.5px solid #E2E8F0",
+              borderBottom: "2px solid #CBD5E1",
             }}
             className="text-slate-800 font-black"
           >
-            <th className="py-1 px-1 border-l border-slate-200/80 font-black text-slate-900 w-[22%]">
+            <th className="py-1 px-1 border-l-2 border-slate-300 font-black text-slate-900 w-[22%]">
               <SafeKaTeXBiDiMathRenderer
                 text="الزاوية ($\theta$)"
                 numeralMode={numeralMode}
                 notationLanguage={notationLanguage}
               />
             </th>
-            <th className="py-1 px-1 border-l border-slate-200/80 font-black text-slate-900 w-[26%]">
+            <th className="py-1 px-1 border-l-2 border-slate-300 font-black text-slate-900 w-[26%]">
               <SafeKaTeXBiDiMathRenderer
                 text={isArabicNotation ? "جا $\\theta$ (الجيب)" : "$\\sin\\theta$"}
                 numeralMode={numeralMode}
                 notationLanguage={notationLanguage}
               />
             </th>
-            <th className="py-1 px-1 border-l border-slate-200/80 font-black text-slate-900 w-[26%]">
+            <th className="py-1 px-1 border-l-2 border-slate-300 font-black text-slate-900 w-[26%]">
               <SafeKaTeXBiDiMathRenderer
                 text={isArabicNotation ? "جتا $\\theta$ (جيب التمام)" : "$\\cos\\theta$"}
                 numeralMode={numeralMode}
@@ -125,10 +125,10 @@ export function TrigSpecialAnglesPedagogicalTable({
               <tr
                 key={row.angleDeg}
                 style={{ backgroundColor: rowBg }}
-                className="border-b border-slate-200/70 transition-colors"
+                className="border-b-2 border-slate-200 transition-colors"
               >
                 {/* عمود الزاوية */}
-                <td className="py-0.5 px-1 font-black text-slate-900 border-l border-slate-200/80 whitespace-nowrap">
+                <td className="py-0.5 px-1 font-black text-slate-900 border-l-2 border-slate-200 whitespace-nowrap">
                   <span
                     style={{
                       borderColor: palette.primaryHex,
@@ -146,7 +146,7 @@ export function TrigSpecialAnglesPedagogicalTable({
                 </td>
 
                 {/* عمود الجيب (sin) */}
-                <td className="py-0.5 px-1 border-l border-slate-200/80 text-slate-950 font-bold leading-normal">
+                <td className="py-0.5 px-1 border-l-2 border-slate-200 text-slate-950 font-bold leading-normal">
                   <SafeKaTeXBiDiMathRenderer
                     text={`$${row.sinMath}$`}
                     numeralMode={numeralMode}
@@ -155,7 +155,7 @@ export function TrigSpecialAnglesPedagogicalTable({
                 </td>
 
                 {/* عمود جيب التمام (cos) */}
-                <td className="py-0.5 px-1 border-l border-slate-200/80 text-slate-950 font-bold leading-normal">
+                <td className="py-0.5 px-1 border-l-2 border-slate-200 text-slate-950 font-bold leading-normal">
                   <SafeKaTeXBiDiMathRenderer
                     text={`$${row.cosMath}$`}
                     numeralMode={numeralMode}

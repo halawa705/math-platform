@@ -127,12 +127,15 @@ export function PedagogicalIdeaAndRuleCapsule({
               style={{ color: bannerAccentHex }}
               className="font-black text-[0.9em] break-words leading-snug"
             >
-              {formatNumeralsByModeSSOT(
-                isWorksheetSection
-                  ? displayTitle.replace(/^ورقة\s*عمل\s*[:\-–]?\s*/i, "")
-                  : displayTitle,
-                numeralMode
-              )}
+              <SafeKaTeXBiDiMathRenderer
+                text={
+                  isWorksheetSection
+                    ? displayTitle.replace(/^ورقة\s*عمل\s*[:\-–]?\s*/i, "")
+                    : displayTitle
+                }
+                numeralMode={numeralMode}
+                notationLanguage={notationLanguage}
+              />
             </span>
           </div>
           <span
