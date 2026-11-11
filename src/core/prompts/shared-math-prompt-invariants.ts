@@ -50,6 +50,11 @@ export function buildSharedMathInvariantsPromptBlock(params: {
     unitTitleArabic: params.unitTitleArabic,
   });
 
+  const trigDirective =
+    params.branchId === "trigonometry"
+      ? "📐 حساب المثلثات: لقوانين الزوايا الخاصة (30°، 60°، 45°)، رتّب النسب في جدول مقارنة منظم (الزاوية | جا | جتا | ظا)، واجعل كل خطوة حل واضحة ومؤطرة لتجنب تداخل الكسور."
+      : undefined;
+
   const compactRules =
     effectiveNotation === "english"
       ? COMPACT_MATH_PROMPT_INVARIANTS_EN
@@ -60,6 +65,7 @@ export function buildSharedMathInvariantsPromptBlock(params: {
     EXHAUSTIVE_IDEA_SPECTRUM_RULE_AR,
     `📌 الفرع (${branchSpec.nameArabic}) | الرموز: ${notationRule}.`,
     ...(geometryDirective ? [geometryDirective] : []),
+    ...(trigDirective ? [trigDirective] : []),
     ...compactRules,
   ].join("\n");
 }

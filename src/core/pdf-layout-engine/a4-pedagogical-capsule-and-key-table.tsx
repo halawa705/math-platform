@@ -17,6 +17,10 @@ import type {
   PrintThemePaletteTokens,
 } from "./a4-vector-html-sheet-renderer";
 import { resolveFlowBannerKind } from "./flow-banner-kind-resolver";
+import {
+  TrigSpecialAnglesPedagogicalTable,
+  isSpecialAnglesTrigRule,
+} from "./trig-special-angles-pedagogical-table";
 
 export const MODULE_ID_A4_PEDAGOGICAL_CAPSULE_AND_KEY_TABLE =
   "a4_pedagogical_capsule_and_key_table" as const;
@@ -232,17 +236,27 @@ export function PedagogicalIdeaAndRuleCapsule({
                     <span>📐</span>
                     <span>{isWorksheetSection ? "مفاتيح الحل:" : "القاعدة والقانون:"}</span>
                   </span>
-                  <span
+                  <div
                     className={`text-slate-900 max-w-full overflow-hidden break-words leading-[1.85] ${
                       boldProseText ? "font-extrabold" : "font-normal"
                     }`}
                   >
-                    <SafeKaTeXBiDiMathRenderer
-                      text={item.framedRuleAr}
-                      numeralMode={numeralMode}
-                      notationLanguage={notationLanguage}
-                    />
-                  </span>
+                    {isSpecialAnglesTrigRule(item.framedRuleAr) ? (
+                      <div className="w-full min-w-0">
+                        <TrigSpecialAnglesPedagogicalTable
+                          palette={palette}
+                          numeralMode={numeralMode}
+                          notationLanguage={notationLanguage}
+                        />
+                      </div>
+                    ) : (
+                      <SafeKaTeXBiDiMathRenderer
+                        text={item.framedRuleAr}
+                        numeralMode={numeralMode}
+                        notationLanguage={notationLanguage}
+                      />
+                    )}
+                  </div>
                 </div>
               )}
             </>
