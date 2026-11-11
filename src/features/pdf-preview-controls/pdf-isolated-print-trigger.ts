@@ -201,11 +201,33 @@ export function triggerIsolatedA4Print(
       display: grid !important;
       grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
     }
-    svg {
+    /* رسومات وأشكال الهندسة والإحصاء فقط (باستثناء متجهات KaTeX للرموز الرياضية كالجذور) */
+    svg:not(.katex svg) {
       max-width: 100% !important;
       height: auto !important;
       display: block;
       margin: 0 auto;
+    }
+    /* ضمان أبعاد وموضع متجهات KaTeX (خاصة رمز الجذر التربيعي والتمددات الرياضية) بدقة تامة في الطباعة */
+    .katex svg {
+      display: block !important;
+      position: absolute !important;
+      width: 100% !important;
+      height: inherit !important;
+      fill: currentColor !important;
+      stroke: currentColor !important;
+      max-width: none !important;
+      margin: 0 !important;
+      overflow: visible !important;
+    }
+    .katex svg path {
+      stroke: none !important;
+      fill: currentColor !important;
+    }
+    .katex .hide-tail {
+      width: 100% !important;
+      position: relative !important;
+      overflow: hidden !important;
     }
   </style>
 </head>

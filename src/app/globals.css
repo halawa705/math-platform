@@ -59,6 +59,30 @@ body {
   min-height: 1.2px !important;
 }
 
+/* حماية متجهات KaTeX (خاصة رمز الجذر التربيعي والتمددات الرياضية) من أي أنماط وتوسيطات SVG عامة */
+.katex svg {
+  display: block !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: inherit !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+
+.katex svg path {
+  stroke: none !important;
+  fill: currentColor !important;
+}
+
+.katex .hide-tail {
+  width: 100% !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
 /* تحكم المعلم اليدوي في سماكة الكلام والشرح (B الكلام والشرح) */
 .pdf-normal-prose .math-prose-segment {
   font-weight: 500 !important;
