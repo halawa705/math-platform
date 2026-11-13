@@ -50,6 +50,8 @@ export function resolveAdaptiveMCQColumnsCount(
   }
 
   if (isInsideNarrowHalfColumn) {
+    // بدائل قصيرة جداً (مثل 60° أو 3x): أربعة في سطر واحد توفر صفاً كاملاً من ارتفاع البطاقة
+    if (maxVisualLen <= 5) return 4;
     // شبكة 2x2 متوازنة (أ في اليمين وب في اليسار / جـ تحت أ ود تحت ب) لمعظم البدائل
     if (maxVisualLen <= 52) {
       return 2;
