@@ -101,13 +101,23 @@ export function parseStage2ByIdeas(s2Raw: string): {
     const hwInlineMatch = !hwSecMatch ? block.match(/((?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*)?سؤال\s+الواجب[\s\S]*?)(?=نهاية\s*الفكرة|###\s*الفكرة|$)/i) : null;
     const hwBody = hwSecMatch?.[1] ?? hwInlineMatch?.[1] ?? "";
 
-    const parseSplits = (body: string, codeRe: RegExp, isDrill: boolean): ExtractedQuestionBlock[] => {
-      let chunks = body
-        .split(/(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\(\d+\)|\d+[\.\-–]))/i)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 10);
+    const parseSplits = (bodyRaw: string, codeRe: RegExp, _isDrill: boolean): ExtractedQuestionBlock[] => {
+      const body = bodyRaw
+        .replace(/`(\[?\s*رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)\s*:[^\]`\n]+\]?)`/gi, "$1")
+        .replace(/^\s*`+\s*$/gm, "");
+      const hasExplicitQuestionCodes = codeRe.test(body);
+      const headerCodeLineRe =
+        /(?:^|\n)\s*(?:[-•*]\s*)?\*{0,2}(?:(?:ال)?سؤال(?:\s+الواجب)?|تمرين|تدريب|مسألة)\s*\d+\*{0,2}\s*\|\s*معرف\s*السؤال\s*:/i;
+      let chunks: string[] = [];
 
-      if (isDrill && chunks.length <= 1) {
+      if (hasExplicitQuestionCodes && headerCodeLineRe.test(body)) {
+        chunks = body
+          .split(
+            /(?=(?:^|\n)\s*(?:[-•*]\s*)?\*{0,2}(?:(?:ال)?سؤال(?:\s+الواجب)?|تمرين|تدريب|مسألة)\s*\d+\*{0,2}\s*\|\s*معرف\s*السؤال\s*:)/i
+          )
+          .map((s) => s.trim())
+          .filter((s) => s.length > 10);
+      } else if (hasExplicitQuestionCodes) {
         const rawSplit = body
           .split(/(?<=\|\s*معرف\s*السؤال\s*:\s*[a-zA-Z]+-\d+-\d+[^\n]*)\n+/i)
           .map((s) => s.trim())
@@ -124,20 +134,35 @@ export function parseStage2ByIdeas(s2Raw: string): {
             byCodeEnd.push(piece);
           }
         }
-        if (byCodeEnd.length > 1 && byCodeEnd.every((c) => /معرف\s*السؤال/i.test(c))) {
+        if (byCodeEnd.length >= 1) {
           chunks = byCodeEnd;
-        } else {
-          const alt = body
-            .split(/\n\s*(?:[-•*]\s*)?(?=(?:في الشكل المقابل|إذا كان\b))/i)
-            .map((s) => s.trim())
-            .filter((s) => s.length > 10);
-          if (alt.length > 1) chunks = alt;
         }
+      }
+
+      if (chunks.length <= 1 && !hasExplicitQuestionCodes) {
+        const hasParentQuestionHeaders = /(?:^|\n)\s*(?:#\d+|(?:ال)?سؤال\b|(?:ال)?تمرين\b|(?:ال)?تدريب\b|(?:ال)?مسألة\b|\[\d+\]|\d+[\.\-–])/i.test(body);
+        const splitRx = hasParentQuestionHeaders
+          ? /(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\d+[\.\-–]))/i
+          : /(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\(\d+\)(?!\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|تحقق|بين))|\d+[\.\-–]))/i;
+        chunks = body
+          .split(splitRx)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 10);
+      }
+
+      if (chunks.length <= 1 && !hasExplicitQuestionCodes) {
+        const alt = body
+          .split(/\n\s*(?:[-•*]\s*)?(?=(?:في الشكل المقابل|إذا كان\b))/i)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 10);
+        if (alt.length > 1) chunks = alt;
       }
 
       return chunks.map((s) => ({
         rawText: s,
-        promptText: cleanStudentFacingMathPromptSSOT(s.replace(QUESTION_PREFIX_RE, "").replace(/^[:\s\-–•*]+/, "").trim()),
+        promptText: cleanStudentFacingMathPromptSSOT(
+          s.replace(/`(\[?\s*رسم[^\]`\n]+\]?)`/gi, "$1").replace(QUESTION_PREFIX_RE, "").replace(/^[:\s\-–•*]+/, "").trim()
+        ),
         qCode: s.match(codeRe)?.[1]?.toLowerCase(),
         kindTag: ideaKind,
         ideaIndex: idx + 1,

@@ -8,6 +8,11 @@ import {
   inferTriangleAngleOverridesFromComposites,
   tryPlaceIntersectingBowTieTriangles,
 } from "./geo-composite-topology-placer";
+import {
+  placeGeneralCompositeQuad,
+  placeOrientedTrapezoid,
+  tryPlaceAdjacentSquares,
+} from "./geo-composite-quad-placer";
 import { placeTriangleFromKnowns, type TriVertexKey } from "./geo-triangle-placer";
 import type { Vec2 } from "./geo-vector-math";
 
@@ -26,6 +31,11 @@ export function placeDeclaredShapes(
   const num = (a: string, b: string): number | undefined => {
     const direct = lengths.get(pairKey(a, b))?.numeric;
     if (direct !== undefined) return direct;
+    for (const f of facts) {
+      if (f.k === "areaOnSide" && pairKey(f.seg[0], f.seg[1]) === pairKey(a, b)) {
+        return Math.sqrt(f.area);
+      }
+    }
     // استنتاج طول الضلع الكلي إذا كان مقسوماً بنقطة تنتمي إليه أو منتصفه (مثل AD = 4 و DB = 2 => AB = 6)
     for (const f of facts) {
       if ((f.k === "pointOn" || f.k === "midpoint") && pairKey(f.seg[0], f.seg[1]) === pairKey(a, b)) {
@@ -51,6 +61,9 @@ export function placeDeclaredShapes(
   let cursorX = 0;
 
   if (tryPlaceIntersectingBowTieTriangles(facts, lengths, points, polygons, num, angleOf)) {
+    return polygons;
+  }
+  if (tryPlaceAdjacentSquares(facts, num, points, polygons)) {
     return polygons;
   }
 
@@ -112,15 +125,8 @@ export function placeDeclaredShapes(
       else if (f.kind === "square") local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: w }, { x: 0, y: w }];
       else if (f.kind === "rhombus") { const D = { x: w * Math.cos(th), y: w * Math.sin(th) }; local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D]; }
       else if (f.kind === "parallelogram") { const D = { x: dPar * Math.cos(th), y: dPar * Math.sin(th) }; local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D]; }
-      else if (f.kind === "trapezoid") {
-        const top = num(c, d) ?? w * 0.5;
-        const isRightAtA = angleOf(a) === 90 || angleOf(d) === 90;
-        const o = isRightAtA ? 0 : (w - top) / 2;
-        const leg = num(d, a) ?? num(b, c);
-        const h = isRightAtA ? (leg ?? w * 0.55) : leg && leg > Math.abs(o) ? Math.sqrt(leg * leg - o * o) : w * 0.55;
-        local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: o + top, y: h }, { x: o, y: h }];
-      }
-      else local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w * 0.85, y: w * 0.7 }, { x: w * 0.1, y: w * 0.6 }];
+      else if (f.kind === "trapezoid") local = placeOrientedTrapezoid(labels, facts, num, angleOf);
+      else local = placeGeneralCompositeQuad(labels, facts, num, angleOf);
     }
     if (f.k === "triangle" && labels.filter((l) => points.has(l)).length === 2) {
       const existing = labels.filter((l) => points.has(l));

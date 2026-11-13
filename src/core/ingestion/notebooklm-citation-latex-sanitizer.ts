@@ -167,7 +167,8 @@ export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
   if (!rawText) return "";
   const healed = healFourRaysHallucination(rawText);
   const withoutDiagram = healed
-    .replace(/\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)[\s\S]*?\]\.?\s*/gi, "")
+    .replace(/`?\s*\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)[\s\S]*?\]\.?\s*`?/gi, "")
+    .replace(/(?:^|\n)\s*`+\s*$/gm, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")
     .replace(/(?:^|\n)\s*(?:لا يوجد رسم|بدون رسم|لا رسم)[^\n]*/gi, "")

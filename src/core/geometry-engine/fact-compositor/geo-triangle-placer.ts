@@ -28,6 +28,9 @@ function fromThreeSides(ab: number, bc: number, ca: number): TrianglePoints | nu
 
 function placeRight(at: TriVertexKey, k: TriangleKnowns): TrianglePoints {
   const ang = k.angleDeg ?? {};
+  const solveOtherLeg = (hyp?: number, leg?: number): number | undefined =>
+    hyp !== undefined && leg !== undefined && hyp > leg + 1e-4 ? Math.sqrt(hyp * hyp - leg * leg) : undefined;
+
   if (at === "B") {
     const effA = ang.A !== undefined && ang.A > 5 && ang.A < 85 ? ang.A : ang.C !== undefined && ang.C > 5 && ang.C < 85 ? 90 - ang.C : undefined;
     let a = k.bc;
@@ -36,9 +39,12 @@ function placeRight(at: TriVertexKey, k: TriangleKnowns): TrianglePoints {
       const tanA = Math.tan(rad(effA));
       if (tanA <= 1) { c = DEFAULT_SIDE; a = DEFAULT_SIDE * tanA; }
       else { a = DEFAULT_SIDE; c = DEFAULT_SIDE / tanA; }
+    } else if (a === undefined && c === undefined && k.ca !== undefined) {
+      a = k.ca * 0.8;
+      c = k.ca * 0.6;
     }
-    a = a ?? (c !== undefined && effA !== undefined ? c * Math.tan(rad(effA)) : DEFAULT_SIDE);
-    c = c ?? (effA !== undefined ? a / Math.tan(rad(effA)) : k.ca && k.ca > a ? Math.sqrt(k.ca * k.ca - a * a) : a * 0.75);
+    a = a ?? (effA !== undefined && c !== undefined ? c * Math.tan(rad(effA)) : solveOtherLeg(k.ca, c) ?? DEFAULT_SIDE);
+    c = c ?? (effA !== undefined ? a / Math.tan(rad(effA)) : solveOtherLeg(k.ca, a) ?? a * 0.75);
     return { A: { x: 0, y: c }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
   }
   if (at === "A") {
@@ -49,9 +55,12 @@ function placeRight(at: TriVertexKey, k: TriangleKnowns): TrianglePoints {
       const tanB = Math.tan(rad(effB));
       if (tanB <= 1) { c = DEFAULT_SIDE; b = DEFAULT_SIDE * tanB; }
       else { b = DEFAULT_SIDE; c = DEFAULT_SIDE / tanB; }
+    } else if (c === undefined && b === undefined && k.bc !== undefined) {
+      c = k.bc * 0.8;
+      b = k.bc * 0.6;
     }
-    c = c ?? (b !== undefined && effB !== undefined ? b / Math.tan(rad(effB)) : DEFAULT_SIDE * 0.8);
-    b = b ?? (effB !== undefined ? c * Math.tan(rad(effB)) : k.bc && k.bc > c ? Math.sqrt(k.bc * k.bc - c * c) : c * 0.75);
+    c = c ?? (effB !== undefined && b !== undefined ? b / Math.tan(rad(effB)) : solveOtherLeg(k.bc, b) ?? DEFAULT_SIDE * 0.8);
+    b = b ?? (effB !== undefined ? c * Math.tan(rad(effB)) : solveOtherLeg(k.bc, c) ?? c * 0.75);
     return { A: { x: 0, y: 0 }, B: { x: c, y: 0 }, C: { x: 0, y: b } };
   }
   const effA = ang.A !== undefined && ang.A > 5 && ang.A < 85 ? ang.A : ang.B !== undefined && ang.B > 5 && ang.B < 85 ? 90 - ang.B : undefined;
@@ -61,9 +70,12 @@ function placeRight(at: TriVertexKey, k: TriangleKnowns): TrianglePoints {
     const tanA = Math.tan(rad(effA));
     if (tanA <= 1) { b = DEFAULT_SIDE; a = DEFAULT_SIDE * tanA; }
     else { a = DEFAULT_SIDE; b = DEFAULT_SIDE / tanA; }
+  } else if (a === undefined && b === undefined && k.ab !== undefined) {
+    a = k.ab * 0.8;
+    b = k.ab * 0.6;
   }
-  a = a ?? (b !== undefined && effA !== undefined ? b * Math.tan(rad(effA)) : k.ab && k.ca ? Math.sqrt(Math.max(k.ab * k.ab - k.ca * k.ca, 1)) : DEFAULT_SIDE);
-  b = b ?? (effA !== undefined ? a / Math.tan(rad(effA)) : a * 0.75);
+  a = a ?? (effA !== undefined && b !== undefined ? b * Math.tan(rad(effA)) : solveOtherLeg(k.ab, b) ?? DEFAULT_SIDE);
+  b = b ?? (effA !== undefined ? a / Math.tan(rad(effA)) : solveOtherLeg(k.ab, a) ?? a * 0.75);
   return { A: { x: a, y: b }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
 }
 
@@ -101,11 +113,37 @@ export function placeTriangleFromKnowns(k: TriangleKnowns): TrianglePoints {
       effB = (180 - ang.C) * 0.54;
     }
   }
-  if (k.ab && k.bc && ang.B) return { A: { x: k.ab * Math.cos(rad(ang.B)), y: k.ab * Math.sin(rad(ang.B)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
-  if (k.ab && k.ca && ang.A) return { A: { x: 0, y: 0 }, B: { x: k.ab, y: 0 }, C: { x: k.ca * Math.cos(rad(ang.A)), y: k.ca * Math.sin(rad(ang.A)) } };
-  if (k.bc && k.ca && ang.C) return { A: { x: k.bc - k.ca * Math.cos(rad(ang.C)), y: k.ca * Math.sin(rad(ang.C)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
+  if (k.ab && k.bc && ang.B !== undefined) return { A: { x: k.ab * Math.cos(rad(ang.B)), y: k.ab * Math.sin(rad(ang.B)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
+  if (k.ab && k.ca && ang.A !== undefined) return { A: { x: 0, y: 0 }, B: { x: k.ab, y: 0 }, C: { x: k.ca * Math.cos(rad(ang.A)), y: k.ca * Math.sin(rad(ang.A)) } };
+  if (k.bc && k.ca && ang.C !== undefined) return { A: { x: k.bc - k.ca * Math.cos(rad(ang.C)), y: k.ca * Math.sin(rad(ang.C)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
+  // SSA via Law of Cosines when angle + adjacent side + opposite side are known
+  const solveThirdSideSSA = (adj: number, opp: number, deg: number): number | undefined => {
+    const c = Math.cos(rad(deg));
+    const disc = (2 * adj * c) ** 2 - 4 * (adj * adj - opp * opp);
+    if (disc < 0) return undefined;
+    const root1 = adj * c + Math.sqrt(disc) / 2;
+    const root2 = adj * c - Math.sqrt(disc) / 2;
+    return root1 > 1e-4 ? root1 : root2 > 1e-4 ? root2 : undefined;
+  };
+  if (k.ab && k.bc && ang.C !== undefined) {
+    const ca = solveThirdSideSSA(k.bc, k.ab, ang.C);
+    if (ca) return { A: { x: k.bc - ca * Math.cos(rad(ang.C)), y: ca * Math.sin(rad(ang.C)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
+  }
+  if (k.ab && k.bc && ang.A !== undefined) {
+    const ca = solveThirdSideSSA(k.ab, k.bc, ang.A);
+    if (ca) return { A: { x: 0, y: 0 }, B: { x: k.ab, y: 0 }, C: { x: ca * Math.cos(rad(ang.A)), y: ca * Math.sin(rad(ang.A)) } };
+  }
+  if (k.ab && k.ca && ang.B !== undefined) {
+    const bc = solveThirdSideSSA(k.ab, k.ca, ang.B);
+    if (bc) return { A: { x: k.ab * Math.cos(rad(ang.B)), y: k.ab * Math.sin(rad(ang.B)) }, B: { x: 0, y: 0 }, C: { x: bc, y: 0 } };
+  }
+  if (k.bc && k.ca && ang.B !== undefined) {
+    const ab = solveThirdSideSSA(k.bc, k.ca, ang.B);
+    if (ab) return { A: { x: ab * Math.cos(rad(ang.B)), y: ab * Math.sin(rad(ang.B)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
+  }
   if (effB !== undefined && effC !== undefined && effB > 1 && effC > 1 && effB + effC < 179) {
-    const a = k.bc ?? DEFAULT_SIDE; const aAng = 180 - effB - effC; const c = (a * Math.sin(rad(effC))) / Math.sin(rad(aAng));
+    const a = k.bc ?? (k.ab ? (k.ab * Math.sin(rad(180 - effB - effC))) / Math.sin(rad(effC)) : k.ca ? (k.ca * Math.sin(rad(180 - effB - effC))) / Math.sin(rad(effB)) : DEFAULT_SIDE);
+    const aAng = 180 - effB - effC; const c = (a * Math.sin(rad(effC))) / Math.sin(rad(aAng));
     return { A: { x: c * Math.cos(rad(effB)), y: c * Math.sin(rad(effB)) }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
   }
   const a = k.bc ?? DEFAULT_SIDE; const c = k.ab ?? a * 0.8; const b = k.ca ?? a * 0.9;

@@ -69,7 +69,11 @@ export function checkFigureFidelityToPrompt(
 
   const promptNumbers = extractAllNumbersFromText(rawPromptOrDescription);
   const promptVertices = extractAllVerticesFromText(rawPromptOrDescription);
-  const normPrompt = toWesternNumeralsSSOT(rawPromptOrDescription).toLowerCase();
+  const normalizeRadicals = (s: string) =>
+    s
+      .replace(/\*?\s*(?:جذر|\\?sqrt)\s*[({]?\s*(\d+(?:\.\d+)?)\s*[)}]?/gi, "√$1")
+      .replace(/\s*√\s*/g, "√");
+  const normPrompt = normalizeRadicals(toWesternNumeralsSSOT(rawPromptOrDescription).toLowerCase());
   const normPromptUnifiedVars = normPrompt
     .replace(/س/g, "x")
     .replace(/ص/g, "y")
@@ -115,7 +119,7 @@ export function checkFigureFidelityToPrompt(
     const cleanNum = stripUnits(toWesternNumeralsSSOT(rawVal));
     if (!cleanNum || cleanNum === "؟" || cleanNum === "?") continue;
 
-    const normVal = cleanNum.toLowerCase().replace(/\s+/g, "");
+    const normVal = normalizeRadicals(cleanNum.toLowerCase().replace(/\s+/g, ""));
     const normValUnified = normVal.replace(/س/g, "x").replace(/ص/g, "y").replace(/ع/g, "z");
     if (normVal && (normPrompt.includes(normVal) || normPromptUnifiedVars.includes(normValUnified))) {
       continue;

@@ -8,6 +8,7 @@ import { splitDescriptionIntoFactStrings } from "./geo-fact-splitter";
 import { parseGeoFactString } from "./geo-fact-parser";
 import { pairKey, toDisplayLabel } from "./geo-label-utils";
 import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
+import { buildOutwardAreaSquaresForFacts } from "./geo-pythagoras-squares-helper";
 import {
   tryPlaceParallelWithMissingEndpoints,
   tryPlacePointOnWithCollinearExtension,
@@ -47,7 +48,9 @@ export function composeFigureFromGeometryDescription(description: string, figure
     }
   }
 
-  const trigCatalogFig = /(?:sin|cos|tan|cot|جا|جتا|ظا|طائرة\s*ورقية|سلم|مربعات\s*متطابقة)/i.test(description)
+  const hasTrigKeywords = /(?:sin|cos|tan|cot|جا|جتا|ظا|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة)/i.test(description);
+  const hasExplicitNamedTri = /مثلث\s*[A-Z]{3}/i.test(description);
+  const trigCatalogFig = (hasTrigKeywords || (/(?:طائرة\s*ورقية|سلم)/.test(description) && !hasExplicitNamedTri))
     ? matchPrepGrade3TrigonometryFigure(description, figureId, notation)
     : undefined;
   if (trigCatalogFig) {
@@ -75,8 +78,8 @@ export function composeFigureFromGeometryDescription(description: string, figure
     const f = parseGeoFactString(line);
     if (f) facts.push(f); else warnings.push(`لم يُفهم السطر: «${line}»`);
   }
-  const lengths = new Map<string, { text: string; numeric?: number; unit?: string }>();
-  for (const f of facts) if (f.k === "length") lengths.set(pairKey(f.seg[0], f.seg[1]), { text: f.text, numeric: f.numeric, unit: f.unit });
+  const lengths = new Map<string, { text: string; numeric?: number; symbolic?: boolean; unit?: string }>();
+  for (const f of facts) if (f.k === "length") lengths.set(pairKey(f.seg[0], f.seg[1]), { text: f.text, numeric: f.numeric, symbolic: f.symbolic, unit: f.unit });
 
   const circleFig = composeCircleFigureFromFacts(facts, lengths, description, figureId, notation);
   if (circleFig) return { figure: circleFig, warnings };
@@ -106,6 +109,14 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const addAngle = (vertex: string, arm1: string, arm2: string, extra: Partial<CanonicalAngleNode> = {}) => angles.push({ id: `${figureId}_ang_${angles.length}`, vertexId: `${figureId}_v_${vertex}`, arm1VertexId: `${figureId}_v_${arm1}`, arm2VertexId: `${figureId}_v_${arm2}`, ...extra });
 
   for (const p of polygons) if (p.rightAt && p.labels.length === 3) addAngle(p.rightAt, ...(p.labels.filter((l) => l !== p.rightAt) as [string, string]), { isRightAngle: true, degrees: 90 });
+  for (const p of polygons) {
+    if (p.kind === "general" && p.labels.length === 4) {
+      const [a, b, c, d] = p.labels;
+      const hasBD = extras.some((e) => pairKey(e.a, e.b) === pairKey(b, d)) || facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(b, d));
+      const hasAC = extras.some((e) => pairKey(e.a, e.b) === pairKey(a, c)) || facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(a, c));
+      if (!hasAC && !hasBD) addExtra(a, c);
+    }
+  }
 
   const ratioOnSeg = (p: string, a: string, b: string): number => {
     const ap = lengths.get(pairKey(a, p))?.numeric; const pb = lengths.get(pairKey(p, b))?.numeric; const ab = lengths.get(pairKey(a, b))?.numeric;
@@ -257,7 +268,7 @@ export function composeFigureFromGeometryDescription(description: string, figure
     seenSegPairs.add(pk);
     const len = lengths.get(pk);
     segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
-      ...(len ? { lengthLabel: { value: len.numeric ?? len.text, unit: len.unit ?? "سم" } } : {}),
+      ...(len ? { lengthLabel: { value: len.symbolic ? len.text : (len.numeric ?? len.text), unit: len.unit ?? "سم" } } : {}),
       ...(ticks.get(pk) ? { tickMarks: Math.min(3, ticks.get(pk)!) as 1 | 2 | 3 } : {}),
       ...(parallelMarks.get(baseKey) ? { parallelArrows: parallelMarks.get(baseKey) as 1 | 2 } : {}), ...(dashed ? { strokeStyle: "dashed" as const } : {}) });
   };
@@ -268,14 +279,21 @@ export function composeFigureFromGeometryDescription(description: string, figure
     if (mids.length > 0 && lengths.has(base) && !chain.some((u, j) => j + 1 < chain.length && lengths.has(pairKey(u, chain[j + 1])))) {
       const fullLen = lengths.get(base)!;
       segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
-        lengthLabel: { value: fullLen.numeric ?? fullLen.text, unit: fullLen.unit ?? "سم" } });
+        lengthLabel: { value: fullLen.symbolic ? fullLen.text : (fullLen.numeric ?? fullLen.text), unit: fullLen.unit ?? "سم" } });
     }
   });
   for (const e of extras) if (P(e.a) && P(e.b)) pushSeg(e.a, e.b, pairKey(e.a, e.b), e.dashed);
 
-  const vertices: CanonicalVertexNode[] = [...points.entries()].map(([k, position]) => ({ id: keyId(k), label: toDisplayLabel(k, notation), position }));
+  const areaSquares = buildOutwardAreaSquaresForFacts({ facts, points, polygons, figureId });
+  const vertices: CanonicalVertexNode[] = [
+    ...[...points.entries()].map(([k, position]) => ({ id: keyId(k), label: toDisplayLabel(k, notation), position })),
+    ...areaSquares.vertices,
+  ];
+  const allSegments: CanonicalSegmentNode[] = [...segments, ...areaSquares.segments];
   const hasQuad = polygons.some((p) => p.labels.length === 4);
   return { warnings, figure: { figureId, familyId: hasQuad ? "quadrilateral_family" : "triangle_family", branchId: hasQuad ? "quad_parallelogram_diagonals" : "triangle_base_general",
-    titleArabic: description.slice(0, 60), notationLanguage: notation, vertices, segments, angles,
-    polygons: polygons.map((p) => p.labels.map(keyId)) } };
+    titleArabic: description.slice(0, 60), notationLanguage: notation, vertices, segments: allSegments, angles,
+    polygons: polygons.map((p) => p.labels.map(keyId)),
+    ...(areaSquares.interiorBadges.length > 0 ? { interiorBadges: areaSquares.interiorBadges } : {}),
+    ...(areaSquares.shadedRegions.length > 0 ? { shadedRegions: areaSquares.shadedRegions } : {}) } };
 }

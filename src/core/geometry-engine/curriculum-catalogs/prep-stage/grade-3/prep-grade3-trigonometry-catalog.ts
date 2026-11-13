@@ -56,8 +56,10 @@ export function matchPrepGrade3TrigonometryFigure(
   const hasTrigToken =
     /(?:\b(?:sin|cos|tan|cot|sec|csc)\b|جا|جتا|ظا|النسب\s*المثلثية|نسبة\s*مثلثية)/i.test(clean);
 
-  // 1. التطبيقات الحياتية والعملية (طائرة ورقية، سلم، عمود إنارة وظل، برج وحبل مشدود)
+  // 1. التطبيقات الحياتية والعملية (طائرة ورقية، سلم، عمود إنارة وظل، برج وحبل مشدود في مسائل حساب المثلثات)
+  const hasLifeTrigAngle = hasTrigToken || /θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)/i.test(clean);
   if (
+    hasLifeTrigAngle &&
     /طائرة\s*ورقية.*خيط|خيط.*طائرة\s*ورقية|سلم\s*طوله.*(?:يستند|أرض|حائط)|يستند\s*سلم\s*طوله|عمود\s*إنارة.*ظل|حبل\s*مشدود\s*من\s*قمة\s*برج/i.test(
       clean
     )

@@ -75,7 +75,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (من المعطيات فقط لا المطلوب ولا المعاملات المضروبة)
   const lengthMatches = assertionsClean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?))(?=[\s،,;؛|.)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?|\())(?=[\s،,;؛|.)]|$)/gi
   );
   for (const lm of lengthMatches) {
     const segRaw = lm[1].replace(/\s+/g, "");
@@ -220,14 +220,14 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 10. المثلث القائم في رأس (بترتيبيْ الكلمات) أو المتساوي الساقين
+  // 10. المثلث القائم في رأس (بترتيبيْ الكلمات) أو المتساوي الساقين (من المعطيات فقط لا المطلوب والإثبات)
   const rightTriMatch =
-    clean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i) ??
-    clean.match(/\b([A-Za-z]{3})\s*مثلث\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
+    assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i) ??
+    assertionsClean.match(/\b([A-Za-z]{3})\s*مثلث\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
   if (rightTriMatch) {
     facts.push(`مثلث ${rightTriMatch[1]} قائم في ${rightTriMatch[2]}`);
   }
-  const isoTriMatch = clean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
+  const isoTriMatch = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
   if (isoTriMatch) {
     facts.push(`مثلث ${isoTriMatch[1]} متساوي الساقين`);
   }
@@ -301,6 +301,15 @@ export function combineProblemAndTagGeometryContext(
       .map((c) => c.replace(/§COMMA§/g, "،").replace(/[\[\]]/g, "").trim())
       .filter(Boolean);
     for (const clause of tagClauses) {
+      const segEq = clause.match(/^([A-Za-z]{2})\s*=/);
+      if (segEq) {
+        const segId = segEq[1].toUpperCase();
+        for (let idx = parts.length - 1; idx >= 0; idx--) {
+          if (new RegExp(`^${segId}\\s*=`, "i").test(parts[idx]) && canonicalFactKey(parts[idx]) !== canonicalFactKey(clause)) {
+            parts.splice(idx, 1);
+          }
+        }
+      }
       const normClause = canonicalFactKey(clause);
       const isDuplicate = parts.some((p) => {
         const normP = canonicalFactKey(p);

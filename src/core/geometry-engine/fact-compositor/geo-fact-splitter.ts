@@ -36,7 +36,7 @@ export function splitDescriptionIntoFactStrings(description: string): string[] {
   return orderFactsByDependency(raw.flatMap(splitDualTrianglePair).flatMap(splitSimilarityPair).flatMap(expandEqualityChain));
 }
 
-const DECLARATION_FACT = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|رباعي|دائرة)/;
+const DECLARATION_FACT = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|شكل\s*رباعي|رباعي|دائرة)/;
 const BASE_POINT_FACT = /(?:∈|منتصف|\sعلى\s|^(?:نمد|مد|امدد)\s)/;
 const DERIVED_LINE_FACT = /(?:متوسط|ينصف|منصف|⊥|\/\/)/;
 const INTERSECTION_FACT = /(?:∩|×|يتقاطعان|يتقاطع|تقاطع)/;
@@ -60,7 +60,7 @@ function splitDualTrianglePair(fact: string): string[] {
   return t1 && t2 ? [`مثلث ${t1}`, `مثلث ${t2}`] : [fact];
 }
 
-const SHAPE_WORD = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|رباعي)/;
+const SHAPE_WORD = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|شكل\s*رباعي|رباعي)/;
 
 /** «مثلث ABC ~ DEF» ← «مثلث ABC» و«مثلث DEF» (يرث كلمة الشكل من الجزء الأول). */
 function splitSimilarityPair(fact: string): string[] {

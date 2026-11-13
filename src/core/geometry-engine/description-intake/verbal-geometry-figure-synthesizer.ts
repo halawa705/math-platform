@@ -153,9 +153,20 @@ export function synthesizeVerbalGeometryFacts(
     }
 
     const lens = extractMeasuredLengths(body);
+    const hypExplicit = isRight
+      ? body.match(/(\d+(?:\.\d+)?)\s*(سم|م|كم|مم|ديسم)?\s*هو\s*(?:ال)?وتر/i) ||
+        body.match(/(?:ال)?وتر(?:ه)?\s*=?\s*(\d+(?:\.\d+)?)\s*(سم|م|كم|مم|ديسم)?/i)
+      : null;
     const hasExistingLengths = existingFacts.some((f) => /^[A-Z]{2}\s*=/.test(f));
     if (!hasExistingLengths && lens.length > 0) {
-      if (lens.length >= 3 && lens[0].value + lens[1].value > lens[2].value) {
+      if (isRight && hypExplicit) {
+        const hypVal = Number(hypExplicit[1]);
+        const hypUnit = hypExplicit[2] || lens[0].unit || "سم";
+        const legs = lens.filter((l) => Math.abs(l.value - hypVal) > 1e-6);
+        out.push(`AC = ${hypVal} ${hypUnit}`);
+        if (legs[0]) out.push(`BC = ${legs[0].value} ${legs[0].unit}`);
+        if (legs[1]) out.push(`AB = ${legs[1].value} ${legs[1].unit}`);
+      } else if (lens.length >= 3 && lens[0].value + lens[1].value > lens[2].value) {
         out.push(
           `AB = ${lens[0].value} ${lens[0].unit}`,
           `BC = ${lens[1].value} ${lens[1].unit}`,

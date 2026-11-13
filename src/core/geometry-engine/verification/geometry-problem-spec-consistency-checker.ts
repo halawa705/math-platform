@@ -35,6 +35,8 @@ export function verifyProblemSpecMathematicalConsistency(
 
   for (const g of spec.givens) {
     if (g.numericValue === undefined) continue;
+    // المعطيات الجبرية التي تحوي متغيرات (مثل x أو 2x - 1) تحمل قيمة تقريبية للرسم فقط وليست ثوابت رياضية للفحص
+    if (g.value && /[a-zA-Zسصع]/.test(g.value)) continue;
     if (g.numericValue <= 0) {
       violations.push(
         `قيمة غير موجبة للمعطى الهندسي (${g.target} = ${g.numericValue}).`
