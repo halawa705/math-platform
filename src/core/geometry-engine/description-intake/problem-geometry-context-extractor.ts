@@ -175,7 +175,27 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     facts.unshift(`مثلث ${plainTriMatch[1]}`);
   }
 
-  // 9-ب. الزاوية الخارجة عند رأس محدد بدون إعلان نقطة الامتداد في الوسم (مثل: الزاوية الخارجة عند Z هو (4x + 20)°)
+  // 9-ب. الزاوية الخارجة بالاسم الصريح (مثل ∠ABD زاوية خارجة عن المثلث ABC قياسها 74°) أو عند رأس محدد بدون وسم امتداد
+  const explicitExtMatch = clean.match(
+    /(?:الزاوية\s+|∠\s*)([A-Za-z]{3})\s*(?:زاوية\s+)?خارجة\s*(?:عن\s*(?:ال)?مثلث\s*([A-Za-z]{3}))?(?:[^.،؛\n]{0,24}?(?:و?قياسها|يساوي|تساوي|=|هو|هي)\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?)?/i
+  );
+  if (explicitExtMatch) {
+    const angRaw = explicitExtMatch[1].toUpperCase();
+    const angChars = angRaw.split("");
+    const triChars = (explicitExtMatch[2] || plainTriMatch?.[1] || "").toUpperCase().split("");
+    const extVertex = angChars[1];
+    const extPt = angChars.find((c) => !triChars.includes(c));
+    const intArm = angChars[0] === extVertex ? angChars[2] : angChars[0];
+    const fromPt = triChars.find((c) => c !== extVertex && c !== intArm);
+    if (triChars.length === 3 && extPt && fromPt && triChars.includes(extVertex) && !facts.some((f) => f.startsWith("نمد "))) {
+      facts.push(`نمد ${fromPt}${extVertex} إلى ${extPt}`);
+    }
+    const extDegVal = explicitExtMatch[3]?.trim();
+    if (extDegVal && !facts.some((f) => f.includes(`∠${angRaw}`))) {
+      facts.push(`ق(∠${angRaw}) = ${extDegVal}°`);
+    }
+  }
+
   const extAtVertexMatch = assertionsClean.match(
     /(?:ال)?زاوية\s*(?:ال)?خارجة\s*(?:عن\s*المثلث\s*)?عند\s*(?:الرأس\s*)?([A-Za-z])\s*(?:هو|هي|تساوي|يساوي|=|قياسها)?\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?/i
   );

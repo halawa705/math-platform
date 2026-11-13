@@ -27,9 +27,43 @@ function fromThreeSides(ab: number, bc: number, ca: number): TrianglePoints | nu
 }
 
 function placeRight(at: TriVertexKey, k: TriangleKnowns): TrianglePoints {
-  if (at === "B") { const a = k.bc ?? DEFAULT_SIDE; const c = k.ab ?? (k.ca && k.ca > a ? Math.sqrt(k.ca * k.ca - a * a) : a * 0.75); return { A: { x: 0, y: c }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } }; }
-  if (at === "A") { const c = k.ab ?? DEFAULT_SIDE * 0.8; const b = k.ca ?? (k.bc && k.bc > c ? Math.sqrt(k.bc * k.bc - c * c) : c * 0.75); return { A: { x: 0, y: 0 }, B: { x: c, y: 0 }, C: { x: 0, y: b } }; }
-  const a = k.bc ?? (k.ab && k.ca ? Math.sqrt(Math.max(k.ab * k.ab - k.ca * k.ca, 1)) : DEFAULT_SIDE); const b = k.ca ?? a * 0.75;
+  const ang = k.angleDeg ?? {};
+  if (at === "B") {
+    const effA = ang.A !== undefined && ang.A > 5 && ang.A < 85 ? ang.A : ang.C !== undefined && ang.C > 5 && ang.C < 85 ? 90 - ang.C : undefined;
+    let a = k.bc;
+    let c = k.ab;
+    if (effA !== undefined && a === undefined && c === undefined) {
+      const tanA = Math.tan(rad(effA));
+      if (tanA <= 1) { c = DEFAULT_SIDE; a = DEFAULT_SIDE * tanA; }
+      else { a = DEFAULT_SIDE; c = DEFAULT_SIDE / tanA; }
+    }
+    a = a ?? (c !== undefined && effA !== undefined ? c * Math.tan(rad(effA)) : DEFAULT_SIDE);
+    c = c ?? (effA !== undefined ? a / Math.tan(rad(effA)) : k.ca && k.ca > a ? Math.sqrt(k.ca * k.ca - a * a) : a * 0.75);
+    return { A: { x: 0, y: c }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
+  }
+  if (at === "A") {
+    const effB = ang.B !== undefined && ang.B > 5 && ang.B < 85 ? ang.B : ang.C !== undefined && ang.C > 5 && ang.C < 85 ? 90 - ang.C : undefined;
+    let c = k.ab;
+    let b = k.ca;
+    if (effB !== undefined && c === undefined && b === undefined) {
+      const tanB = Math.tan(rad(effB));
+      if (tanB <= 1) { c = DEFAULT_SIDE; b = DEFAULT_SIDE * tanB; }
+      else { b = DEFAULT_SIDE; c = DEFAULT_SIDE / tanB; }
+    }
+    c = c ?? (b !== undefined && effB !== undefined ? b / Math.tan(rad(effB)) : DEFAULT_SIDE * 0.8);
+    b = b ?? (effB !== undefined ? c * Math.tan(rad(effB)) : k.bc && k.bc > c ? Math.sqrt(k.bc * k.bc - c * c) : c * 0.75);
+    return { A: { x: 0, y: 0 }, B: { x: c, y: 0 }, C: { x: 0, y: b } };
+  }
+  const effA = ang.A !== undefined && ang.A > 5 && ang.A < 85 ? ang.A : ang.B !== undefined && ang.B > 5 && ang.B < 85 ? 90 - ang.B : undefined;
+  let a = k.bc;
+  let b = k.ca;
+  if (effA !== undefined && a === undefined && b === undefined) {
+    const tanA = Math.tan(rad(effA));
+    if (tanA <= 1) { b = DEFAULT_SIDE; a = DEFAULT_SIDE * tanA; }
+    else { a = DEFAULT_SIDE; b = DEFAULT_SIDE / tanA; }
+  }
+  a = a ?? (b !== undefined && effA !== undefined ? b * Math.tan(rad(effA)) : k.ab && k.ca ? Math.sqrt(Math.max(k.ab * k.ab - k.ca * k.ca, 1)) : DEFAULT_SIDE);
+  b = b ?? (effA !== undefined ? a / Math.tan(rad(effA)) : a * 0.75);
   return { A: { x: a, y: b }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
 }
 

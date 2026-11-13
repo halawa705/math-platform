@@ -37,7 +37,16 @@ export function placeDeclaredShapes(
     }
     return undefined;
   };
-  const angleOf = (v: string) => { const f = facts.find((x) => x.k === "angle" && x.vertex === v && x.deg !== undefined); return f && f.k === "angle" ? f.deg : undefined; };
+  const angleOf = (v: string, polySet?: ReadonlySet<string>) => {
+    const f = facts.find(
+      (x) =>
+        x.k === "angle" &&
+        x.vertex === v &&
+        x.deg !== undefined &&
+        (!polySet || !x.arms || x.arms.every((arm) => polySet.has(arm)))
+    );
+    return f && f.k === "angle" ? f.deg : undefined;
+  };
   const polygons: PlacedPolygon[] = [];
   let cursorX = 0;
 
@@ -84,10 +93,11 @@ export function placeDeclaredShapes(
           }
         }
       }
+      const triSet = new Set(labels);
       const ov = inferTriangleAngleOverridesFromComposites(facts, labels);
       const tri = placeTriangleFromKnowns({
         ab: abVal, bc: bcVal, ca: caVal,
-        angleDeg: { A: angleOf(a) ?? ov.get(a), B: angleOf(b) ?? ov.get(b), C: angleOf(c) ?? ov.get(c) },
+        angleDeg: { A: angleOf(a, triSet) ?? ov.get(a), B: angleOf(b, triSet) ?? ov.get(b), C: angleOf(c, triSet) ?? ov.get(c) },
         rightAt: f.right ? keyOf(f.right) : undefined,
         isoscelesApex: f.isoApex ? keyOf(f.isoApex) : undefined,
         equilateral: f.equilateral,

@@ -5,6 +5,8 @@
  */
 import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-ssot";
 import { buildFigureResidualFunction } from "./figure-constraint-residual-builder";
+import { inferFigureInvariants } from "./figure-invariant-inference-helper";
+import { measureAngleDegrees } from "../verification/figure-vector-measure-helpers";
 import { minimizeResiduals } from "./levenberg-marquardt-residual-minimizer";
 import { verifyGeometryFigure } from "../verification/geometry-figure-verification-orchestrator";
 import type { FigureVerificationReport } from "../verification/verification-report-types-ssot";
@@ -63,6 +65,13 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
   const before = verifyGeometryFigure(fig);
   if (before.issues.length === 0 || fig.vertices.length === 0) return { figure: fig, report: before, refined: false };
   const { fn, x0 } = buildFigureResidualFunction(fig);
+  const { straightExtensions } = inferFigureInvariants(fig);
+  const keepsExtensionsStraight = (cand: CanonicalGeometryFigureIR): boolean =>
+    straightExtensions
+      .filter((ext) => ext.isDashed)
+      .every(({ vertices: [end1, mid, end2] }) =>
+        measureAngleDegrees(cand.vertices[mid].position, cand.vertices[end1].position, cand.vertices[end2].position) >= 178.5
+      );
   const seeds = buildMultiStartSeeds(x0);
 
   let bestFigure = fig;
@@ -76,6 +85,7 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
       ...fig,
       vertices: fig.vertices.map((v, i) => ({ ...v, position: { x: x[2 * i], y: x[2 * i + 1] } })),
     };
+    if (!keepsExtensionsStraight(candidate)) continue;
     const report = verifyGeometryFigure(candidate);
     const candidateErrs = errorCount(report);
     const bestErrs = errorCount(bestReport);

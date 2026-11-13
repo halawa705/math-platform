@@ -90,6 +90,10 @@ body {
 .pdf-bold-prose .math-prose-segment {
   font-weight: 800 !important;
 }
+.pedagogical-idea-title,
+.pedagogical-idea-title .math-prose-segment {
+  font-weight: 900 !important;
+}
 
 /* تحكم المعلم اليدوي في سماكة الكسور والمعادلات والرموز الرياضية فقط (B الكسور والمعادلات) */
 .pdf-normal-math .math-fit-box,

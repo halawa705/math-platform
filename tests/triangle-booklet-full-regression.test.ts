@@ -304,4 +304,56 @@ describe("11-Idea Triangle Booklet Permanent Regression Suite", () => {
     expect(svg).toContain("5x");
     expect(svg).toContain("9x");
   });
+
+  it("keeps exterior angle extensions strictly 180-degree collinear across right, pointOn, and algebraic exterior cases (#24, #25, #26)", () => {
+    const angleDeg = (
+      map: Map<string, { x: number; y: number }>,
+      vKey: string,
+      pKey: string,
+      qKey: string
+    ): number => {
+      const v = map.get(vKey)!;
+      const p = map.get(pKey)!;
+      const q = map.get(qKey)!;
+      const ux = p.x - v.x; const uy = p.y - v.y;
+      const wx = q.x - v.x; const wy = q.y - v.y;
+      const dot = ux * wx + uy * wy;
+      const mag = Math.hypot(ux, uy) * Math.hypot(wx, wy);
+      return (Math.acos(Math.max(-1, Math.min(1, dot / (mag || 1)))) * 180) / Math.PI;
+    };
+
+    // حاول 24: مثلث قائم في B مع m(∠A)=32° وامتداد BC إلى D
+    const c24 = combineProblemAndTagGeometryContext(
+      "مثلث ABC قائم في B ؛ ق(∠A) = 32° ؛ نمد BC إلى D",
+      "في المثلث $ABC$ القائم الزاوية في $B$. إذا كان $m(\\angle A) = 32^\\circ$. احسب قياس الزاوية الخارجة عند الرأس $C$."
+    );
+    const m24 = matchGeometryWithDiagnostics(c24, "drill-24", "english");
+    expect(m24.warnings).toEqual([]);
+    const p24 = new Map(m24.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p24, "C", "B", "D")).toBeGreaterThan(178.5);
+    expect(angleDeg(p24, "A", "B", "C")).toBeCloseTo(32, 0);
+
+    // مثال 25: D ∈ AB وتكوين زاوية CBD خارجة مع m(∠C)=70°
+    const c25 = combineProblemAndTagGeometryContext(
+      undefined,
+      "في المثلث $ABC$، النقطة $D \\in AB$ بحيث تكون الزاوية $CBD$ زاوية خارجة وقياسها $(3x + 15)^\\circ$. فإذا كان $m(\\angle C) = 70^\\circ$ و $m(\\angle A) = (2x + 2)^\\circ$. أوجد بالبرهان قيمة $x$."
+    );
+    const m25 = matchGeometryWithDiagnostics(c25, "ex-25", "english");
+    expect(m25.warnings).toEqual([]);
+    const p25 = new Map(m25.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p25, "B", "A", "D")).toBeGreaterThan(178.5);
+    expect(angleDeg(p25, "C", "A", "B")).toBeCloseTo(70, 0);
+
+    // مثال 26: ∠ABD زاوية خارجة عن المثلث ABC قياسها 74° (استقامة C-B-D والداخلة ∠ABC = 106°)
+    const c26 = combineProblemAndTagGeometryContext(
+      undefined,
+      "في الشكل المقابل، $\\angle ABD$ زاوية خارجة عن المثلث $ABC$ قياسها $74^\\circ$. فإذا كان $m(\\angle A) = (4x - 1)^\\circ$ و $m(\\angle C) = (2x + 15)^\\circ$. احسب قيمة $x$ وقياس $\\angle A$."
+    );
+    const m26 = matchGeometryWithDiagnostics(c26, "ex-26", "english");
+    expect(m26.warnings).toEqual([]);
+    const p26 = new Map(m26.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p26, "B", "C", "D")).toBeGreaterThan(178.5);
+    expect(angleDeg(p26, "B", "A", "D")).toBeCloseTo(74, 0);
+    expect(angleDeg(p26, "B", "A", "C")).toBeCloseTo(106, 0);
+  });
 });

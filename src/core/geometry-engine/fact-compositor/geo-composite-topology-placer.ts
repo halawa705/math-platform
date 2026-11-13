@@ -48,6 +48,21 @@ export function inferTriangleAngleOverridesFromComposites(
         if (interior > 5 && interior < 175) overrides.set(f.through, interior);
       }
     }
+    if (f.k === "pointOn" && triSet.has(f.seg[0]) && triSet.has(f.seg[1]) && !triSet.has(f.p)) {
+      const angFact = facts.find(
+        (af): af is Extract<GeoFact, { k: "angle" }> =>
+          af.k === "angle" &&
+          (af.vertex === f.seg[0] || af.vertex === f.seg[1]) &&
+          af.deg !== undefined &&
+          af.deg > 5 &&
+          af.deg < 175 &&
+          Boolean(af.arms?.includes(f.p))
+      );
+      if (angFact && angFact.deg !== undefined) {
+        const interior = 180 - angFact.deg;
+        if (interior > 5 && interior < 175) overrides.set(angFact.vertex, interior);
+      }
+    }
   }
 
   for (const pf of facts) {
@@ -247,9 +262,14 @@ export function tryPlaceParallelWithMissingEndpoints(params: {
         af.k === "angle" &&
         af.vertex === anchorKey &&
         af.deg !== undefined &&
-        Boolean(af.arms?.includes(missingKey))
+        (!af.arms || af.arms.includes(missingKey))
     );
-    const otherArmKey = angHint?.arms ? (angHint.arms[0] === anchorKey ? angHint.arms[2] : angHint.arms[0]) : undefined;
+    const otherArmKey = angHint?.arms
+      ? (angHint.arms[0] === anchorKey ? angHint.arms[2] : angHint.arms[0])
+      : params.host.get(anchorKey)?.[0] === anchorKey
+        ? params.host.get(anchorKey)?.[1]
+        : params.host.get(anchorKey)?.[0] ??
+          facts.find((pt): pt is Extract<GeoFact, { k: "pointOn" }> => pt.k === "pointOn" && (pt.seg[0] === anchorKey || pt.seg[1] === anchorKey))?.p;
     const pOther = otherArmKey ? P(otherArmKey) : undefined;
     if (angHint?.deg !== undefined && pOther) {
       const angBetween = (cand: Vec2) => {

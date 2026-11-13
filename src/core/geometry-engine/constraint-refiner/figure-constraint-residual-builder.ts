@@ -52,6 +52,13 @@ export function buildFigureResidualFunction(fig: CanonicalGeometryFigureIR): { f
     for (const g of tickGroups) for (let i = 1; i < g.length; i++) r.push(10 * Math.log(Math.max(dist(x, g[i][0], g[i][1]), 1e-9) / Math.max(dist(x, g[0][0], g[0][1]), 1e-9)));
     for (const g of arrowGroups) for (let i = 1; i < g.length; i++) r.push(10 * sine(x, g[0][0], g[0][1], g[i][0], g[i][1]));
     for (const [p, a, b] of inv.collinear) r.push(20 * sine(x, a, b, a, p));
+    for (const ext of inv.straightExtensions) {
+      const [end1, mid, end2] = ext.vertices;
+      const w = ext.isDashed ? 40 : 6;
+      r.push(w * sine(x, mid, end1, mid, end2));
+      const c = cosine(x, mid, end1, mid, end2);
+      if (c > -0.95) r.push(w * (c + 1));
+    }
     for (const [a, b, c, d] of inv.parallel) r.push(5 * sine(x, a, b, c, d));
     for (const [a, b, c, d] of inv.perpendicular) r.push(5 * cosine(x, a, b, c, d));
     for (let k = 0; k < x.length; k++) r.push((0.02 * (x[k] - x0[k])) / diag);

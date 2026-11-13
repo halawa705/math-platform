@@ -111,21 +111,21 @@ export function PedagogicalIdeaAndRuleCapsule({
             ) : isPlainSection ? null : !isHomeworkSection ? (
               <span
                 style={{ backgroundColor: palette.primaryHex }}
-                className="text-white px-2 py-0.5 rounded-md text-[0.82em] font-black shrink-0 shadow-2xs"
+                className="text-white px-2 py-0.5 rounded-md text-[0.88em] font-black shrink-0 shadow-2xs"
               >
                 الفكرة ({formatNumeralsByModeSSOT(ideaNumberText, numeralMode)})
               </span>
             ) : (
               <span
                 style={{ backgroundColor: "#BE185D" }}
-                className="text-white px-2 py-0.5 rounded-md text-[0.82em] font-black shrink-0 shadow-2xs"
+                className="text-white px-2 py-0.5 rounded-md text-[0.88em] font-black shrink-0 shadow-2xs"
               >
                 📚 الواجب المنزلي
               </span>
             )}
             <span
-              style={{ color: bannerAccentHex }}
-              className="font-black text-[0.9em] break-words leading-snug"
+              style={{ color: bannerAccentHex, fontWeight: 900 }}
+              className="pedagogical-idea-title font-black text-[1.12em] break-words leading-snug"
             >
               <SafeKaTeXBiDiMathRenderer
                 text={

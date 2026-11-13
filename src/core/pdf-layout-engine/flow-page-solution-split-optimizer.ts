@@ -12,7 +12,8 @@ import { buildSolutionSplitVariants } from "./flow-solution-split-variants-build
 export const MODULE_ID_FLOW_PAGE_SOLUTION_SPLIT_OPTIMIZER = "flow_page_solution_split_optimizer" as const;
 
 /** أقل نسبة فراغ فعلي (قبل التمديد الصناعي للبطاقات) في الصفحة تستحق محاولة التقسيم لملء الصفحة بالمعلومات. */
-const MIN_RAW_SLACK_RATIO_TO_TRY_SPLIT = 0.06;
+const MIN_RAW_SLACK_RATIO_TO_TRY_SPLIT = 0.11;
+const MIN_RAW_FILL_TO_PROTECT_WORKED_PAIR = 0.86;
 const MAX_ACCEPTED_SPLITS = 80;
 
 export type FlowPackOnce = (items: readonly FlowItem[]) => readonly FlowPage[];
@@ -75,6 +76,18 @@ export function optimizePagesWithSolutionSplits(
           firstOnNext.kind === "exam_section_banner")
           ? nextPageItems[1]
           : firstOnNext;
+      const nextIdx = firstOnNext === next ? 0 : 1;
+      const afterNext = nextPageItems[nextIdx + 1];
+      const isFirstOfWorkedPair =
+        next?.kind === "question" &&
+        next.isWorkedExample &&
+        !next.solutionSlice &&
+        afterNext?.kind === "question" &&
+        afterNext.isWorkedExample &&
+        !afterNext.solutionSlice &&
+        next.ideaIndex !== undefined &&
+        next.ideaIndex === afterNext.ideaIndex;
+      if (isFirstOfWorkedPair && rawFill >= MIN_RAW_FILL_TO_PROTECT_WORKED_PAIR) continue;
       if (!next || tried.has(next.id)) continue;
       const variants = variantsById.get(next.id);
       if (!variants) continue;

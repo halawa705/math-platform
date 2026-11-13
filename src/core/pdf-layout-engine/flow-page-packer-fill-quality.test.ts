@@ -135,4 +135,52 @@ describe("final review section banners", () => {
     // الأمثلة المحلولة لا تتكرر في كراسة الإجابة النهائية، فقط حاول بنفسك والواجب
     expect(parentAnswerCards.map((c) => c.question.id)).toEqual(["booklet-s1-drill-1-1", "booklet-s2-hw-1"]);
   });
+
+  it("keeps worked-example pairs side-by-side instead of splitting into stretched full-width slabs when prior page is already well filled", () => {
+    const qs: PrintableMathQuestionItem[] = [
+      q("booklet-s1-example-1-1", 1, {
+        isWorkedExample: true,
+        ideaBannerTitleAr: "الفكرة الأولى",
+        conceptExplanationAr: "شرح ١",
+        framedRuleAr: "قاعدة ١",
+        solutionStepsAr: ["خطوة ١", "خطوة ٢", "خطوة ٣"],
+      }),
+      q("booklet-s1-example-1-2", 2, {
+        isWorkedExample: true,
+        solutionStepsAr: ["خطوة ١", "خطوة ٢", "خطوة ٣"],
+      }),
+      q("booklet-s1-drill-1-1", 3),
+      q("booklet-s1-example-2-1", 4, {
+        isWorkedExample: true,
+        ideaBannerTitleAr: "الفكرة الثانية",
+        conceptExplanationAr: "شرح ٢",
+        framedRuleAr: "قاعدة ٢",
+        solutionStepsAr: ["١", "٢", "٣", "٤", "٥", "٦", "٧"],
+      }),
+      q("booklet-s1-example-2-2", 5, {
+        isWorkedExample: true,
+        solutionStepsAr: ["١", "٢", "٣", "٤", "٥", "٦", "٧"],
+      }),
+      q("booklet-s1-drill-2-1", 6),
+    ];
+    const built = buildFlowItems({ questions: qs, columnsCount: 2, includeAnswerKey: false });
+    const h = new Map<string, number>();
+    built.items.forEach((item) => {
+      if (item.kind === "idea_capsule") h.set(item.id, 130);
+      else if (item.kind === "idea_divider") h.set(item.id, 18);
+      else if (item.kind === "question") {
+        const base = item.question.id.includes("example-2-") ? 360 : item.isWorkedExample ? 290 : 140;
+        h.set(item.id, base);
+        if (item.span === "column") h.set(fullWidthHeightKey(item.id), Math.round(base * 0.65));
+      }
+    });
+    const packed = packFlowItemsIntoPages(built.items, h, {
+      budgets: { firstPagePx: 890, nextPagePx: 1020 },
+      density: FLOW_DENSITY_PROFILES.ultra_compact,
+    });
+    const hasSplitWorkedPair = packed.some((pg) =>
+      pg.segments.some((s) => s.kind === "full" && s.item.kind === "question" && Boolean(s.item.solutionSlice))
+    );
+    expect(hasSplitWorkedPair).toBe(false);
+  });
 });

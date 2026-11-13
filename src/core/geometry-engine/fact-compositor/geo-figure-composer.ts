@@ -121,6 +121,24 @@ export function composeFigureFromGeometryDescription(description: string, figure
   for (const f of facts) {
     if (f.k === "pointOn" || f.k === "midpoint") {
       const [a, b] = f.seg;
+      if (f.k === "pointOn" && facts.some((ef) => ef.k === "extend" && ef.to === f.p)) {
+        continue;
+      }
+      if (f.k === "pointOn" && P(a) && P(b) && !P(f.p)) {
+        const extAng = facts.find(
+          (af): af is Extract<GeoFact, { k: "angle" }> =>
+            af.k === "angle" && (af.vertex === a || af.vertex === b) && Boolean(af.arms?.includes(f.p))
+        );
+        if (extAng) {
+          const through = extAng.vertex;
+          const from = through === a ? b : a;
+          const A = P(from)!; const B = P(through)!;
+          const len = lengths.get(pairKey(through, f.p))?.numeric ?? vDist(A, B) * 0.4;
+          points.set(f.p, vAdd(B, vScale(vSub(B, A), len / (vDist(A, B) || 1))));
+          addExtra(through, f.p, true);
+          continue;
+        }
+      }
       if (f.k === "pointOn" && tryPlacePointOnWithCollinearExtension({ p: f.p, seg: f.seg, points, lengths, addExtra })) {
         host.set(f.p, f.seg);
         continue;

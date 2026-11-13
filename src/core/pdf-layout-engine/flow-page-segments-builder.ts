@@ -103,8 +103,8 @@ export function buildSegmentsForSlice(
         heightPx: fullHeights[i] as number,
       }));
       if (
-        stackH <= pureCols.heightPx ||
-        (pureCols.unabsorbedPx > UNABSORBED_IMBALANCE_TOLERANCE_PX && stackH < bestScore)
+        stackH <= pureCols.heightPx - 64 ||
+        (pureCols.unabsorbedPx > UNABSORBED_IMBALANCE_TOLERANCE_PX + 24 && stackH < bestScore - 24)
       ) {
         bestSegments = fullStackSegments;
         bestScore = stackH;

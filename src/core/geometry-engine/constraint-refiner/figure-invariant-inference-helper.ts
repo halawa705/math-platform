@@ -6,9 +6,16 @@ import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-s
 
 export const MODULE_ID_FIGURE_INVARIANT_INFERENCE_HELPER = "figure_invariant_inference_helper" as const;
 
+export interface StraightExtensionInvariant {
+  readonly vertices: readonly [number, number, number];
+  readonly isDashed: boolean;
+}
+
 export interface InferredFigureInvariants {
   /** [p, a, b]: النقطة p تقع على المستقيم ab (فهارس رؤوس). */
   readonly collinear: readonly (readonly [number, number, number])[];
+  /** [end1, mid, end2]: امتداد مستقيم بزاوية 180° عند الرأس المشترك mid (يجب ألا ينكسر أو ينقلب). */
+  readonly straightExtensions: readonly StraightExtensionInvariant[];
   readonly parallel: readonly (readonly [number, number, number, number])[];
   readonly perpendicular: readonly (readonly [number, number, number, number])[];
 }
@@ -30,6 +37,10 @@ export function inferFigureInvariants(fig: CanonicalGeometryFigureIR): InferredF
       if (Math.abs(cross) < 1e-6 * len && t > -1e-6 && t < 1 + 1e-6) collinear.push([p, a, b]);
     }
   }
+  const segDashed = fig.segments
+    .filter((s) => idx.get(s.fromVertexId) !== undefined && idx.get(s.toVertexId) !== undefined)
+    .map((s) => s.strokeStyle === "dashed");
+  const straightExtensions: StraightExtensionInvariant[] = [];
   const parallel: [number, number, number, number][] = [];
   const perpendicular: [number, number, number, number][] = [];
   for (let i = 0; i < segs.length; i++) for (let j = i + 1; j < segs.length; j++) {
@@ -41,6 +52,27 @@ export function inferFigureInvariants(fig: CanonicalGeometryFigureIR): InferredF
     const shared = a === c || a === d || b === c || b === d;
     if (sin < 1e-6 && !shared) parallel.push([a, b, c, d]);
     if (cos < 1e-6) perpendicular.push([a, b, c, d]);
+    // قطعتان تشتركان في رأس واحد وتصنعان معاً خطاً مستقيماً (امتداد 180° لزاوية خارجة أو مستقيمة)
+    if (sin < 1e-5 && shared) {
+      const mid = a === c || a === d ? a : b;
+      const end1 = mid === a ? b : a;
+      const end2 = mid === c ? d : c;
+      if (end1 !== end2) {
+        const d1 = { x: P[end1].x - P[mid].x, y: P[end1].y - P[mid].y };
+        const d2 = { x: P[end2].x - P[mid].x, y: P[end2].y - P[mid].y };
+        const dotUnit = (d1.x * d2.x + d1.y * d2.y) / ((Math.hypot(d1.x, d1.y) * Math.hypot(d2.x, d2.y)) || 1);
+        if (dotUnit < -0.999) {
+          const isDashed = Boolean(segDashed[i] || segDashed[j]);
+          if (isDashed) {
+            straightExtensions.push({
+              vertices: [end1, mid, end2],
+              isDashed,
+            });
+            collinear.push([end2, end1, mid]);
+          }
+        }
+      }
+    }
   }
-  return { collinear, parallel, perpendicular };
+  return { collinear, straightExtensions, parallel, perpendicular };
 }

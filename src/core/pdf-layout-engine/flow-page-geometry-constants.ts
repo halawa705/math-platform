@@ -30,7 +30,7 @@ export const FLOW_FALLBACK_FIRST_PAGE_BUDGET_PX = 930;
 export const FLOW_FALLBACK_NEXT_PAGE_BUDGET_PX = 1035;
 
 /** صفحة لا تُمدَّد بطاقاتها إن قلّ امتلاؤها عن هذه النسبة (تجنباً لبطاقات متضخمة). */
-export const FLOW_MIN_FILL_RATIO_FOR_STRETCH = 0.5;
+export const FLOW_MIN_FILL_RATIO_FOR_STRETCH = 0.62;
 
 export interface FlowDensityProfile {
   /** أقل مسافة بين كائنين: تحدد أقصى ضغط ممكن (أقل عدد أوراق). */
