@@ -84,9 +84,10 @@ export function distributePageSlack(p: DistributeParams): FlowPage {
     );
   const fitsAt = (gap: number) => contentAt(gap) <= budgetPx;
 
-  // (٢) أكبر مسافة ≤ حدّ الكثافة تتسع في الميزانية.
-  let gapPx = gapMin;
-  for (let g = density.gapMaxPx; g > gapMin; g--) {
+  // (٢) أكبر مسافة ≤ حدّ الكثافة تتسع في الميزانية (مع السماح بالهبوط حتى 2px إذا استوعب ذلك فيضاً يسيراً).
+  const floorGapPx = Math.min(gapMin, 2);
+  let gapPx = floorGapPx;
+  for (let g = density.gapMaxPx; g >= floorGapPx; g--) {
     if (fitsAt(g)) { gapPx = g; break; }
   }
 

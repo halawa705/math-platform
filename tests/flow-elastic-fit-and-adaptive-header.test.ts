@@ -8,10 +8,11 @@
 
 import { describe, expect, it } from "vitest";
 import { resolveAdaptiveFirstPageHeader, COMPACT_HEADER_HEIGHT_SAVING_PX } from "../src/core/pdf-layout-engine/adaptive-page-header-budget-resolver";
-import { resolveElasticPageFit, MAX_ELASTIC_ABSORPTION_LIMIT_PX } from "../src/core/pdf-layout-engine/flow-elastic-fit-resolver";
+import { resolveElasticPageFit, MIN_SAFE_ELASTIC_GAP_PX } from "../src/core/pdf-layout-engine/flow-elastic-fit-resolver";
 import { buildFlowItems } from "../src/core/pdf-layout-engine/flow-items-builder";
 import { packFlowItemsIntoPages } from "../src/core/pdf-layout-engine/flow-page-packer";
 import { FLOW_DENSITY_PROFILES } from "../src/core/pdf-layout-engine/flow-page-geometry-constants";
+import { buildSolutionSplitVariants } from "../src/core/pdf-layout-engine/flow-solution-split-variants-builder";
 import type { PrintableMathQuestionItem } from "../src/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import type { FlowPageSegment } from "../src/core/pdf-layout-engine/flow-item-model";
 
@@ -74,7 +75,7 @@ describe("Knuth-Plass Micro-Elasticity Resolver", () => {
     expect(result.absorbedPx).toBe(0);
   });
 
-  it("absorbs small font-scaling overflow (up to 55px) through gap, padding, and diagram elasticity", () => {
+  it("absorbs small overflow ONLY via real achievable gap compression (no phantom padding/diagram clipping)", () => {
     const q1 = createMockQuestion("q1", 1, { geometryFigure: {} as any });
     const q2 = createMockQuestion("q2", 2, { geometryFigure: {} as any });
     const segments: FlowPageSegment[] = [
@@ -83,17 +84,27 @@ describe("Knuth-Plass Micro-Elasticity Resolver", () => {
       { kind: "full", item: { id: "foot", kind: "accreditation_footer", span: "full" }, heightPx: 90 },
     ];
 
-    // الفائض 25px فقط (نتيجة تكبير الخط مثلاً إلى 12.5pt)
-    const result = resolveElasticPageFit({
+    // مع 3 مقاطع و gapPx=8: المسافة القابلة للتقليص فعلياً = 2 * (8 - 2) = 12px
+    const fitResult = resolveElasticPageFit({
+      segments,
+      usedHeightPx: 1010,
+      budgetPx: 1000,
+      gapPx: 8,
+    });
+    expect(fitResult.fits).toBe(true);
+    expect(fitResult.absorbedPx).toBe(10);
+    expect(fitResult.adjustedGapPx).toBeGreaterThanOrEqual(MIN_SAFE_ELASTIC_GAP_PX);
+    expect(fitResult.adjustedGapPx).toBeLessThan(8);
+
+    // أي فيض يتجاوز قدرة تقليص المسافات البينية (مثل 25px عندما السعة 12px) يُرفض حتى لا يُقص التذييل
+    const rejectResult = resolveElasticPageFit({
       segments,
       usedHeightPx: 1025,
       budgetPx: 1000,
       gapPx: 8,
     });
-
-    expect(result.fits).toBe(true);
-    expect(result.absorbedPx).toBe(25);
-    expect(result.adjustedGapPx).toBeLessThan(8);
+    expect(rejectResult.fits).toBe(false);
+    expect(rejectResult.absorbedPx).toBe(0);
   });
 
   it("rejects overflow that exceeds the safe elastic limit (> 55px)", () => {
@@ -130,9 +141,9 @@ describe("Page Packer Integration with Idea Capsule Invariants", () => {
 
     const heights = new Map<string, number>();
     items.forEach((it) => {
-      // التدريبات تأخذ 200px، الكبسولة 100px، بينما الأمثلة ضخمة جداً (500px لكل مثال)
+      // التدريبات تأخذ 180px، الكبسولة 100px، بينما الأمثلة 490px (تتسع مع الكبسولة في صفحة مستقلة 100+3+490=593<=600 لكن لا تتسع مع التدريبات)
       if (it.kind === "idea_capsule") heights.set(it.id, 100);
-      else if (it.kind === "question" && it.isWorkedExample) heights.set(it.id, 500);
+      else if (it.kind === "question" && it.isWorkedExample) heights.set(it.id, 490);
       else heights.set(it.id, 180);
     });
 
@@ -148,5 +159,49 @@ describe("Page Packer Integration with Idea Capsule Invariants", () => {
 
     const secondPageItems = pages[1].segments.flatMap((s) => s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]);
     expect(secondPageItems[0].kind).toBe("idea_capsule");
+    expect(pages.every((p) => !p.overflowsBudget)).toBe(true);
+  });
+
+  it("fills a half-empty page via solution-split optimizer instead of aborting on phantom overflow", () => {
+    const questions: PrintableMathQuestionItem[] = [
+      createMockQuestion("booklet-s1-drill-1-1", 1),
+      createMockQuestion("booklet-s1-drill-1-2", 2),
+      createMockQuestion("booklet-s1-example-2-1", 3, {
+        isWorkedExample: true,
+        ideaBannerTitleAr: "الفكرة 2",
+        solutionStepsAr: ["خطوة 1", "خطوة 2", "خطوة 3", "خطوة 4"],
+      }),
+      createMockQuestion("booklet-s1-example-2-2", 4, {
+        isWorkedExample: true,
+        solutionStepsAr: ["خطوة أ", "خطوة ب"],
+      }),
+    ];
+
+    const { items } = buildFlowItems({
+      questions,
+      columnsCount: 2,
+      includeAnswerKey: false,
+    });
+
+    const heights = new Map<string, number>();
+    items.forEach((it) => {
+      if (it.kind === "idea_capsule") heights.set(it.id, 100);
+      else if (it.kind === "question" && it.isWorkedExample) heights.set(it.id, 480);
+      else heights.set(it.id, 420);
+    });
+    for (const variants of buildSolutionSplitVariants(items).values()) {
+      for (const v of variants) {
+        heights.set(v.head.id, 260);
+        heights.set(v.tail.id, 210);
+      }
+    }
+
+    const pages = packFlowItemsIntoPages(items, heights, {
+      budgets: { firstPagePx: 900, nextPagePx: 900 },
+      density: FLOW_DENSITY_PROFILES.ultra_compact,
+    });
+
+    expect(pages.every((p) => !p.overflowsBudget)).toBe(true);
+    expect(pages[0].usedHeightPx / pages[0].budgetHeightPx).toBeGreaterThanOrEqual(0.8);
   });
 });

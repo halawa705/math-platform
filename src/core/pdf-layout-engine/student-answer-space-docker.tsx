@@ -37,25 +37,31 @@ export function StudentAnswerSpaceDocker({
       ? "إجابة الواجب المنزلي:"
       : "مساحة الحل:";
 
-  const lineStyleClass =
-    answerSpaceStyle === "dotted"
-      ? "border-b border-dotted border-slate-400"
-      : answerSpaceStyle === "lined"
-        ? "border-b border-solid border-slate-400"
-        : "bg-white border border-slate-200";
-
   const gapClass = lineCount <= 4 ? "gap-1.5" : lineCount <= 7 ? "gap-1" : "gap-0.5";
   const itemHeightClass = lineCount <= 4 ? "h-3" : lineCount <= 7 ? "h-2.5" : "h-2";
 
   return (
-    <div className="mt-auto px-2 pb-1.5 pt-1 bg-white border-t border-dashed border-slate-300 flex flex-col gap-1">
+    <div className="mt-auto px-2 pb-1.5 pt-1 bg-white border-t border-slate-200 flex flex-col gap-1">
       <div style={{ color: labelColor }} className="text-[0.74em] font-black text-left select-none">
         {labelText}
       </div>
       <div className={`flex flex-col ${gapClass}`}>
-        {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) => (
-          <div key={lineIdx} className={`${itemHeightClass} w-full ${lineStyleClass}`} />
-        ))}
+        {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) =>
+          answerSpaceStyle === "dotted" ? (
+            <div key={lineIdx} className={`${itemHeightClass} w-full flex items-end`}>
+              <svg className="w-full h-[2px] block overflow-visible" aria-hidden="true">
+                <line x1="0" y1="1" x2="100%" y2="1" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 3.5" />
+              </svg>
+            </div>
+          ) : (
+            <div
+              key={lineIdx}
+              className={`${itemHeightClass} w-full ${
+                answerSpaceStyle === "lined" ? "border-b border-solid border-slate-300" : "bg-white border border-slate-200"
+              }`}
+            />
+          )
+        )}
       </div>
     </div>
   );

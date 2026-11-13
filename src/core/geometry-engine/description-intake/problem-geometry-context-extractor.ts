@@ -87,9 +87,9 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠D) = (3x - 12)° أو ق(∠أ ب جـ) = 90° (من المعطيات فقط لا المطلوب)
+  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠D) = (3x - 12)° أو ق(∠أ ب جـ) = 90° (مع استبعاد النسب المتسلسلة مثل = 4 : 5 : 9)
   const angleMatches = assertionsClean.matchAll(
-    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
+    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?!\s*:)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
@@ -98,6 +98,17 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (angRaw && degVal && !facts.some((f) => angExactRx.test(f))) {
       facts.push(`ق(∠${angRaw}) = ${degVal}°`);
     }
+  }
+
+  // 4-أ. نسبة متسلسلة بين زوايا مثلث: m(∠A):m(∠B):m(∠C) = 4:5:9
+  const chainedAngleRatioMatch = assertionsClean.match(
+    /(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]|[أ-ي])\s*\)\s*:\s*(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]|[أ-ي])\s*\)\s*:\s*(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]|[أ-ي])\s*\)\s*=\s*(\d+)\s*:\s*(\d+)\s*:\s*(\d+)/i
+  );
+  if (chainedAngleRatioMatch) {
+    const [, v1, v2, v3, r1, r2, r3] = chainedAngleRatioMatch;
+    if (!facts.some((f) => f.includes(`∠${v1}`))) facts.push(`ق(∠${v1}) = ${r1}x`);
+    if (!facts.some((f) => f.includes(`∠${v2}`))) facts.push(`ق(∠${v2}) = ${r2}x`);
+    if (!facts.some((f) => f.includes(`∠${v3}`))) facts.push(`ق(∠${v3}) = ${r3}x`);
   }
 
   // 4-ب. الزوايا المنعكسة أو المقسمة بالعمل (مثل ق(∠AEC) المنعكسة = 290° أو زاوية تبادل 50° وزاوية تبادل 35°)

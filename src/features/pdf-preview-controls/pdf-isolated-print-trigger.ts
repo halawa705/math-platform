@@ -140,7 +140,7 @@ export function triggerIsolatedA4Print(
     .pdf-bold-math .katex .mbin,
     .pdf-bold-math .katex .mrel {
       font-weight: 700 !important;
-      -webkit-text-stroke: 0.16px currentColor;
+      -webkit-text-stroke: 0px transparent !important;
     }
     .pdf-bold-math .katex .mfrac {
       font-size: 0.90em !important;
@@ -152,7 +152,7 @@ export function triggerIsolatedA4Print(
     .pdf-bold-math .katex .mfrac .textrm,
     .pdf-bold-math .katex .mfrac .text {
       font-weight: 700 !important;
-      -webkit-text-stroke: 0.12px currentColor;
+      -webkit-text-stroke: 0px transparent !important;
     }
     .pdf-bold-math .katex .mfrac .frac-line {
       border-bottom-width: 0.085em !important;
@@ -165,12 +165,19 @@ export function triggerIsolatedA4Print(
       padding: 0 !important;
       background-color: #ffffff !important;
     }
+    .sovereign-a4-page-sheet,
+    .sovereign-a4-page-sheet *,
+    .sovereign-a4-page-sheet *::before,
+    .sovereign-a4-page-sheet *::after {
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
     .sovereign-a4-page-sheet {
       width: 210mm !important;
       height: 297mm !important;
       min-height: 297mm !important;
       max-height: 297mm !important;
-      padding: 18px 20px !important;
+      padding: 14px 18px !important;
       margin: 0 !important;
       background-color: #ffffff !important;
       border: none !important;

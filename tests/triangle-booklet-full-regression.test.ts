@@ -287,4 +287,21 @@ describe("11-Idea Triangle Booklet Permanent Regression Suite", () => {
     expect(hw13?.geometryFigure).toBeUndefined();
     expect(hw13?.figureDiagnosticsAr).toBeUndefined();
   });
+
+  it("extracts chained angle ratios m(∠A):m(∠B):m(∠C) = 4:5:9 without misreading 4°", () => {
+    const combined = combineProblemAndTagGeometryContext(
+      undefined,
+      "في المثلث $ABC$، إذا كان $m(\\angle A) : m(\\angle B) : m(\\angle C) = 4 : 5 : 9$. أوجد قياس كل زاوية."
+    );
+    const matched = matchGeometryWithDiagnostics(combined, "hw-07-ratio", "english");
+    expect(matched.figure).toBeDefined();
+    const svg = projectGeometryFigureToSVGMarkup(matched.figure!, {
+      numeralMode: "western",
+      notationLanguage: "english",
+    });
+    expect(svg).not.toContain(">4°<");
+    expect(svg).toContain("4x");
+    expect(svg).toContain("5x");
+    expect(svg).toContain("9x");
+  });
 });

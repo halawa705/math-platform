@@ -109,11 +109,13 @@ export function projectGeometryAnglesSVGMarkup(
             : undefined)
       : undefined;
 
-    // المنصف الزاوي لوضع النص أو العلامة (مع إزاحة تكيّفية للتسميات الجبرية والزوايا الحادة الضيقة)
+    // المنصف الزاوي لوضع النص أو العلامة (مع إزاحة تكيّفية وتقليص آمن للأذرع القصيرة في المثلثات المتقاطعة لمنع تداخل التسميات)
     const midAng = ang1 + diff / 2;
     const openDeg = (Math.abs(diff) * 180) / Math.PI;
     const isLongLabel = Boolean(labelText && labelText.length >= 6);
-    const labelDist = rArc + 9 + (isLongLabel ? 7 : 0) + (openDeg < 42 ? 6 : 0);
+    const minArmPx = Math.min(len1, len2);
+    const rawLabelDist = rArc + 9 + (isLongLabel ? 7 : 0) + (openDeg < 42 ? 6 : 0);
+    const labelDist = minArmPx < 62 ? Math.min(rawLabelDist, Math.max(11, minArmPx * 0.34)) : rawLabelDist;
     const lx = vx + Math.cos(midAng) * labelDist;
     const ly = vy + Math.sin(midAng) * labelDist + 2.6;
 
