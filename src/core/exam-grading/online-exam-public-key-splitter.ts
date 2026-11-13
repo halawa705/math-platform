@@ -13,7 +13,7 @@ import { auditMCQQuestionIntegrity } from "@/core/validation/question-options-in
 
 export const MODULE_ID_ONLINE_EXAM_PUBLIC_KEY_SPLITTER = "online_exam_public_key_splitter" as const;
 
-export type OnlineAnswerMode = "mcq" | "short_answer";
+export type OnlineAnswerMode = "mcq" | "short_answer" | "essay_photo";
 
 export interface OnlinePublicQuestion {
   readonly questionId: string;
@@ -27,6 +27,7 @@ export interface OnlinePublicQuestion {
   readonly attachedGeometryFigure?: CanonicalGeometryFigureIR;
   readonly graphSpec?: CartesianGraphSpec;
   readonly rawSvgMarkup?: string;
+  readonly imageUrl?: string;
   readonly notationLanguage?: MathNotationLanguage;
   readonly numeralMode?: NumeralDisplayMode;
   readonly lessonTitleArabic?: string;
@@ -51,9 +52,16 @@ export interface OnlineExamSplitResult {
   readonly excludedQuestionNumbers: readonly number[];
 }
 
+export interface SplitExamPublicKeyOptions {
+  readonly includeEssayPhotoQuestions?: boolean;
+}
+
 const MAX_AUTO_FINAL_ANSWER_CHARS = 40;
 
-export function splitExamIntoPublicAndKey(questions: readonly QuestionAssessmentIR[]): OnlineExamSplitResult {
+export function splitExamIntoPublicAndKey(
+  questions: readonly QuestionAssessmentIR[],
+  options: SplitExamPublicKeyOptions = {}
+): OnlineExamSplitResult {
   const publicQuestions: OnlinePublicQuestion[] = [];
   const answerKey: OnlineAnswerKeyItem[] = [];
   const excluded: number[] = [];
@@ -69,6 +77,7 @@ export function splitExamIntoPublicAndKey(questions: readonly QuestionAssessment
       attachedGeometryFigure: q.attachedGeometryFigure,
       graphSpec: q.graphSpec,
       rawSvgMarkup: q.rawSvgMarkup,
+      imageUrl: q.imageUrl,
       notationLanguage: q.notationLanguage,
       numeralMode: q.numeralMode,
       lessonTitleArabic: q.lessonTitleArabic,
@@ -107,6 +116,12 @@ export function splitExamIntoPublicAndKey(questions: readonly QuestionAssessment
     if (isShortKind && accepted.length > 0) {
       publicQuestions.push({ ...base, answerMode: "short_answer" });
       answerKey.push({ ...keyBase, answerMode: "short_answer", acceptedAnswers: accepted });
+    } else if (
+      (q.allowPhotoUpload === true || options.includeEssayPhotoQuestions) &&
+      (q.patternKind === "proof_reasoning" || q.patternKind === "multi_part_problem" || q.patternKind === "find_error")
+    ) {
+      publicQuestions.push({ ...base, answerMode: "essay_photo" });
+      answerKey.push({ ...keyBase, answerMode: "essay_photo", acceptedAnswers: [] });
     } else {
       excluded.push(q.displayOrderNumber);
     }

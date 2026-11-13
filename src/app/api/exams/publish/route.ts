@@ -36,12 +36,15 @@ export async function POST(req: Request) {
       durationMinutes?: number;
       availabilityDays?: number;
       revealAnswers?: boolean;
+      includeEssayPhotoQuestions?: boolean;
       questions?: readonly QuestionAssessmentIR[];
     };
 
     const rawQuestions = Array.isArray(body.questions) ? body.questions : [];
     const { publicQuestions, answerKey, excludedQuestionNumbers } =
-      splitExamIntoPublicAndKey(rawQuestions);
+      splitExamIntoPublicAndKey(rawQuestions, {
+        includeEssayPhotoQuestions: Boolean(body.includeEssayPhotoQuestions),
+      });
 
     if (publicQuestions.length === 0) {
       return NextResponse.json(

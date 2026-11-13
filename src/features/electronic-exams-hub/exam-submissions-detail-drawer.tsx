@@ -9,6 +9,7 @@
 import { useState } from "react";
 import type { PublishedOnlineExam } from "./published-online-exams-store";
 import type { OnlineExamSubmissionRecord } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import TeacherManualEssayGradingBox from "./teacher-manual-essay-grading-box";
 
 export const MODULE_ID_EXAM_SUBMISSIONS_DETAIL_DRAWER =
   "exam_submissions_detail_drawer" as const;
@@ -89,43 +90,59 @@ export default function ExamSubmissionsDetailDrawer({
             </button>
 
             {isOpen && (
-              <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] font-bold">
-                {exam.questions.map((q) => {
-                  const ans = sub.answersJson?.[q.questionId];
-                  const res = sub.resultJson?.items.find(
-                    (i) => i.questionId === q.questionId
-                  );
-                  const ansLabel =
-                    ans?.choiceIndex !== undefined && ans.choiceIndex !== null
-                      ? `البديل (${CHOICE_LETTERS[ans.choiceIndex] ?? ans.choiceIndex + 1})`
-                      : ans?.text
-                      ? ans.text
-                      : "بدون إجابة";
+              <div className="space-y-3 pt-2 border-t border-slate-200/70 dark:border-slate-800">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] font-bold">
+                  {exam.questions.map((q) => {
+                    const ans = sub.answersJson?.[q.questionId];
+                    const res = sub.resultJson?.items.find(
+                      (i) => i.questionId === q.questionId
+                    );
+                    const ansLabel =
+                      ans?.choiceIndex !== undefined && ans.choiceIndex !== null
+                        ? `البديل (${CHOICE_LETTERS[ans.choiceIndex] ?? ans.choiceIndex + 1})`
+                        : ans?.proofImageDataUrl
+                          ? `📷 صورة حل${ans.text ? ` + ${ans.text}` : ""}`
+                          : ans?.proofImageDeletedAfterGrading
+                            ? "✓ صورة حل (تم تصحيحها وحذفها)"
+                            : ans?.text
+                              ? ans.text
+                              : "بدون إجابة";
 
-                  return (
-                    <div
-                      key={q.questionId}
-                      className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800"
-                    >
-                      <span className="truncate">
-                        س{q.displayOrderNumber}: {ansLabel}
-                      </span>
-                      {res ? (
-                        <span
-                          className={
-                            res.isCorrect
-                              ? "text-emerald-600 font-black"
-                              : "text-rose-600 font-black"
-                          }
-                        >
-                          {res.isCorrect ? "✓ صح" : "✗ خطأ"}
+                    return (
+                      <div
+                        key={q.questionId}
+                        className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800"
+                      >
+                        <span className="truncate">
+                          س{q.displayOrderNumber}: {ansLabel}
                         </span>
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
-                    </div>
-                  );
-                })}
+                        {res ? (
+                          <span
+                            className={
+                              res.pendingTeacherReview
+                                ? "text-amber-600 font-black"
+                                : res.isCorrect
+                                  ? "text-emerald-600 font-black"
+                                  : "text-rose-600 font-black"
+                            }
+                          >
+                            {res.pendingTeacherReview
+                              ? "⏳ قيد التصحيح"
+                              : res.isCorrect
+                                ? "✓ صح"
+                                : "✗ خطأ"}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <TeacherManualEssayGradingBox
+                  examQuestions={exam.questions}
+                  submission={sub}
+                />
               </div>
             )}
           </div>

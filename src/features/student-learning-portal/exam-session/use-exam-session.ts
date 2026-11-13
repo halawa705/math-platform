@@ -22,6 +22,12 @@ import {
   findStudentSubmissionForExamSSOT,
   recordStudentOnlineExamSubmissionSSOT,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import {
+  buildExamDraftStorageKey,
+  clearPersistentExamDraft,
+  loadPersistentExamDraft,
+  savePersistentExamDraft,
+} from "./exam-draft-persistent-storage";
 
 export const MODULE_ID_USE_EXAM_SESSION = "use_exam_session" as const;
 
@@ -49,9 +55,10 @@ export function useExamSession(params: {
   const [resultPct, setResultPct] = useState<number | null>(null);
   const [resultItems, setResultItems] = useState<readonly OnlineQuestionResult[]>([]);
   const [reviewList, setReviewList] = useState<readonly ExamQuestionReviewInfo[] | null>(null);
+  const [lastDraftSavedAtIso, setLastDraftSavedAtIso] = useState<string | null>(null);
   const deadlineMsRef = useRef<number | null>(null);
 
-  const draftKey = exam && studentCode ? `exam_draft_${exam.examId}_${studentCode}` : "";
+  const draftKey = exam ? buildExamDraftStorageKey(exam.examId, studentCode) : "";
 
   const resetSimulation = useCallback(() => {
     setErrorMsg(null);
@@ -79,15 +86,18 @@ export function useExamSession(params: {
     setRemainingSeconds(initialSec);
     deadlineMsRef.current = Date.now() + initialSec * 1000;
 
-    if (draftKey && typeof window !== "undefined") {
-      try {
-        const raw = window.sessionStorage.getItem(draftKey);
-        setAnswers(raw ? (JSON.parse(raw) as Record<string, StudentAnswerInput>) : {});
-      } catch {
+    if (draftKey) {
+      const restored = loadPersistentExamDraft(draftKey);
+      if (restored) {
+        setAnswers({ ...restored.answers });
+        setLastDraftSavedAtIso(restored.savedAtIso);
+      } else {
         setAnswers({});
+        setLastDraftSavedAtIso(null);
       }
     } else {
       setAnswers({});
+      setLastDraftSavedAtIso(null);
     }
 
     if (studentCode) {
@@ -139,8 +149,8 @@ export function useExamSession(params: {
     (questionId: string, patch: StudentAnswerInput) => {
       setAnswers((prev) => {
         const next = { ...prev, [questionId]: { ...prev[questionId], ...patch } };
-        if (draftKey && typeof window !== "undefined") {
-          try { window.sessionStorage.setItem(draftKey, JSON.stringify(next)); } catch { /* ignore */ }
+        if (draftKey) {
+          setLastDraftSavedAtIso(savePersistentExamDraft(draftKey, next));
         }
         return next;
       });
@@ -229,7 +239,7 @@ export function useExamSession(params: {
           items, totalEarnedMarks: data.totalEarnedMarks ?? 0, totalAllocatedMarks: data.totalAllocatedMarks ?? 0, percentage: pct,
         },
       });
-      if (draftKey && typeof window !== "undefined") window.sessionStorage.removeItem(draftKey);
+      if (draftKey) clearPersistentExamDraft(draftKey);
       onExamSubmitted?.();
     } catch {
       setErrorMsg("تعذر الاتصال بالخادم لتسليم الاختبار.");
@@ -254,6 +264,6 @@ export function useExamSession(params: {
 
   return {
     answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, resultItems, reviewList,
-    updateAnswer, toggleFlag, submitExam, resetSimulation,
+    lastDraftSavedAtIso, updateAnswer, toggleFlag, submitExam, resetSimulation,
   };
 }

@@ -46,6 +46,7 @@ import { buildCubeCuboid3DFigure } from "./spatial-3d-family/cube-cuboid-prism-b
 import { buildRightCircularCone3DFigure } from "./spatial-3d-family/cylinder-cone-sphere-branch";
 import { buildInclinedPlaneForcesFigure } from "./spatial-3d-family/mechanics-force-vectors-branch";
 import { matchAndRenderStatisticsFigure } from "../statistics-engine/statistics-orchestrator";
+import { detectAndBuildMathElementaryVisualFigure } from "./elementary-visuals/math-elementary-visuals-dispatcher";
 
 export const MODULE_ID_NATURAL_ARABIC_GEOMETRY_MATCHER = "natural_arabic_geometry_matcher" as const;
 
@@ -79,6 +80,11 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   }
   if (stageRes.figure) {
     return stageRes.figure;
+  }
+
+  const elementaryVisual = detectAndBuildMathElementaryVisualFigure(desc, figureId, notationLanguage);
+  if (elementaryVisual) {
+    return elementaryVisual;
   }
 
   if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage, description: desc });

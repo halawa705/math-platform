@@ -16,6 +16,8 @@ import type { PublishedExamQuestionItem } from "@/features/electronic-exams-hub/
 import type { OnlineQuestionResult, StudentAnswerInput } from "@/core/exam-grading/online-exam-grader";
 import { ARABIC_CHOICE_LETTERS } from "@/core/ssot/numeral-and-unit-ssot";
 import type { ExamQuestionReviewInfo } from "./use-exam-session";
+import ExamQuestionFigureZoomModal from "./exam-question-figure-zoom-modal";
+import StudentProofPhotoCaptureBox from "./student-proof-photo-capture-box";
 
 export const MODULE_ID_EXAM_QUESTION_CARD = "exam_question_card" as const;
 
@@ -46,23 +48,29 @@ export default function ExamQuestionCard({
   const numeralMode =
     question.numeralMode ?? (notationLanguage === "arabic" ? "eastern" : "western");
 
-  const hasFigure = Boolean(
+  const hasSvgSource = Boolean(
     question.attachedGeometryFigure || question.graphSpec || question.rawSvgMarkup
   );
+  const hasFigure = hasSvgSource || Boolean(question.imageUrl);
 
   const isMcq =
     (question.answerMode === "mcq" || question.patternKind === "mcq") &&
     Array.isArray(question.mcqChoicesArabic) &&
     question.mcqChoicesArabic.length > 0;
+  const isEssayPhoto =
+    question.answerMode === "essay_photo" ||
+    question.allowPhotoUpload === true;
 
   const pickedChoice = answer?.choiceIndex;
   const textVal = answer?.text ?? "";
 
   const borderClass = !isSubmitted
     ? "border-slate-200 dark:border-slate-800"
-    : resultState?.isCorrect
-      ? "border-2 border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/15"
-      : "border-2 border-rose-500 bg-rose-50/20 dark:bg-rose-950/15";
+    : resultState?.pendingTeacherReview
+      ? "border-2 border-amber-400 bg-amber-50/20 dark:bg-amber-950/15"
+      : resultState?.isCorrect
+        ? "border-2 border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/15"
+        : "border-2 border-rose-500 bg-rose-50/20 dark:bg-rose-950/15";
 
   const figureAspect = question.attachedGeometryFigure
     ? computeFigureAspectFromVertices(question.attachedGeometryFigure.vertices)
@@ -72,7 +80,7 @@ export default function ExamQuestionCard({
   const modalWidthPx = 310;
   const modalHeightPx = Math.max(170, Math.min(245, Math.round(modalWidthPx / figureAspect)));
 
-  const cardSvg = hasFigure
+  const cardSvg = hasSvgSource
     ? renderQuestionFigureSvg(question, {
         widthPx: cardWidthPx,
         heightPx: cardHeightPx,
@@ -84,7 +92,7 @@ export default function ExamQuestionCard({
       })
     : null;
 
-  const modalSvg = hasFigure
+  const modalSvg = hasSvgSource
     ? renderQuestionFigureSvg(question, {
         widthPx: modalWidthPx,
         heightPx: modalHeightPx,
@@ -106,12 +114,18 @@ export default function ExamQuestionCard({
           {isSubmitted && resultState && (
             <span
               className={`px-2.5 py-1 rounded-xl ${
-                resultState.isCorrect
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
-                  : "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200"
+                resultState.pendingTeacherReview
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"
+                  : resultState.isCorrect
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                    : "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200"
               }`}
             >
-              {resultState.isCorrect ? "✓ إجابة صحيحة" : "✗ إجابة خاطئة"}
+              {resultState.pendingTeacherReview
+                ? "⏳ بانتظار تصحيح المعلم"
+                : resultState.isCorrect
+                  ? "✓ إجابة صحيحة"
+                  : "✗ إجابة خاطئة"}
             </span>
           )}
         </div>
@@ -150,14 +164,25 @@ export default function ExamQuestionCard({
             />
           )}
         </div>
-        {hasFigure && cardSvg && (
+        {hasFigure && (cardSvg || question.imageUrl) && (
           <div className="sm:col-span-5 max-w-full flex flex-col items-center">
-            <div
-              onClick={() => setIsZoomModalOpen(true)}
-              className="w-full max-w-full overflow-hidden p-2.5 rounded-2xl bg-white text-slate-900 border-2 border-indigo-200 dark:border-teal-400/70 flex justify-center cursor-pointer shadow-sm hover:border-indigo-400 transition [&>svg]:max-w-full [&>svg]:h-auto"
-              title="انقر لتكبير الرسم وعرضه بدقة عالية"
-              dangerouslySetInnerHTML={{ __html: cardSvg }}
-            />
+            {cardSvg ? (
+              <div
+                onClick={() => setIsZoomModalOpen(true)}
+                className="w-full max-w-full overflow-hidden p-2.5 rounded-2xl bg-white text-slate-900 border-2 border-indigo-200 dark:border-teal-400/70 flex justify-center cursor-pointer shadow-sm hover:border-indigo-400 transition [&>svg]:max-w-full [&>svg]:h-auto"
+                title="انقر لتكبير الرسم وعرضه بدقة عالية"
+                dangerouslySetInnerHTML={{ __html: cardSvg }}
+              />
+            ) : question.imageUrl ? (
+              <div
+                onClick={() => setIsZoomModalOpen(true)}
+                className="w-full max-w-full overflow-hidden p-2 rounded-2xl bg-white border-2 border-indigo-200 dark:border-teal-400/70 flex justify-center cursor-pointer shadow-sm"
+                title="انقر لتكبير الصورة التوضيحية"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={question.imageUrl} alt={`رسم السؤال ${question.displayOrderNumber}`} className="max-h-48 w-auto object-contain rounded-xl" />
+              </div>
+            ) : null}
             <button
               type="button"
               onClick={() => setIsZoomModalOpen(true)}
@@ -170,48 +195,13 @@ export default function ExamQuestionCard({
         )}
       </div>
 
-      {/* نافذة التكبير المنبثقة للرسم الهندسي والبياني في الاختبار الإلكتروني */}
-      {isZoomModalOpen && modalSvg && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5"
-          onClick={() => setIsZoomModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-2xl space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-base">📐</span>
-                <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                  رسم توضيحي — السؤال {question.displayOrderNumber}
-                </h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsZoomModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black text-xs flex items-center justify-center hover:bg-slate-200 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-            <div
-              className="p-3 sm:p-4 rounded-2xl bg-white text-slate-900 border-2 border-indigo-200 dark:border-teal-400/70 flex items-center justify-center overflow-x-auto min-h-[260px] shadow-sm [&>svg]:w-full [&>svg]:max-w-[520px] [&>svg]:h-auto"
-              dangerouslySetInnerHTML={{ __html: modalSvg }}
-            />
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setIsZoomModalOpen(false)}
-                className="w-full min-h-[44px] rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white text-xs font-black cursor-pointer shadow-sm"
-              >
-                ✓ العودة لحل السؤال
-              </button>
-            </div>
-          </div>
-        </div>
+      {isZoomModalOpen && (modalSvg || question.imageUrl) && (
+        <ExamQuestionFigureZoomModal
+          questionNumber={question.displayOrderNumber}
+          modalSvg={modalSvg}
+          fallbackImageUrl={question.imageUrl}
+          onClose={() => setIsZoomModalOpen(false)}
+        />
       )}
 
       {isMcq && question.mcqChoicesArabic ? (
@@ -255,12 +245,25 @@ export default function ExamQuestionCard({
         </div>
       ) : (
         <div className="space-y-2.5">
+          {isEssayPhoto && (
+            <StudentProofPhotoCaptureBox
+              imageDataUrl={answer?.proofImageDataUrl}
+              rotationDeg={answer?.proofImageRotationDeg}
+              deletedAfterGrading={answer?.proofImageDeletedAfterGrading}
+              isSubmitted={isSubmitted}
+              onUpdatePhoto={(photoPatch) => onChangeAnswer(photoPatch)}
+            />
+          )}
           <input
             type="text"
             disabled={isSubmitted}
             value={textVal}
             onChange={(e) => onChangeAnswer({ text: e.target.value })}
-            placeholder="اكتب الناتج النهائي أو الإجابة القصيرة هنا..."
+            placeholder={
+              isEssayPhoto
+                ? "اكتب ملاحظة أو الناتج النهائي (اختياري مع صورة الحل)..."
+                : "اكتب الناتج النهائي أو الإجابة القصيرة هنا..."
+            }
             className="w-full min-h-[48px] px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-teal-600"
           />
           {!isSubmitted && (
@@ -269,6 +272,12 @@ export default function ExamQuestionCard({
               onClear={() => onChangeAnswer({ text: "" })}
             />
           )}
+        </div>
+      )}
+
+      {isSubmitted && resultState?.teacherFeedback && (
+        <div className="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-950 dark:text-indigo-200">
+          📝 تعليق المعلم ({resultState.earnedMarks}/{resultState.allocatedMarks}): {resultState.teacherFeedback}
         </div>
       )}
 

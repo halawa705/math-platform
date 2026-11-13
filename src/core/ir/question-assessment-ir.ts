@@ -109,6 +109,10 @@ export interface QuestionAssessmentIR {
   readonly attachedStatisticsDataset?: CanonicalStatisticsDatasetIR;
   readonly graphSpec?: CartesianGraphSpec;
   readonly rawSvgMarkup?: string;
+  /** رابط أو بيانات صورة توضيحية احتياطية عندما يتعذر توليد رسم متجهي خاص. */
+  readonly imageUrl?: string;
+  /** تفعيل رفع/تصوير خطوات الحل في الأسئلة المقالية أثناء الاختبار الإلكتروني. */
+  readonly allowPhotoUpload?: boolean;
   readonly notationLanguage?: MathNotationLanguage;
   readonly numeralMode?: NumeralDisplayMode;
 

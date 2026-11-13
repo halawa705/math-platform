@@ -23,6 +23,11 @@ import { useExamSession } from "./exam-session/use-exam-session";
 import ExamTopProgressBar from "./exam-session/exam-top-progress-bar";
 import ExamQuestionCard from "./exam-session/exam-question-card";
 import ExamResultScreen from "./exam-session/exam-result-screen";
+import PostExamReviewFilterBar, {
+  computePostExamReviewCounts,
+  doesQuestionMatchReviewFilter,
+  type ExamPostReviewFilterKind,
+} from "./exam-session/post-exam-review-filter-bar";
 
 export const MODULE_ID_STUDENT_ASSIGNED_EXAMS_TAB = "student_assigned_exams_tab" as const;
 
@@ -47,6 +52,7 @@ export default function StudentAssignedExamsTab({
   const [selectedExamId, setSelectedExamId] = useState<string>(initialExamId);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<ExamPostReviewFilterKind>("all");
 
   useEffect(() => {
     if (initialExamId) setSelectedExamId(initialExamId);
@@ -77,11 +83,11 @@ export default function StudentAssignedExamsTab({
   }, [gradeId, initialExamId, isTeacherPreview]);
 
   const exam = activeExams.find((e) => e.examId === selectedExamId) || activeExams[0] || null;
-  useEffect(() => { setCurrentIdx(0); setConfirmOpen(false); }, [exam?.examId]);
+  useEffect(() => { setCurrentIdx(0); setConfirmOpen(false); setReviewFilter("all"); }, [exam?.examId]);
 
   const {
     answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, resultItems, reviewList,
-    updateAnswer, toggleFlag, submitExam, resetSimulation,
+    lastDraftSavedAtIso, updateAnswer, toggleFlag, submitExam, resetSimulation,
   } = useExamSession({
     exam,
     studentCode,
@@ -106,8 +112,20 @@ export default function StudentAssignedExamsTab({
   const currentQ = exam.questions[safeIdx];
   const answeredCount = exam.questions.filter((q) => {
     const a = answers[q.questionId];
-    return a && (a.choiceIndex !== undefined || (a.text && a.text.trim().length > 0));
+    return a && (a.choiceIndex !== undefined || Boolean(a.text?.trim()) || Boolean(a.proofImageDataUrl));
   }).length;
+  const reviewCounts = submitted ? computePostExamReviewCounts(exam.questions, resultItems) : null;
+
+  const handleSelectReviewFilter = (nextFilter: ExamPostReviewFilterKind) => {
+    setReviewFilter(nextFilter);
+    const firstMatchIdx = exam.questions.findIndex((q) =>
+      doesQuestionMatchReviewFilter(
+        resultItems.find((r) => r.questionId === q.questionId),
+        nextFilter
+      )
+    );
+    if (firstMatchIdx >= 0) setCurrentIdx(firstMatchIdx);
+  };
 
   return (
     <div className="space-y-4">
@@ -156,15 +174,33 @@ export default function StudentAssignedExamsTab({
       )}
 
       {errorMsg && <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-black text-rose-800">⚠️ {errorMsg}</div>}
+      {!submitted && lastDraftSavedAtIso && (
+        <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 px-2">
+          💾 تم حفظ إجاباتك تلقائياً على جهازك (الساعة{" "}
+          {new Date(lastDraftSavedAtIso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })})
+        </div>
+      )}
       {submitted && resultPct !== null && <ExamResultScreen studentNameAr={studentNameAr || "تجربة المعلم"} examTitleAr={exam.titleAr} percentageScore={resultPct} />}
+      {submitted && reviewCounts && (
+        <PostExamReviewFilterBar
+          counts={reviewCounts}
+          activeFilter={reviewFilter}
+          onSelectFilter={handleSelectReviewFilter}
+        />
+      )}
 
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
         {exam.questions.map((q, idx) => {
           const a = answers[q.questionId];
-          const isAns = Boolean(a && (a.choiceIndex !== undefined || (a.text && a.text.trim())));
+          const isAns = Boolean(a && (a.choiceIndex !== undefined || a.text?.trim() || a.proofImageDataUrl));
           const resItem = resultItems.find((r) => r.questionId === q.questionId);
+          if (submitted && !doesQuestionMatchReviewFilter(resItem, reviewFilter)) return null;
           const dotStyle = submitted && resItem
-            ? resItem.isCorrect ? "bg-emerald-600 border-emerald-600 text-white" : "bg-rose-600 border-rose-600 text-white"
+            ? resItem.pendingTeacherReview
+              ? "bg-amber-500 border-amber-500 text-slate-950"
+              : resItem.isCorrect
+                ? "bg-emerald-600 border-emerald-600 text-white"
+                : "bg-rose-600 border-rose-600 text-white"
             : flaggedIds[q.questionId] ? "bg-amber-400 border-amber-500 text-slate-950"
             : isAns ? "bg-teal-600 border-teal-600 text-white"
             : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600";

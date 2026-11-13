@@ -4,6 +4,10 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 200 سطر).
  */
 
+import {
+  applyManualGradesAndWipePhotos,
+  type ManualQuestionGradeInput,
+} from "@/core/exam-grading/manual-essay-grading-and-wipe";
 import type {
   OnlineExamGradeResult,
   StudentAnswerInput,
@@ -143,6 +147,34 @@ export function markExamSubmissionsReviewedSSOT(examId: string): void {
       void syncExamSubmissionToSupabaseCloud(s);
     }
   }
+}
+
+export function updateSubmissionManualGradesSSOT(params: {
+  readonly submissionId: string;
+  readonly gradesByQuestionId: Readonly<Record<string, ManualQuestionGradeInput>>;
+}): OnlineExamSubmissionRecord | null {
+  let updatedRecord: OnlineExamSubmissionRecord | null = null;
+  const updatedList = loadAllExamSubmissionsSSOT().map((sub) => {
+    if (sub.submissionId !== params.submissionId) return sub;
+    const applied = applyManualGradesAndWipePhotos({
+      answersJson: sub.answersJson,
+      resultJson: sub.resultJson,
+      gradesByQuestionId: params.gradesByQuestionId,
+    });
+    updatedRecord = {
+      ...sub,
+      percentageScore: applied.updatedResultJson.percentage,
+      isReviewedByTeacher: true,
+      answersJson: applied.updatedAnswersJson,
+      resultJson: applied.updatedResultJson,
+    };
+    return updatedRecord;
+  });
+  if (updatedRecord) {
+    persistSubmissions(updatedList);
+    notifyRealtimeTableUpdated("exam_submissions");
+  }
+  return updatedRecord;
 }
 
 export {

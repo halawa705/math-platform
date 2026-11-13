@@ -8,13 +8,21 @@ import { isStudentShortAnswerCorrect } from "./short-answer-matcher";
 
 export const MODULE_ID_ONLINE_EXAM_GRADER = "online_exam_grader" as const;
 
-export interface StudentAnswerInput { readonly choiceIndex?: number | null; readonly text?: string }
+export interface StudentAnswerInput {
+  readonly choiceIndex?: number | null;
+  readonly text?: string;
+  readonly proofImageDataUrl?: string;
+  readonly proofImageRotationDeg?: number;
+  readonly proofImageDeletedAfterGrading?: boolean;
+}
 
 export interface OnlineQuestionResult {
   readonly questionId: string;
   readonly isCorrect: boolean;
   readonly earnedMarks: number;
   readonly allocatedMarks: number;
+  readonly pendingTeacherReview?: boolean;
+  readonly teacherFeedback?: string;
 }
 
 export interface OnlineExamGradeResult {
@@ -32,6 +40,16 @@ export function gradeOnlineExam(
   let total = 0;
   const items = answerKey.map((k): OnlineQuestionResult => {
     const a = answers[k.questionId];
+    if (k.answerMode === "essay_photo") {
+      total += k.allocatedMarks;
+      return {
+        questionId: k.questionId,
+        isCorrect: false,
+        earnedMarks: 0,
+        allocatedMarks: k.allocatedMarks,
+        pendingTeacherReview: true,
+      };
+    }
     const isCorrect =
       k.answerMode === "mcq"
         ? a?.choiceIndex !== undefined && a.choiceIndex !== null && a.choiceIndex === k.correctMcqChoiceIndex
