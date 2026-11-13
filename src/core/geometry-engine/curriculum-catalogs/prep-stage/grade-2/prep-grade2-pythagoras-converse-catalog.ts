@@ -106,8 +106,8 @@ export function matchPrepGrade2PythagorasConverseFigure(
     return buildPythagorasObtuseTriangleACDFigure({ figureId, notationLanguage });
   }
 
-  // 12. مطابقة عامة لنظرية فيثاغورس وعكسها في 2 إعدادي
-  if (/فيثاغورس|عكس\s*فيثاغورس/i.test(d)) {
+  // 12. مطابقة عامة لنظرية فيثاغورس وعكسها في 2 إعدادي (بشرط غياب رؤوس وأبعاد محددة لمسألة مستقلة)
+  if (/فيثاغورس|عكس\s*فيثاغورس/i.test(d) && !/مثلث\s*[A-Z]{3}|[A-Z]{2}\s*=|∠\s*[A-Z]|\d+\s*سم/i.test(d)) {
     return buildPythagorasAltitudeArea84Figure({ figureId, notationLanguage });
   }
 

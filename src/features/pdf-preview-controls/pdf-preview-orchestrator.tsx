@@ -85,7 +85,7 @@ export default function PDFPreviewOrchestrator({
           : (persisted.paperTemplateId ?? "classic_sovereign"),
       columnsCount: isBookletOrReview ? 2 : (persisted.columnsCount ?? 2),
       answerVisibilityMode: isBookletOrReview
-        ? "questions_with_answers"
+        ? "questions_only"
         : isExamDoc
           ? "questions_only"
           : persisted.answerVisibilityMode,
@@ -114,7 +114,7 @@ export default function PDFPreviewOrchestrator({
           : (persisted.paperTemplateId ?? "classic_sovereign"),
       columnsCount: isBookletOrReview ? 2 : (persisted.columnsCount ?? 2),
       answerVisibilityMode: isBookletOrReview
-        ? "questions_with_answers"
+        ? "questions_only"
         : isExamDoc
           ? "questions_only"
           : persisted.answerVisibilityMode,

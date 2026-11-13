@@ -185,6 +185,20 @@ Defining any shared state or reference data in more than one place is **STRICTLY
 2. **Zero Silent Execution on Risky Requests:**
    - Silently executing a command that introduces an architectural flaw or breaks another feature without warning the user and obtaining confirmation first is a severe violation of this Constitution.
 
+---
+
+## 8. Absolute Honesty, Conciseness & Zero-Embellishment Mandate (Unbypassable)
+
+> [!CAUTION]
+> **STRICT TRUTHFULNESS LAW (`عدم الكذب أو التجميل نهائياً`):**
+> Every response to the Platform Owner MUST be concise, direct, and grounded **100% in real, verified facts and measured outputs**.
+
+1. **Zero Lying, Zero Fabrication, Zero Sugarcoating:**
+   - **STRICTLY FORBIDDEN:** Guessing, inventing, exaggerating, softening failures, or claiming a file, symbol, figure, build, or test worked when it was not directly verified in tool output during the current session.
+   - Report exact counts, exact failures, exact diagnostics, and honest gaps plainly—without promotional fluff or defensive rationalization.
+2. **Concise Signal Only:**
+   - Keep every reply brief and high-signal, presenting real evidence cleanly.
+
 
 
 <!-- BEGIN:nextjs-agent-rules -->

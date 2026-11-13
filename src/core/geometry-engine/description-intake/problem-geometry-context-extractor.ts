@@ -8,6 +8,8 @@
  */
 
 import { convertGeometryLatexToPlainText } from "./geometry-latex-to-plain-normalizer";
+import { unwrapStructuredCategoryHeaders } from "./geometry-clause-restructurer";
+import { synthesizeVerbalGeometryFacts } from "./verbal-geometry-figure-synthesizer";
 import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
 import {
   type ExtractedSimilarityCorrespondence,
@@ -48,7 +50,10 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     .replace(/\|\s*معرف\s*[^|\n]*/g, " ");
 
   const clean = convertGeometryLatexToPlainText(rawClean);
-  const assertionsClean = stripGoalClausesForAssertions(clean);
+  const assertionsClean = stripGoalClausesForAssertions(clean).replace(
+    /((?:ق|m)\s*\(\s*∠\s*[A-Za-z]{1,3}\s*\))\s*=\s*\d+(?:\.\d+)?\s*(?:ق|m)\s*\(\s*∠\s*[A-Za-z]{1,3}\s*\)\s*=\s*(\d+(?:\.\d+)?\s*(?:°|درجة)?)/gi,
+    "$1 = $2"
+  );
 
   // 1. علاقة التشابه أو التطابق
   const sim = extractOrderedSimilarityTriangles(clean);
@@ -70,25 +75,27 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (من المعطيات فقط لا المطلوب ولا المعاملات المضروبة)
   const lengthMatches = assertionsClean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(?:سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?))(?=[\s،,;؛|.)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?))(?=[\s،,;؛|.)]|$)/gi
   );
   for (const lm of lengthMatches) {
     const segRaw = lm[1].replace(/\s+/g, "");
     const valRaw = lm[2].trim();
+    const unitRaw = (lm[3] || "سم").trim();
     if (/^(sin|cos|tan)$/i.test(segRaw)) continue;
     if (valRaw && !facts.some((f) => f.startsWith(`${segRaw} =`))) {
-      facts.push(`${segRaw} = ${valRaw} سم`);
+      facts.push(`${segRaw} = ${valRaw} ${unitRaw}`);
     }
   }
 
-  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠ب) = 65° أو ق(∠أ ب جـ) = 90° (من المعطيات فقط لا المطلوب)
+  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠D) = (3x - 12)° أو ق(∠أ ب جـ) = 90° (من المعطيات فقط لا المطلوب)
   const angleMatches = assertionsClean.matchAll(
-    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*([0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
+    /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
     const degVal = am[4].trim();
-    if (angRaw && degVal && !facts.some((f) => f.includes(`∠${angRaw}`) || f.includes(`∠ ${angRaw}`))) {
+    const angExactRx = new RegExp(`∠\\s*${angRaw}(?![A-Za-zأ-يـ])`);
+    if (angRaw && degVal && !facts.some((f) => angExactRx.test(f))) {
       facts.push(`ق(∠${angRaw}) = ${degVal}°`);
     }
   }
@@ -151,13 +158,26 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (!facts.includes(capStr)) facts.push(capStr);
   }
 
-  // 9. استخراج أذرع زاوية المطلوب لضمان عدم سقوط أي شعاع ذُكر في المطلوب فقط (مثل m(∠CMD))
-  const goalAngMatches = clean.matchAll(/(?:أوجد|احسب|قياس|قيمة)\s+.*?(?:ق\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|∠\s*([A-Za-z]{3}))/gi);
-  for (const gm of goalAngMatches) {
-    const targetAng = (gm[1] || gm[2] || gm[3] || "").replace(/\s+/g, "");
-    if (targetAng.length === 3) {
-      const goalArmStr = `الشعاع ${targetAng[1]}${targetAng[0]} و ${targetAng[1]}${targetAng[2]}`;
-      if (!facts.includes(goalArmStr)) facts.push(goalArmStr);
+  // 9. المثلث العام في متن المسألة (جزء المعطيات فقط حتى لا يُعلن مثلث المطلوب)
+  const plainTriMatch = assertionsClean.match(/(?:في\s+)?(?:ال)?مثلث\s*([A-Z]{3})\b/);
+  if (plainTriMatch && !facts.some((f) => f.includes(`مثلث ${plainTriMatch[1]}`))) {
+    facts.unshift(`مثلث ${plainTriMatch[1]}`);
+  }
+
+  // 9-ب. الزاوية الخارجة عند رأس محدد بدون إعلان نقطة الامتداد في الوسم (مثل: الزاوية الخارجة عند Z هو (4x + 20)°)
+  const extAtVertexMatch = assertionsClean.match(
+    /(?:ال)?زاوية\s*(?:ال)?خارجة\s*(?:عن\s*المثلث\s*)?عند\s*(?:الرأس\s*)?([A-Za-z])\s*(?:هو|هي|تساوي|يساوي|=|قياسها)?\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?/i
+  );
+  if (extAtVertexMatch && plainTriMatch) {
+    const extV = extAtVertexMatch[1].toUpperCase();
+    const extVal = extAtVertexMatch[2].trim();
+    const triChars = plainTriMatch[1].split("");
+    if (triChars.includes(extV)) {
+      const others = triChars.filter((c) => c !== extV);
+      const extEnd = ["W", "D", "K", "M"].find((ch) => !triChars.includes(ch)) ?? "W";
+      if (others.length === 2 && !facts.some((f) => f.startsWith("نمد "))) {
+        facts.push(`نمد ${others[1]}${extV} إلى ${extEnd}`, `ق(∠${others[0]}${extV}${extEnd}) = ${extVal}°`);
+      }
     }
   }
 
@@ -228,24 +248,36 @@ export function combineProblemAndTagGeometryContext(
     parts.push(...promptFacts);
   }
 
-  // إذا وُجد وسم رسم، ندمج فقراته غير المكررة بعد تنظيف الأقواس
+  // إذا وُجد وسم رسم، ندمج فقراته غير المكررة بعد فك الأغلفة وتوحيد الصيغة
   if (effectiveTag) {
     // فواصل الآلاف (13,000) ليست فواصل حقائق: تُحمى قبل التقسيم وإلا تحوّل 13,000 إلى حقيقتين «13» و«000».
-    const cleanTag = convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "");
+    const cleanTag = unwrapStructuredCategoryHeaders(
+      convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "")
+    );
+    const canonicalFactKey = (f: string) =>
+      f.replace(/\s+/g, "").replace(/m\(∠/gi, "ق(∠").replace(/°/g, "");
     const tagClauses = cleanTag
       .replace(/(تصنع\s+زوايا\s+[^;؛\n]+)/g, (m) => m.replace(/[,،]/g, "§COMMA§"))
       .split(/\s*(?:[;؛\n]+|[,،]+(?![^()]*\)))\s*/)
       .map((c) => c.replace(/§COMMA§/g, "،").replace(/[\[\]]/g, "").trim())
       .filter(Boolean);
     for (const clause of tagClauses) {
-      const normClause = clause.replace(/\s+/g, "");
+      const normClause = canonicalFactKey(clause);
       const isDuplicate = parts.some((p) => {
-        const normP = p.replace(/\s+/g, "");
+        const normP = canonicalFactKey(p);
         return normP === normClause || (normP.length === normClause.length && normP.includes(normClause));
       });
       if (!isDuplicate) {
         parts.push(clause);
       }
+    }
+  }
+
+  // إذا لم يوجد وسم رسم صريح ولا شكل هندسي معلن في الأجزاء، نولّد حقائق الشكل اللفظي للمسائل الهندسية اللفظية
+  if (!effectiveTag && effectivePrompt) {
+    const verbalFacts = synthesizeVerbalGeometryFacts(effectivePrompt, parts);
+    for (const vf of verbalFacts) {
+      if (!parts.includes(vf)) parts.push(vf);
     }
   }
 

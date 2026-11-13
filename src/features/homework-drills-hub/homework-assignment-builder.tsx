@@ -67,6 +67,7 @@ export default function HomeworkAssignmentBuilder({ onHomeworkPublished }: Homew
       unitId: activeUnit?.id || "u1",
       lessonId: activeLesson?.id || "l1",
       lessonTitleArabic: activeLesson?.titleArabic || "الدرس الأول",
+      gradeId: activeGrade?.id || gradeId,
     });
 
     const newAssignment: PublishedOnlineHomeworkAssignment = {

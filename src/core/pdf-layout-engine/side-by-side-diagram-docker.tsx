@@ -198,6 +198,7 @@ export default function SideBySideDiagramDocker({
                 optionsFontEm={optionsFontEm}
                 isSolvedMode={isSolvedMode}
                 correctMcqIndex={question.correctMcqIndex}
+                synthesizedMcqIndices={question.synthesizedMcqIndices}
                 palette={palette}
                 numeralMode={settings.numeralMode}
                 notationLanguage={settings.notationLanguage}

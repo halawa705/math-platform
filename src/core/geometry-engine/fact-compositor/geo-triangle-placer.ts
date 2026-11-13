@@ -50,12 +50,29 @@ export function placeTriangleFromKnowns(k: TriangleKnowns): TrianglePoints {
   if (right) return placeRight(right, k);
   if (k.isoscelesApex) return placeIsosceles(k.isoscelesApex, k);
   const ang = k.angleDeg ?? {};
+  const knownCount = [ang.A, ang.B, ang.C].filter((v) => v !== undefined).length;
+  let effB = ang.B;
+  let effC = ang.C;
+  if (ang.A !== undefined && ang.B !== undefined && ang.A + ang.B < 179 && effC === undefined) {
+    effC = 180 - ang.A - ang.B;
+  } else if (ang.A !== undefined && ang.C !== undefined && ang.A + ang.C < 179 && effB === undefined) {
+    effB = 180 - ang.A - ang.C;
+  } else if (knownCount === 1) {
+    if (ang.A !== undefined && ang.A > 5 && ang.A < 175) {
+      effB = (180 - ang.A) * 0.56;
+      effC = 180 - ang.A - effB;
+    } else if (ang.B !== undefined && ang.B > 5 && ang.B < 175) {
+      effC = (180 - ang.B) * 0.46;
+    } else if (ang.C !== undefined && ang.C > 5 && ang.C < 175) {
+      effB = (180 - ang.C) * 0.54;
+    }
+  }
   if (k.ab && k.bc && ang.B) return { A: { x: k.ab * Math.cos(rad(ang.B)), y: k.ab * Math.sin(rad(ang.B)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
   if (k.ab && k.ca && ang.A) return { A: { x: 0, y: 0 }, B: { x: k.ab, y: 0 }, C: { x: k.ca * Math.cos(rad(ang.A)), y: k.ca * Math.sin(rad(ang.A)) } };
   if (k.bc && k.ca && ang.C) return { A: { x: k.bc - k.ca * Math.cos(rad(ang.C)), y: k.ca * Math.sin(rad(ang.C)) }, B: { x: 0, y: 0 }, C: { x: k.bc, y: 0 } };
-  if (ang.B && ang.C && ang.B + ang.C < 179) {
-    const a = k.bc ?? DEFAULT_SIDE; const aAng = 180 - ang.B - ang.C; const c = (a * Math.sin(rad(ang.C))) / Math.sin(rad(aAng));
-    return { A: { x: c * Math.cos(rad(ang.B)), y: c * Math.sin(rad(ang.B)) }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
+  if (effB !== undefined && effC !== undefined && effB > 1 && effC > 1 && effB + effC < 179) {
+    const a = k.bc ?? DEFAULT_SIDE; const aAng = 180 - effB - effC; const c = (a * Math.sin(rad(effC))) / Math.sin(rad(aAng));
+    return { A: { x: c * Math.cos(rad(effB)), y: c * Math.sin(rad(effB)) }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
   }
   const a = k.bc ?? DEFAULT_SIDE; const c = k.ab ?? a * 0.8; const b = k.ca ?? a * 0.9;
   return fromThreeSides(c, a, b) ?? { A: { x: a * 0.4, y: a * 0.8 }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };

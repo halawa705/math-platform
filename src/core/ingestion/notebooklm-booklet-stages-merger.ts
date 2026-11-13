@@ -9,8 +9,9 @@ import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import {
-  hasExplicitGeometricOrTrigShapeInPrompt,
   isDiagramJustifiedForQuestion,
+  shouldTriggerGeometryDiagramForPrompt,
+  type CurriculumStageKind,
 } from "./unsolicited-diagram-guard";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
@@ -35,6 +36,8 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   readonly unitId: string;
   readonly lessonId: string;
   readonly lessonTitleArabic: string;
+  readonly gradeId?: string;
+  readonly stage?: CurriculumStageKind;
 }): readonly PrintableMathQuestionItem[] {
   let rawS1 = params.stage1Raw || "";
   let rawS2 = params.stage2Raw || "";
@@ -88,19 +91,28 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
 
       examples.forEach((ex, exIdx) => {
         const graphSpec = ex.geometryRaw ? parseCartesianGraphDescription(ex.geometryRaw) ?? undefined : undefined;
+        const hasExplicitTag = Boolean(ex.geometryRaw);
         const hasFigureRef =
-          Boolean(ex.geometryRaw) ||
-          hasExplicitGeometricOrTrigShapeInPrompt(ex.promptAr) ||
-          /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(
-            ex.promptAr
-          );
+          hasExplicitTag ||
+          shouldTriggerGeometryDiagramForPrompt({
+            promptArabic: ex.promptAr,
+            hasExplicitTag,
+            branchId: params.branchId,
+            gradeId: params.gradeId,
+            stage: params.stage,
+            lessonTitleArabic: params.lessonTitleArabic,
+          });
         const combinedGeo = !graphSpec && hasFigureRef
           ? combineProblemAndTagGeometryContext(ex.geometryRaw, ex.promptAr)
           : "";
         const diagramAllowed = isDiagramJustifiedForQuestion({
           promptArabic: ex.promptAr,
           rawDiagramTagText: combinedGeo,
+          hasExplicitTag,
           branchId: params.branchId,
+          gradeId: params.gradeId,
+          stage: params.stage,
+          lessonTitleArabic: params.lessonTitleArabic,
         });
         const geoDiag =
           diagramAllowed && combinedGeo
@@ -119,6 +131,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
           isWorkedExample: true,
           promptAr: ex.promptAr,
           mcqChoicesAr: ex.mcqChoicesAr,
+          synthesizedMcqIndices: ex.synthesizedMcqIndices,
           correctMcqIndex: resolveCorrectChoiceIndex(ex.rawFinal || ex.steps.join(" "), ex.mcqChoicesAr),
           modelAnswerAr: ex.steps.join(" ⇐ ") || ex.rawFinal || "تطبيق مباشر",
           solutionStepsAr: ex.steps.length > 0 ? ex.steps : undefined,
@@ -140,6 +153,9 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
             block: { ...drill, ideaIndex: ideaIdx + 1 },
             branchNameAr: params.branchNameAr,
             branchId: params.branchId,
+            gradeId: params.gradeId,
+            stage: params.stage,
+            lessonTitleArabic: params.lessonTitleArabic,
             defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
             defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
             solutionsMap,
@@ -155,6 +171,8 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         unitId: params.unitId,
         lessonId: params.lessonId,
         lessonTitleArabic: params.lessonTitleArabic,
+        gradeId: params.gradeId,
+        stage: params.stage,
       });
       fallbackQs.forEach((q, idx) => {
         const item = convertQuestionAssessmentIRToPrintableItem(q, params.branchNameAr);
@@ -179,6 +197,9 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
             block: { ...drill, ideaIndex: seenIdx },
             branchNameAr: params.branchNameAr,
             branchId: params.branchId,
+            gradeId: params.gradeId,
+            stage: params.stage,
+            lessonTitleArabic: params.lessonTitleArabic,
             defaultPrompt: `تمرين حاول بنفسك (${dIdx + 1})`,
             defaultAnswer: "حل الطالب كتطبيق مباشر على الفكرة",
             bannerTitleAr: dIdx === 0 ? `الفكرة (${seenIdx}) — تمارين حاول بنفسك` : undefined,
@@ -197,6 +218,9 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         block: hw,
         branchNameAr: params.branchNameAr,
         branchId: params.branchId,
+        gradeId: params.gradeId,
+        stage: params.stage,
+        lessonTitleArabic: params.lessonTitleArabic,
         defaultPrompt: `سؤال واجب (${hIdx + 1})`,
         defaultAnswer: "واجب منزلي للتقييم والتصحيح",
         bannerTitleAr: hIdx === 0 ? "📚 تمارين الواجب المنزلي الشاملة على الدرس" : undefined,

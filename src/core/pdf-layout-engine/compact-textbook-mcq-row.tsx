@@ -186,15 +186,19 @@ export function CompactTextbookMcqRow({
       >
         {choices.slice(0, 4).map((choiceText, optIdx) => {
           const isCorrect = isSolvedMode && question.correctMcqIndex === optIdx;
+          const isSynthesized = Boolean(question.synthesizedMcqIndices?.includes(optIdx));
           const letter = getChoiceLetterByNotationSSOT(optIdx, notationLanguage);
           return (
             <div
               key={optIdx}
+              title={isSynthesized ? "خيار فارغ في المصدر — تم ملؤه تلقائياً" : undefined}
               style={{
-                backgroundColor: "#ffffff",
-                border: isCorrect
-                  ? "1.8px solid #059669"
-                  : `1.1px solid ${choiceBorderHex}55`,
+                backgroundColor: isSynthesized ? "#F0FDF4" : "#ffffff",
+                border: isSynthesized
+                  ? "1.5px solid #16A34A"
+                  : isCorrect
+                    ? "1.8px solid #059669"
+                    : `1.1px solid ${choiceBorderHex}55`,
                 borderRadius: "6px",
                 padding: "1.5px 5px",
                 boxShadow: isCorrect
@@ -205,9 +209,9 @@ export function CompactTextbookMcqRow({
             >
               <span
                 style={{
-                  backgroundColor: isCorrect ? "#059669" : choiceCircleBg,
+                  backgroundColor: isSynthesized ? "#16A34A" : isCorrect ? "#059669" : choiceCircleBg,
                   color: "#ffffff",
-                  border: `1px solid ${isCorrect ? "#047857" : choiceCircleBorder}`,
+                  border: `1px solid ${isSynthesized ? "#15803D" : isCorrect ? "#047857" : choiceCircleBorder}`,
                   boxShadow: isCorrect ? "0 1.5px 0 #064e3b" : choiceCircleShadow,
                   width: "18px",
                   height: "18px",
@@ -224,7 +228,7 @@ export function CompactTextbookMcqRow({
                 {letter}
               </span>
               <div
-                style={{ color: isCorrect ? "#064e3b" : choiceTextHex }}
+                style={{ color: isSynthesized ? "#15803D" : isCorrect ? "#064e3b" : choiceTextHex }}
                 className="flex-1 min-w-0 text-right font-extrabold text-[0.92em] break-words leading-tight"
               >
                 <SafeKaTeXBiDiMathRenderer

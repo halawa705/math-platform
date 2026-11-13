@@ -80,6 +80,7 @@ export interface QuestionAssessmentIR {
    */
   readonly mcqChoicesArabic?: readonly [string, string, string, string];
   readonly correctMcqChoiceIndex?: 0 | 1 | 2 | 3;
+  readonly synthesizedMcqIndices?: readonly number[];
 
   /**
    * الجزئيات الفرعية في الأسئلة المقالية المركبة.

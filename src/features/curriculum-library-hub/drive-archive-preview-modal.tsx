@@ -33,7 +33,7 @@ export default function DriveArchivePreviewModal({
   const sheetRef = useRef<HTMLDivElement>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [answerMode, setAnswerMode] = useState<DocumentAnswerVisibilityMode>(
-    record?.settings?.answerVisibilityMode ?? "questions_with_answers"
+    record?.settings?.answerVisibilityMode ?? "questions_only"
   );
 
   if (!record) return null;

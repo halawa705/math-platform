@@ -50,12 +50,40 @@ export function verifyProblemSpecMathematicalConsistency(
   }
 
   for (const rel of spec.relations) {
-    if (rel.kind === "right_angle" && rel.at) {
-      if (!angleByTarget.has(rel.at)) {
-        angleByTarget.set(rel.at, 90);
+    if (rel.kind !== "right_angle" || !rel.at) continue;
+    const triAngleKey = rel.targets?.find((t) => t.length === 3 && t[1] === rel.at);
+    if (triAngleKey) {
+      if (!angleByTarget.has(triAngleKey)) {
+        angleByTarget.set(triAngleKey, 90);
+      }
+      continue;
+    }
+    if (rel.targets && rel.targets.length === 2 && rel.targets[0].length === 2 && rel.targets[1].length === 2) {
+      const a0 = rel.targets[0].replace(rel.at, "");
+      const a1 = rel.targets[1].replace(rel.at, "");
+      if (a0.length === 1 && a1.length === 1) {
+        const key3 = `${a0}${rel.at}${a1}`;
+        if (!angleByTarget.has(key3)) angleByTarget.set(key3, 90);
+        continue;
       }
     }
+    if (!angleByTarget.has(rel.at)) {
+      angleByTarget.set(rel.at, 90);
+    }
   }
+
+  const resolveTriangleVertexAngle = (
+    triVerts: readonly string[],
+    v: string
+  ): number | undefined => {
+    const triSet = new Set(triVerts);
+    for (const [k, deg] of angleByTarget) {
+      if (k.length === 3 && k[1] === v && triSet.has(k[0]) && triSet.has(k[2])) {
+        return deg;
+      }
+    }
+    return angleByTarget.get(v);
+  };
 
   // فحص كل مثلث معلن في المواصفة
   for (const obj of spec.objects) {
@@ -74,10 +102,10 @@ export function verifyProblemSpecMathematicalConsistency(
         }
       }
 
-      // 2. فحص مجموع زوايا المثلث الداخلية (للزوايا المعلنة برأس واحد)
-      const angA = angleByTarget.get(A);
-      const angB = angleByTarget.get(B);
-      const angC = angleByTarget.get(C);
+      // 2. فحص مجموع زوايا المثلث الداخلية (الزوايا المنتمية لنفس المثلث)
+      const angA = resolveTriangleVertexAngle(obj.vertices, A);
+      const angB = resolveTriangleVertexAngle(obj.vertices, B);
+      const angC = resolveTriangleVertexAngle(obj.vertices, C);
       const knownAngles = [angA, angB, angC].filter((x): x is number => x !== undefined);
 
       if (knownAngles.length === 2) {

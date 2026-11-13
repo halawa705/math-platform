@@ -49,9 +49,9 @@ export function matchPrepGrade1ParallelismFigure(
   const d = normalizeParallelismArabicLettersToLatin((arabicDescription || "").trim());
   if (!d) return undefined;
 
-  // حماية: استبعاد المضلعات والرباعيات العامة ونظريات 2ع و 3ع كي لا يحدث التباس في السجل الموحد
+  // حماية: استبعاد المضلعات والرباعيات العامة والمثلثات ونظريات 2ع و 3ع كي لا يحدث التباس في السجل الموحد
   if (
-    /شكل\s*رباعي|مستطيل|مربع|معين|شبه\s*منحرف|سداسي|خماسي|معادلة|إحداثي|l1\s*\/\/\s*l2\s*\/\/\s*l3|أربعة\s*مستقيمات|متوسطات|مثلث.*قائم/i.test(d) ||
+    /شكل\s*رباعي|مستطيل|مربع|معين|شبه\s*منحرف|سداسي|خماسي|معادلة|إحداثي|l1\s*\/\/\s*l2\s*\/\/\s*l3|أربعة\s*مستقيمات|متوسطات|مثلث|نمد\s+[A-Z]{2}|امتداد|[A-Z]{2}\s*∩\s*[A-Z]{2}/i.test(d) ||
     (/متوازي\s*(?:الأضلاع|اضلاع)/i.test(d) && !/DE\s*ينصف\s*∠?\s*ADC/i.test(d))
   ) {
     return undefined;
@@ -182,8 +182,11 @@ export function matchPrepGrade1ParallelismFigure(
     return buildParallelCorrespondingAnglesFigure({ figureId, notationLanguage });
   }
 
-  // 22. مطابقة عامة للتوازي في أولى إعدادي
-  if (/(?:التوازي|مستقيم(?:ان|ين|ات)?\s*(?:ال)?متوازي(?:ان|ين|ة)?)/i.test(d) && !/تطبيقات\s*التوازي/i.test(d)) {
+  // 22. مطابقة عامة للتوازي في أولى إعدادي (فقط عندما لا تكون مسألة مثلث/تقاطع مسمى)
+  if (
+    /(?:التوازي|مستقيم(?:ان|ين|ات)?\s*(?:ال)?متوازي(?:ان|ين|ة)?)/i.test(d) &&
+    !/تطبيقات\s*التوازي|مثلث|نمد|امتداد|∩|[A-Z]{2}\s*\/\/\s*[A-Z]{2}/i.test(d)
+  ) {
     const degMatch = d.match(/(\d+(?:\.\d+)?)\s*°/);
     const deg = degMatch ? Number(degMatch[1]) : undefined;
     return buildParallelCorrespondingAnglesFigure({ figureId, notationLanguage, deg });

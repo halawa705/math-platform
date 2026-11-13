@@ -4,6 +4,10 @@
  */
 import type { GeoFact } from "./geo-fact-types";
 import { pairKey } from "./geo-label-utils";
+import {
+  inferTriangleAngleOverridesFromComposites,
+  tryPlaceIntersectingBowTieTriangles,
+} from "./geo-composite-topology-placer";
 import { placeTriangleFromKnowns, type TriVertexKey } from "./geo-triangle-placer";
 import type { Vec2 } from "./geo-vector-math";
 
@@ -36,6 +40,10 @@ export function placeDeclaredShapes(
   const angleOf = (v: string) => { const f = facts.find((x) => x.k === "angle" && x.vertex === v && x.deg !== undefined); return f && f.k === "angle" ? f.deg : undefined; };
   const polygons: PlacedPolygon[] = [];
   let cursorX = 0;
+
+  if (tryPlaceIntersectingBowTieTriangles(facts, lengths, points, polygons, num, angleOf)) {
+    return polygons;
+  }
 
   // دعم تشابه وتطابق المضلعات والمثلثات المعلنة عبر حقيقة التشابه أو التطابق
   const effectiveFacts: GeoFact[] = [...facts];
@@ -76,9 +84,10 @@ export function placeDeclaredShapes(
           }
         }
       }
+      const ov = inferTriangleAngleOverridesFromComposites(facts, labels);
       const tri = placeTriangleFromKnowns({
         ab: abVal, bc: bcVal, ca: caVal,
-        angleDeg: { A: angleOf(a), B: angleOf(b), C: angleOf(c) },
+        angleDeg: { A: angleOf(a) ?? ov.get(a), B: angleOf(b) ?? ov.get(b), C: angleOf(c) ?? ov.get(c) },
         rightAt: f.right ? keyOf(f.right) : undefined,
         isoscelesApex: f.isoApex ? keyOf(f.isoApex) : undefined,
         equilateral: f.equilateral,

@@ -10,12 +10,17 @@ import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { sanitizeNotebookLMCitationsAndLatex, healFourRaysHallucination } from "./notebooklm-citation-latex-sanitizer";
-import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
+import { synthesizeEmptyMcqChoices } from "./mcq-empty-choice-synthesizer";
+import {
+  isDiagramJustifiedForQuestion,
+  shouldTriggerGeometryDiagramForPrompt,
+  type CurriculumStageKind,
+} from "./unsolicited-diagram-guard";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER = "notebooklm_exam_questions_parser" as const;
 
-const INLINE_OPTION_SPLIT_REGEX =
-  /(?:^|\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])\s*([\s\S]*?)(?=(?:\n|\s+)(?:\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])|\n\s*(?:الإجابة|الحل|خطوات|الناتج|\|\s*معرف)|$)/gi;
+const OPTION_MARKER_REGEX =
+  /(?:^|\n|\s+)(\(\s*(?:أ|ا|ب|جـ?|د|A|B|C|D)\s*\)|(?:أ|ب|جـ|د)\s*[)\].:-])(?=\s|$|\n)/gi;
 
 export function parseChoicesTupleFromBlock(
   rawBlock: string,
@@ -33,8 +38,8 @@ export function parseChoicesTupleFromBlock(
 
   const explicitChoicesLine = rawBlock.match(/(?:^|\n)\s*(?:البدائل|الاختيارات|\[?OPTIONS\]?|\[?CHOICES\]?)\s*:\s*([^\n]+)/i)?.[1];
   if (explicitChoicesLine) {
-    const pipeParts = explicitChoicesLine.split("|").map(cleanChoice).filter(Boolean);
-    if (pipeParts.length >= 4) return [pipeParts[0], pipeParts[1], pipeParts[2], pipeParts[3]];
+    const rawPipes = explicitChoicesLine.split("|").map(cleanChoice);
+    if (rawPipes.length >= 4) return [rawPipes[0], rawPipes[1], rawPipes[2], rawPipes[3]];
   }
 
   if (/(?:مقالي|برهان|أكمل|قصيرة|essay|proof|comp|short)/i.test(rawKind)) {
@@ -44,8 +49,16 @@ export function parseChoicesTupleFromBlock(
   const preAnswerText = (
     rawBlock.split(/\n\s*(?:الإجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0] || rawBlock
   ).replace(/^\s*\|.*$/gm, "");
-  const optionMatches = Array.from(preAnswerText.matchAll(INLINE_OPTION_SPLIT_REGEX)).map((m) => cleanChoice(m[1] || ""));
-  return optionMatches.length >= 4 ? [optionMatches[0], optionMatches[1], optionMatches[2], optionMatches[3]] : undefined;
+  const markers = Array.from(preAnswerText.matchAll(OPTION_MARKER_REGEX));
+  if (markers.length < 4) return undefined;
+  const stopTailMatch = preAnswerText.slice((markers[3].index ?? 0) + markers[3][0].length).match(/\n\s*(?:الإجابة|الحل|خطوات|الناتج|\|\s*معرف)/i);
+  const hardEnd = stopTailMatch?.index !== undefined ? (markers[3].index ?? 0) + markers[3][0].length + stopTailMatch.index : preAnswerText.length;
+  const slots = [0, 1, 2, 3].map((i) => {
+    const start = (markers[i].index ?? 0) + markers[i][0].length;
+    const end = i < 3 ? (markers[i + 1].index ?? hardEnd) : hardEnd;
+    return cleanChoice(preAnswerText.slice(start, Math.max(start, end)));
+  });
+  return [slots[0], slots[1], slots[2], slots[3]];
 }
 
 export function stripInlineChoicesFromPromptText(promptText: string): string {
@@ -58,7 +71,7 @@ export function stripInlineChoicesFromPromptText(promptText: string): string {
       continue;
     }
     const inlineIdx = line.search(
-      /(?:^|\s+)(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])\s+\S[\s\S]*?(?:\(\s*ب\s*\)|ب\s*[)\].:-])\s+/i
+      /(?:^|\s+)(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])(?:\s|$)[\s\S]*?(?:\(\s*ب\s*\)|ب\s*[)\].:-])(?:\s|$)/i
     );
     if (inlineIdx >= 0) {
       if (inlineIdx > 2) nonTableLines.push(line.slice(0, inlineIdx).trim());
@@ -68,7 +81,7 @@ export function stripInlineChoicesFromPromptText(promptText: string): string {
   }
   const joined = nonTableLines.join("\n").trim();
   const multiLineOptIdx = joined.search(
-    /\n\s*(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])\s+[^\n|]+\n\s*(?:\(\s*ب\s*\)|ب\s*[)\].:-])\s+/i
+    /\n\s*(?:\(\s*(?:أ|ا)\s*\)|أ\s*[)\].:-])[^\n|]*\n\s*(?:\(\s*ب\s*\)|ب\s*[)\].:-])(?:\s|$)/i
   );
   return multiLineOptIdx > 4 ? joined.slice(0, multiLineOptIdx).trim() : joined;
 }
@@ -127,6 +140,8 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   readonly unitId: string;
   readonly lessonId: string;
   readonly lessonTitleArabic: string;
+  readonly gradeId?: string;
+  readonly stage?: CurriculumStageKind;
 }): readonly QuestionAssessmentIR[] {
   let { cleanedText } = sanitizeNotebookLMCitationsAndLatex(params.rawText);
   if (!cleanedText) return [];
@@ -210,15 +225,41 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
     const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
     const geoMatch = !graphMatch ? block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
-    const combinedGeo = !graphSpec
-      ? combineProblemAndTagGeometryContext(rawDrawing || geoMatch?.[1], basePrompt)
-      : "";
-    const diagramAllowed = isDiagramJustifiedForQuestion({ promptArabic: basePrompt, rawDiagramTagText: combinedGeo, branchId: params.branchId });
+    const hasTag = Boolean(rawDrawing || geoMatch?.[1]);
+    const shouldTryGeo =
+      !graphSpec &&
+      (hasTag ||
+        shouldTriggerGeometryDiagramForPrompt({
+          promptArabic: basePrompt,
+          hasExplicitTag: false,
+          branchId: params.branchId,
+          gradeId: params.gradeId,
+          stage: params.stage,
+          lessonTitleArabic: params.lessonTitleArabic,
+        }));
+    const combinedGeo = shouldTryGeo ? combineProblemAndTagGeometryContext(rawDrawing || geoMatch?.[1], basePrompt) : "";
+    const diagramAllowed = isDiagramJustifiedForQuestion({
+      promptArabic: basePrompt,
+      rawDiagramTagText: combinedGeo,
+      hasExplicitTag: hasTag,
+      branchId: params.branchId,
+      gradeId: params.gradeId,
+      stage: params.stage,
+      lessonTitleArabic: params.lessonTitleArabic,
+    });
     const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `geom_${params.lessonId}_${orderNumber}`) : undefined;
     const attachedGeometryFigure = geoDiag?.figure;
     const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
-    const mcqChoicesArabic = parseChoicesTupleFromBlock(block, rawKind);
+    const rawChoices = parseChoicesTupleFromBlock(block, rawKind);
+    const modelSolutionStepsArabic = rawSteps ? mergeLogicalSolutionSteps(rawSteps) : rawCorrect ? [rawCorrect] : [];
+    const finalCanonicalAnswerArabic = rawFinalAnswer || rawCorrect || modelSolutionStepsArabic[modelSolutionStepsArabic.length - 1] || "";
+    const synthResult = rawChoices
+      ? synthesizeEmptyMcqChoices({ choices: rawChoices, solutionText: `${rawCorrect} ${finalCanonicalAnswerArabic}` })
+      : undefined;
+    const mcqChoicesArabic = synthResult?.choices;
+    const synthesizedMcqIndices = synthResult && synthResult.synthesizedIndices.length > 0 ? synthResult.synthesizedIndices : undefined;
+    const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect || rawFinalAnswer, mcqChoicesArabic);
     const inlineGovMatch = basePrompt.match(/(?:\{\s*(محافظة\s+[^}\n]+)\s*\}|\[\s*(محافظة\s+[^\]\n]+)\s*\]|\(\s*(محافظة\s+[^)\n]+)\s*\))/i);
     const resolvedGov = (rawGov || inlineGovMatch?.[1] || inlineGovMatch?.[2] || inlineGovMatch?.[3] || "").trim();
     const rawCleanPrompt = basePrompt
@@ -232,45 +273,25 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
 
     const patternKind: MathQuestionPatternKind =
-      rawKind.includes("mcq") || rawKind.includes("اختر") || rawKind.includes("multiple") || mcqChoicesArabic !== undefined
-        ? "mcq"
-        : rawKind.includes("short") || rawKind.includes("قصيرة")
-          ? "direct_answer"
-          : rawKind.includes("proof") || rawKind.includes("برهان") || rawKind.includes("مقالي") || rawKind.includes("essay")
-            ? "proof_reasoning"
-            : rawKind.includes("comp") || rawKind.includes("أكمل")
-              ? "completion"
-              : "direct_answer";
-
-    const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect || rawFinalAnswer, mcqChoicesArabic);
-    const modelSolutionStepsArabic = rawSteps ? mergeLogicalSolutionSteps(rawSteps) : rawCorrect ? [rawCorrect] : [];
-    const finalCanonicalAnswerArabic = rawFinalAnswer || rawCorrect || modelSolutionStepsArabic[modelSolutionStepsArabic.length - 1] || "";
+      rawKind.includes("mcq") || rawKind.includes("اختر") || rawKind.includes("multiple") || mcqChoicesArabic !== undefined ? "mcq"
+        : rawKind.includes("short") || rawKind.includes("قصيرة") ? "direct_answer"
+        : rawKind.includes("proof") || rawKind.includes("برهان") || rawKind.includes("مقالي") || rawKind.includes("essay") ? "proof_reasoning"
+        : rawKind.includes("comp") || rawKind.includes("أكمل") ? "completion" : "direct_answer";
 
     return {
-      questionId: `q-${params.lessonId}-${orderNumber}`,
-      displayOrderNumber: orderNumber,
-      branchId: params.branchId,
-      unitId: params.unitId,
-      lessonId: params.lessonId,
-      lessonTitleArabic: params.lessonTitleArabic,
-      patternKind,
-      cognitiveDepth: patternKind === "proof_reasoning" ? "deductive_proof" : "multi_step_analysis",
-      allocatedMarks: Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : patternKind === "mcq" ? 1 : 3,
-      estimatedSolveMinutes: patternKind === "mcq" ? 2 : 5,
-      promptArabic: cleanPrompt,
-      givenDataArabic: rawGiven ? rawGiven.split(/[،|]/).map((s) => s.trim()).filter(Boolean) : undefined,
+      questionId: `q_${params.lessonId}_${orderNumber}`, displayOrderNumber: orderNumber,
+      branchId: params.branchId, unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: params.lessonTitleArabic,
+      patternKind, cognitiveDepth: patternKind === "proof_reasoning" ? "deductive_proof" : "direct_application",
+      allocatedMarks: Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : 2,
+      estimatedSolveMinutes: patternKind === "proof_reasoning" ? 5 : 2,
+      promptArabic: cleanPrompt || basePrompt,
+      givenDataArabic: rawGiven ? rawGiven.split("|").map((s) => s.trim()).filter(Boolean) : undefined,
       requiredToProveOrFindArabic: rawRequired || undefined,
-      mcqChoicesArabic,
-      correctMcqChoiceIndex,
-      modelSolutionStepsArabic,
-      finalCanonicalAnswerArabic,
+      mcqChoicesArabic, correctMcqChoiceIndex, synthesizedMcqIndices, modelSolutionStepsArabic, finalCanonicalAnswerArabic,
       acceptedAnswersArabic: rawAccepted ? rawAccepted.split("|").map((s) => s.trim()).filter(Boolean) : undefined,
-      figureDiagnosticsAr,
-      attachedGeometryFigure,
-      graphSpec,
+      figureDiagnosticsAr, attachedGeometryFigure, graphSpec,
       authenticCitation: resolvedGov && !resolvedGov.includes("غير مذكور") ? { governorateNameArabic: resolvedGov } : undefined,
-      answerLinesCount: 0,
-      hasDottedDivider: true,
+      answerLinesCount: 0, hasDottedDivider: true,
     };
   });
 }

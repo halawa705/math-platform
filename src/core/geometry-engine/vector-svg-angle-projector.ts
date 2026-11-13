@@ -99,12 +99,6 @@ export function projectGeometryAnglesSVGMarkup(
       `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${opts.accentColor}" stroke-width="1.4" />`
     );
 
-    // المنصف الزاوي لوضع النص أو العلامة
-    const midAng = ang1 + diff / 2;
-    const labelDist = rArc + 9;
-    const lx = vx + Math.cos(midAng) * labelDist;
-    const ly = vy + Math.sin(midAng) * labelDist + 3;
-
     // 3. كتابة قياس الزاوية (نص أو درجات) - لا يُكتب أي قياس رقمي إذا وُجدت علامة تطابق أو تنصيف رمزية (نقطة أو علامة x)
     const isCongruenceMark = ang.markSymbol === "dot" || ang.markSymbol === "cross";
     const labelText = !isCongruenceMark
@@ -115,14 +109,23 @@ export function projectGeometryAnglesSVGMarkup(
             : undefined)
       : undefined;
 
+    // المنصف الزاوي لوضع النص أو العلامة (مع إزاحة تكيّفية للتسميات الجبرية والزوايا الحادة الضيقة)
+    const midAng = ang1 + diff / 2;
+    const openDeg = (Math.abs(diff) * 180) / Math.PI;
+    const isLongLabel = Boolean(labelText && labelText.length >= 6);
+    const labelDist = rArc + 9 + (isLongLabel ? 7 : 0) + (openDeg < 42 ? 6 : 0);
+    const lx = vx + Math.cos(midAng) * labelDist;
+    const ly = vy + Math.sin(midAng) * labelDist + 2.6;
+
     if (labelText) {
       const isUnknown =
         ang.labelKind === "unknown" ||
         labelText.includes("؟") ||
         labelText.includes("?");
       const angTextColor = isUnknown ? "#D97706" : opts.accentColor;
+      const fontSize = labelText.length >= 8 ? "6.6" : labelText.length >= 6 ? "7.2" : "8";
       elements.push(
-        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="8" font-weight="bold" fill="${angTextColor}">${labelText}</text>`
+        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-weight="bold" fill="${angTextColor}" paint-order="stroke" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round">${labelText}</text>`
       );
     }
 

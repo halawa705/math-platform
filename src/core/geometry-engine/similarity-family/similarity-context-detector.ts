@@ -70,12 +70,13 @@ export function isSimilarityGeometryContext(description: string): boolean {
     return true;
   }
 
-  // 6. توازي على أضلاع المثلث (طاليس والقطع المتناسبة)
+  // 6. توازي على أضلاع المثلث (طاليس والقطع المتناسبة - لا يُفعّل لمسائل زوايا أولى إعدادي ذات الدرجات)
   if (
     description.includes("∈") &&
     description.includes("//") &&
     (description.includes("مثلث") || description.includes("Δ")) &&
-    !description.includes("متوسط")
+    !description.includes("متوسط") &&
+    !description.includes("°")
   ) {
     return true;
   }

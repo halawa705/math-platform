@@ -160,7 +160,7 @@ export default function StudioExamGeneratorTab({
       return;
     }
     const extracted = parseNotebookLMExamQuestionsToIR({
-      rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
+      rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle, gradeId,
     });
     setParsedQuestions(extracted);
     onSyncQuestionsToSheet?.(extracted.map((q) => mapToPrintable(q)));
@@ -179,7 +179,7 @@ export default function StudioExamGeneratorTab({
   const getActiveQuestions = (): readonly QuestionAssessmentIR[] => {
     if (parsedQuestions.length > 0) return parsedQuestions;
     const fresh = parseNotebookLMExamQuestionsToIR({
-      rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle,
+      rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle, gradeId,
     });
     if (fresh.length > 0) setParsedQuestions(fresh);
     return fresh;

@@ -8,6 +8,10 @@ import { splitDescriptionIntoFactStrings } from "./geo-fact-splitter";
 import { parseGeoFactString } from "./geo-fact-parser";
 import { pairKey, toDisplayLabel } from "./geo-label-utils";
 import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
+import {
+  tryPlaceParallelWithMissingEndpoints,
+  tryPlacePointOnWithCollinearExtension,
+} from "./geo-composite-topology-placer";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
@@ -43,12 +47,16 @@ export function composeFigureFromGeometryDescription(description: string, figure
     }
   }
 
-  const trigCatalogFig = matchPrepGrade3TrigonometryFigure(description, figureId, notation);
+  const trigCatalogFig = /(?:sin|cos|tan|cot|جا|جتا|ظا|طائرة\s*ورقية|سلم|مربعات\s*متطابقة)/i.test(description)
+    ? matchPrepGrade3TrigonometryFigure(description, figureId, notation)
+    : undefined;
   if (trigCatalogFig) {
     return { figure: trigCatalogFig, warnings: [] };
   }
 
-  const parallelCatalogFig = matchPrepGrade1ParallelismFigure(description, figureId, notation);
+  const parallelCatalogFig = !/مثلث|نمد|امتداد|∩/i.test(description)
+    ? matchPrepGrade1ParallelismFigure(description, figureId, notation)
+    : undefined;
   if (parallelCatalogFig) {
     return { figure: parallelCatalogFig, warnings: [] };
   }
@@ -112,11 +120,33 @@ export function composeFigureFromGeometryDescription(description: string, figure
 
   for (const f of facts) {
     if (f.k === "pointOn" || f.k === "midpoint") {
-      const [a, b] = f.seg; if (!P(a) || !P(b)) { warnings.push(`نقطتا ${a}${b} غير معرّفتين`); continue; }
+      const [a, b] = f.seg;
+      if (f.k === "pointOn" && tryPlacePointOnWithCollinearExtension({ p: f.p, seg: f.seg, points, lengths, addExtra })) {
+        host.set(f.p, f.seg);
+        continue;
+      }
+      const isDeferredHostLine = f.k === "pointOn" && facts.some((pf) => pf.k === "parallel" && (pairKey(pf.a[0], pf.a[1]) === pairKey(a, b) || pairKey(pf.b[0], pf.b[1]) === pairKey(a, b)));
+      if (!P(a) || !P(b)) { if (!isDeferredHostLine) warnings.push(`نقطتا ${a}${b} غير معرّفتين`); continue; }
       points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
       if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
     } else if (f.k === "parallel") {
-      const [x, y] = f.a; const [p, q] = f.b; if (!P(x) || !P(y) || !P(p) || !P(q)) { warnings.push("توازي بنقاط غير معرّفة"); continue; }
+      const [x, y] = f.a; const [p, q] = f.b;
+      // إذا ذكر DE // BC في مثلث ABC دون ذكر D ∈ AB و E ∈ AC صراحةً نضعهما على الضلعين
+      const basePoly = polygons.find((pl) => pl.labels.length === 3 && pl.labels.includes(p) && pl.labels.includes(q));
+      if (!P(x) && !P(y) && basePoly) {
+        const apex = basePoly.labels.find((l) => l !== p && l !== q);
+        if (apex) {
+          points.set(x, vLerp(P(apex)!, P(p)!, 0.48)); host.set(x, [apex, p]);
+          points.set(y, vLerp(P(apex)!, P(q)!, 0.48)); host.set(y, [apex, q]);
+        }
+      }
+      const handledComposite = tryPlaceParallelWithMissingEndpoints({
+        parallelFact: f, facts, points, host, lengths, addExtra,
+        addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
+        nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
+      });
+      if (handledComposite) continue;
+      if (!P(x) || !P(y) || !P(p) || !P(q)) { warnings.push("توازي بنقاط غير معرّفة"); continue; }
       const d = vSub(P(q)!, P(p)!); const hy = host.get(y); const hx = host.get(x);
       if (hy) { const r = lineIntersection(P(x)!, vAdd(P(x)!, d), P(hy[0])!, P(hy[1])!); if (r) points.set(y, r); }
       else if (hx) { const r = lineIntersection(P(y)!, vAdd(P(y)!, d), P(hx[0])!, P(hx[1])!); if (r) points.set(x, r); }
@@ -148,8 +178,14 @@ export function composeFigureFromGeometryDescription(description: string, figure
       ticks.set(pairKey(opp[0], d), ++tickGroup); ticks.set(pairKey(d, opp[1]), tickGroup);
     } else if (f.k === "intersect") {
       if (!P(f.a[0]) || !P(f.a[1]) || !P(f.b[0]) || !P(f.b[1])) { warnings.push("تقاطع بنقاط غير معرّفة"); continue; }
-      const r = lineIntersection(P(f.a[0])!, P(f.a[1])!, P(f.b[0])!, P(f.b[1])!); if (!r) { warnings.push("مستقيمان متوازيان لا يتقاطعان"); continue; }
-      points.set(f.p, r); for (const s of [f.a, f.b]) if (!isPolygonSide(s[0], s[1])) addExtra(s[0], s[1]);
+      if (!P(f.p)) {
+        const r = lineIntersection(P(f.a[0])!, P(f.a[1])!, P(f.b[0])!, P(f.b[1])!); if (!r) { warnings.push("مستقيمان متوازيان لا يتقاطعان"); continue; }
+        points.set(f.p, r);
+      }
+      for (const s of [f.a, f.b]) {
+        const alreadySplit = isPolygonSide(s[0], f.p) && isPolygonSide(f.p, s[1]);
+        if (!isPolygonSide(s[0], s[1]) && !alreadySplit) addExtra(s[0], s[1]);
+      }
     } else if (f.k === "diagonalsMeet") {
       const q = polygons.find((x) => x.labels.length === 4); if (!q) continue; const [a, b, c, d] = q.labels;
       const r = lineIntersection(P(a)!, P(c)!, P(b)!, P(d)!); if (r) { points.set(f.p, r); addExtra(a, c); addExtra(b, d); }
@@ -160,8 +196,22 @@ export function composeFigureFromGeometryDescription(description: string, figure
     else if (f.k === "equal") { ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup); ticks.set(pairKey(f.b[0], f.b[1]), tickGroup); }
     else if (f.k === "angle") {
       const poly = polyOf(f.vertex); const labels = poly?.labels ?? []; const i = labels.indexOf(f.vertex);
-      const arms = f.arms ? [f.arms[0], f.arms[2]] : i >= 0 ? [labels[(i + labels.length - 1) % labels.length], labels[(i + 1) % labels.length]] : null;
-      if (arms) addAngle(f.vertex, arms[0], arms[1], { degrees: f.deg, degreesLabel: f.text ?? (f.deg !== undefined && !f.right ? `${f.deg}°` : undefined), isRightAngle: f.right });
+      let arms: [string, string] | null = f.arms ? [f.arms[0], f.arms[2]] : i >= 0 ? [labels[(i + labels.length - 1) % labels.length], labels[(i + 1) % labels.length]] : null;
+      if (!arms) {
+        const neighbors = extras.flatMap((e) => (e.a === f.vertex ? [e.b] : e.b === f.vertex ? [e.a] : []));
+        for (const hSeg of [host.get(f.vertex)]) if (hSeg) neighbors.push(hSeg[0], hSeg[1]);
+        const uniqueN = Array.from(new Set(neighbors.filter((n) => n !== f.vertex && P(n))));
+        if (uniqueN.length >= 2) arms = [uniqueN[0], uniqueN[1]];
+      }
+      const eqAngleMatch = f.text?.match(/^(?:ق|m)?\s*\(?\s*∠\s*([A-Z])\s*\)?$/);
+      if (arms && eqAngleMatch) {
+        const vOther = eqAngleMatch[1];
+        const polyO = polyOf(vOther); const lblO = polyO?.labels ?? []; const iO = lblO.indexOf(vOther);
+        addAngle(f.vertex, arms[0], arms[1], { markSymbol: "dot" });
+        if (iO >= 0) addAngle(vOther, lblO[(iO + lblO.length - 1) % lblO.length], lblO[(iO + 1) % lblO.length], { markSymbol: "dot" });
+      } else if (arms && P(arms[0]) && P(arms[1])) {
+        addAngle(f.vertex, arms[0], arms[1], { degrees: f.deg, degreesLabel: f.text ?? (f.deg !== undefined && !f.right ? `${f.deg}°` : undefined), isRightAngle: f.right });
+      }
     }
   }
 

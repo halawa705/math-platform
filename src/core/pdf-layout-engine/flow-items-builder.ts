@@ -242,5 +242,8 @@ export function buildFlowItems(params: {
     items.push({ id: "flow-accreditation-footer", kind: "accreditation_footer", span: "full" });
   }
 
-  return { items, totalIdeasCount: groups.length };
+  const actualIdeasCount = groups.filter(
+    (g) => !g.anchorQuestion?.ideaBannerTitleAr?.includes("الواجب المنزلي")
+  ).length;
+  return { items, totalIdeasCount: Math.max(1, actualIdeasCount) };
 }

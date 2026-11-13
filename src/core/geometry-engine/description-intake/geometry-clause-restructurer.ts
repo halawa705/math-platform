@@ -8,6 +8,41 @@ import { parseLabelList } from "../fact-compositor/geo-label-utils";
 export const MODULE_ID_GEOMETRY_CLAUSE_RESTRUCTURER = "geometry_clause_restructurer" as const;
 
 const SEP = " ؛ ";
+const STRUCTURED_HEADER_REGEX =
+  /(?:^|[؛;\s])(?:الرؤوس|الأشكال|الشكل|أطوال\s*الأضلاع(?:\s*ووحداتها)?|الأطوال|الزوايا(?:\s*والتعامد)?|التوازي(?:\s*والتعامد)?|الأشعة(?:\s*والامتداد)?|المعطيات|الأضلاع\s*والزوايا|النقاط)\s*\(/g;
+
+/**
+ * يفك أغلفة الأقواس الهيكلية مثل `الرؤوس (مثلث ABC)` و`الزوايا والتعامد (m(∠B) = 90° ; m(∠A) = 35°)`
+ * مع احترام الأقواس المتداخلة كي لا تتبقى `)` زائدة أو يتلف التعبير `(x + 10)°`.
+ */
+export function unwrapStructuredCategoryHeaders(text: string): string {
+  if (!text) return text;
+  let out = text;
+  for (let pass = 0; pass < 4; pass++) {
+    STRUCTURED_HEADER_REGEX.lastIndex = 0;
+    const match = STRUCTURED_HEADER_REGEX.exec(out);
+    if (!match) break;
+    const openParenIdx = out.indexOf("(", match.index);
+    if (openParenIdx < 0) break;
+    const prefixHasSep = /^[؛;\s]/.test(match[0]) ? SEP : "";
+    let depth = 1;
+    let i = openParenIdx + 1;
+    while (i < out.length && depth > 0) {
+      if (out[i] === "(") depth++;
+      else if (out[i] === ")") depth--;
+      i++;
+    }
+    if (depth === 0) {
+      const inner = out.slice(openParenIdx + 1, i - 1).trim();
+      out = out.slice(0, match.index) + prefixHasSep + inner + SEP + out.slice(i);
+    } else {
+      const inner = out.slice(openParenIdx + 1).trim();
+      out = out.slice(0, match.index) + prefixHasSep + inner;
+    }
+  }
+  return out;
+}
+
 /** جمل «المطلوب» ليست حقائق رسم فتُحذف. */
 const GOAL_CLAUSE =
   /^(?:ثم\s+)?[فو]?\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|استنتج|علل|بين\s*أن|حدد|اذكر|ما\s*(?:هو|هي|قيمة|نوع)|المطلوب|هل\b)/;
@@ -41,6 +76,8 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(/\]/g, SEP)
     .replace(/\|\s*(?:معرف|نوع)\s*[^؛;\n]*/g, " ")
     .replace(/\|\s*$/g, " ")
+    .replace(/(?:؛|;|\s)*المطلوب\s*[:：][^؛;\n]*/g, SEP);
+  t = unwrapStructuredCategoryHeaders(t)
     .replace(/(?<!\d)\.(?!\d)/g, SEP);
   t = t
     .replace(/(وتر|قطر)\s+فيها/g, "$1")
@@ -51,6 +88,9 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s*(?:ال)?(?:مستقيم|قطعة\\s*مستقيمة)?\\s*(?:و?يقطع)\\s*\\b(${LABELS_ONE_SEG})\\b\\s*في\\s*([A-Z]|${AR})`, "g"), "$1 ؛ $3 ∈ $2")
     .replace(/(?:ال)?نقطة\s+(?=[A-Z]\b)/g, " ")
     .replace(new RegExp(`(?:ال)?نقطة\\s+(${AR})(?=\\s+(?:على|∈|منتصف|تنتمي))`, "g"), "$1")
+    .replace(new RegExp(`([A-Z]|${AR})\\s*(?:∈|على)?\\s*(?:لـ|إلى|على)?\\s*امتداد\\s*(?:القطعة\\s*|الشعاع\\s*|المستقيم\\s*|الضلع\\s*)?(${LABELS_ONE_SEG}|${AR}\\s*${AR})`, "g"), "نمد $2 إلى $1")
+    .replace(/مثلثان\s*([A-Z]{3})\s*و\s*([A-Z]{3})(?:\s*(?:يتقاطعان|متقاطعان))?(?:\s*(?:في|عند)\s*(?:الرأس|النقطة)?\s*([A-Z]))?/g, "مثلث $1 ؛ مثلث $2")
+    .replace(/(مثلث\s*[A-Z]{3})\s+(?:يمثل|تمثل|يمثّل)\s+[^؛;]+/g, "$1")
     .replace(/([A-Z]|[أ-ي]ـ?)\s*(?:هي\s*)?نقطة\s*تقاطع\s*(?:ال)?قطر(?:يه|يها|ي|ان|اه)\s*/g, " قطراه يتقاطعان في $1 ")
     .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+([^؛;]*?)(?:طوله|طولها)\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم)?`, "g"), "$1 $2 ؛ $1 = $3 سم ")
     .replace(new RegExp(`\\sو(?:\\s*)(?=${FACT_START})`, "g"), SEP)

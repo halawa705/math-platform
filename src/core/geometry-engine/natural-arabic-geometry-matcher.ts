@@ -95,7 +95,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
 
   if (/إقليدس|عمود.*وتر|مسقط/i.test(desc)) return buildTriangleEuclidAltitudeFigure({ figureId, notationLanguage });
   if (/متوسط|نقطة\s*تقاطع\s*المتوسطات/i.test(desc)) return buildTriangleMediansCentroidFigure({ figureId, notationLanguage });
-  if (/طاليس|يوازي/i.test(desc) && /مثلث/i.test(desc) && !/منتصف/i.test(desc)) return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
+  if (/طاليس|يوازي/i.test(desc) && /مثلث/i.test(desc) && !/منتصف|°|\b[A-Z]{2}\s*\/\/\s*[A-Z]{2}/i.test(desc)) return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
   if (/منصف\s*زاوية/i.test(desc)) return buildTriangleAngleBisectorFigure({ figureId, notationLanguage });
   if (/زاوية\s*خارجة/i.test(desc)) return buildTriangleExteriorAngleFigure({ figureId, notationLanguage });
   if (/منتصف/i.test(desc) && /مثلث/i.test(desc)) return buildTriangleMidsegmentFigure({ figureId, notationLanguage });

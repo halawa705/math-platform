@@ -19,6 +19,7 @@ export interface AdaptiveMCQChoicesCardProps {
   readonly optionsFontEm: string;
   readonly isSolvedMode: boolean;
   readonly correctMcqIndex?: number;
+  readonly synthesizedMcqIndices?: readonly number[];
   readonly palette: PrintThemePaletteTokens;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage?: "arabic" | "english";
@@ -30,6 +31,7 @@ export function AdaptiveMCQChoicesCard({
   optionsFontEm,
   isSolvedMode,
   correctMcqIndex,
+  synthesizedMcqIndices,
   palette,
   numeralMode,
   notationLanguage,
@@ -41,12 +43,18 @@ export function AdaptiveMCQChoicesCard({
     >
       {mcqChoicesAr.map((choice, cIdx) => {
         const isCorrect = isSolvedMode && correctMcqIndex === cIdx;
+        const isSynthesized = Boolean(synthesizedMcqIndices?.includes(cIdx));
         return (
           <div
             key={cIdx}
+            title={isSynthesized ? "خيار فارغ في المصدر — تم ملؤه تلقائياً" : undefined}
             style={{
-              borderColor: isCorrect ? palette.primaryHex : palette.solvedBorderHex,
-              backgroundColor: "#FFFFFF",
+              borderColor: isSynthesized
+                ? "#16A34A"
+                : isCorrect
+                  ? palette.primaryHex
+                  : palette.solvedBorderHex,
+              backgroundColor: isSynthesized ? "#F0FDF4" : "#FFFFFF",
               boxShadow: isCorrect
                 ? `0 0 0 1px ${palette.primaryHex} inset`
                 : "0 1px 2px rgba(76, 29, 149, 0.04)",
@@ -55,14 +63,23 @@ export function AdaptiveMCQChoicesCard({
           >
             <span
               style={{
-                background: isCorrect ? palette.headerGradientCss : palette.primaryHex,
+                background: isSynthesized
+                  ? "#16A34A"
+                  : isCorrect
+                    ? palette.headerGradientCss
+                    : palette.primaryHex,
                 color: "#ffffff",
               }}
               className="w-5 h-5 rounded-md flex items-center justify-center text-[0.8em] font-black shrink-0 shadow-2xs"
             >
               {getChoiceLetterByNotationSSOT(cIdx, notationLanguage)}
             </span>
-            <div className="flex-1 min-w-0 flex items-center justify-center text-center font-extrabold text-slate-900 break-normal leading-normal py-0.5">
+            <div
+              style={isSynthesized ? { color: "#15803D" } : undefined}
+              className={`flex-1 min-w-0 flex items-center justify-center text-center font-extrabold break-normal leading-normal py-0.5 ${
+                isSynthesized ? "" : "text-slate-900"
+              }`}
+            >
               <SafeKaTeXBiDiMathRenderer
                 text={choice}
                 numeralMode={numeralMode}

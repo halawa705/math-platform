@@ -84,7 +84,10 @@ export function matchPrepGrade1TriangleAnglesFigure(
   }
 
   // 11. مسألة 2-7 ص 207: مثلث متساوي الأضلاع والزاوية الخارجة عنه = 120°
-  if (/متساوي\s*الأضلاع.*(?:ال)?خارج(?:ي)?ة|(?:ال)?خارج(?:ي)?ة.*متساوي\s*الأضلاع/i.test(d)) {
+  if (
+    (/متساوي\s*الأضلاع.*(?:ال)?خارج(?:ي)?ة|(?:ال)?خارج(?:ي)?ة.*متساوي\s*الأضلاع/i.test(d)) &&
+    !/مثلث\s*[A-Z]{3}|(?<![أ-يA-Za-z])[xXس](?![أ-يA-Za-z])|\d+°/.test(d.replace(/120°|60°/g, ""))
+  ) {
     return buildTriangleEquilateralExterior120Figure({
       figureId,
       notationLanguage,
@@ -97,8 +100,11 @@ export function matchPrepGrade1TriangleAnglesFigure(
     return buildTriangleTwoExteriors110104Figure({ figureId, notationLanguage });
   }
 
-  // 13. مطابقة عامة للمثلث 1 إعدادي
-  if (/الزاوية\s*الخارجة\s*للمثلث|مجموع\s*قياسات\s*الزوايا\s*الداخلة\s*للمثلث/i.test(d)) {
+  // 13. مطابقة عامة للمثلث 1 إعدادي (فقط للشرح النظري المجرد بلا رؤوس أو معطيات محددة)
+  if (
+    /(?:الزاوية\s*الخارجة\s*للمثلث|مجموع\s*قياسات\s*الزوايا\s*الداخلة\s*للمثلث)/i.test(d) &&
+    !/مثلث\s*[A-Z]{3}|[A-Z]{2}\s*=|∠\s*[A-Z]|ق\s*\(|m\s*\(|(?<![أ-يA-Za-z])[xXس](?![أ-يA-Za-z])|\d+°|متساوي\s*الأضلاع|قائم/i.test(d)
+  ) {
     return buildTriangleExteriorSum2282Figure({ figureId, notationLanguage });
   }
 

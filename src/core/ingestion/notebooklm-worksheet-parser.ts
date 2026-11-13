@@ -13,7 +13,12 @@ import { combineProblemAndTagGeometryContext } from "../geometry-engine/descript
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { detectAndBuildAreaModelSvg } from "../geometry-engine/arithmetic-area-model/area-model-arithmetic-svg-builder";
-import { isDiagramJustifiedForQuestion } from "./unsolicited-diagram-guard";
+import { synthesizeEmptyMcqChoices } from "./mcq-empty-choice-synthesizer";
+import {
+  isDiagramJustifiedForQuestion,
+  shouldTriggerGeometryDiagramForPrompt,
+  type CurriculumStageKind,
+} from "./unsolicited-diagram-guard";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -30,6 +35,8 @@ export interface ParseNotebookLMWorksheetParams {
   readonly branchNameAr: string;
   readonly lessonTitleArabic: string;
   readonly includeAnswerLines?: boolean;
+  readonly gradeId?: string;
+  readonly stage?: CurriculumStageKind;
 }
 
 interface ParsedWorksheetCore {
@@ -52,6 +59,7 @@ interface ParsedWorksheetQuestion {
   readonly promptText: string;
   readonly diagramDesc?: string;
   readonly choices?: readonly [string, string, string, string];
+  readonly synthesizedMcqIndices?: readonly number[];
   readonly correctIndex?: 0 | 1 | 2 | 3;
   readonly rawSolution?: string;
   readonly steps: readonly string[];
@@ -154,11 +162,14 @@ function parseQuestionsBlocks(raw: string): ParsedWorksheetQuestion[] {
     const promptMatch = body.match(/النص\s*:\s*([\s\S]*?)(?=(?:الرسم|البدائل|الإجابة_الصحيحة|البرهان|===|$))/i);
     let promptText = (promptMatch?.[1] || body).trim();
     const diagMatch = body.match(/الرسم\s*:\s*(\[رسم هندسي:[^\]]+\])/i);
-    const choices = isMcq ? parseChoicesTupleFromBlock(body) : undefined;
+    const rawChoices = isMcq ? parseChoicesTupleFromBlock(body) : undefined;
     promptText = stripInlineChoicesFromPromptText(promptText);
 
     const ansMatch = body.match(/الإجابة_الصحيحة\s*:\s*([^\n|]+)/i);
     const rawCorrect = ansMatch?.[1]?.trim() || "";
+    const synthResult = rawChoices ? synthesizeEmptyMcqChoices({ choices: rawChoices, solutionText: rawCorrect }) : undefined;
+    const choices = synthResult?.choices;
+    const synthesizedMcqIndices = synthResult && synthResult.synthesizedIndices.length > 0 ? synthResult.synthesizedIndices : undefined;
     const correctIndex = isMcq && choices ? resolveCorrectChoiceIndex(rawCorrect, choices) : undefined;
 
     const stepsMatch = body.match(/(?:البرهان_والخطوات|خطوات الحل)\s*:\s*([\s\S]*?)$/i);
@@ -172,6 +183,7 @@ function parseQuestionsBlocks(raw: string): ParsedWorksheetQuestion[] {
       promptText: cleanStudentFacingMathPromptSSOT(promptText),
       diagramDesc: diagMatch?.[1],
       choices,
+      synthesizedMcqIndices,
       correctIndex,
       rawSolution: rawCorrect,
       steps,
@@ -209,13 +221,28 @@ export function parseNotebookLMWorksheetResponse(
     let geoMatch;
     let graphSpec;
     if (!areaModelSvg) {
-      const diagCombined = ex.diagramDesc
-        ? combineProblemAndTagGeometryContext(ex.examplePrompt, ex.diagramDesc)
+      const hasExplicitTag = Boolean(ex.diagramDesc);
+      const shouldTryGeo =
+        hasExplicitTag ||
+        shouldTriggerGeometryDiagramForPrompt({
+          promptArabic: ex.examplePrompt,
+          hasExplicitTag: false,
+          branchId,
+          gradeId: params.gradeId,
+          stage: params.stage,
+          lessonTitleArabic,
+        });
+      const diagCombined = shouldTryGeo
+        ? combineProblemAndTagGeometryContext(ex.diagramDesc, ex.examplePrompt)
         : undefined;
       const diagramAllowed = isDiagramJustifiedForQuestion({
         promptArabic: ex.examplePrompt,
         rawDiagramTagText: diagCombined || ex.diagramDesc,
+        hasExplicitTag,
         branchId,
+        gradeId: params.gradeId,
+        stage: params.stage,
+        lessonTitleArabic,
       });
       geoMatch = diagramAllowed && diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
       graphSpec = diagramAllowed && ex.diagramDesc ? parseCartesianGraphDescription(ex.diagramDesc) : undefined;
@@ -252,13 +279,28 @@ export function parseNotebookLMWorksheetResponse(
     let geoMatch;
     let graphSpec;
     if (!areaModelSvg) {
-      const diagCombined = q.diagramDesc
-        ? combineProblemAndTagGeometryContext(q.promptText, q.diagramDesc)
+      const hasExplicitTag = Boolean(q.diagramDesc);
+      const shouldTryGeo =
+        hasExplicitTag ||
+        shouldTriggerGeometryDiagramForPrompt({
+          promptArabic: q.promptText,
+          hasExplicitTag: false,
+          branchId,
+          gradeId: params.gradeId,
+          stage: params.stage,
+          lessonTitleArabic,
+        });
+      const diagCombined = shouldTryGeo
+        ? combineProblemAndTagGeometryContext(q.diagramDesc, q.promptText)
         : undefined;
       const diagramAllowed = isDiagramJustifiedForQuestion({
         promptArabic: q.promptText,
         rawDiagramTagText: diagCombined || q.diagramDesc,
+        hasExplicitTag,
         branchId,
+        gradeId: params.gradeId,
+        stage: params.stage,
+        lessonTitleArabic,
       });
       geoMatch = diagramAllowed && diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
       graphSpec = diagramAllowed && q.diagramDesc ? parseCartesianGraphDescription(q.diagramDesc) : undefined;
@@ -274,6 +316,7 @@ export function parseNotebookLMWorksheetResponse(
       marks: q.marks,
       promptAr: q.promptText,
       mcqChoicesAr: q.choices,
+      synthesizedMcqIndices: q.synthesizedMcqIndices,
       correctMcqIndex: q.correctIndex,
       modelAnswerAr: q.rawSolution || q.steps.join(" ⇐ "),
       solutionStepsAr: q.steps,

@@ -114,7 +114,7 @@ export default function StudioBookletGeneratorTab({
     const activeScope = targetedScopeText || lessonTitle;
     const items = mergeBookletThreeStagesRepliesToPrintableItems({
       stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "",
-      branchId, branchNameAr, unitId: "booklet-unit", lessonId: "booklet-lesson", lessonTitleArabic: activeScope,
+      branchId, branchNameAr, unitId: "booklet-unit", lessonId: "booklet-lesson", lessonTitleArabic: activeScope, gradeId,
     });
     if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);

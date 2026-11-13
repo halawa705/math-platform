@@ -73,10 +73,14 @@ export function parseGeoFactString(s: string): GeoFact | null {
   }
   // قياس زاوية
   if ((m = s.match(new RegExp(`^ق\\s*\\(\\s*∠?\\s*${LIST1}\\s*\\)\\s*=\\s*(.+)$`, "u"))) || (m = s.match(new RegExp(`^∠\\s*${LIST1}\\s*=\\s*(.+)$`, "u")))) {
-    const labels = parseLabelList(m[1]); const val = m[2].replace(/°/g, "").trim();
+    const labels = parseLabelList(m[1]); const rawVal = m[2].trim();
+    const hasDeg = /°|درجة/.test(rawVal);
+    const val = rawVal.replace(/°|درجة/g, "").trim();
     if (labels && (labels.length === 1 || labels.length === 3)) {
       const num = Number(val);
-      return { k: "angle", arms: labels.length === 3 ? [labels[0], labels[1], labels[2]] : undefined, vertex: labels.length === 3 ? labels[1] : labels[0], deg: Number.isFinite(num) ? num : undefined, text: Number.isFinite(num) ? undefined : val, right: num === 90 || undefined };
+      const isUnknown = val === "؟" || val === "?";
+      const displayText = hasDeg && !isUnknown && !val.includes("°") ? `${val}°` : val;
+      return { k: "angle", arms: labels.length === 3 ? [labels[0], labels[1], labels[2]] : undefined, vertex: labels.length === 3 ? labels[1] : labels[0], deg: Number.isFinite(num) ? num : undefined, text: Number.isFinite(num) ? undefined : displayText, right: num === 90 || undefined };
     }
   }
   if ((m = s.match(new RegExp(`^∠\\s*${LIST1}\\s*قائمة$`, "u"))) || (m = s.match(new RegExp(`^(?:زاوية\\s*)?${LIST1}\\s*قائمة$`, "u")))) {
@@ -93,8 +97,9 @@ export function parseGeoFactString(s: string): GeoFact | null {
   if ((m = s.match(re(`${SEGRX}\\s*(?:∩|×)\\s*${SEGRX}\\s*=\\s*\\{?\\s*${ONE}\\s*\\}?`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
   if ((m = s.match(new RegExp(`قطرا.*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`, "u")))) return { k: "diagonalsMeet", p: one(m[1]) };
   if ((m = s.match(re(`${SEGRX}\\s*(?:و|،|,)?\\s*${SEGRX}\\s*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
-  // نقطة على قطعة / منتصف
+  // نقطة على قطعة / منتصف / امتداد
   if ((m = s.match(re(`${ONE}\\s*منتصف\\s*(?:القطعة\\s*)?${SEGRX}`)))) { const a = seg(m[2]); if (a) return { k: "midpoint", p: one(m[1]), seg: a }; }
+  if ((m = s.match(re(`${ONE}\\s*(?:∈|على)\\s*امتداد\\s*(?:القطعة\\s*|الشعاع\\s*|المستقيم\\s*|الضلع\\s*)?${SEGRX}`)))) { const a = seg(m[2]); if (a) return { k: "extend", from: a[0], through: a[1], to: one(m[1]) }; }
   if ((m = s.match(re(`${ONE}\\s*∈\\s*(?:القطعة\\s*|الضلع\\s*|ال?وتر\\s*)?${SEGRX}`)))) { const a = seg(m[2]); if (a) return { k: "pointOn", p: one(m[1]), seg: a }; }
   if ((m = s.match(re(`${ONE}\\s*على\\s*(?:القطعة\\s*|الضلع\\s*)?${SEGRX}`)))) { const a = seg(m[2]); if (a) return { k: "pointOn", p: one(m[1]), seg: a }; }
   // مد وتوصيل

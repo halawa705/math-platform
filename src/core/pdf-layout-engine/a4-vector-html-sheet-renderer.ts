@@ -24,6 +24,8 @@ export interface PrintableMathQuestionItem {
   readonly promptAr: string;
   readonly mcqChoicesAr?: readonly [string, string, string, string];
   readonly correctMcqIndex?: 0 | 1 | 2 | 3;
+  /** فهارس البدائل التي كانت فارغة في المصدر وملأها النظام تلقائياً بقيمة مشابهة خاطئة (تُلوّن بالأخضر) */
+  readonly synthesizedMcqIndices?: readonly number[];
   readonly modelAnswerAr: string;
   readonly solutionStepsAr?: readonly string[];
   readonly givenDataAr?: string;
@@ -179,6 +181,7 @@ export function convertQuestionAssessmentIRToPrintableItem(
     promptAr: q.promptArabic,
     mcqChoicesAr: q.mcqChoicesArabic,
     correctMcqIndex: q.correctMcqChoiceIndex,
+    synthesizedMcqIndices: q.synthesizedMcqIndices,
     modelAnswerAr:
       q.modelSolutionStepsArabic.length > 0
         ? q.modelSolutionStepsArabic.join(" ⇐ ")

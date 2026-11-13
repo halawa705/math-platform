@@ -10,9 +10,11 @@ import { parseCartesianGraphDescription } from "../geometry-engine/graph-composi
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
+import { synthesizeEmptyMcqChoices } from "./mcq-empty-choice-synthesizer";
 import {
-  hasExplicitGeometricOrTrigShapeInPrompt,
   isDiagramJustifiedForQuestion,
+  shouldTriggerGeometryDiagramForPrompt,
+  type CurriculumStageKind,
 } from "./unsolicited-diagram-guard";
 import {
   mergeLogicalSolutionSteps,
@@ -106,10 +108,22 @@ export function parseStage2ByIdeas(s2Raw: string): {
         .filter((s) => s.length > 10);
 
       if (isDrill && chunks.length <= 1) {
-        const byCodeEnd = body
+        const rawSplit = body
           .split(/(?<=\|\s*معرف\s*السؤال\s*:\s*[a-zA-Z]+-\d+-\d+[^\n]*)\n+/i)
           .map((s) => s.trim())
-          .filter((s) => s.length > 10);
+          .filter((s) => s.length > 0);
+        // إعادة إلحاق وسم [رسم ...] بالسؤال السابق له مباشرة حتى لا يتسرب للسؤال التالي أو يُبطل التقسيم
+        const byCodeEnd: string[] = [];
+        for (const piece of rawSplit) {
+          const leadingTag = piece.match(/^((?:\[?\s*رسم\s*(?:هندسي|توضيحي|بياني|إحصائي)\s*:[^\]\n]+\]?\s*\n*)+)([\s\S]*)$/i);
+          if (leadingTag && byCodeEnd.length > 0) {
+            byCodeEnd[byCodeEnd.length - 1] = `${byCodeEnd[byCodeEnd.length - 1]}\n${leadingTag[1].trim()}`;
+            const rest = leadingTag[2].trim();
+            if (rest.length > 10) byCodeEnd.push(rest);
+          } else if (piece.length > 10) {
+            byCodeEnd.push(piece);
+          }
+        }
         if (byCodeEnd.length > 1 && byCodeEnd.every((c) => /معرف\s*السؤال/i.test(c))) {
           chunks = byCodeEnd;
         } else {
@@ -149,6 +163,7 @@ export function parseSolvedExamplesFromSection(
   rawFinal: string;
   geometryRaw?: string;
   mcqChoicesAr?: readonly [string, string, string, string];
+  synthesizedMcqIndices?: readonly number[];
 }> {
   const cleanSection = examplesSection.split(/(?:^|\n)\s*نهاية\s*الفكرة/i)[0] || "";
   const exSplits = cleanSection
@@ -163,8 +178,8 @@ export function parseSolvedExamplesFromSection(
       .replace(/^(?:#{1,6}\s*)?(?:\*\*|__)?(?:المثال\s*\S+|مثال\s*\S+)(?:\*\*|__)?\s*|^(?:\|\s*)?معرف\s*المثال\s*:\s*\S+\s*|^(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*/gi, "")
       .split(/(?=(?:المثال|مثال|معرف\s*المثال))/i)[0].trim();
     const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
-    const mcqChoices = parseChoicesTupleFromBlock(cleanProblem);
-    const finalPrompt = mcqChoices ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
+    const rawExampleChoices = parseChoicesTupleFromBlock(cleanProblem);
+    const finalPrompt = rawExampleChoices ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
     const stepsMatch = exBody.match(/(?:\*\*|__)?(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|خطوات_الحل|الحل(?:\s*بالتفصيل)?(?:\*\*|__)?\s*[:：]|البرهان(?:\s*والخطوات)?(?:\*\*|__)?\s*[:：])(?:\*\*|__)?\s*[:：]?\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i);
     const rawFinal = exBody.match(/(?:\*\*|__)?(?:الناتج\s*النهائي(?:\s*المعتمد)?|الإجابة\s*النهائية)(?:\*\*|__)?\s*[:：]\s*([^\r\n]+)/i)?.[1]?.replace(/^\*\*|\*\*$/g, "").trim() || "";
     const fallbackStepsLines = !stepsMatch?.[1]
@@ -179,8 +194,13 @@ export function parseSolvedExamplesFromSection(
         !/example-\d+-\d+/i.test(l) && !/(?:مفهوم\s*الفكرة|القاعدة\s*الرياضية|حاول\s*بنفسك|الواجب\s*المنزلي)/i.test(l)
     );
     if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);
+    const synthExample = rawExampleChoices
+      ? synthesizeEmptyMcqChoices({ choices: rawExampleChoices, solutionText: `${rawFinal} ${steps.join(" ")}` })
+      : undefined;
+    const mcqChoices = synthExample?.choices;
+    const synthesizedMcqIndices = synthExample && synthExample.synthesizedIndices.length > 0 ? synthExample.synthesizedIndices : undefined;
     const geoMatch = exBody.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-    return { promptAr: finalPrompt || ideaTitle, steps, rawFinal, geometryRaw: geoMatch?.[1], mcqChoicesAr: mcqChoices };
+    return { promptAr: finalPrompt || ideaTitle, steps, rawFinal, geometryRaw: geoMatch?.[1], mcqChoicesAr: mcqChoices, synthesizedMcqIndices };
   });
 }
 
@@ -190,32 +210,49 @@ export function buildStage2PrintableItem(params: {
   readonly block: ExtractedQuestionBlock;
   readonly branchNameAr: string;
   readonly branchId?: MathBranchId;
+  readonly gradeId?: string;
+  readonly stage?: CurriculumStageKind;
+  readonly lessonTitleArabic?: string;
   readonly defaultPrompt: string;
   readonly defaultAnswer: string;
   readonly bannerTitleAr?: string;
   readonly solutionsMap: { readonly byCode: Map<string, readonly string[]>; readonly byIndex: Map<number, readonly string[]> };
 }): PrintableMathQuestionItem {
-  const mcqChoices = parseChoicesTupleFromBlock(params.block.promptText);
-  const rawPrompt = mcqChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
-  const isMcq = (params.block.rawText || "").includes("اختر") || (params.block.kindTag || "").includes("اختر") || mcqChoices !== undefined;
+  const rawChoices = parseChoicesTupleFromBlock(params.block.promptText);
+  const rawPrompt = rawChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
+  const isMcq = (params.block.rawText || "").includes("اختر") || (params.block.kindTag || "").includes("اختر") || rawChoices !== undefined;
   const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) || params.solutionsMap.byIndex.get(params.questionNumber);
+  const synthResult = rawChoices
+    ? synthesizeEmptyMcqChoices({ choices: rawChoices, solutionText: matchedSteps?.join(" ") })
+    : undefined;
+  const mcqChoices = synthResult?.choices;
+  const synthesizedMcqIndices = synthResult && synthResult.synthesizedIndices.length > 0 ? synthResult.synthesizedIndices : undefined;
   const graphMatch = params.block.rawText.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
   const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
   const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
+  const hasExplicitTag = Boolean(geoMatch?.[1]);
   const hasFigureRef =
-    Boolean(geoMatch) ||
-    hasExplicitGeometricOrTrigShapeInPrompt(rawPrompt) ||
-    /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل/i.test(
-      rawPrompt
-    );
+    hasExplicitTag ||
+    shouldTriggerGeometryDiagramForPrompt({
+      promptArabic: rawPrompt,
+      hasExplicitTag,
+      branchId: params.branchId ?? "plane_geometry",
+      gradeId: params.gradeId,
+      stage: params.stage,
+      lessonTitleArabic: params.lessonTitleArabic,
+    });
   const combinedGeo = !graphSpec && hasFigureRef
     ? combineProblemAndTagGeometryContext(geoMatch?.[1], rawPrompt)
     : "";
   const diagramAllowed = params.branchId
     ? isDiagramJustifiedForQuestion({
-        promptArabic: params.block.rawText || params.block.promptText,
+        promptArabic: rawPrompt,
         rawDiagramTagText: combinedGeo,
+        hasExplicitTag,
         branchId: params.branchId,
+        gradeId: params.gradeId,
+        stage: params.stage,
+        lessonTitleArabic: params.lessonTitleArabic,
       })
     : true;
   const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `${params.id}_geo`) : undefined;
@@ -229,6 +266,7 @@ export function buildStage2PrintableItem(params: {
     branchBadgeAr: params.branchNameAr, marks: isMcq ? 1 : 2,
     promptAr: cleanStudentFacingMathPromptSSOT(rawPrompt) || params.defaultPrompt,
     mcqChoicesAr: mcqChoices,
+    synthesizedMcqIndices,
     correctMcqIndex: resolveCorrectChoiceIndex(matchedSteps?.[matchedSteps.length - 1] || "", mcqChoices),
     modelAnswerAr: matchedSteps ? matchedSteps.join(" ⇐ ") : params.defaultAnswer,
     solutionStepsAr: matchedSteps, geometryFigure, graphSpec, figureDiagnosticsAr,
