@@ -33,19 +33,31 @@ export function splitDescriptionIntoFactStrings(description: string): string[] {
     .split(/[;؛\n]|،(?![^()]*\))|(?<=\D)\.(?=\s)/)
     .map((s) => { let t = s.trim(); for (let i = 0; i < 2; i++) t = t.replace(LEADING_CONNECTORS, "").trim(); return t; })
     .filter((s) => s.length > 0);
-  return orderFactsByDependency(raw.flatMap(splitSimilarityPair).flatMap(expandEqualityChain));
+  return orderFactsByDependency(raw.flatMap(splitDualTrianglePair).flatMap(splitSimilarityPair).flatMap(expandEqualityChain));
 }
 
 const DECLARATION_FACT = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|رباعي|دائرة)/;
 const BASE_POINT_FACT = /(?:∈|منتصف|\sعلى\s|^(?:نمد|مد|امدد)\s)/;
 const DERIVED_LINE_FACT = /(?:متوسط|ينصف|منصف|⊥|\/\/)/;
-const INTERSECTION_FACT = /(?:∩|×|يتقاطعان)/;
+const INTERSECTION_FACT = /(?:∩|×|يتقاطعان|يتقاطع|تقاطع)/;
 
 /** يضمن تعريف الأشكال أولاً ثم النقاط المشتقة ثم العلاقات/الأطوال (ترتيب ثابت يحفظ الترتيب الأصلي داخل كل فئة). */
 function orderFactsByDependency(facts: string[]): string[] {
   const rank = (f: string) =>
     DECLARATION_FACT.test(f) ? 0 : BASE_POINT_FACT.test(f) ? 1 : DERIVED_LINE_FACT.test(f) ? 2 : INTERSECTION_FACT.test(f) ? 3 : 4;
   return facts.map((f, i) => ({ f, i, r: rank(f) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.f);
+}
+
+const TRI_NAME = "([A-Z]{3}|(?:[أ-ي]ـ?\\s*){3})";
+const DUAL_TRI_RX = new RegExp(`^(?:ال)?(?:مثلثان|مثلثين)\\s+${TRI_NAME}\\s*(?:و|،|مع)\\s*(?:ال)?مثلث\\s*${TRI_NAME}|^(?:ال)?(?:مثلثان|مثلثين)\\s+${TRI_NAME}\\s*(?:و|،|مع)\\s+${TRI_NAME}`, "u");
+
+/** «مثلثان ABC و ADE» ← «مثلث ABC» و«مثلث ADE». */
+function splitDualTrianglePair(fact: string): string[] {
+  const m = fact.match(DUAL_TRI_RX);
+  if (!m) return [fact];
+  const t1 = (m[1] || m[3] || "").trim();
+  const t2 = (m[2] || m[4] || "").trim();
+  return t1 && t2 ? [`مثلث ${t1}`, `مثلث ${t2}`] : [fact];
 }
 
 const SHAPE_WORD = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|رباعي)/;

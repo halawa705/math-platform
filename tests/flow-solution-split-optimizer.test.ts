@@ -67,4 +67,26 @@ describe("solution split optimizer", () => {
     const slack = (ps: readonly FlowPage[]) => ps.slice(0, -1).reduce((s, p) => s + (1 - p.usedHeightPx / p.budgetHeightPx), 0);
     expect(slack(pages)).toBeLessThan(slack(baseline));
   });
+
+  it("never leaves a 1-step orphan tail when >= 4 steps and never splits an item without pulling head onto the slack page", () => {
+    const allVariants = [...buildSolutionSplitVariants(items).values()].flat();
+    expect(allVariants.every((v) => STEPS.length - v.k >= 2)).toBe(true);
+
+    // صفحة 0 بها فراغ لكن رأس المثال التالي لا يسعه فراغ صفحة 0: يمنع تقسيمه على صفحة 1 وترك رأس يتيم بها
+    const tightItems = [
+      q("booklet-s1-example-1-1", 1, { ideaBannerTitleAr: "الفكرة 1", conceptExplanationAr: "ش", framedRuleAr: "ق" }),
+      q("booklet-s1-example-1-2", 2),
+    ];
+    const built = buildFlowItems({ questions: tightItems, columnsCount: 1, includeAnswerKey: false, includeAccreditation: false });
+    const h2 = new Map<string, number>();
+    for (const it of built.items) h2.set(it.id, it.kind === "idea_capsule" ? 120 : it.kind === "idea_divider" ? 22 : it.id.endsWith("-1") ? 720 : 860);
+    for (const vs of buildSolutionSplitVariants(built.items).values()) {
+      for (const v of vs) {
+        h2.set(v.head.id, 450); // أكبر من الفراغ المتبقي في صفحة 0 (~100px)
+        h2.set(v.tail.id, 420);
+      }
+    }
+    const tightPages = packFlowItemsIntoPages(built.items, h2, { budgets: BUDGETS, density });
+    expect(tightPages.flatMap(flat).some((i) => i.kind === "question" && i.solutionSlice)).toBe(false);
+  });
 });

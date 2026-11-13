@@ -137,6 +137,14 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
       facts.push(relStr);
     }
   }
+  for (const dm of clean.matchAll(/(?:رسم|ارسم|نرسم)\s+من\s+(?:النقطة\s+)?([A-Za-z]|[أ-ي]ـ?)\s+(?:المستقيم\s+|مستقيم\s+|الشعاع\s+)?([A-Za-z]{2})\s*(?:\/\/|يوازي)/gi)) {
+    const ptOnLine = `${dm[1]} ∈ ${dm[2]}`;
+    if (!facts.includes(ptOnLine)) facts.push(ptOnLine);
+  }
+  for (const pm of clean.matchAll(/(?:المستقيم|الشعاع|القطعة)\s+([A-Za-z]{2})\s+(?:يمر|المار)\s+(?:بالنقطة|بـ|من)\s*([A-Za-z]|[أ-ي]ـ?)/gi)) {
+    const ptOnLine = `${pm[2]} ∈ ${pm[1]}`;
+    if (!facts.includes(ptOnLine)) facts.push(ptOnLine);
+  }
 
   // 6. منصف زاوية: BD ينصف ∠ABE أو الشعاع ME ينصف ∠AMD
   const bisMatches = clean.matchAll(
@@ -298,30 +306,17 @@ export function combineProblemAndTagGeometryContext(
         const normP = canonicalFactKey(p);
         return normP === normClause || (normP.length === normClause.length && normP.includes(normClause));
       });
-      if (!isDuplicate) {
-        parts.push(clause);
-      }
+      if (!isDuplicate) parts.push(clause);
     }
   }
-
-  // إذا لم يوجد وسم رسم صريح ولا شكل هندسي معلن في الأجزاء، نولّد حقائق الشكل اللفظي للمسائل الهندسية اللفظية
   if (!effectiveTag && effectivePrompt) {
-    const verbalFacts = synthesizeVerbalGeometryFacts(effectivePrompt, parts);
-    for (const vf of verbalFacts) {
+    for (const vf of synthesizeVerbalGeometryFacts(effectivePrompt, parts)) {
       if (!parts.includes(vf)) parts.push(vf);
     }
   }
-
-  // تنظيف شامل لأي أقواس معقوفة لمنع وسوم مشوهة
   const sanitized = parts.map((p) => p.replace(/[\[\]]/g, "").trim()).filter(Boolean);
-  if (sanitized.length === 0) {
-    return (effectiveTag || effectivePrompt || "").replace(/[\[\]]/g, "").trim();
-  }
-
-  // ترتيب الحقائق: التشابه/التطابق أولاً، ثم النقاط والخطوط، ثم الأطوال، ثم الزوايا
+  if (sanitized.length === 0) return (effectiveTag || effectivePrompt || "").replace(/[\[\]]/g, "").trim();
   const simFacts = sanitized.filter((p) => p.includes("~") || p.includes("≅") || p.includes("تشابه"));
   const otherFacts = sanitized.filter((p) => !simFacts.includes(p));
-
-  const deduplicated = Array.from(new Set([...simFacts, ...otherFacts]));
-  return deduplicated.join(" ؛ ");
+  return Array.from(new Set([...simFacts, ...otherFacts])).join(" ؛ ");
 }

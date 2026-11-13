@@ -149,11 +149,15 @@ export function composeFigureFromGeometryDescription(description: string, figure
       if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
     } else if (f.k === "parallel") {
       const [x, y] = f.a; const [p, q] = f.b;
-      // إذا ذكر DE // BC في مثلث ABC دون ذكر D ∈ AB و E ∈ AC صراحةً نضعهما على الضلعين
+      // إذا ذكر DE // BC في مثلث ABC دون ذكر D ∈ AB و E ∈ AC صراحةً نضعهما على الضلعين (ما لم يمر [x,y] برأس المثلث)
       const basePoly = polygons.find((pl) => pl.labels.length === 3 && pl.labels.includes(p) && pl.labels.includes(q));
       if (!P(x) && !P(y) && basePoly) {
         const apex = basePoly.labels.find((l) => l !== p && l !== q);
-        if (apex) {
+        const passesThroughApex =
+          Boolean(apex) &&
+          (facts.some((pf) => pf.k === "pointOn" && pf.p === apex && pairKey(pf.seg[0], pf.seg[1]) === pairKey(x, y)) ||
+            facts.some((af) => af.k === "angle" && af.vertex === apex && (af.arms?.includes(x) || af.arms?.includes(y))));
+        if (apex && !passesThroughApex) {
           points.set(x, vLerp(P(apex)!, P(p)!, 0.48)); host.set(x, [apex, p]);
           points.set(y, vLerp(P(apex)!, P(q)!, 0.48)); host.set(y, [apex, q]);
         }

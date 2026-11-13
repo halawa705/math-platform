@@ -105,7 +105,7 @@ export function triggerIsolatedA4Print(
     }
     .pedagogical-idea-title,
     .pedagogical-idea-title .math-prose-segment {
-      font-weight: 900 !important;
+      font-weight: 800 !important;
     }
     .pdf-normal-math .math-fit-box,
     .pdf-normal-math .katex,

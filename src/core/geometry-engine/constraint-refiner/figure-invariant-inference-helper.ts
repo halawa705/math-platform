@@ -63,11 +63,11 @@ export function inferFigureInvariants(fig: CanonicalGeometryFigureIR): InferredF
         const dotUnit = (d1.x * d2.x + d1.y * d2.y) / ((Math.hypot(d1.x, d1.y) * Math.hypot(d2.x, d2.y)) || 1);
         if (dotUnit < -0.999) {
           const isDashed = Boolean(segDashed[i] || segDashed[j]);
+          straightExtensions.push({
+            vertices: [end1, mid, end2],
+            isDashed,
+          });
           if (isDashed) {
-            straightExtensions.push({
-              vertices: [end1, mid, end2],
-              isDashed,
-            });
             collinear.push([end2, end1, mid]);
           }
         }

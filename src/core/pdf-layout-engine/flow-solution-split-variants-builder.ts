@@ -42,8 +42,10 @@ export function buildSolutionSplitVariants(
     if (!isSplittableSolvedExample(item)) continue;
     const total = item.question.solutionStepsAr!.length;
     const startK = total >= MIN_HEAD_STEPS + 1 ? MIN_HEAD_STEPS : 1;
+    // منع ذيل يتيم من خطوة واحدة فقط أعلى الصفحة التالية (مثل الناتج النهائي وحده) متى أمكن
+    const endK = total >= 4 ? total - 1 : total;
     const variants: SolutionSplitVariant[] = [];
-    for (let k = startK; k < total; k++) {
+    for (let k = startK; k < endK; k++) {
       variants.push({
         k,
         head: { ...item, id: `${item.id}~head${k}`, span: "full", solutionSlice: { from: 0, to: k, total } },

@@ -8,10 +8,13 @@
  */
 
 import type { GeoFact } from "./geo-fact-types";
+import { inferTriangleAngleOverridesFromComposites } from "./geo-composite-angle-override-helper";
 import { pairKey } from "./geo-label-utils";
 import type { LengthMap, PlacedPolygon } from "./geo-shape-placers";
 import { placeTriangleFromKnowns, type TriVertexKey } from "./geo-triangle-placer";
 import { vAdd, vDist, vScale, vSub, type Vec2 } from "./geo-vector-math";
+
+export { inferTriangleAngleOverridesFromComposites };
 
 export const MODULE_ID_GEO_COMPOSITE_TOPOLOGY_PLACER =
   "geo_composite_topology_placer" as const;
@@ -21,75 +24,6 @@ const vNorm = (v: Vec2): Vec2 => {
   const m = Math.hypot(v.x, v.y) || 1;
   return { x: v.x / m, y: v.y / m };
 };
-
-/**
- * يستنتج قياسات زوايا داخلة لمثلث من حقائق الامتداد والزوايا الخارجة أو التناظر/التبادل على خط مار بالرأس.
- */
-export function inferTriangleAngleOverridesFromComposites(
-  facts: readonly GeoFact[],
-  triLabels: readonly string[]
-): Map<string, number> {
-  const overrides = new Map<string, number>();
-  const triSet = new Set(triLabels);
-
-  for (const f of facts) {
-    if (f.k === "extend" && triSet.has(f.from) && triSet.has(f.through)) {
-      const angFact = facts.find(
-        (af): af is Extract<GeoFact, { k: "angle" }> =>
-          af.k === "angle" &&
-          af.vertex === f.through &&
-          af.deg !== undefined &&
-          af.deg > 5 &&
-          af.deg < 175 &&
-          Boolean(af.arms?.includes(f.to))
-      );
-      if (angFact && angFact.deg !== undefined) {
-        const interior = 180 - angFact.deg;
-        if (interior > 5 && interior < 175) overrides.set(f.through, interior);
-      }
-    }
-    if (f.k === "pointOn" && triSet.has(f.seg[0]) && triSet.has(f.seg[1]) && !triSet.has(f.p)) {
-      const angFact = facts.find(
-        (af): af is Extract<GeoFact, { k: "angle" }> =>
-          af.k === "angle" &&
-          (af.vertex === f.seg[0] || af.vertex === f.seg[1]) &&
-          af.deg !== undefined &&
-          af.deg > 5 &&
-          af.deg < 175 &&
-          Boolean(af.arms?.includes(f.p))
-      );
-      if (angFact && angFact.deg !== undefined) {
-        const interior = 180 - angFact.deg;
-        if (interior > 5 && interior < 175) overrides.set(angFact.vertex, interior);
-      }
-    }
-  }
-
-  for (const pf of facts) {
-    if (pf.k !== "parallel") continue;
-    const hostPoint = facts.find(
-      (hp): hp is Extract<GeoFact, { k: "pointOn" }> =>
-        hp.k === "pointOn" && triSet.has(hp.p) && pairKey(hp.seg[0], hp.seg[1]) === pairKey(pf.a[0], pf.a[1])
-    );
-    const baseSeg = hostPoint ? pf.b : undefined;
-    if (!hostPoint || !baseSeg || !triSet.has(baseSeg[0]) || !triSet.has(baseSeg[1])) continue;
-    const [x, y] = pf.a;
-    const [b0, b1] = baseSeg;
-    for (const af of facts) {
-      if (af.k !== "angle" || af.vertex !== hostPoint.p || !af.arms || af.deg === undefined) continue;
-      if (af.deg <= 5 || af.deg >= 175) continue;
-      const otherArm = af.arms[0] === hostPoint.p ? af.arms[2] : af.arms[0];
-      if (otherArm === b0 || otherArm === b1) {
-        const hasX = af.arms.includes(x);
-        const hasY = af.arms.includes(y);
-        if (hasX && !hasY) overrides.set(b0, af.deg);
-        else if (hasY && !hasX) overrides.set(b1, af.deg);
-      }
-    }
-  }
-
-  return overrides;
-}
 
 /**
  * يضع مثلثين يشتركان في نقطة تقاطع وحيدة (`BD ∩ CE = {A}` أو `AE ∩ BD = {C}`) باستقامة دقيقة وزوايا منسجمة.
@@ -102,7 +36,28 @@ export function tryPlaceIntersectingBowTieTriangles(
   numSide: (a: string, b: string) => number | undefined,
   angleOf: (v: string) => number | undefined
 ): boolean {
-  const tris = facts.filter((f): f is Extract<GeoFact, { k: "triangle" }> => f.k === "triangle");
+  const rawTris = facts.filter((f): f is Extract<GeoFact, { k: "triangle" }> => f.k === "triangle");
+  const seenTri = new Set<string>();
+  const tris: Array<Extract<GeoFact, { k: "triangle" }>> = rawTris.filter((t) => {
+    const key = [...t.labels].sort().join("|");
+    if (seenTri.has(key)) return false;
+    seenTri.add(key);
+    return true;
+  });
+  if (tris.length === 1) {
+    const tOnly = tris[0];
+    const interSingle = facts.find(
+      (f): f is Extract<GeoFact, { k: "intersect" }> => f.k === "intersect" && tOnly.labels.includes(f.p)
+    );
+    if (interSingle) {
+      const s = interSingle.p;
+      const aOther = interSingle.a.find((v) => v !== s);
+      const bOther = interSingle.b.find((v) => v !== s);
+      if (aOther && bOther && !tOnly.labels.includes(aOther) && !tOnly.labels.includes(bOther)) {
+        tris.push({ k: "triangle", labels: [s, aOther, bOther] });
+      }
+    }
+  }
   if (tris.length !== 2) return false;
   const [t1, t2] = tris;
   const shared = t1.labels.filter((l) => t2.labels.includes(l));
@@ -211,11 +166,23 @@ export function tryPlaceParallelWithMissingEndpoints(params: {
   const [x, y] = parallelFact.a;
   const [p, q] = parallelFact.b;
 
-  // الحالة 1: المستقيم XY // PQ ويمر بالرأس V الموجود (A ∈ XY)
+  // الحالة 1: المستقيم XY // PQ ويمر بالرأس V الموجود (A ∈ XY أو زوايا معطاة عند V مثل ∠XAB و ∠YAC)
+  const findHostForLine = (line: readonly [string, string]): { p: string; seg: readonly [string, string] } | undefined => {
+    const explicit = facts.find(
+      (f): f is Extract<GeoFact, { k: "pointOn" }> =>
+        f.k === "pointOn" && P(f.p) !== undefined && pairKey(f.seg[0], f.seg[1]) === pairKey(line[0], line[1])
+    );
+    if (explicit) return explicit;
+    const byAngle = facts.find(
+      (af): af is Extract<GeoFact, { k: "angle" }> =>
+        af.k === "angle" && P(af.vertex) !== undefined && Boolean(af.arms?.includes(line[0]) || af.arms?.includes(line[1]))
+    );
+    return byAngle ? { p: byAngle.vertex, seg: line } : undefined;
+  };
   const hostLine = !P(x) && !P(y) && P(p) && P(q)
-    ? facts.find((f): f is Extract<GeoFact, { k: "pointOn" }> => f.k === "pointOn" && P(f.p) !== undefined && pairKey(f.seg[0], f.seg[1]) === pairKey(x, y))
+    ? findHostForLine([x, y])
     : !P(p) && !P(q) && P(x) && P(y)
-      ? facts.find((f): f is Extract<GeoFact, { k: "pointOn" }> => f.k === "pointOn" && P(f.p) !== undefined && pairKey(f.seg[0], f.seg[1]) === pairKey(p, q))
+      ? findHostForLine([p, q])
       : undefined;
 
   if (hostLine) {
@@ -265,7 +232,7 @@ export function tryPlaceParallelWithMissingEndpoints(params: {
         (!af.arms || af.arms.includes(missingKey))
     );
     const otherArmKey = angHint?.arms
-      ? (angHint.arms[0] === anchorKey ? angHint.arms[2] : angHint.arms[0])
+      ? angHint.arms.find((k) => k !== anchorKey && k !== missingKey)
       : params.host.get(anchorKey)?.[0] === anchorKey
         ? params.host.get(anchorKey)?.[1]
         : params.host.get(anchorKey)?.[0] ??

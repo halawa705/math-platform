@@ -96,7 +96,9 @@ export function parseGeoFactString(s: string): GeoFact | null {
   // تقاطع
   if ((m = s.match(re(`${SEGRX}\\s*(?:∩|×)\\s*${SEGRX}\\s*=\\s*\\{?\\s*${ONE}\\s*\\}?`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
   if ((m = s.match(new RegExp(`قطرا.*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`, "u")))) return { k: "diagonalsMeet", p: one(m[1]) };
-  if ((m = s.match(re(`${SEGRX}\\s*(?:و|،|,)?\\s*${SEGRX}\\s*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
+  if ((m = s.match(re(`${SEGRX}\\s*(?:و|،|,)?\\s*${SEGRX}\\s*يتقاطعان\\s*(?:في|عند)\\s*(?:النقطة\\s+)?${ONE}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
+  if ((m = s.match(re(`${SEGRX}\\s+يتقاطع\\s+(?:مع|و)\\s+${SEGRX}\\s*(?:في|عند)\\s*(?:النقطة\\s+)?${ONE}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
+  if ((m = s.match(re(`(?:إذا\\s+)?تقاطع\\s+(?:المستقيمان\\s+|المستقيم\\s+|القطعتان\\s+)?${SEGRX}\\s*(?:و|،|مع)\\s*(?:المستقيم\\s+)?${SEGRX}\\s*(?:في|عند)\\s*(?:النقطة\\s+)?${ONE}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "intersect", a, b, p: one(m[3]) }; }
   // نقطة على قطعة / منتصف / امتداد
   if ((m = s.match(re(`${ONE}\\s*منتصف\\s*(?:القطعة\\s*)?${SEGRX}`)))) { const a = seg(m[2]); if (a) return { k: "midpoint", p: one(m[1]), seg: a }; }
   if ((m = s.match(re(`${ONE}\\s*(?:∈|على)\\s*امتداد\\s*(?:القطعة\\s*|الشعاع\\s*|المستقيم\\s*|الضلع\\s*)?${SEGRX}`)))) { const a = seg(m[2]); if (a) return { k: "extend", from: a[0], through: a[1], to: one(m[1]) }; }

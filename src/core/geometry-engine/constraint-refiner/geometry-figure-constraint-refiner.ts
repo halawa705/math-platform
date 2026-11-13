@@ -6,7 +6,7 @@
 import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-ssot";
 import { buildFigureResidualFunction } from "./figure-constraint-residual-builder";
 import { inferFigureInvariants } from "./figure-invariant-inference-helper";
-import { measureAngleDegrees } from "../verification/figure-vector-measure-helpers";
+import { measureAngleDegrees, median, parseNumericLabel } from "../verification/figure-vector-measure-helpers";
 import { minimizeResiduals } from "./levenberg-marquardt-residual-minimizer";
 import { verifyGeometryFigure } from "../verification/geometry-figure-verification-orchestrator";
 import type { FigureVerificationReport } from "../verification/verification-report-types-ssot";
@@ -66,44 +66,66 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
   if (before.issues.length === 0 || fig.vertices.length === 0) return { figure: fig, report: before, refined: false };
   const { fn, x0 } = buildFigureResidualFunction(fig);
   const { straightExtensions } = inferFigureInvariants(fig);
-  const keepsExtensionsStraight = (cand: CanonicalGeometryFigureIR): boolean =>
+  const idxMap = new Map(fig.vertices.map((v, i) => [v.id, i] as const));
+  const hasAnyLengthLabel = fig.segments.some((s) => parseNumericLabel(s.lengthLabel?.value) !== null);
+  const origSegLengths = fig.segments.map((s) => {
+    const a = idxMap.get(s.fromVertexId); const b = idxMap.get(s.toVertexId);
+    if (a === undefined || b === undefined) return null;
+    const len = Math.hypot(fig.vertices[b].position.x - fig.vertices[a].position.x, fig.vertices[b].position.y - fig.vertices[a].position.y);
+    return len > 1e-4 ? { a, b, len } : null;
+  }).filter((e): e is { a: number; b: number; len: number } => e !== null);
+
+  const preservesEdgeScale = (cand: CanonicalGeometryFigureIR): boolean => {
+    if (hasAnyLengthLabel || origSegLengths.length === 0) return true;
+    const ratios = origSegLengths.map(({ a, b, len }) =>
+      Math.hypot(cand.vertices[b].position.x - cand.vertices[a].position.x, cand.vertices[b].position.y - cand.vertices[a].position.y) / len
+    );
+    const refRatio = median(ratios) || 1;
+    return ratios.every((r) => r / refRatio >= 0.42 && r / refRatio <= 2.4);
+  };
+
+  const keepsExtensionsStraight = (cand: CanonicalGeometryFigureIR, requireSolid: boolean): boolean =>
     straightExtensions
-      .filter((ext) => ext.isDashed)
+      .filter((ext) => requireSolid || ext.isDashed)
       .every(({ vertices: [end1, mid, end2] }) =>
         measureAngleDegrees(cand.vertices[mid].position, cand.vertices[end1].position, cand.vertices[end2].position) >= 178.5
       );
+
   const seeds = buildMultiStartSeeds(x0);
+  const minimized = seeds.map((seed) => minimizeResiduals(fn, seed));
 
   let bestFigure = fig;
   let bestReport = before;
   let bestCost = Infinity;
   let refined = false;
 
-  for (const seed of seeds) {
-    const { x, cost } = minimizeResiduals(fn, seed);
-    const candidate: CanonicalGeometryFigureIR = {
-      ...fig,
-      vertices: fig.vertices.map((v, i) => ({ ...v, position: { x: x[2 * i], y: x[2 * i + 1] } })),
-    };
-    if (!keepsExtensionsStraight(candidate)) continue;
-    const report = verifyGeometryFigure(candidate);
-    const candidateErrs = errorCount(report);
-    const bestErrs = errorCount(bestReport);
-    const isBetter =
-      candidateErrs < bestErrs ||
-      (candidateErrs === bestErrs && report.issues.length < bestReport.issues.length) ||
-      (candidateErrs === bestErrs && report.issues.length === bestReport.issues.length && cost < bestCost);
+  const tryPass = (requireSolid: boolean) => {
+    for (const { x, cost } of minimized) {
+      const candidate: CanonicalGeometryFigureIR = {
+        ...fig,
+        vertices: fig.vertices.map((v, i) => ({ ...v, position: { x: x[2 * i], y: x[2 * i + 1] } })),
+      };
+      if (!keepsExtensionsStraight(candidate, requireSolid) || !preservesEdgeScale(candidate)) continue;
+      const report = verifyGeometryFigure(candidate);
+      const candidateErrs = errorCount(report);
+      const bestErrs = errorCount(bestReport);
+      const isBetter =
+        candidateErrs < bestErrs ||
+        (candidateErrs === bestErrs && report.issues.length < bestReport.issues.length) ||
+        (candidateErrs === bestErrs && report.issues.length === bestReport.issues.length && cost < bestCost);
 
-    if (isBetter) {
-      bestFigure = candidate;
-      bestReport = report;
-      bestCost = cost;
-      refined = true;
+      if (isBetter) {
+        bestFigure = candidate;
+        bestReport = report;
+        bestCost = cost;
+        refined = true;
+      }
+      if (candidateErrs === 0 && report.issues.length === 0) break;
     }
-    if (candidateErrs === 0 && report.issues.length === 0) {
-      break;
-    }
-  }
+  };
+
+  tryPass(true);
+  if (!refined) tryPass(false);
 
   return refined ? { figure: bestFigure, report: bestReport, refined: true } : { figure: fig, report: before, refined: false };
 }

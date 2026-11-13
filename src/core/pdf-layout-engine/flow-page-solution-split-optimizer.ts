@@ -106,7 +106,7 @@ export function optimizePagesWithSolutionSplits(
         if (candidatePages.some((cp) => cp.overflowsBudget)) continue;
         const headPage = pageIndexOfItem(candidatePages, v.head.id);
         const tailPage = pageIndexOfItem(candidatePages, v.tail.id);
-        if (headPage < 0 || tailPage <= headPage) continue;
+        if (headPage !== p || tailPage !== p + 1) continue;
         const score = slackScore(candidatePages, heights);
         if (candidatePages.length < bestPagesCount || score < bestScore) {
           bestPagesCount = candidatePages.length;

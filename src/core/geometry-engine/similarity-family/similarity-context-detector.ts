@@ -16,7 +16,7 @@ const EXPLICIT_SIMILARITY_KEYWORDS_REGEX =
   /[~∼]|\\sim|تشابه|متشابه|متطابقا\s*الزوايا|متطابقة\s*الزوايا|زوايا\s*متطابقة|نسبة\s*التشابه|معامل\s*التشابه|ظل|عمود\s*إنارة|سارية|رجل\s*طوله|إقليدس|اقليدس/i;
 
 const ANGLE_SIMILARITY_MATCH_REGEX =
-  /AED.*=.*B|ADE.*=.*C/i;
+  /(?:ق|m)?\s*\(?\s*∠\s*AED\s*\)?\s*=\s*(?:ق|m)?\s*\(?\s*∠\s*B\s*\)?|(?:ق|m)?\s*\(?\s*∠\s*ADE\s*\)?\s*=\s*(?:ق|m)?\s*\(?\s*∠\s*C\s*\)?/i;
 
 const INTERSECTING_SEGMENTS_SIMILARITY_REGEX =
   /[A-Z]{2}\s*∩\s*[A-Z]{2}\s*=\s*\{?\s*[A-Z]\s*\}?/i;

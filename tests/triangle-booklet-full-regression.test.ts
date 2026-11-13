@@ -355,5 +355,50 @@ describe("11-Idea Triangle Booklet Permanent Regression Suite", () => {
     expect(angleDeg(p26, "B", "C", "D")).toBeGreaterThan(178.5);
     expect(angleDeg(p26, "B", "A", "D")).toBeCloseTo(74, 0);
     expect(angleDeg(p26, "B", "A", "C")).toBeCloseTo(106, 0);
+
+    // تدريب 34: AD // BC، q(∠DAC)=40°، q(∠B)=75° بدون سحق المثلث
+    const c34 = combineProblemAndTagGeometryContext(
+      "مثلث ABC ؛ AD // BC ؛ ق(∠DAC) = 40° ؛ ق(∠B) = 75°",
+      "في الشكل المقابل، $AD // BC$. فإذا كان $m(\\angle DAC) = 40^\\circ$ و $m(\\angle B) = 75^\\circ$."
+    );
+    const m34 = matchGeometryWithDiagnostics(c34, "drill-34", "english");
+    expect(m34.warnings).toEqual([]);
+    const p34 = new Map(m34.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p34, "A", "D", "C")).toBeCloseTo(40, 0);
+    expect(Math.hypot(p34.get("B")!.x - p34.get("A")!.x, p34.get("B")!.y - p34.get("A")!.y)).toBeGreaterThan(3);
+
+    // تدريب 35: AB // CD، C ∈ BE، q(∠B)=55°، q(∠D)=65° باستقامة E-C-B كاملة
+    const c35 = combineProblemAndTagGeometryContext(
+      "AB // CD ؛ C ∈ BE ؛ ق(∠B) = 55° ؛ مثلث CDE ؛ ق(∠D) = 65°",
+      "في الشكل المقابل، $AB // CD$، و $BC$ قاطع لهما. فإذا كان المثلث $CDE$ فيه $m(\\angle D) = 65^\\circ$ و $m(\\angle B) = 55^\\circ$ حيث $C \\in BE$."
+    );
+    const m35 = matchGeometryWithDiagnostics(c35, "drill-35", "english");
+    expect(m35.warnings).toEqual([]);
+    const p35 = new Map(m35.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p35, "C", "E", "B")).toBeGreaterThan(178.5);
+    expect(angleDeg(p35, "B", "A", "C")).toBeCloseTo(55, 0);
+
+    // تدريب 36: رسم من A مستقيم XY // BC دون تصفير الزوايا أو قلب المثلث
+    const c36 = combineProblemAndTagGeometryContext(
+      undefined,
+      "في الشكل المقابل، $ABC$ مثلث. رسم من $A$ مستقيم $XY // BC$ بحيث كان $m(\\angle XAB) = 55^\\circ$ و $m(\\angle YAC) = 65^\\circ$."
+    );
+    const m36 = matchGeometryWithDiagnostics(c36, "drill-36", "english");
+    expect(m36.warnings).toEqual([]);
+    const p36 = new Map(m36.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p36, "A", "X", "Y")).toBeGreaterThan(178.5);
+    expect(angleDeg(p36, "A", "X", "B")).toBeCloseTo(55, 0);
+    expect(angleDeg(p36, "A", "Y", "C")).toBeCloseTo(65, 0);
+
+    // مثال 37: صياغة التقاطع العربية BD يتقاطع مع CE في A
+    const c37 = combineProblemAndTagGeometryContext(
+      "مثلثان ABC و ADE، BD يتقاطع مع CE في A، ق(∠B)=50°، ق(∠C)=70°، ق(∠D)=80°",
+      "في الشكل المقابل، $BD \\cap CE = \\{A\\}$."
+    );
+    const m37 = matchGeometryWithDiagnostics(c37, "ex-37", "english");
+    expect(m37.warnings).toEqual([]);
+    const p37 = new Map(m37.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(angleDeg(p37, "A", "B", "D")).toBeGreaterThan(178.5);
+    expect(angleDeg(p37, "A", "C", "E")).toBeGreaterThan(178.5);
   });
 });
