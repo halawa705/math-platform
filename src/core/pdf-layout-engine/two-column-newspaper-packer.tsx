@@ -18,7 +18,7 @@ import { FlowItemRenderer } from "./flow-item-renderer";
 import { FlowMeasurementStagingPlatform } from "./flow-measurement-staging-platform";
 import { resolveFlowPageBudgets } from "./flow-page-budget-resolver";
 import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
-import { packFlowItemsIntoPages } from "./flow-page-packer";
+import { packFlowItemsWithBestPracticeOrder } from "./flow-practice-items-reorder-search";
 import type { FlowItem } from "./flow-item-model";
 import { PageFillReportChip } from "./page-fill-report-chip";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
@@ -115,7 +115,7 @@ export default function TwoColumnNewspaperPacker({
   );
   const discretePages = React.useMemo(
     () =>
-      packFlowItemsIntoPages(flowItems, measured.heights, {
+      packFlowItemsWithBestPracticeOrder(flowItems, measured.heights, {
         budgets: pageBudgets,
         density: densityProfile,
         manualCompactHeader: effSettings.compactHeader,

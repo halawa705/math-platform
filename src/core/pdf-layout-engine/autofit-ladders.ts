@@ -23,7 +23,6 @@ const BOOKLET_FILL_LADDER: readonly AutoFitRung[] = [
   r(13, 1, 2, false, false),
   r(12.5, 1, 2, false, false),
   r(12, 1, 2, false, false),
-  r(11.5, 1, 2, false, false),
 ];
 
 const EXAM_MAX_PAGES_LADDER: readonly AutoFitRung[] = [
