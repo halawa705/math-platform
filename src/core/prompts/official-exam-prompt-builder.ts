@@ -17,6 +17,7 @@ export const MODULE_ID_OFFICIAL_EXAM_PROMPT_BUILDER =
   "official_exam_prompt_builder" as const;
 
 export interface OfficialExamPromptBuilderConfig {
+  readonly gradeId?: string;
   readonly gradeNameArabic: string;
   readonly termNumber: 1 | 2;
   readonly branchId: MathBranchId;
@@ -73,6 +74,7 @@ export function buildOfficialExamNotebookLMPrompt(
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
       lessonTitleArabic: lessonsText,
+      gradeId: config.gradeId,
     }),
     "📐 قالب الإخراج الإلزامي لكل سؤال:",
     "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو PROOF أو ESSAY] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",

@@ -26,6 +26,7 @@ export interface SVGProjectorOptions {
   readonly heightPx?: number;
   readonly strokeColorHex?: string;
   readonly accentColorHex?: string;
+  readonly backgroundColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
   readonly notationLanguage?: MathNotationLanguage;
 }
@@ -38,9 +39,14 @@ export function projectGeometryFigureToSVGMarkup(
   const height = options.heightPx ?? 165;
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#0D9488";
+  const backgroundColor = options.backgroundColorHex ?? "#FFFFFF";
   const numeralMode = options.numeralMode ?? "western";
   const notation = options.notationLanguage || "english";
   const padding = Math.max(16, Math.min(22, Math.round(Math.min(width, height) * 0.14)));
+  const bgRectSvg =
+    backgroundColor && backgroundColor !== "transparent"
+      ? `<rect x="0" y="0" width="${width}" height="${height}" rx="8" fill="${backgroundColor}" />`
+      : "";
 
   if (figure.rawSvgMarkup) {
     return figure.rawSvgMarkup;
@@ -277,6 +283,6 @@ export function projectGeometryFigureToSVGMarkup(
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${circleRimSvg}${surfaceTintsSvg}${segmentsSvg}${interiorBadgesSvg}${anglesSvg}${verticesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${segmentsSvg}${interiorBadgesSvg}${anglesSvg}${verticesSvg}</svg>`;
 }
 

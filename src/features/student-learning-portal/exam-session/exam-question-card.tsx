@@ -10,6 +10,8 @@ import { useState } from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudentVirtualMathKeypad from "@/features/electronic-exams-hub/student-virtual-math-keypad";
 import { renderQuestionFigureSvg } from "@/core/pdf-layout-engine/question-figure-svg-renderer";
+import { computeFigureAspectFromVertices } from "@/core/pdf-layout-engine/question-figure-box-size";
+import { QuestionGivenRequiredBadges } from "@/core/pdf-layout-engine/question-given-required-badges";
 import type { PublishedExamQuestionItem } from "@/features/electronic-exams-hub/published-online-exams-store";
 import type { OnlineQuestionResult, StudentAnswerInput } from "@/core/exam-grading/online-exam-grader";
 import { ARABIC_CHOICE_LETTERS } from "@/core/ssot/numeral-and-unit-ssot";
@@ -40,8 +42,12 @@ export default function ExamQuestionCard({
 }: ExamQuestionCardProps) {
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
 
+  const notationLanguage = question.notationLanguage ?? "english";
+  const numeralMode =
+    question.numeralMode ?? (notationLanguage === "arabic" ? "eastern" : "western");
+
   const hasFigure = Boolean(
-    question.attachedGeometryFigure || question.graphSpec
+    question.attachedGeometryFigure || question.graphSpec || question.rawSvgMarkup
   );
 
   const isMcq =
@@ -58,11 +64,21 @@ export default function ExamQuestionCard({
       ? "border-2 border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/15"
       : "border-2 border-rose-500 bg-rose-50/20 dark:bg-rose-950/15";
 
+  const figureAspect = question.attachedGeometryFigure
+    ? computeFigureAspectFromVertices(question.attachedGeometryFigure.vertices)
+    : 1.45;
+  const cardWidthPx = 285;
+  const cardHeightPx = Math.max(150, Math.min(220, Math.round(cardWidthPx / figureAspect)));
+  const modalWidthPx = 310;
+  const modalHeightPx = Math.max(170, Math.min(245, Math.round(modalWidthPx / figureAspect)));
+
   const cardSvg = hasFigure
     ? renderQuestionFigureSvg(question, {
-        widthPx: 290,
-        heightPx: 190,
-        numeralMode: "western",
+        widthPx: cardWidthPx,
+        heightPx: cardHeightPx,
+        numeralMode,
+        notationLanguage,
+        backgroundColorHex: "#FFFFFF",
         strokeColorHex: "#0F172A",
         accentColorHex: "#0D9488",
       })
@@ -70,9 +86,11 @@ export default function ExamQuestionCard({
 
   const modalSvg = hasFigure
     ? renderQuestionFigureSvg(question, {
-        widthPx: 460,
-        heightPx: 310,
-        numeralMode: "western",
+        widthPx: modalWidthPx,
+        heightPx: modalHeightPx,
+        numeralMode,
+        notationLanguage,
+        backgroundColorHex: "#FFFFFF",
         strokeColorHex: "#0F172A",
         accentColorHex: "#0D9488",
       })
@@ -117,14 +135,26 @@ export default function ExamQuestionCard({
       </div>
 
       <div className={hasFigure ? "grid grid-cols-1 sm:grid-cols-12 gap-3 items-center" : "block"}>
-        <div className={hasFigure ? "sm:col-span-7 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100" : "text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100"}>
-          <SafeKaTeXBiDiMathRenderer text={question.promptArabic} />
+        <div className={hasFigure ? "sm:col-span-7 space-y-2 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100" : "space-y-2 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-100"}>
+          <SafeKaTeXBiDiMathRenderer text={question.promptArabic} numeralMode={numeralMode} notationLanguage={notationLanguage} />
+          {(question.givenDataArabic?.length || question.requiredToProveOrFindArabic) && (
+            <QuestionGivenRequiredBadges
+              givenDataAr={question.givenDataArabic?.join(" ، ")}
+              requiredToFindAr={question.requiredToProveOrFindArabic}
+              primaryHex="#312E81"
+              secondaryHex="#0D9488"
+              softSurfaceHex="#F8FAFC"
+              solvedBorderHex="#99F6E4"
+              numeralMode={numeralMode}
+              notationLanguage={notationLanguage}
+            />
+          )}
         </div>
         {hasFigure && cardSvg && (
           <div className="sm:col-span-5 max-w-full flex flex-col items-center">
             <div
               onClick={() => setIsZoomModalOpen(true)}
-              className="w-full max-w-full overflow-hidden p-2 rounded-2xl bg-white dark:bg-slate-950 border-2 border-indigo-200 dark:border-indigo-900/70 flex justify-center cursor-pointer shadow-xs hover:border-indigo-400 transition"
+              className="w-full max-w-full overflow-hidden p-2.5 rounded-2xl bg-white text-slate-900 border-2 border-indigo-200 dark:border-teal-400/70 flex justify-center cursor-pointer shadow-sm hover:border-indigo-400 transition [&>svg]:max-w-full [&>svg]:h-auto"
               title="انقر لتكبير الرسم وعرضه بدقة عالية"
               dangerouslySetInnerHTML={{ __html: cardSvg }}
             />
@@ -168,7 +198,7 @@ export default function ExamQuestionCard({
               </button>
             </div>
             <div
-              className="p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-x-auto min-h-[260px]"
+              className="p-3 sm:p-4 rounded-2xl bg-white text-slate-900 border-2 border-indigo-200 dark:border-teal-400/70 flex items-center justify-center overflow-x-auto min-h-[260px] shadow-sm [&>svg]:w-full [&>svg]:max-w-[520px] [&>svg]:h-auto"
               dangerouslySetInnerHTML={{ __html: modalSvg }}
             />
             <div className="text-center">
@@ -215,7 +245,7 @@ export default function ExamQuestionCard({
                   <span className="w-6 h-6 rounded-lg bg-black/10 flex items-center justify-center text-[11px]">
                     {ARABIC_CHOICE_LETTERS[cIdx] ?? cIdx + 1}
                   </span>
-                  <SafeKaTeXBiDiMathRenderer text={choice} />
+                  <SafeKaTeXBiDiMathRenderer text={choice} numeralMode={numeralMode} notationLanguage={notationLanguage} />
                 </span>
                 {isCorrectChoice && <span>✓</span>}
                 {isWrongPicked && <span>✗</span>}
@@ -245,11 +275,11 @@ export default function ExamQuestionCard({
       {isSubmitted && reviewState && (
         <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
           <div className="font-black text-teal-800 dark:text-teal-300">
-            💡 الإجابة النموذجية: <SafeKaTeXBiDiMathRenderer text={reviewState.finalAnswerArabic} />
+            💡 الإجابة النموذجية: <SafeKaTeXBiDiMathRenderer text={reviewState.finalAnswerArabic} numeralMode={numeralMode} notationLanguage={notationLanguage} />
           </div>
           {reviewState.modelSolutionStepsArabic.length > 0 && (
             <div className="text-slate-600 dark:text-slate-300 font-bold leading-relaxed">
-              <SafeKaTeXBiDiMathRenderer text={reviewState.modelSolutionStepsArabic.join(" — ")} />
+              <SafeKaTeXBiDiMathRenderer text={reviewState.modelSolutionStepsArabic.join(" — ")} numeralMode={numeralMode} notationLanguage={notationLanguage} />
             </div>
           )}
         </div>

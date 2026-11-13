@@ -35,6 +35,8 @@ export function buildSharedMathInvariantsPromptBlock(params: {
   readonly notationLanguage?: MathNotationLanguage;
   readonly lessonTitleArabic?: string;
   readonly unitTitleArabic?: string;
+  readonly gradeId?: string;
+  readonly stage?: "primary" | "preparatory" | "secondary";
 }): string {
   const branchSpec = MATH_BRANCHES_SSOT[params.branchId];
   const effectiveNotation: MathNotationLanguage = params.notationLanguage ?? "english";
@@ -48,6 +50,8 @@ export function buildSharedMathInvariantsPromptBlock(params: {
     notationLanguage: effectiveNotation,
     lessonTitleArabic: params.lessonTitleArabic,
     unitTitleArabic: params.unitTitleArabic,
+    gradeId: params.gradeId,
+    stage: params.stage,
   });
 
   const trigDirective =

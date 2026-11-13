@@ -17,6 +17,7 @@ export const MODULE_ID_ONLINE_EXAM_PROMPT_BUILDER =
   "online_exam_prompt_builder" as const;
 
 export interface OnlineExamPromptBuilderConfig {
+  readonly gradeId?: string;
   readonly gradeNameArabic: string;
   readonly termNumber: 1 | 2;
   readonly branchId: MathBranchId;
@@ -75,11 +76,12 @@ export function buildOnlineExamNotebookLMPrompt(
       branchId: config.branchId,
       notationLanguage: config.notationLanguage,
       lessonTitleArabic: lessonsText,
+      gradeId: config.gradeId,
     }),
     "📐 قالب الإخراج الإلزامي لكل سؤال:",
     "=== [QUESTION: رقم_السؤال] | النوع: [MCQ أو SHORT] | الدرس: [اسم_الدرس] | الدرجة: [الدرجة] ===",
     "النص: [نص السؤال بالمعادلات بـ $...$]",
-    "الرسم: [[رسم هندسي: ...] إن لزم وإلا فارغ]",
+    "الرسم: [[رسم هندسي: ...] أو [رسم بياني: ...] أو [رسم إحصائي: ...] أو [نموذج بصري: ...] إن لزم وإلا فارغ]",
     "البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (وزّع الإجابات الصحيحة عشوائياً بين أ، ب، جـ، د ولا تحصرها في أ)",
     "الإجابة_الصحيحة: [حرف البديل في MCQ، أو القيمة في SHORT]",
     "الإجابات_المقبولة: [في SHORT: الصيغ المكافئة بـ | مثل: 0.5 | 1/2 | \\frac{1}{2}]",

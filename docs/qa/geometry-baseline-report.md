@@ -1,6 +1,6 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية والرسوم (لوحة القياس v2 - المرحلة 0)
 
-> تاريخ التوليد: 2026-11-13T07:49:26.754Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-13T13:43:46.595Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر ونظافة وليست حكماً نهائياً**. الدقة الحقيقية تُحسب فقط من خانة `humanVerdict` بعد المراجعة البشرية الصريحة.
@@ -8,11 +8,11 @@
 ## 1. الملخص التنفيذي ومؤشرات الدقة
 
 - إجمالي الحالات في المجموعة الذهبية: **437** حالة (تغطي ابتدائي 3–6 وإعدادي 1–3)
-- أنتج النظام شكلاً في: **384** (87.9%)
+- أنتج النظام شكلاً في: **383** (87.6%)
 - شكل بلا أي علامة خطر آلية: **194** (44.4%)
-- شكل بعلامات خطر آلية: **182** (41.6%)
+- شكل بعلامات خطر آلية: **181** (41.4%)
 - 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها (هلوسة زائدة): **8**
-- شكل مفقود لمسألة تستحق شكلاً: **3**
+- شكل مفقود لمسألة تستحق شكلاً: **4**
 - رفض صحيح لمسائل نظرية (لا شكل): **50**
 - **الدقة المُثبتة بالمراجعة البشرية (Human Accuracy):** **لم تُراجَع أي حالة بعد**
 - **مطابقة المواصفة المرجعية الآلية (expectedFigureSpec):** **81/111** (73.0%)
@@ -21,14 +21,14 @@
 
 | العلامة الآلية | العدد |
 |---|---|
-| `from_fixed_catalog` | 182 |
+| `from_fixed_catalog` | 181 |
 | `missing_given_on_figure` | 3 |
 
 ### لوحة التغطية والدقة حسب الصف الدراسي
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح | معتمد بشرياً | دقة مثبتة |
 |---|---|---|---|---|---|---|---|---|
-| prep-1 | 120 | 49 | 65 | 0 | 0 | 6 | 0/0 | — |
+| prep-1 | 120 | 49 | 64 | 0 | 1 | 6 | 0/0 | — |
 | prep-2 | 89 | 13 | 75 | 0 | 1 | 0 | 0/0 | — |
 | prep-3 | 33 | 15 | 16 | 1 | 0 | 1 | 0/0 | — |
 | primary-3 | 30 | 14 | 8 | 3 | 0 | 5 | 0/0 | — |
@@ -43,7 +43,7 @@
 |---|---|---|---|---|---|---|---|---|
 | analytic_geometry | 3 | 0 | 1 | 0 | 2 | 0 | 0/0 | — |
 | numbers | 67 | 26 | 3 | 0 | 0 | 38 | 0/0 | — |
-| plane_geometry | 324 | 135 | 174 | 6 | 1 | 8 | 0/0 | — |
+| plane_geometry | 324 | 135 | 173 | 6 | 2 | 8 | 0/0 | — |
 | primary_visual_models | 4 | 4 | 0 | 0 | 0 | 0 | 0/0 | — |
 | solid_geometry | 5 | 0 | 3 | 2 | 0 | 0 | 0/0 | — |
 | statistics_probability | 34 | 29 | 1 | 0 | 0 | 4 | 0/0 | — |
@@ -91,7 +91,7 @@
 | prep-1-prep-grade1-quadrilaterals-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-quadrilaterals-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-1-prep-grade1-quadrilaterals-catalog-4 | missed_figure | — | none | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |

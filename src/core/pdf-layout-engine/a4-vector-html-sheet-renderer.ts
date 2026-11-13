@@ -200,6 +200,7 @@ export function convertQuestionAssessmentIRToPrintableItem(
     citationBadgeAr: q.authenticCitation?.governorateNameArabic,
     geometryFigure: q.attachedGeometryFigure,
     graphSpec: q.graphSpec,
+    rawSvgMarkup: q.rawSvgMarkup,
     figureDiagnosticsAr: q.figureDiagnosticsAr,
     answerLinesCount: q.answerLinesCount,
     hasCustomAnswerLines: q.hasCustomAnswerLines,

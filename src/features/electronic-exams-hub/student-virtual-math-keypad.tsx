@@ -29,6 +29,8 @@ const MATH_TOUCH_KEYS = [
   { label: "⊥", insert: " ⊥ " },
   { label: "≥", insert: " ≥ " },
   { label: "≤", insert: " ≤ " },
+  { label: "°", insert: "°" },
+  { label: "/", insert: "/" },
 ] as const;
 
 export default function StudentVirtualMathKeypad({

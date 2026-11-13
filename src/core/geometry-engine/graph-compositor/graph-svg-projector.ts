@@ -25,6 +25,7 @@ export interface GraphSVGProjectorOptions {
   readonly heightPx?: number;
   readonly strokeColorHex?: string;
   readonly accentColorHex?: string;
+  readonly backgroundColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
   readonly notationLanguage?: MathNotationLanguage;
 }
@@ -80,9 +81,14 @@ export function projectCartesianGraphToSVGMarkup(
   const height = options.heightPx ?? 160;
   const strokeColor = options.strokeColorHex ?? "#1E293B";
   const accentColor = options.accentColorHex ?? "#2563EB";
+  const backgroundColor = options.backgroundColorHex ?? "#FFFFFF";
   const numeralMode = options.numeralMode ?? "western";
   const notation = options.notationLanguage ?? "arabic";
   const pad = 16;
+  const bgRectSvg =
+    backgroundColor && backgroundColor !== "transparent"
+      ? `<rect x="0" y="0" width="${width}" height="${height}" rx="8" fill="${backgroundColor}" />`
+      : "";
 
   const { xMin, xMax, yMin, yMax } = spec;
   const spanX = Math.max(1, xMax - xMin);
@@ -207,5 +213,5 @@ export function projectCartesianGraphToSVGMarkup(
     })
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${shadingSvg}${gridLines.join("")}${axesSvg}${axesSymSvg}${tickLabels.join("")}${curvesSvg}${pointsSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${bgRectSvg}${shadingSvg}${gridLines.join("")}${axesSvg}${axesSymSvg}${tickLabels.join("")}${curvesSvg}${pointsSvg}</svg>`;
 }

@@ -178,6 +178,7 @@ export default function TeacherGenerationStudioView() {
               branchNameAr={branch.nameArabic}
               selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
               targetedScopeText={targetedScopeText}
+              notationLanguage={notationLanguage}
               essayAnswerLinesCount={essayAnswerLinesCount}
               onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
               onApplyExamTitleToSheet={applyTitle}

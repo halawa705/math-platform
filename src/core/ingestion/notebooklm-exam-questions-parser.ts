@@ -6,16 +6,14 @@
 
 import type { QuestionAssessmentIR, MathQuestionPatternKind } from "../ir/question-assessment-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
-import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
-import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
-import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
+import type { MathNotationLanguage, NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { sanitizeNotebookLMCitationsAndLatex, healFourRaysHallucination } from "./notebooklm-citation-latex-sanitizer";
 import { synthesizeEmptyMcqChoices } from "./mcq-empty-choice-synthesizer";
+import type { CurriculumStageKind } from "./unsolicited-diagram-guard";
 import {
-  isDiagramJustifiedForQuestion,
-  shouldTriggerGeometryDiagramForPrompt,
-  type CurriculumStageKind,
-} from "./unsolicited-diagram-guard";
+  extractExamQuestionDiagrams,
+  cleanExamStudentPromptArabic,
+} from "./exam-question-diagram-extractor";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER = "notebooklm_exam_questions_parser" as const;
 
@@ -142,6 +140,8 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   readonly lessonTitleArabic: string;
   readonly gradeId?: string;
   readonly stage?: CurriculumStageKind;
+  readonly notationLanguage?: MathNotationLanguage;
+  readonly numeralMode?: NumeralDisplayMode;
 }): readonly QuestionAssessmentIR[] {
   let { cleanedText } = sanitizeNotebookLMCitationsAndLatex(params.rawText);
   if (!cleanedText) return [];
@@ -222,34 +222,19 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .trim();
 
     const basePrompt = healFourRaysHallucination(explicitPrompt || fallbackPrompt || block);
-    const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
-    const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
-    const geoMatch = !graphMatch ? block.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
-    const hasTag = Boolean(rawDrawing || geoMatch?.[1]);
-    const shouldTryGeo =
-      !graphSpec &&
-      (hasTag ||
-        shouldTriggerGeometryDiagramForPrompt({
-          promptArabic: basePrompt,
-          hasExplicitTag: false,
-          branchId: params.branchId,
-          gradeId: params.gradeId,
-          stage: params.stage,
-          lessonTitleArabic: params.lessonTitleArabic,
-        }));
-    const combinedGeo = shouldTryGeo ? combineProblemAndTagGeometryContext(rawDrawing || geoMatch?.[1], basePrompt) : "";
-    const diagramAllowed = isDiagramJustifiedForQuestion({
-      promptArabic: basePrompt,
-      rawDiagramTagText: combinedGeo,
-      hasExplicitTag: hasTag,
+    const extractedDiagrams = extractExamQuestionDiagrams({
+      block,
+      basePrompt,
+      rawDrawing,
       branchId: params.branchId,
+      lessonId: params.lessonId,
+      lessonTitleArabic: params.lessonTitleArabic,
+      orderNumber,
       gradeId: params.gradeId,
       stage: params.stage,
-      lessonTitleArabic: params.lessonTitleArabic,
+      notationLanguage: params.notationLanguage,
+      numeralMode: params.numeralMode,
     });
-    const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `geom_${params.lessonId}_${orderNumber}`) : undefined;
-    const attachedGeometryFigure = geoDiag?.figure;
-    const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 
     const rawChoices = parseChoicesTupleFromBlock(block, rawKind);
     const modelSolutionStepsArabic = rawSteps ? mergeLogicalSolutionSteps(rawSteps) : rawCorrect ? [rawCorrect] : [];
@@ -262,14 +247,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect || rawFinalAnswer, mcqChoicesArabic);
     const inlineGovMatch = basePrompt.match(/(?:\{\s*(محافظة\s+[^}\n]+)\s*\}|\[\s*(محافظة\s+[^\]\n]+)\s*\]|\(\s*(محافظة\s+[^)\n]+)\s*\))/i);
     const resolvedGov = (rawGov || inlineGovMatch?.[1] || inlineGovMatch?.[2] || inlineGovMatch?.[3] || "").trim();
-    const rawCleanPrompt = basePrompt
-      .replace(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+\]/gi, "")
-      .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
-      .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")
-      .replace(/(?:^|\n)\s*(?:لا يوجد رسم|بدون رسم|لا رسم)[^\n]*/gi, "")
-      .replace(/(?:^|\n)\s*(?:الإجابة_الصحيحة|الإجابة الصحيحة|إجابة_الصحيحة|إجابة الصحيحة|الإجابة|الحل|خطوات الحل|خطوات_الحل)\s*:[^\n]*/gi, "")
-      .replace(/(?:\{\s*محافظة\s+[^}\n]+\s*\}|\[\s*محافظة\s+[^\]\n]+\s*\]|\(\s*محافظة\s+[^)\n]+\s*\))/gi, "")
-      .trim();
+    const rawCleanPrompt = cleanExamStudentPromptArabic(basePrompt);
     const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
 
     const patternKind: MathQuestionPatternKind =
@@ -289,7 +267,12 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       requiredToProveOrFindArabic: rawRequired || undefined,
       mcqChoicesArabic, correctMcqChoiceIndex, synthesizedMcqIndices, modelSolutionStepsArabic, finalCanonicalAnswerArabic,
       acceptedAnswersArabic: rawAccepted ? rawAccepted.split("|").map((s) => s.trim()).filter(Boolean) : undefined,
-      figureDiagnosticsAr, attachedGeometryFigure, graphSpec,
+      figureDiagnosticsAr: extractedDiagrams.figureDiagnosticsAr,
+      attachedGeometryFigure: extractedDiagrams.attachedGeometryFigure,
+      graphSpec: extractedDiagrams.graphSpec,
+      rawSvgMarkup: extractedDiagrams.rawSvgMarkup,
+      notationLanguage: params.notationLanguage,
+      numeralMode: params.numeralMode,
       authenticCitation: resolvedGov && !resolvedGov.includes("غير مذكور") ? { governorateNameArabic: resolvedGov } : undefined,
       answerLinesCount: 0, hasDottedDivider: true,
     };

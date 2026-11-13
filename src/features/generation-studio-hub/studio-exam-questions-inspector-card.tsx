@@ -232,18 +232,18 @@ export default function StudioExamQuestionsInspectorCard({
               ) : (
                 <div className="space-y-2 text-xs">
                   <div className="font-extrabold text-slate-900 dark:text-slate-100 leading-relaxed">
-                    <SafeKaTeXBiDiMathRenderer text={q.promptArabic} />
+                    <SafeKaTeXBiDiMathRenderer text={q.promptArabic} numeralMode={q.numeralMode ?? "western"} notationLanguage={q.notationLanguage ?? "english"} />
                   </div>
 
-                  {(q.attachedGeometryFigure || q.graphSpec) && (
-                    <div className="my-1.5 p-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center">
+                  {(q.attachedGeometryFigure || q.graphSpec || q.rawSvgMarkup) && (
+                    <div className="my-1.5 p-2 rounded-xl bg-white text-slate-900 border-2 border-slate-200 dark:border-teal-400/50 shadow-xs flex flex-col items-center justify-center">
                       <div
-                        className="max-w-full overflow-x-auto flex justify-center"
+                        className="max-w-full overflow-x-auto flex justify-center bg-white rounded-lg"
                         dangerouslySetInnerHTML={{
-                          __html: renderQuestionFigureSvg(q, { widthPx: 250, heightPx: 165, strokeColorHex: "#0F172A", accentColorHex: "#0D9488" }) || "",
+                          __html: renderQuestionFigureSvg(q, { widthPx: 260, heightPx: 170, backgroundColorHex: "#FFFFFF", strokeColorHex: "#0F172A", accentColorHex: "#0D9488", numeralMode: q.numeralMode, notationLanguage: q.notationLanguage }) || "",
                         }}
                       />
-                      <span className="text-[10px] text-slate-500 font-bold mt-0.5">📐 رسم السؤال المعتمد</span>
+                      <span className="text-[10px] text-slate-600 font-bold mt-1">📐 رسم السؤال المعتمد</span>
                     </div>
                   )}
 
@@ -271,7 +271,7 @@ export default function StudioExamQuestionsInspectorCard({
                           >
                             <span className="font-black">({CHOICE_LABELS[cIdx]})</span>
                             <span className="truncate">
-                              <SafeKaTeXBiDiMathRenderer text={ch} />
+                              <SafeKaTeXBiDiMathRenderer text={ch} numeralMode={q.numeralMode ?? "western"} notationLanguage={q.notationLanguage ?? "english"} />
                             </span>
                             {isCorrect && <span className="mr-auto text-emerald-600 font-black">✓</span>}
                           </div>
@@ -283,7 +283,7 @@ export default function StudioExamQuestionsInspectorCard({
                   {q.modelSolutionStepsArabic.length > 0 && (
                     <div className="px-2.5 py-1.5 rounded-xl bg-teal-50/70 dark:bg-slate-800/60 border border-teal-200/60 dark:border-slate-700 text-[11px] font-bold text-teal-950 dark:text-teal-200">
                       <span className="font-black ml-1">💡 الحل:</span>
-                      <SafeKaTeXBiDiMathRenderer text={q.modelSolutionStepsArabic.join(" ⇐ ")} />
+                      <SafeKaTeXBiDiMathRenderer text={q.modelSolutionStepsArabic.join(" ⇐ ")} numeralMode={q.numeralMode ?? "western"} notationLanguage={q.notationLanguage ?? "english"} />
                     </div>
                   )}
                 </div>

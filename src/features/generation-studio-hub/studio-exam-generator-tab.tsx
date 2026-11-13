@@ -9,6 +9,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
+import { loadPersistedPDFPrintSettingsSSOT } from "@/core/ssot/pdf-print-settings-ssot";
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import { buildStandardDocumentTitleSSOT, loadActiveCurriculumUnitsSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
@@ -52,6 +54,7 @@ export interface StudioExamGeneratorTabProps {
   readonly selectedUnitIds?: readonly string[];
   readonly selectedLessonIds?: readonly string[];
   readonly targetedScopeText?: string;
+  readonly notationLanguage?: MathNotationLanguage;
   readonly essayAnswerLinesCount?: number;
   readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
@@ -62,7 +65,7 @@ export interface StudioExamGeneratorTabProps {
 export default function StudioExamGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "", lessonTitle, branchNameAr,
-  selectedUnitIds = [], selectedLessonIds = [], targetedScopeText,
+  selectedUnitIds = [], selectedLessonIds = [], targetedScopeText, notationLanguage = "english",
   essayAnswerLinesCount, onChangeEssayAnswerLinesCount,
   onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet, onSyncQuestionsToSheet,
 }: StudioExamGeneratorTabProps) {
@@ -135,7 +138,7 @@ export default function StudioExamGeneratorTab({
 
   useEffect(() => {
     const baseCfg = {
-      gradeNameArabic: gradeNameAr, termNumber: 1 as const, branchId,
+      gradeId, gradeNameArabic: gradeNameAr, termNumber: 1 as const, branchId,
       targetedLessonTitlesArabic: [lessonTitle],
       targetedScopeArabic: targetedScopeText,
       unitFocusWeights: focusWeightItems,
@@ -148,27 +151,20 @@ export default function StudioExamGeneratorTab({
         ? buildOnlineExamNotebookLMPrompt({ ...baseCfg, shortAnswerQuestionsCount: effectiveProof })
         : buildOfficialExamNotebookLMPrompt({ ...baseCfg, essayAndProofQuestionsCount: effectiveProof })
     );
-  }, [gradeNameAr, branchId, lessonTitle, targetedScopeText, focusWeightItems, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
+  }, [gradeId, gradeNameAr, branchId, lessonTitle, targetedScopeText, focusWeightItems, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
 
   const handleReplyChange = (raw: string) => {
     setNotice(null);
     setReply(raw);
     persist({ savedReply: raw });
-    if (!raw.trim()) {
-      setParsedQuestions([]);
-      setDiagRows([]);
-      return;
-    }
+    if (!raw.trim()) { setParsedQuestions([]); setDiagRows([]); return; }
+    const numeralMode = loadPersistedPDFPrintSettingsSSOT().numeralMode ?? "western";
     const extracted = parseNotebookLMExamQuestionsToIR({
-      rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle, gradeId,
+      rawText: raw, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle, gradeId, notationLanguage, numeralMode,
     });
     setParsedQuestions(extracted);
     onSyncQuestionsToSheet?.(extracted.map((q) => mapToPrintable(q)));
-    setDiagRows(
-      extracted
-        .filter((q) => q.figureDiagnosticsAr?.length)
-        .map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! }))
-    );
+    setDiagRows(extracted.filter((q) => q.figureDiagnosticsAr?.length).map((q) => ({ questionNumber: q.displayOrderNumber, warnings: q.figureDiagnosticsAr! })));
   };
 
   const handleUpdateQuestions = (nextQs: readonly QuestionAssessmentIR[]) => {
@@ -178,8 +174,9 @@ export default function StudioExamGeneratorTab({
 
   const getActiveQuestions = (): readonly QuestionAssessmentIR[] => {
     if (parsedQuestions.length > 0) return parsedQuestions;
+    const numeralMode = loadPersistedPDFPrintSettingsSSOT().numeralMode ?? "western";
     const fresh = parseNotebookLMExamQuestionsToIR({
-      rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle, gradeId,
+      rawText: reply, branchId, unitId: "exam-unit", lessonId: "exam-lesson", lessonTitleArabic: lessonTitle, gradeId, notationLanguage, numeralMode,
     });
     if (fresh.length > 0) setParsedQuestions(fresh);
     return fresh;
@@ -196,8 +193,10 @@ export default function StudioExamGeneratorTab({
   };
 
   const handlePublish = async (p: { customTitleAr: string; durationMinutes: number; availabilityDays: number; revealAnswers: boolean }) => {
-    const qs = getActiveQuestions();
-    if (qs.length === 0) { setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة."); return; }
+    const rawQs = getActiveQuestions();
+    if (rawQs.length === 0) { setPublishMsg("⚠️ الصق رد NotebookLM أولاً ليتم استخراج الأسئلة."); return; }
+    const numeralMode = loadPersistedPDFPrintSettingsSSOT().numeralMode ?? "western";
+    const qs = rawQs.map((q) => ({ ...q, notationLanguage: q.notationLanguage ?? notationLanguage, numeralMode: q.numeralMode ?? numeralMode }));
     const finalTitle = p.customTitleAr.trim() || `اختبار — ${targetedScopeText || lessonTitle}`;
     let examCode = publishedInfo?.examId;
     let excl: readonly number[] = [];

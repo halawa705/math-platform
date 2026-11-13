@@ -15,6 +15,7 @@ export interface RenderQuestionFigureSvgOptions {
   readonly heightPx?: number;
   readonly strokeColorHex?: string;
   readonly accentColorHex?: string;
+  readonly backgroundColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
   readonly notationLanguage?: MathNotationLanguage;
 }

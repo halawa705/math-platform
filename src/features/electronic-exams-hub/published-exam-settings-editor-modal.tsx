@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import { renderQuestionFigureSvg } from "@/core/pdf-layout-engine/question-figure-svg-renderer";
 import {
   loadLocalExamAnswerKeySSOT,
   saveLocalExamAnswerKeySSOT,
@@ -144,6 +145,24 @@ export default function PublishedExamSettingsEditorModal({
                     {isOpen && (
                       <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                         <textarea rows={2} value={q.promptArabic} onChange={(e) => updateQuestionItem(idx, { promptArabic: e.target.value })} className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold" />
+                        {(q.attachedGeometryFigure || q.graphSpec || q.rawSvgMarkup) && (
+                          <div className="p-2 rounded-xl bg-white text-slate-900 border border-slate-300 dark:border-teal-400/60 flex justify-center overflow-x-auto">
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  renderQuestionFigureSvg(q, {
+                                    widthPx: 240,
+                                    heightPx: 155,
+                                    backgroundColorHex: "#FFFFFF",
+                                    strokeColorHex: "#0F172A",
+                                    accentColorHex: "#0D9488",
+                                    numeralMode: q.numeralMode,
+                                    notationLanguage: q.notationLanguage,
+                                  }) || "",
+                              }}
+                            />
+                          </div>
+                        )}
                         {q.mcqChoicesArabic && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                             {([0, 1, 2, 3] as const).map((cIdx) => {

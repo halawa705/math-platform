@@ -8,6 +8,7 @@ import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
 import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-ssot";
 import type { CartesianGraphSpec } from "@/core/ssot/cartesian-graph-spec-ssot";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
+import type { MathNotationLanguage, NumeralDisplayMode } from "@/core/ssot/numeral-and-unit-ssot";
 import { auditMCQQuestionIntegrity } from "@/core/validation/question-options-integrity-auditor";
 
 export const MODULE_ID_ONLINE_EXAM_PUBLIC_KEY_SPLITTER = "online_exam_public_key_splitter" as const;
@@ -19,10 +20,15 @@ export interface OnlinePublicQuestion {
   readonly displayOrderNumber: number;
   readonly allocatedMarks: number;
   readonly promptArabic: string;
+  readonly givenDataArabic?: readonly string[];
+  readonly requiredToProveOrFindArabic?: string;
   readonly answerMode: OnlineAnswerMode;
   readonly mcqChoicesArabic?: readonly string[];
   readonly attachedGeometryFigure?: CanonicalGeometryFigureIR;
   readonly graphSpec?: CartesianGraphSpec;
+  readonly rawSvgMarkup?: string;
+  readonly notationLanguage?: MathNotationLanguage;
+  readonly numeralMode?: NumeralDisplayMode;
   readonly lessonTitleArabic?: string;
   readonly branchId?: MathBranchId;
 }
@@ -58,8 +64,13 @@ export function splitExamIntoPublicAndKey(questions: readonly QuestionAssessment
       displayOrderNumber: q.displayOrderNumber,
       allocatedMarks: q.allocatedMarks,
       promptArabic: q.promptArabic,
+      givenDataArabic: q.givenDataArabic,
+      requiredToProveOrFindArabic: q.requiredToProveOrFindArabic,
       attachedGeometryFigure: q.attachedGeometryFigure,
       graphSpec: q.graphSpec,
+      rawSvgMarkup: q.rawSvgMarkup,
+      notationLanguage: q.notationLanguage,
+      numeralMode: q.numeralMode,
       lessonTitleArabic: q.lessonTitleArabic,
       branchId: q.branchId,
     };
