@@ -18,6 +18,8 @@ export interface QuestionCardDensityMetrics {
   readonly cardPaddingClass: string;
   readonly badgeSizeClass: string;
   readonly figureScaleFactor: number;
+  /** ارتفاع سطر نص السؤال (بدون تغيير حجم الخط). */
+  readonly promptLineHeight: number;
 }
 
 /**
@@ -42,6 +44,7 @@ export function resolveQuestionCardDensity(params: {
       cardPaddingClass: "p-2 pb-2",
       badgeSizeClass: "px-2.5 py-0.5 text-[0.82em]",
       figureScaleFactor: columnsCount === 2 ? 0.92 : 1.0,
+      promptLineHeight: 1.62,
     };
   }
 
@@ -52,6 +55,7 @@ export function resolveQuestionCardDensity(params: {
       cardPaddingClass: columnsCount === 2 ? "p-2 pb-1.5" : "p-2 pb-2",
       badgeSizeClass: "px-2 py-0.5 text-[0.80em]",
       figureScaleFactor: columnsCount === 2 ? 0.88 : 1.0,
+      promptLineHeight: 1.58,
     };
   }
 
@@ -61,5 +65,6 @@ export function resolveQuestionCardDensity(params: {
     cardPaddingClass: "p-1.5 pb-1",
     badgeSizeClass: "px-1.5 py-0.2 text-[0.76em]",
     figureScaleFactor: columnsCount === 2 ? 0.82 : 0.90,
+    promptLineHeight: 1.52,
   };
 }

@@ -39,7 +39,7 @@ export function AdaptiveMCQChoicesCard({
   return (
     <div
       style={{ fontSize: optionsFontEm }}
-      className={`grid ${mcqGridClass} gap-1.5 pt-1.5 mt-1.5 border-t border-purple-100`}
+      className={`grid ${mcqGridClass} gap-1 pt-1 mt-1 border-t border-purple-100`}
     >
       {mcqChoicesAr.map((choice, cIdx) => {
         const isCorrect = isSolvedMode && correctMcqIndex === cIdx;
@@ -59,7 +59,7 @@ export function AdaptiveMCQChoicesCard({
                 ? `0 0 0 1px ${palette.primaryHex} inset`
                 : "0 1px 2px rgba(76, 29, 149, 0.04)",
             }}
-            className="min-w-0 px-2 py-1 rounded-lg border-2 flex items-center justify-between gap-1.5 min-h-[2.35rem]"
+            className="min-w-0 px-1.5 py-0.5 rounded-lg border-2 flex items-center justify-between gap-1 min-h-[2rem]"
           >
             <span
               style={{
