@@ -78,7 +78,10 @@ export function matchPrepGrade2TriangleCongruenceFigure(
   }
 
   // 4. مقص بتنصيف E للقطعتين AB و CD وتوازي AC // DB (مسألة 11)
-  if (/E\s*نقطة\s*منتصف\s*كل\s*من\s*AB.*CD|AEC.*BED|E\s*منتصف.*AB.*CD/i.test(d)) {
+  if (
+    !/متوازي\s*أضلاع|شبه\s*منحرف/i.test(d) &&
+    /(?:E\s*(?:نقطة\s*)?منتصف\s*(?:كل\s*من\s*)?(?:القطعتين\s*)?\bAB\b[^؛;\n.]{0,12}\bCD\b|AEC\s*(?:≅|~)\s*(?:Δ\s*)?BED)/i.test(d)
+  ) {
     return buildCongruenceScissorMidpointEFigure({ figureId, notationLanguage });
   }
 

@@ -9,7 +9,7 @@ import { normalizeArabicGeometryUnitSSOT } from "@/core/ssot/numeral-and-unit-ss
 
 export const MODULE_ID_GEO_FACT_PARSER = "geo_fact_parser" as const;
 
-const UNIT_RX = "(?:(سم²|م²|سم\\^2|م\\^2|سم|متر|أمتار|متراً|امتار|قدماً|أقدام|قدم|بوصة|بوصات|م|كم|مم|ديسم|وحدة\\s*طول|وحدة|وحدات|cm|mm|km|dm|m))?";
+const UNIT_RX = "(?:(سم²|م²|سم\\^2|م\\^2|سم|متر|أمتار|متراً|مترا|أمتاراً|أمتارا|امتاراً|امتار|قدماً|أقدام|قدم|بوصة|بوصات|م|كم|مم|ديسم|وحدة\\s*طول|وحدة|وحدات|cm|mm|km|dm|m))?";
 
 const L = "(?:[A-Za-z]|[أ-ي]ـ?)";
 const SEGRX = `(${L}\\s*${L})(?![A-Za-zء-ي])`;
@@ -151,11 +151,22 @@ export function parseGeoFactString(s: string): GeoFact | null {
   }
   // تساوي أضلاع / طول
   if ((m = s.match(re(`${SEGRX}\\s*=\\s*${SEGRX}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "equal", a, b }; }
+  if ((m = s.match(/^محيط\s*=\s*(\d+(?:\.\d+)?)\s*(سم|م|متراً|مترا|متر)?$/))) {
+    return { k: "perimeter", value: Number(m[1]), unit: normalizeArabicGeometryUnitSSOT(m[2]) ?? "سم" };
+  }
+  if ((m = s.match(/^مساحة\s*=\s*(\d+(?:\.\d+)?)\s*(سم²|سم\^2|م²)?$/))) {
+    return { k: "area", value: Number(m[1]), unit: (m[2] || "سم²").replace(/\^2/g, "²") };
+  }
+  if ((m = s.match(re(`${SEGRX}\\s*=\\s*(\\d+)\\s*/\\s*(\\d+)\\s*${SEGRX}`)))) {
+    const a = seg(m[1]); const b = seg(m[4]);
+    const num = Number(m[2]); const den = Number(m[3]);
+    if (a && b && den > 0) return { k: "segmentRatio", part: a, whole: b, num, den };
+  }
   if ((m = s.match(re(`${SEGRX}\\s*=\\s*(.+?)\\s*${UNIT_RX}`)))) {
     const a = seg(m[1]);
     const text = m[2].trim().replace(/\*?\s*جذر\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/g, "√$1");
     const unit = normalizeArabicGeometryUnitSSOT(m[3]);
-    if (a && text) {
+    if (a && text && !/^[A-Z]{2}(?:\s*=\s*[A-Z]{2})*$/.test(text) && !/^[A-Z]{2}\s*=/.test(text)) {
       const hasVar = /[a-zA-Zسصع]/.test(text);
       const hasRad = /√/.test(text);
       const evalExpr = text

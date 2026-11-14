@@ -10,6 +10,13 @@
 import type { CanonicalAngleNode } from "../ssot/geometry-archetype-ssot";
 import { formatNumeralsByModeSSOT, type MathNotationLanguage, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
+import {
+  boxOverlapArea,
+  createCenteredBox,
+  segmentIntersectsBox,
+  type ScreenBox,
+  type ScreenSegmentObstacle,
+} from "./svg-label-collision-layout-solver";
 
 export const MODULE_ID_VECTOR_SVG_ANGLE_PROJECTOR =
   "vector_svg_angle_projector" as const;
@@ -26,6 +33,8 @@ export interface AngleProjectorOptions {
   readonly accentColor: string;
   readonly numeralMode: NumeralDisplayMode;
   readonly notation?: MathNotationLanguage;
+  readonly occupiedBoxes?: ScreenBox[];
+  readonly obstacleSegments?: readonly ScreenSegmentObstacle[];
 }
 
 export function projectGeometryAnglesSVGMarkup(
@@ -70,6 +79,13 @@ export function projectGeometryAnglesSVGMarkup(
       elements.push(
         `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${cornerX.toFixed(1)} ${cornerY.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)} Z" fill="${opts.accentColor}" fill-opacity="0.15" stroke="${opts.strokeColor}" stroke-width="1.3" />`
       );
+      if (opts.occupiedBoxes) {
+        const minRx = Math.min(vx, p1x, cornerX, p2x);
+        const maxRx = Math.max(vx, p1x, cornerX, p2x);
+        const minRy = Math.min(vy, p1y, cornerY, p2y);
+        const maxRy = Math.max(vy, p1y, cornerY, p2y);
+        opts.occupiedBoxes.push({ minX: minRx, minY: minRy, maxX: maxRx, maxY: maxRy });
+      }
       continue;
     }
 
@@ -116,10 +132,40 @@ export function projectGeometryAnglesSVGMarkup(
     const minArmPx = Math.min(len1, len2);
     const rawLabelDist = rArc + 9 + (isLongLabel ? 7 : 0) + (openDeg < 42 ? 6 : 0);
     const labelDist = minArmPx < 62 ? Math.min(rawLabelDist, Math.max(11, minArmPx * 0.34)) : rawLabelDist;
-    const lx = vx + Math.cos(midAng) * labelDist;
-    const ly = vy + Math.sin(midAng) * labelDist + 2.6;
+    let lx = vx + Math.cos(midAng) * labelDist;
+    let ly = vy + Math.sin(midAng) * labelDist + 2.6;
 
     if (labelText) {
+      if (opts.occupiedBoxes || opts.obstacleSegments) {
+        const estW = Math.max(14, labelText.length * 5.2 + 4);
+        const estH = 10.5;
+        let bestCost = Infinity;
+        let bestBox = createCenteredBox(lx, ly - 2.6, estW, estH);
+        const distChoices = [labelDist, labelDist + 5, Math.max(12, labelDist - 4)];
+        const angChoices = [0, 0.22, -0.22];
+        for (const d of distChoices) {
+          for (const da of angChoices) {
+            const cx = vx + Math.cos(midAng + da) * d;
+            const cy = vy + Math.sin(midAng + da) * d;
+            const box = createCenteredBox(cx, cy, estW, estH);
+            let cost = Math.abs(d - labelDist) * 2 + Math.abs(da) * 20;
+            for (const ob of opts.occupiedBoxes ?? []) {
+              const area = boxOverlapArea(box, ob, 1);
+              if (area > 0) cost += 600 + area * 10;
+            }
+            for (const s of opts.obstacleSegments ?? []) {
+              if (segmentIntersectsBox(s, box, 1.5)) cost += 300;
+            }
+            if (cost < bestCost) {
+              bestCost = cost;
+              lx = cx;
+              ly = cy + 2.6;
+              bestBox = box;
+            }
+          }
+        }
+        opts.occupiedBoxes?.push(bestBox);
+      }
       const isUnknown =
         ang.labelKind === "unknown" ||
         labelText.includes("؟") ||

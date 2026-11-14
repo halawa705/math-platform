@@ -53,7 +53,7 @@ export function matchPrepGrade2ParallelApplicationsFigure(
   }
 
   // 2. قاطعان لمستقيمات متوازية بأجزاء متساوية 4X و 8 و y+1 (مسألة 3 ص 210)
-  if (/l1\s*\/\/\s*l2\s*\/\/\s*l3|قاطعان\s*لهم.*4X.*8|4X.*8.*y\s*\+\s*1/i.test(d)) {
+  if (/قاطعان\s*لهم.*4X.*8|4X.*8.*y\s*\+\s*1/i.test(d)) {
     return buildThalesTransversals4x8yFigure({ figureId, notationLanguage });
   }
 

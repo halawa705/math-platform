@@ -15,6 +15,21 @@ import {
 } from "./geo-composite-topology-placer";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
+import { tryComposeParallelTransversalsFigure } from "./geo-parallel-transversals-placer";
+import {
+  buildPerimeterAndAreaBadges,
+  deduplicatePlacedPolygons,
+  registerIntersectingRaySegments,
+  resolveParallelConstraintFact,
+  tryPlaceSegmentRatioVertex,
+} from "./geo-composite-constraint-helpers";
+import {
+  assembleCanonicalFigureSegments,
+  resolveAngleFactHelper,
+  resolveExtendWithEqualHelper,
+  type AssembledExtraSeg,
+} from "./geo-figure-segments-assembler";
+import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
 import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
@@ -22,12 +37,11 @@ import { matchPrepGrade1ParallelismFigure } from "../curriculum-catalogs/prep-st
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
-import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
+
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
 export interface ComposeResult { readonly figure: CanonicalGeometryFigureIR | null; readonly warnings: readonly string[] }
-interface ExtraSeg { readonly a: string; readonly b: string; readonly dashed?: boolean }
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
@@ -39,7 +53,8 @@ export function composeFigureFromGeometryDescription(description: string, figure
   }
 
   // 1. فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية أولاً على كامل النص المدمج
-  const isSimilarityContext = isSimilarityGeometryContext(description);
+  const isQuadOrMidpointContext = /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف)/.test(description);
+  const isSimilarityContext = !isQuadOrMidpointContext && isSimilarityGeometryContext(description);
 
   if (isSimilarityContext) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
@@ -48,16 +63,16 @@ export function composeFigureFromGeometryDescription(description: string, figure
     }
   }
 
-  const hasTrigKeywords = /(?:sin|cos|tan|cot|جا|جتا|ظا|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة)/i.test(description);
+  const hasTrigKeywords = /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة/i.test(description);
   const hasExplicitNamedTri = /مثلث\s*[A-Z]{3}/i.test(description);
-  const trigCatalogFig = (hasTrigKeywords || (/(?:طائرة\s*ورقية|سلم)/.test(description) && !hasExplicitNamedTri))
+  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم)/.test(description) && !hasExplicitNamedTri))
     ? matchPrepGrade3TrigonometryFigure(description, figureId, notation)
     : undefined;
   if (trigCatalogFig) {
     return { figure: trigCatalogFig, warnings: [] };
   }
 
-  const parallelCatalogFig = !/مثلث|نمد|امتداد|∩/i.test(description)
+  const parallelCatalogFig = !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
     ? matchPrepGrade1ParallelismFigure(description, figureId, notation)
     : undefined;
   if (parallelCatalogFig) {
@@ -67,11 +82,8 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
   if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
     const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
-    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description)) {
-      return fromTag;
-    }
+    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description)) return fromTag;
   }
-
   const warnings: string[] = [];
   const facts: GeoFact[] = [];
   for (const line of splitDescriptionIntoFactStrings(description)) {
@@ -85,18 +97,20 @@ export function composeFigureFromGeometryDescription(description: string, figure
   if (circleFig) return { figure: circleFig, warnings };
 
   const points = new Map<string, Vec2>();
-  const polygons = placeDeclaredShapes(facts, lengths, points);
+  const polygons = deduplicatePlacedPolygons(
+    placeDeclaredShapes(facts, lengths, points)
+  );
   if (polygons.length === 0) {
-    const isParallelProblem = /(?:\/\/|\\parallel|\|\|)|توازي|متوازيان|متوازيين|متوازية|يوازي|توازى/i.test(description);
-    if (!isParallelProblem) {
+    const parallelFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
+    if (parallelFig) return { figure: parallelFig, warnings: [] };
+    if (!/(?:\/\/|\\parallel|\|\|)|توازي|متوازيان|متوازيين|متوازية|يوازي|توازى/i.test(description)) {
       const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation);
       if (angleFanFig) return { figure: angleFanFig, warnings: [] };
     }
     return { figure: null, warnings: [...warnings, "لا يوجد مثلث أو رباعي أو دائرة معلنة في الوصف."] };
   }
-
   const host = new Map<string, Seg>();
-  const extras: ExtraSeg[] = [];
+  const extras: AssembledExtraSeg[] = [];
   const ticks = new Map<string, number>();
   const parallelMarks = new Map<string, number>();
   const angles: CanonicalAngleNode[] = [];
@@ -108,13 +122,12 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const isPolygonSide = (a: string, b: string) => polygons.some((p) => p.labels.some((l, i) => pairKey(l, p.labels[(i + 1) % p.labels.length]) === pairKey(a, b)));
   const addAngle = (vertex: string, arm1: string, arm2: string, extra: Partial<CanonicalAngleNode> = {}) => angles.push({ id: `${figureId}_ang_${angles.length}`, vertexId: `${figureId}_v_${vertex}`, arm1VertexId: `${figureId}_v_${arm1}`, arm2VertexId: `${figureId}_v_${arm2}`, ...extra });
 
-  for (const p of polygons) if (p.rightAt && p.labels.length === 3) addAngle(p.rightAt, ...(p.labels.filter((l) => l !== p.rightAt) as [string, string]), { isRightAngle: true, degrees: 90 });
   for (const p of polygons) {
+    if (p.rightAt && p.labels.length === 3) addAngle(p.rightAt, ...(p.labels.filter((l) => l !== p.rightAt) as [string, string]), { isRightAngle: true, degrees: 90 });
     if (p.kind === "general" && p.labels.length === 4) {
       const [a, b, c, d] = p.labels;
-      const hasBD = extras.some((e) => pairKey(e.a, e.b) === pairKey(b, d)) || facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(b, d));
-      const hasAC = extras.some((e) => pairKey(e.a, e.b) === pairKey(a, c)) || facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(a, c));
-      if (!hasAC && !hasBD) addExtra(a, c);
+      const hasDiag = (u: string, v: string) => extras.some((e) => pairKey(e.a, e.b) === pairKey(u, v)) || facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(u, v));
+      if (!hasDiag(a, c) && !hasDiag(b, d)) addExtra(a, c);
     }
   }
 
@@ -129,9 +142,38 @@ export function composeFigureFromGeometryDescription(description: string, figure
     return 0.4;
   };
 
+  const deferredParallels: Extract<GeoFact, { k: "parallel" }>[] = [];
+  const runParallel = (pf: Extract<GeoFact, { k: "parallel" }>) => resolveParallelConstraintFact({
+    parallelFact: pf, facts, polygons, points, host, addExtra,
+    addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
+    nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
+    tryComposite: () => tryPlaceParallelWithMissingEndpoints({
+      parallelFact: pf, facts, points, host, lengths, addExtra,
+      addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
+      nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
+    }),
+    warnings,
+  });
+
   for (const f of facts) {
+    if (f.k === "segmentRatio") {
+      tryPlaceSegmentRatioVertex({ fact: f, points, host });
+      continue;
+    }
     if (f.k === "pointOn" || f.k === "midpoint") {
       const [a, b] = f.seg;
+      if (f.k === "midpoint" && P(f.p) && Boolean(P(a)) !== Boolean(P(b))) {
+        const missing = P(a) ? b : a;
+        const known = P(a) ? a : b;
+        const hasDeferredPointOn = facts.some((pf) => (pf.k === "pointOn" && pf.p === missing) || (pf.k === "intersect" && pf.p === missing));
+        if (!hasDeferredPointOn) {
+          points.set(missing, vAdd(P(f.p)!, vSub(P(f.p)!, P(known)!)));
+          ticks.set(pairKey(a, f.p), ++tickGroup);
+          ticks.set(pairKey(f.p, b), tickGroup);
+          addExtra(a, b);
+          continue;
+        }
+      }
       if (f.k === "pointOn" && facts.some((ef) => ef.k === "extend" && ef.to === f.p)) {
         continue;
       }
@@ -159,32 +201,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
       points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
       if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
     } else if (f.k === "parallel") {
-      const [x, y] = f.a; const [p, q] = f.b;
-      // إذا ذكر DE // BC في مثلث ABC دون ذكر D ∈ AB و E ∈ AC صراحةً نضعهما على الضلعين (ما لم يمر [x,y] برأس المثلث)
-      const basePoly = polygons.find((pl) => pl.labels.length === 3 && pl.labels.includes(p) && pl.labels.includes(q));
-      if (!P(x) && !P(y) && basePoly) {
-        const apex = basePoly.labels.find((l) => l !== p && l !== q);
-        const passesThroughApex =
-          Boolean(apex) &&
-          (facts.some((pf) => pf.k === "pointOn" && pf.p === apex && pairKey(pf.seg[0], pf.seg[1]) === pairKey(x, y)) ||
-            facts.some((af) => af.k === "angle" && af.vertex === apex && (af.arms?.includes(x) || af.arms?.includes(y))));
-        if (apex && !passesThroughApex) {
-          points.set(x, vLerp(P(apex)!, P(p)!, 0.48)); host.set(x, [apex, p]);
-          points.set(y, vLerp(P(apex)!, P(q)!, 0.48)); host.set(y, [apex, q]);
-        }
-      }
-      const handledComposite = tryPlaceParallelWithMissingEndpoints({
-        parallelFact: f, facts, points, host, lengths, addExtra,
-        addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
-        nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
-      });
-      if (handledComposite) continue;
-      if (!P(x) || !P(y) || !P(p) || !P(q)) { warnings.push("توازي بنقاط غير معرّفة"); continue; }
-      const d = vSub(P(q)!, P(p)!); const hy = host.get(y); const hx = host.get(x);
-      if (hy) { const r = lineIntersection(P(x)!, vAdd(P(x)!, d), P(hy[0])!, P(hy[1])!); if (r) points.set(y, r); }
-      else if (hx) { const r = lineIntersection(P(y)!, vAdd(P(y)!, d), P(hx[0])!, P(hx[1])!); if (r) points.set(x, r); }
-      parallelGroup = Math.min(2, parallelGroup + 1);
-      parallelMarks.set(pairKey(x, y), parallelGroup); parallelMarks.set(pairKey(p, q), parallelGroup); addExtra(x, y);
+      const awaitsIntersect = [f.a[0], f.a[1], f.b[0], f.b[1]].some(
+        (pt) => !P(pt) && facts.some((inf) => inf.k === "intersect" && inf.p === pt)
+      );
+      if (awaitsIntersect) { deferredParallels.push(f); continue; }
+      runParallel(f);
     } else if (f.k === "perp") {
       let [apex, foot] = f.a; if (f.foot) foot = f.foot; if (!P(apex) && P(foot)) [apex, foot] = [foot, apex];
       const [b0, b1] = f.b; if (!P(apex) || !P(b0) || !P(b1)) { warnings.push("تعامد بنقاط غير معرّفة"); continue; }
@@ -216,37 +237,21 @@ export function composeFigureFromGeometryDescription(description: string, figure
         points.set(f.p, r);
       }
       for (const s of [f.a, f.b]) {
-        const alreadySplit = isPolygonSide(s[0], f.p) && isPolygonSide(f.p, s[1]);
-        if (!isPolygonSide(s[0], s[1]) && !alreadySplit) addExtra(s[0], s[1]);
+        registerIntersectingRaySegments({ s, p: f.p, points, host, isPolygonSide, addExtra });
       }
     } else if (f.k === "diagonalsMeet") {
       const q = polygons.find((x) => x.labels.length === 4); if (!q) continue; const [a, b, c, d] = q.labels;
       const r = lineIntersection(P(a)!, P(c)!, P(b)!, P(d)!); if (r) { points.set(f.p, r); addExtra(a, c); addExtra(b, d); }
     } else if (f.k === "extend") {
-      const A = P(f.from); const B = P(f.through); if (!A || !B) continue; const len = lengths.get(pairKey(f.through, f.to))?.numeric ?? vDist(A, B) * 0.4;
-      points.set(f.to, vAdd(B, vScale(vSub(B, A), len / (vDist(A, B) || 1)))); addExtra(f.through, f.to, true);
+      resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
     } else if (f.k === "draw") addExtra(f.seg[0], f.seg[1]);
     else if (f.k === "equal") { ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup); ticks.set(pairKey(f.b[0], f.b[1]), tickGroup); }
     else if (f.k === "angle") {
-      const poly = polyOf(f.vertex); const labels = poly?.labels ?? []; const i = labels.indexOf(f.vertex);
-      let arms: [string, string] | null = f.arms ? [f.arms[0], f.arms[2]] : i >= 0 ? [labels[(i + labels.length - 1) % labels.length], labels[(i + 1) % labels.length]] : null;
-      if (!arms) {
-        const neighbors = extras.flatMap((e) => (e.a === f.vertex ? [e.b] : e.b === f.vertex ? [e.a] : []));
-        for (const hSeg of [host.get(f.vertex)]) if (hSeg) neighbors.push(hSeg[0], hSeg[1]);
-        const uniqueN = Array.from(new Set(neighbors.filter((n) => n !== f.vertex && P(n))));
-        if (uniqueN.length >= 2) arms = [uniqueN[0], uniqueN[1]];
-      }
-      const eqAngleMatch = f.text?.match(/^(?:ق|m)?\s*\(?\s*∠\s*([A-Z])\s*\)?$/);
-      if (arms && eqAngleMatch) {
-        const vOther = eqAngleMatch[1];
-        const polyO = polyOf(vOther); const lblO = polyO?.labels ?? []; const iO = lblO.indexOf(vOther);
-        addAngle(f.vertex, arms[0], arms[1], { markSymbol: "dot" });
-        if (iO >= 0) addAngle(vOther, lblO[(iO + lblO.length - 1) % lblO.length], lblO[(iO + 1) % lblO.length], { markSymbol: "dot" });
-      } else if (arms && P(arms[0]) && P(arms[1])) {
-        addAngle(f.vertex, arms[0], arms[1], { degrees: f.deg, degreesLabel: f.text ?? (f.deg !== undefined && !f.right ? `${f.deg}°` : undefined), isRightAngle: f.right });
-      }
+      resolveAngleFactHelper({ fact: f, polyOf, extras, host, points, addAngle });
     }
   }
+
+  for (const pf of deferredParallels) runParallel(pf);
 
   for (const f of facts) {
     if (f.k === "length" && P(f.seg[0]) && P(f.seg[1]) && !isPolygonSide(f.seg[0], f.seg[1])) {
@@ -260,40 +265,22 @@ export function composeFigureFromGeometryDescription(description: string, figure
   }
 
   const keyId = (k: string) => `${figureId}_v_${k}`;
-  const segments: CanonicalSegmentNode[] = [];
-  const seenSegPairs = new Set<string>();
-  const pushSeg = (a: string, b: string, baseKey: string, dashed?: boolean) => {
-    const pk = pairKey(a, b);
-    if (seenSegPairs.has(pk)) return;
-    seenSegPairs.add(pk);
-    const len = lengths.get(pk);
-    segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
-      ...(len ? { lengthLabel: { value: len.symbolic ? len.text : (len.numeric ?? len.text), unit: len.unit ?? "سم" } } : {}),
-      ...(ticks.get(pk) ? { tickMarks: Math.min(3, ticks.get(pk)!) as 1 | 2 | 3 } : {}),
-      ...(parallelMarks.get(baseKey) ? { parallelArrows: parallelMarks.get(baseKey) as 1 | 2 } : {}), ...(dashed ? { strokeStyle: "dashed" as const } : {}) });
-  };
-  for (const poly of polygons) poly.labels.forEach((a, i) => {
-    const b = poly.labels[(i + 1) % poly.labels.length]; const base = pairKey(a, b);
-    const mids = [...host.entries()].filter(([, s]) => pairKey(s[0], s[1]) === base).map(([k]) => k).sort((m, n) => vDist(P(a)!, P(m)!) - vDist(P(a)!, P(n)!));
-    const chain = [a, ...mids, b]; for (let j = 0; j + 1 < chain.length; j++) pushSeg(chain[j], chain[j + 1], base);
-    if (mids.length > 0 && lengths.has(base) && !chain.some((u, j) => j + 1 < chain.length && lengths.has(pairKey(u, chain[j + 1])))) {
-      const fullLen = lengths.get(base)!;
-      segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(a), toVertexId: keyId(b),
-        lengthLabel: { value: fullLen.symbolic ? fullLen.text : (fullLen.numeric ?? fullLen.text), unit: fullLen.unit ?? "سم" } });
-    }
+  const segments = assembleCanonicalFigureSegments({
+    figureId, polygons, points, host, lengths, ticks, parallelMarks, extras,
   });
-  for (const e of extras) if (P(e.a) && P(e.b)) pushSeg(e.a, e.b, pairKey(e.a, e.b), e.dashed);
 
   const areaSquares = buildOutwardAreaSquaresForFacts({ facts, points, polygons, figureId });
-  const vertices: CanonicalVertexNode[] = [
-    ...[...points.entries()].map(([k, position]) => ({ id: keyId(k), label: toDisplayLabel(k, notation), position })),
-    ...areaSquares.vertices,
-  ];
+  const vertices: CanonicalVertexNode[] = [...[...points.entries()].map(([k, position]) => ({ id: keyId(k), label: toDisplayLabel(k, notation), position })), ...areaSquares.vertices];
   const allSegments: CanonicalSegmentNode[] = [...segments, ...areaSquares.segments];
   const hasQuad = polygons.some((p) => p.labels.length === 4);
-  return { warnings, figure: { figureId, familyId: hasQuad ? "quadrilateral_family" : "triangle_family", branchId: hasQuad ? "quad_parallelogram_diagonals" : "triangle_base_general",
-    titleArabic: description.slice(0, 60), notationLanguage: notation, vertices, segments: allSegments, angles,
-    polygons: polygons.map((p) => p.labels.map(keyId)),
-    ...(areaSquares.interiorBadges.length > 0 ? { interiorBadges: areaSquares.interiorBadges } : {}),
-    ...(areaSquares.shadedRegions.length > 0 ? { shadedRegions: areaSquares.shadedRegions } : {}) } };
+  const mergedBadges = [...areaSquares.interiorBadges, ...buildPerimeterAndAreaBadges({ facts, polygons, points, figureId })];
+  return {
+    warnings,
+    figure: {
+      figureId, familyId: hasQuad ? "quadrilateral_family" : "triangle_family", branchId: hasQuad ? "quad_parallelogram_diagonals" : "triangle_base_general",
+      titleArabic: description.slice(0, 60), notationLanguage: notation, vertices, segments: allSegments, angles, polygons: polygons.map((p) => p.labels.map(keyId)),
+      ...(mergedBadges.length > 0 ? { interiorBadges: mergedBadges } : {}),
+      ...(areaSquares.shadedRegions.length > 0 ? { shadedRegions: areaSquares.shadedRegions } : {}),
+    },
+  };
 }

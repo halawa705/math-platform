@@ -209,19 +209,28 @@ export function getChoiceLetterByNotationSSOT(
 const GEOMETRY_UNIT_NORMALIZATION_MAP: Readonly<Record<string, ArabicMathUnit>> = {
   "سم": "سم",
   "سنتيمتر": "سم",
+  "سنتيمتراً": "سم",
+  "سنتيمترا": "سم",
   "سنتيمترات": "سم",
   cm: "سم",
   "م": "م",
   "متر": "م",
+  "متراً": "م",
+  "مترا": "م",
   "أمتار": "م",
+  "أمتارا": "م",
   "امتار": "م",
+  "امتارا": "م",
   m: "م",
   "كم": "كم",
   "كيلومتر": "كم",
+  "كيلومتراً": "كم",
+  "كيلومترا": "كم",
   km: "كم",
   "مم": "مم",
   "ملليمتر": "مم",
   "مليمتر": "مم",
+  "ملليمتراً": "مم",
   mm: "مم",
   "ديسم": "ديسم",
   "ديسيمتر": "ديسم",
@@ -241,7 +250,11 @@ const GEOMETRY_UNIT_NORMALIZATION_MAP: Readonly<Record<string, ArabicMathUnit>> 
  */
 export function normalizeArabicGeometryUnitSSOT(rawUnit?: string): ArabicMathUnit | undefined {
   if (!rawUnit) return undefined;
-  const key = rawUnit.trim().replace(/\s+/g, " ").toLowerCase();
+  const key = rawUnit
+    .trim()
+    .replace(/[\u064B-\u0652\u0670]/g, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
   return GEOMETRY_UNIT_NORMALIZATION_MAP[key];
 }
 

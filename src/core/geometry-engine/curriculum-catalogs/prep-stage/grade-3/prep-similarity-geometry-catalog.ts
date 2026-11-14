@@ -127,7 +127,11 @@ export function matchPrepSimilarityGeometryFigure(
   }
 
   // 12. مضلعان رباعيان قياسيان عامان عند ذكر التشابه العام
-  if (/مضلع.*رباعي|رباعي.*متشابه|مضلعان.*متشابهان|مضلعين.*متشابهين|ABCD.*EFGH|ABCD.*PQRS/i.test(d)) {
+  const hasExplicitSimilarityWord = /تشابه|متشابه|يشابه|~/i.test(d);
+  if (
+    hasExplicitSimilarityWord &&
+    /مضلع.*رباعي|رباعي.*متشابه|مضلعان.*متشابهان|مضلعين.*متشابهين|ABCD.*EFGH|ABCD.*PQRS/i.test(d)
+  ) {
     return buildSimilarQuadsWithRadicalsAndAnglesFigure({ figureId, notationLanguage });
   }
 

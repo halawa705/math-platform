@@ -12,6 +12,10 @@ import { unwrapStructuredCategoryHeaders } from "./geometry-clause-restructurer"
 import { synthesizeVerbalGeometryFacts } from "./verbal-geometry-figure-synthesizer";
 import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
 import {
+  extractPromptQuadMidpointAndMeasureFacts,
+  mergeCleanedTagClausesIntoParts,
+} from "./prompt-midpoint-and-quad-extractor";
+import {
   type ExtractedSimilarityCorrespondence,
   extractOrderedSimilarityTriangles,
   unpackSequentialSideLengths,
@@ -220,55 +224,35 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 10. المثلث القائم في رأس (بترتيبيْ الكلمات) أو المتساوي الساقين (من المعطيات فقط لا المطلوب والإثبات)
-  const rightTriMatch =
-    assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i) ??
-    assertionsClean.match(/\b([A-Za-z]{3})\s*مثلث\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
-  if (rightTriMatch) {
-    facts.push(`مثلث ${rightTriMatch[1]} قائم في ${rightTriMatch[2]}`);
-  }
-  const isoTriMatch = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
-  if (isoTriMatch) {
-    facts.push(`مثلث ${isoTriMatch[1]} متساوي الساقين`);
+  for (const extraFact of extractPromptQuadMidpointAndMeasureFacts(clean, assertionsClean)) {
+    if (!facts.includes(extraFact)) facts.push(extraFact);
   }
 
+  // 10. المثلث القائم والمتساوي الساقين
+  const rightTriM = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i)
+    ?? assertionsClean.match(/\b([A-Za-z]{3})\s*مثلث\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
+  if (rightTriM) facts.push(`مثلث ${rightTriM[1]} قائم في ${rightTriM[2]}`);
+  const isoTriM = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
+  if (isoTriM) facts.push(`مثلث ${isoTriM[1]} متساوي الساقين`);
   return facts;
 }
 
-/**
- * يدمج وسم الرسم الهندسي مع نص المسألة الكامل في سلسلة حقائق موحدة خالية من التكرار.
- */
-export function combineProblemAndTagGeometryContext(
-  tagDescription?: string,
-  promptText?: string
-): string {
+/** يدمج وسم الرسم الهندسي مع نص المسألة الكامل في سلسلة حقائق موحدة خالية من التكرار. */
+export function combineProblemAndTagGeometryContext(tagDescription?: string, promptText?: string): string {
   let effectiveTag = tagDescription?.trim();
   const effectivePrompt = promptText?.trim();
+  if (effectiveTag) effectiveTag = effectiveTag.replace(/^\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*/i, "").replace(/\s*\]\s*$/i, "").trim();
+  if (!effectiveTag && effectivePrompt) effectiveTag = effectivePrompt.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i)?.[1].trim();
 
-  // إزالة وسم [رسم هندسي: ...] المحيط بالوسم لمنع تكوين وسوم مكسورة لاحقاً
-  if (effectiveTag) {
-    effectiveTag = effectiveTag
-      .replace(/^\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*/i, "")
-      .replace(/\s*\]\s*$/i, "")
-      .trim();
-  }
-
-  // إذا لم يُمرر وسم رسم مستقل وكان نص المسألة يحتوي على وسم [رسم هندسي: ...]
-  if (!effectiveTag && effectivePrompt) {
-    const embeddedMatch = effectivePrompt.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
-    if (embeddedMatch) {
-      effectiveTag = embeddedMatch[1].trim();
-    }
-  }
-
-  // إذا وُجد نص مسألة يطابق مباشرة سجل القواعد الذهبية لحساب المثلثات (3ع)، نحتفظ بنص المسألة النظيف مباشرةً دون تلويثه بوسم خارجي
-  if (effectivePrompt && matchPrepGrade3TrigonometryFigure(effectivePrompt)) {
+  const hasTrig = Boolean(effectivePrompt && /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية/i.test(effectivePrompt));
+  const isQuadOrMid = Boolean(effectivePrompt && !hasTrig && /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف)/.test(effectivePrompt));
+  if (effectivePrompt && !isQuadOrMid && matchPrepGrade3TrigonometryFigure(effectivePrompt)) {
     return effectivePrompt
       .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
       .replace(/[\[\]]/g, "")
       .trim();
   }
-  if (effectivePrompt && effectiveTag && matchPrepGrade3TrigonometryFigure(`${effectivePrompt} ؛ ${effectiveTag}`)) {
+  if (effectivePrompt && effectiveTag && !isQuadOrMid && matchPrepGrade3TrigonometryFigure(`${effectivePrompt} ؛ ${effectiveTag}`)) {
     const cleanPromptForTrig = effectivePrompt
       .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
       .replace(/[\[\]]/g, "")
@@ -289,34 +273,10 @@ export function combineProblemAndTagGeometryContext(
 
   // إذا وُجد وسم رسم، ندمج فقراته غير المكررة بعد فك الأغلفة وتوحيد الصيغة
   if (effectiveTag) {
-    // فواصل الآلاف (13,000) ليست فواصل حقائق: تُحمى قبل التقسيم وإلا تحوّل 13,000 إلى حقيقتين «13» و«000».
     const cleanTag = unwrapStructuredCategoryHeaders(
       convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "")
     );
-    const canonicalFactKey = (f: string) =>
-      f.replace(/\s+/g, "").replace(/m\(∠/gi, "ق(∠").replace(/°/g, "");
-    const tagClauses = cleanTag
-      .replace(/(تصنع\s+زوايا\s+[^;؛\n]+)/g, (m) => m.replace(/[,،]/g, "§COMMA§"))
-      .split(/\s*(?:[;؛\n]+|[,،]+(?![^()]*\)))\s*/)
-      .map((c) => c.replace(/§COMMA§/g, "،").replace(/[\[\]]/g, "").trim())
-      .filter(Boolean);
-    for (const clause of tagClauses) {
-      const segEq = clause.match(/^([A-Za-z]{2})\s*=/);
-      if (segEq) {
-        const segId = segEq[1].toUpperCase();
-        for (let idx = parts.length - 1; idx >= 0; idx--) {
-          if (new RegExp(`^${segId}\\s*=`, "i").test(parts[idx]) && canonicalFactKey(parts[idx]) !== canonicalFactKey(clause)) {
-            parts.splice(idx, 1);
-          }
-        }
-      }
-      const normClause = canonicalFactKey(clause);
-      const isDuplicate = parts.some((p) => {
-        const normP = canonicalFactKey(p);
-        return normP === normClause || (normP.length === normClause.length && normP.includes(normClause));
-      });
-      if (!isDuplicate) parts.push(clause);
-    }
+    mergeCleanedTagClausesIntoParts(cleanTag, parts);
   }
   if (!effectiveTag && effectivePrompt) {
     for (const vf of synthesizeVerbalGeometryFacts(effectivePrompt, parts)) {
@@ -324,7 +284,7 @@ export function combineProblemAndTagGeometryContext(
     }
   }
   const sanitized = parts.map((p) => p.replace(/[\[\]]/g, "").trim()).filter(Boolean);
-  if (sanitized.length === 0) return (effectiveTag || effectivePrompt || "").replace(/[\[\]]/g, "").trim();
+  if (sanitized.length === 0) return convertGeometryLatexToPlainText(effectiveTag || effectivePrompt || "").replace(/[\[\]]/g, "").trim();
   const simFacts = sanitized.filter((p) => p.includes("~") || p.includes("≅") || p.includes("تشابه"));
   const otherFacts = sanitized.filter((p) => !simFacts.includes(p));
   return Array.from(new Set([...simFacts, ...otherFacts])).join(" ؛ ");
