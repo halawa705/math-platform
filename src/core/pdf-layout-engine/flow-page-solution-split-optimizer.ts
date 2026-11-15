@@ -12,8 +12,8 @@ import { buildSolutionSplitVariants } from "./flow-solution-split-variants-build
 export const MODULE_ID_FLOW_PAGE_SOLUTION_SPLIT_OPTIMIZER = "flow_page_solution_split_optimizer" as const;
 
 /** أقل نسبة فراغ فعلي (قبل التمديد الصناعي للبطاقات) في الصفحة تستحق محاولة التقسيم لملء الصفحة بالمعلومات. */
-const MIN_RAW_SLACK_RATIO_TO_TRY_SPLIT = 0.11;
-const MIN_RAW_FILL_TO_PROTECT_WORKED_PAIR = 0.86;
+const MIN_RAW_SLACK_RATIO_TO_TRY_SPLIT = 0.06;
+const MIN_RAW_FILL_TO_PROTECT_WORKED_PAIR = 0.94;
 const MAX_ACCEPTED_SPLITS = 80;
 
 export type FlowPackOnce = (items: readonly FlowItem[]) => readonly FlowPage[];
@@ -145,20 +145,26 @@ export function optimizePagesWithSolutionSplits(
 
       for (const v of variants) {
         if (!heights.has(v.head.id) || !heights.has(v.tail.id)) continue;
-        const fullHead: FlowItem = { ...v.head, span: "full" };
-        const fullTail: FlowItem = { ...v.tail, span: "full" };
-        const candidateItems = currentItems.flatMap((i) => (i.id === next.id ? [fullHead, fullTail] : [i]));
-        const candidatePages = packOnce(candidateItems);
-        if (candidatePages.length > bestPagesCount) continue;
-        if (candidatePages.some((cp) => cp.overflowsBudget)) continue;
-        const headPage = pageIndexOfItem(candidatePages, fullHead.id);
-        const tailPage = pageIndexOfItem(candidatePages, fullTail.id);
-        if (headPage !== p || tailPage !== p + 1) continue;
-        const score = slackScore(candidatePages, heights);
-        if (candidatePages.length < bestPagesCount || score < bestScore) {
-          bestPagesCount = candidatePages.length;
-          bestScore = score;
-          best = { items: candidateItems, pages: candidatePages };
+        if (v.head.kind !== "question" || v.tail.kind !== "question") continue;
+        const spanModes: readonly ("full" | "column")[] = next.span === "column" ? ["column", "full"] : ["full"];
+        for (const spanMode of spanModes) {
+          const headId = spanMode === "column" && heights.has(`${v.head.id}::col`) ? `${v.head.id}::col` : v.head.id;
+          const tailId = spanMode === "column" && heights.has(`${v.tail.id}::col`) ? `${v.tail.id}::col` : v.tail.id;
+          const splitHead: FlowItem = { ...v.head, id: headId, span: spanMode };
+          const splitTail: FlowItem = { ...v.tail, id: tailId, span: spanMode };
+          const candidateItems = currentItems.flatMap((i) => (i.id === next.id ? [splitHead, splitTail] : [i]));
+          const candidatePages = packOnce(candidateItems);
+          if (candidatePages.length > bestPagesCount) continue;
+          if (candidatePages.some((cp) => cp.overflowsBudget)) continue;
+          const headPage = pageIndexOfItem(candidatePages, splitHead.id);
+          const tailPage = pageIndexOfItem(candidatePages, splitTail.id);
+          if (headPage !== p || tailPage !== p + 1) continue;
+          const score = slackScore(candidatePages, heights);
+          if (candidatePages.length < bestPagesCount || score < bestScore) {
+            bestPagesCount = candidatePages.length;
+            bestScore = score;
+            best = { items: candidateItems, pages: candidatePages };
+          }
         }
       }
 

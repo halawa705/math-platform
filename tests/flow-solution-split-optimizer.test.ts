@@ -47,11 +47,11 @@ describe("solution split optimizer", () => {
     expect(baseline.flatMap(flat).some((i) => i.kind === "question" && i.solutionSlice)).toBe(false);
   });
 
-  it("splits a solved example so page 1 takes >= 2 whole steps and the rest continues, never more pages", () => {
+  it("splits a solved example at any valid step boundary (from prompt-only k=0 up to total-1) and never increases pages", () => {
     const all = pages.flatMap(flat);
-    const head = all.find((i) => i.kind === "question" && i.solutionSlice?.from === 0);
-    const tail = all.find((i) => i.kind === "question" && i.solutionSlice && i.solutionSlice.from > 0);
-    expect(head && head.kind === "question" && head.solutionSlice!.to).toBeGreaterThanOrEqual(2);
+    const head = all.find((i) => i.kind === "question" && i.solutionSlice && !i.solutionSlice.isTail);
+    const tail = all.find((i) => i.kind === "question" && i.solutionSlice && (i.solutionSlice.isTail || i.solutionSlice.from > 0));
+    expect(head && head.kind === "question" && head.solutionSlice!.to).toBeGreaterThanOrEqual(0);
     expect(tail).toBeDefined();
     if (head?.kind === "question" && tail?.kind === "question") {
       expect(tail.solutionSlice!.from).toBe(head.solutionSlice!.to);
@@ -68,9 +68,9 @@ describe("solution split optimizer", () => {
     expect(slack(pages)).toBeLessThan(slack(baseline));
   });
 
-  it("never leaves a 1-step orphan tail when >= 4 steps and never splits an item without pulling head onto the slack page", () => {
+  it("allows every step boundary (k in [0, total-1]) and never splits an item without pulling head onto the slack page", () => {
     const allVariants = [...buildSolutionSplitVariants(items).values()].flat();
-    expect(allVariants.every((v) => STEPS.length - v.k >= 2)).toBe(true);
+    expect(allVariants.every((v) => v.k >= 0 && STEPS.length - v.k >= 1)).toBe(true);
 
     // صفحة 0 بها فراغ لكن رأس المثال التالي لا يسعه فراغ صفحة 0: يمنع تقسيمه على صفحة 1 وترك رأس يتيم بها
     const tightItems = [

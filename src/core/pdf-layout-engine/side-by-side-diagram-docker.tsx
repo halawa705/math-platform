@@ -49,7 +49,7 @@ export default function SideBySideDiagramDocker({
   forceHideSolution = false,
   isAnswerCard = false,
 }: SideBySideDiagramDockerProps) {
-  const isContinuation = solutionSlice !== undefined && solutionSlice.from > 0;
+  const isContinuation = Boolean(solutionSlice && (solutionSlice.from > 0 || solutionSlice.isTail));
   const palette = resolvePrintThemePalette(settings.colorThemeId);
   const formattedQNum = formatNumeralsByModeSSOT(question.questionNumber, settings.numeralMode);
   const formattedIdeaIndex =
@@ -112,7 +112,7 @@ export default function SideBySideDiagramDocker({
     stepsCount >= 5 || totalStepsLength > 240 ? 0.95 : stepsCount >= 3 || totalStepsLength > 130 ? 0.98 : 1;
   const optionsFontEm = question.mcqChoicesAr && question.mcqChoicesAr.some((c) => c.length > 18) ? "0.82em" : "0.88em";
   const cleanPromptText = cleanStudentFacingMathPromptSSOT(question.promptAr);
-  const visiblePromptLen = cleanPromptText.replace(/\\[a-zA-Z]+|\{|\}|\$/g, "").trim().length;
+  const hasEmbeddedDiagram = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
 
   return (
     <article
@@ -145,18 +145,28 @@ export default function SideBySideDiagramDocker({
 
         {(!isAnswerKeyOnlyMode || isAnswerCardMode) && !isContinuation && (
           <div className="min-w-0" style={{ breakAfter: "avoid" }}>
-            <div
-              className={
-                question.geometryFigure || question.graphSpec
-                  ? settings.columnsCount === 2 && visiblePromptLen > 320
-                    ? "flex flex-col items-start gap-2 min-w-0"
-                    : "flex items-start justify-between gap-2 min-w-0"
-                  : "block min-w-0"
-              }
-            >
+            <div className="flow-root min-w-0">
+              {hasEmbeddedDiagram && (
+                <div className="float-left mr-2.5 mb-1.5 clear-left">
+                  <EmbeddedGeometrySVGDocker
+                    geometryFigure={question.geometryFigure}
+                    graphSpec={question.graphSpec}
+                    rawSvgMarkup={question.rawSvgMarkup}
+                    borderHex={palette.borderHex}
+                    softSurfaceHex={palette.softSurfaceHex}
+                    primaryHex={palette.primaryHex}
+                    accentHex={palette.accentHex}
+                    numeralMode={settings.numeralMode}
+                    notationLanguage={settings.notationLanguage}
+                    figureScale={effectiveFigureScale}
+                    columnsCount={settings.columnsCount}
+                  />
+                </div>
+              )}
+
               <div
                 style={{ lineHeight: densityMetrics.promptLineHeight }}
-                className={`flex-1 min-w-0 space-y-1 text-[0.95em] text-slate-900 break-words ${
+                className={`min-w-0 space-y-1 text-[0.95em] text-slate-900 break-words ${
                   settings.boldProseText ? "font-extrabold" : "font-normal"
                 }`}
               >
@@ -178,20 +188,6 @@ export default function SideBySideDiagramDocker({
                   notationLanguage={settings.notationLanguage}
                 />
               </div>
-
-              <EmbeddedGeometrySVGDocker
-                geometryFigure={question.geometryFigure}
-                graphSpec={question.graphSpec}
-                rawSvgMarkup={question.rawSvgMarkup}
-                borderHex={palette.borderHex}
-                softSurfaceHex={palette.softSurfaceHex}
-                primaryHex={palette.primaryHex}
-                accentHex={palette.accentHex}
-                numeralMode={settings.numeralMode}
-                notationLanguage={settings.notationLanguage}
-                figureScale={effectiveFigureScale}
-                columnsCount={settings.columnsCount}
-              />
             </div>
 
             {question.mcqChoicesAr && (

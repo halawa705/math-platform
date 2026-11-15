@@ -84,6 +84,33 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
     return ratios.every((r) => r / refRatio >= 0.42 && r / refRatio <= 2.4);
   };
 
+  const origXs = fig.vertices.map((v) => v.position.x);
+  const origYs = fig.vertices.map((v) => v.position.y);
+  const origSpanX = Math.max(...origXs) - Math.min(...origXs);
+  const origSpanY = Math.max(...origYs) - Math.min(...origYs);
+  const origIs2D = Math.min(origSpanX, origSpanY) / Math.max(origSpanX, origSpanY, 1e-6) > 0.18;
+
+  const preserves2DTopology = (cand: CanonicalGeometryFigureIR): boolean => {
+    if (!origIs2D) return true;
+    const cxs = cand.vertices.map((v) => v.position.x);
+    const cys = cand.vertices.map((v) => v.position.y);
+    const cSpanX = Math.max(...cxs) - Math.min(...cxs);
+    const cSpanY = Math.max(...cys) - Math.min(...cys);
+    if (Math.min(cSpanX, cSpanY) / Math.max(cSpanX, cSpanY, 1e-6) < 0.22) return false;
+    for (const poly of cand.polygons ?? []) {
+      if (poly.length < 3) continue;
+      for (let i = 0; i < poly.length; i++) {
+        const prev = idxMap.get(poly[(i + poly.length - 1) % poly.length]);
+        const cur = idxMap.get(poly[i]);
+        const next = idxMap.get(poly[(i + 1) % poly.length]);
+        if (prev === undefined || cur === undefined || next === undefined) continue;
+        const deg = measureAngleDegrees(cand.vertices[cur].position, cand.vertices[prev].position, cand.vertices[next].position);
+        if (deg < 12 || deg > 168) return false;
+      }
+    }
+    return true;
+  };
+
   const keepsExtensionsStraight = (cand: CanonicalGeometryFigureIR, requireSolid: boolean): boolean =>
     straightExtensions
       .filter((ext) => requireSolid || ext.isDashed)
@@ -105,7 +132,7 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
         ...fig,
         vertices: fig.vertices.map((v, i) => ({ ...v, position: { x: x[2 * i], y: x[2 * i + 1] } })),
       };
-      if (!keepsExtensionsStraight(candidate, requireSolid) || !preservesEdgeScale(candidate)) continue;
+      if (!preserves2DTopology(candidate) || !keepsExtensionsStraight(candidate, requireSolid) || !preservesEdgeScale(candidate)) continue;
       const report = verifyGeometryFigure(candidate);
       const candidateErrs = errorCount(report);
       const bestErrs = errorCount(bestReport);

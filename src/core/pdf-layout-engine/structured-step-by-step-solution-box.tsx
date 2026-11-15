@@ -70,10 +70,17 @@ export function StructuredStepByStepSolutionBox({
   if (allSteps.length === 0) return null;
   const stepOffset = slice ? slice.from : 0;
   const steps = slice ? allSteps.slice(slice.from, slice.to) : allSteps;
-  const isContinuation = stepOffset > 0;
+  const isContinuation = Boolean(slice && (slice.from > 0 || slice.isTail));
   const continuesNextPage = slice !== undefined && slice.to < allSteps.length;
 
   const effectiveEm = Number((0.86 * compactScale).toFixed(2));
+  if (steps.length === 0 && continuesNextPage) {
+    return (
+      <div style={{ fontSize: `${effectiveEm}em` }} className="mt-1 pt-0.5 border-t border-slate-200/90 text-[0.8em] font-black text-slate-500 text-left">
+        يتبع الحل في الصفحة التالية ◂
+      </div>
+    );
+  }
   const isOddQuestion = item.questionNumber % 2 === 1;
   const answerTokens = resolveAnswerThemeTokens(themeId, isOddQuestion);
   const useTwoColLayout = steps.length >= 2;

@@ -229,5 +229,5 @@ export function projectGeometryFigureToSVGMarkup(
     ? `<rect x="${vb.minX}" y="${vb.minY}" width="${vb.width}" height="${vb.height}" rx="8" fill="${backgroundColor}" />`
     : "";
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
 }

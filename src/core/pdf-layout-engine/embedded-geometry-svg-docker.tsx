@@ -61,7 +61,7 @@ export function EmbeddedGeometrySVGDocker({
       style={{
         width: `${box.boxWidthPx}px`,
         minWidth: `${box.boxWidthPx}px`,
-        maxHeight: `${Math.round(box.boxHeightPx * 1.15)}px`,
+        maxHeight: `${Math.round(box.boxHeightPx * 1.32)}px`,
         borderColor: borderHex,
         backgroundColor: "#ffffff",
         boxShadow: "0 1px 3px rgba(15, 23, 42, 0.05)",

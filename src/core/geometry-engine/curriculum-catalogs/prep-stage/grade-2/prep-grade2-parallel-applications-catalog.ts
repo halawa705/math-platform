@@ -91,8 +91,12 @@ export function matchPrepGrade2ParallelApplicationsFigure(
     return buildParallelQuadFE10RightAngleDFigure({ figureId, notationLanguage });
   }
 
-  // 9. متوازي أضلاع ABCD مع منصفين E و F لإثبات أن AC = 3 AG (مسألة 19 ص 214)
-  if (/AC\s*=\s*3\s*AG|متوازي\s*أضلاع.*E\s*،\s*F\s*منتصفي\s*BC\s*،\s*AD/i.test(d)) {
+  // 9. متوازي أضلاع ABCD مع منصفين E و F لإثبات أن AC = 3 AG أو AG = GK = KC (مسألة 19 ص 214)
+  if (
+    /AC\s*=\s*3\s*AG|AG\s*=\s*GK\s*=\s*KC|متوازي\s*أضلاع.*E\s*،\s*F\s*منتصفي\s*BC\s*،\s*AD|متوازي\s*أضلاع[\s\S]*?منتصف\s*BC[\s\S]*?منتصف\s*AD[\s\S]*?ليقطع\s*DF/i.test(
+      d
+    )
+  ) {
     return buildParallelogramTrisectionACFigure({ figureId, notationLanguage });
   }
 

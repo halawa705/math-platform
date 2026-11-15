@@ -147,7 +147,7 @@ export function detectParallelLineCountAndNames(givens: string): {
     return { count: countMap[arMatch[1]] ?? 4, namedPairs: null, lineLabels: [] };
   }
 
-  const partsMatch = givens.match(/قسمت\s+(?:قاطع[اً]?\s+لها|المسافة)\s+إلى\s+([234])\s+أجزاء\s+متساوية/);
+  const partsMatch = givens.match(/قسمت\s+(?:قاطع(?:اً|ا)?\s+لها|المسافة)\s+إلى\s+([234])\s+أجزاء\s+متساوية/);
   if (partsMatch) {
     return { count: Number(partsMatch[1]) + 1, namedPairs: null, lineLabels: [] };
   }

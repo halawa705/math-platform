@@ -77,12 +77,25 @@ export function placeOrientedTrapezoid(
   angleOf: AngleOfFn
 ): Vec2[] {
   const [a, b, c, d] = labels;
-  const adParallelBc = facts.some(
+  const hasExplicitAdBcParallel = facts.some(
     (f) =>
       f.k === "parallel" &&
       ((pairKey(f.a[0], f.a[1]) === pairKey(d, a) && pairKey(f.b[0], f.b[1]) === pairKey(b, c)) ||
         (pairKey(f.b[0], f.b[1]) === pairKey(d, a) && pairKey(f.a[0], f.a[1]) === pairKey(b, c)))
   );
+  const hasExplicitAbCdParallel = facts.some(
+    (f) =>
+      f.k === "parallel" &&
+      ((pairKey(f.a[0], f.a[1]) === pairKey(a, b) && pairKey(f.b[0], f.b[1]) === pairKey(c, d)) ||
+        (pairKey(f.b[0], f.b[1]) === pairKey(a, b) && pairKey(f.a[0], f.a[1]) === pairKey(c, d)))
+  );
+  const hasAdBcBaseLengthsOnly =
+    num(d, a) !== undefined && num(b, c) !== undefined && num(a, b) === undefined && num(c, d) === undefined;
+  const hasAbCdLegMidpoints =
+    facts.some((f) => f.k === "midpoint" && pairKey(f.seg[0], f.seg[1]) === pairKey(a, b)) &&
+    facts.some((f) => f.k === "midpoint" && pairKey(f.seg[0], f.seg[1]) === pairKey(c, d));
+  const adParallelBc =
+    hasExplicitAdBcParallel || (!hasExplicitAbCdParallel && (hasAdBcBaseLengthsOnly || hasAbCdLegMidpoints));
   if (adParallelBc) {
     const wBot = num(b, c) ?? 12;
     const wTop = num(a, d) ?? wBot * 0.5;

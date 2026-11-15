@@ -131,7 +131,7 @@ export function assembleCanonicalFigureSegments(params: {
             },
           }
         : {}),
-      ...(ticks.get(pk) ? { tickMarks: Math.min(3, ticks.get(pk)!) as 1 | 2 | 3 } : {}),
+      ...(ticks.get(pk) && ticks.get(pk)! <= 3 ? { tickMarks: ticks.get(pk)! as 1 | 2 | 3 } : {}),
       ...(parallelMarks.get(baseKey)
         ? { parallelArrows: parallelMarks.get(baseKey) as 1 | 2 }
         : {}),

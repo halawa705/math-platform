@@ -15,6 +15,8 @@ export interface FlowSolutionSlice {
   /** فهرس يلي آخر خطوة معروضة (حصري). */
   readonly to: number;
   readonly total: number;
+  /** يحدد ما إذا كانت البطاقة تمثل ذيل الحل في الصفحة التالية (حتى عندما يبدأ الذيل من الخطوة 0 بعد فصل نص السؤال وحده في الرأس). */
+  readonly isTail?: boolean;
 }
 
 export type FlowItem =

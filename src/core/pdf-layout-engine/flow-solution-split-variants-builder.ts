@@ -9,8 +9,8 @@ import type { FlowItem } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_SOLUTION_SPLIT_VARIANTS_BUILDER = "flow_solution_split_variants_builder" as const;
 
-/** أقل عدد خطوات قياسي يبقى في الصفحة الأولى من البطاقة المقسومة (مع السماح بـ 1 لأن الرأس يضم السؤال والشكل الهندسي وأول خطوة). */
-export const MIN_HEAD_STEPS = 1;
+/** أقل عدد خطوات قياسي يبقى في الصفحة الأولى من البطاقة المقسومة (0 = رأس البطاقة يضم السؤال والشكل الهندسي فقط، والخطوات تبدأ في الصفحة التالية). */
+export const MIN_HEAD_STEPS = 0;
 
 export interface SolutionSplitVariant {
   readonly k: number;
@@ -31,7 +31,7 @@ function isSplittableSolvedExample(item: FlowItem): item is QuestionFlowItem {
     q.id.startsWith("ws-concept-") ||
     (q.id.startsWith("booklet-s1-") && !q.id.includes("-drill-"));
   if (!isWorked) return false;
-  return (q.solutionStepsAr?.length ?? 0) >= 2;
+  return (q.solutionStepsAr?.length ?? 0) >= 1;
 }
 
 export function buildSolutionSplitVariants(
@@ -41,15 +41,12 @@ export function buildSolutionSplitVariants(
   for (const item of items) {
     if (!isSplittableSolvedExample(item)) continue;
     const total = item.question.solutionStepsAr!.length;
-    const startK = total >= MIN_HEAD_STEPS + 1 ? MIN_HEAD_STEPS : 1;
-    // منع ذيل يتيم من خطوة واحدة فقط أعلى الصفحة التالية (مثل الناتج النهائي وحده) متى أمكن
-    const endK = total >= 4 ? total - 1 : total;
     const variants: SolutionSplitVariant[] = [];
-    for (let k = startK; k < endK; k++) {
+    for (let k = MIN_HEAD_STEPS; k < total; k++) {
       variants.push({
         k,
-        head: { ...item, id: `${item.id}~head${k}`, span: "full", solutionSlice: { from: 0, to: k, total } },
-        tail: { ...item, id: `${item.id}~tail${k}`, span: "full", solutionSlice: { from: k, to: total, total } },
+        head: { ...item, id: `${item.id}~head${k}`, span: "full", solutionSlice: { from: 0, to: k, total, isTail: false } },
+        tail: { ...item, id: `${item.id}~tail${k}`, span: "full", solutionSlice: { from: k, to: total, total, isTail: true } },
       });
     }
     if (variants.length > 0) result.set(item.id, variants);

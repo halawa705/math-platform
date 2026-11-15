@@ -267,7 +267,7 @@ export function computeExpandedSvgViewBox(params: {
     if (b.minY < 2) minY = Math.min(minY, b.minY - 4);
     if (b.maxY > params.baseHeight - 2) maxY = Math.max(maxY, b.maxY + 4);
   }
-  const maxAllowedH = params.baseHeight * 1.15;
+  const maxAllowedH = params.baseHeight * 1.35;
   const rawH = maxY - minY;
   if (rawH > maxAllowedH) {
     const excess = rawH - maxAllowedH;

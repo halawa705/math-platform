@@ -181,8 +181,11 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (!facts.includes(capStr)) facts.push(capStr);
   }
 
-  // 9. المثلث العام في متن المسألة (جزء المعطيات فقط حتى لا يُعلن مثلث المطلوب)
-  const plainTriMatch = assertionsClean.match(/(?:في\s+)?(?:ال)?مثلث\s*([A-Z]{3})\b/);
+  // 9. المثلث العام في متن المسألة (جزء المعطيات فقط حتى لا يُعلن مثلث المطلوب أو المثلث الداخلي للمنتصفات كمثلث منفصل)
+  const outerMidTriMatch = assertionsClean.match(
+    /(?:مرسوم\s*بربط|رؤوسه|الناتج\s*من\s*توصيل|بداخل)\s*(?:منتصفات\s*أضلاع\s*)?(?:ال)?مثلث\s*(?:الأصلي\s*|الأكبر\s*)?([A-Z]{3})\b/
+  );
+  const plainTriMatch = outerMidTriMatch ?? assertionsClean.match(/(?:في\s+)?(?:ال)?مثلث\s*([A-Z]{3})\b/);
   if (plainTriMatch && !facts.some((f) => f.includes(`مثلث ${plainTriMatch[1]}`))) {
     facts.unshift(`مثلث ${plainTriMatch[1]}`);
   }

@@ -252,12 +252,30 @@ export function resolveParallelConstraintFact(params: {
   const d = vSub(points.get(q)!, points.get(p)!);
   const hy = host.get(y);
   const hx = host.get(x);
-  if (hy) {
+  const isMidX = facts.some((f) => f.k === "midpoint" && f.p === x);
+  const isMidY = facts.some((f) => f.k === "midpoint" && f.p === y);
+  let movedPt: string | null = null;
+  if (hy && (!isMidY || isMidX)) {
     const r = lineIntersection(points.get(x)!, vAdd(points.get(x)!, d), points.get(hy[0])!, points.get(hy[1])!);
-    if (r) points.set(y, r);
+    if (r) {
+      points.set(y, r);
+      movedPt = y;
+    }
   } else if (hx) {
     const r = lineIntersection(points.get(y)!, vAdd(points.get(y)!, d), points.get(hx[0])!, points.get(hx[1])!);
-    if (r) points.set(x, r);
+    if (r) {
+      points.set(x, r);
+      movedPt = x;
+    }
+  }
+  if (movedPt) {
+    for (const mf of facts) {
+      if (mf.k === "midpoint" && (mf.seg[0] === movedPt || mf.seg[1] === movedPt)) {
+        const A = points.get(mf.seg[0]);
+        const B = points.get(mf.seg[1]);
+        if (A && B) points.set(mf.p, vLerp(A, B, 0.5));
+      }
+    }
   }
   const grp = nextGroup();
   addParallelMark(x, y, grp);

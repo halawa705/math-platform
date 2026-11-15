@@ -121,9 +121,9 @@ describe("Knuth-Plass Micro-Elasticity Resolver", () => {
 });
 
 describe("Page Packer Integration with Idea Capsule Invariants", () => {
-  it("never isolates a capsule at the bottom of a page without its worked examples", () => {
-    // 4 تدريبات من الفكرة 1 تملأ حوالي 400px، ثم تأتي كبسولة الفكرة 2 (~120px)
-    // ومثالا الفكرة 2 طويلان جداً (لا يتسعان معاً في الصفحة)
+  it("allows an idea capsule to fill remaining space at the bottom of a page after drills to save paper", () => {
+    // 4 تدريبات من الفكرة 1 تملأ حوالي 360px (عمودان × 180px)، ثم تأتي كبسولة الفكرة 2 (~100px)
+    // ومثالا الفكرة 2 طويلان (490px) فيأخذان الصفحة التالية، بينما تملأ الكبسولة الفراغ السفلي للصفحة الأولى
     const questions: PrintableMathQuestionItem[] = [
       createMockQuestion("booklet-s1-drill-1-1", 1),
       createMockQuestion("booklet-s1-drill-1-2", 2),
@@ -141,7 +141,6 @@ describe("Page Packer Integration with Idea Capsule Invariants", () => {
 
     const heights = new Map<string, number>();
     items.forEach((it) => {
-      // التدريبات تأخذ 180px، الكبسولة 100px، بينما الأمثلة 490px (تتسع مع الكبسولة في صفحة مستقلة 100+3+490=593<=600 لكن لا تتسع مع التدريبات)
       if (it.kind === "idea_capsule") heights.set(it.id, 100);
       else if (it.kind === "question" && it.isWorkedExample) heights.set(it.id, 490);
       else heights.set(it.id, 180);
@@ -152,13 +151,10 @@ describe("Page Packer Integration with Idea Capsule Invariants", () => {
       density: FLOW_DENSITY_PROFILES.standard_balanced,
     });
 
-    // لا تُترك الكبسولة يتيمة في قاع الصفحة بدون أمثلتها بل تنتقل متصدرة في الصفحة التالية مع أمثلتها
+    // يُسمح للكبسولة باستغلال الفراغ المتبقي في قاع الصفحة الأولى بعد التدريبات لتوفير الورق
     const firstPageItems = pages[0].segments.flatMap((s) => s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]);
-    const hasOrphanCapsuleOnPage1 = firstPageItems.some((it) => it.kind === "idea_capsule" && (it as any).ideaIndex === 2);
-    expect(hasOrphanCapsuleOnPage1).toBe(false);
-
-    const secondPageItems = pages[1].segments.flatMap((s) => s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]);
-    expect(secondPageItems[0].kind).toBe("idea_capsule");
+    const hasCapsuleOnPage1 = firstPageItems.some((it) => it.kind === "idea_capsule" && (it as any).ideaIndex === 2);
+    expect(hasCapsuleOnPage1).toBe(true);
     expect(pages.every((p) => !p.overflowsBudget)).toBe(true);
   });
 

@@ -58,36 +58,91 @@ export function extractPromptQuadMidpointAndMeasureFacts(
     facts.push(`مساحة = ${areaM[1]} ${areaM[2] === "م" ? "م²" : "سم²"}`);
   }
 
-  // 4. منتصفات ثلاثية في مثلث: النقط X, Y, Z هي منتصفات أضلاعه الثلاثة / للأضلاع AB, BC, AC
-  const triVertexM = normAssert.match(/(?:مثلث|Δ)\s*([A-Z]{3})\b/);
-  const explicitSidesMidM = normAssert.match(
-    /([A-Z])\s*,\s*([A-Z])\s*,\s*([A-Z])\s*(?:هي\s*|ك)?منتصفات\s*(?:أضلاعه|الأضلاع|للأضلاع)\s*(?:ال)?([A-Z]{2})\s*[,،و]\s*([A-Z]{2})\s*[,،و]\s*([A-Z]{2})/
+  // 4. مثلث مرسوم بربط منتصفات أضلاع مثلث آخر (مثل △DEF مرسوم بربط منتصفات أضلاع المثلث ABC)
+  const nestedMidTriM = normClean.match(
+    /(?:ال)?مثلث\s*([A-Z]{3})\s+(?:هو\s*)?(?:مثلث\s*)?(?:مرسوم\s*بربط|رؤوسه|الناتج\s*من\s*توصيل|بداخل)\s*(?:منتصفات\s*أضلاع\s*)?(?:ال)?مثلث\s*(?:الأصلي\s*|الأكبر\s*)?([A-Z]{3})\b/
   );
+  if (nestedMidTriM) {
+    const [D, E, F] = nestedMidTriM[1].split("");
+    const [A, B, C] = nestedMidTriM[2].split("");
+    facts.push(
+      `مثلث ${A}${B}${C}`,
+      `${D} منتصف ${A}${B}`,
+      `${E} منتصف ${B}${C}`,
+      `${F} منتصف ${A}${C}`,
+      `ارسم ${D}${E}`,
+      `ارسم ${E}${F}`,
+      `ارسم ${F}${D}`
+    );
+  }
+
+  // 4ب. منتصفات رباعية في شكل رباعي: K, L, M, N منتصفات الأضلاع AB, BC, CD, DA على الترتيب
+  const quadVertexM = normAssert.match(/(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي)\s*([A-Z]{4})\b/)
+    ?? normAssert.match(/\b([A-Z]{4})\s+(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي)/);
+  const fourSidesMidM = normAssert.match(
+    /([A-Z])\s*[,،]\s*([A-Z])\s*[,،]\s*([A-Z])\s*[,،و]\s*([A-Z])\s*(?:هي\s*|ك)?منتصفات\s*(?:أضلاعه(?:\s*الأربعة)?|الأضلاع|للأضلاع)(?:\s*(?:ال)?([A-Z]{2})\s*[,،]\s*([A-Z]{2})\s*[,،]\s*([A-Z]{2})\s*[,،و]\s*([A-Z]{2}))?/
+  );
+  if (fourSidesMidM) {
+    const [, p1, p2, p3, p4, s1, s2, s3, s4] = fourSidesMidM;
+    const q = quadVertexM ? quadVertexM[1] : "ABCD";
+    const a = s1 ?? `${q[0]}${q[1]}`;
+    const b = s2 ?? `${q[1]}${q[2]}`;
+    const c = s3 ?? `${q[2]}${q[3]}`;
+    const d = s4 ?? `${q[3]}${q[0]}`;
+    facts.push(
+      `${p1} منتصف ${a}`,
+      `${p2} منتصف ${b}`,
+      `${p3} منتصف ${c}`,
+      `${p4} منتصف ${d}`,
+      `ارسم ${p1}${p2}`,
+      `ارسم ${p2}${p3}`,
+      `ارسم ${p3}${p4}`,
+      `ارسم ${p4}${p1}`
+    );
+  }
+
+  // 4ج. منتصفات ثلاثية في مثلث: النقط X, Y, Z هي منتصفات أضلاعه الثلاثة / للأضلاع AB, BC, AC
+  const triVertexM = nestedMidTriM ? [nestedMidTriM[0], nestedMidTriM[2]] : normAssert.match(/(?:مثلث|Δ)\s*([A-Z]{3})\b/);
+  const explicitSidesMidM = !fourSidesMidM
+    ? normAssert.match(
+        /(?<![A-Z]\s*[,،]\s*)([A-Z])\s*[,،]\s*([A-Z])\s*[,،و]\s*([A-Z])\s*(?:هي\s*|ك)?منتصفات\s*(?:أضلاعه|الأضلاع|للأضلاع)\s*(?:ال)?([A-Z]{2})\s*[,،و]\s*([A-Z]{2})\s*[,،و]\s*([A-Z]{2})/
+      )
+    : null;
   if (explicitSidesMidM) {
     facts.push(
       `${explicitSidesMidM[1]} منتصف ${explicitSidesMidM[4]}`,
       `${explicitSidesMidM[2]} منتصف ${explicitSidesMidM[5]}`,
       `${explicitSidesMidM[3]} منتصف ${explicitSidesMidM[6]}`,
-      `مثلث ${explicitSidesMidM[1]}${explicitSidesMidM[2]}${explicitSidesMidM[3]}`
+      `ارسم ${explicitSidesMidM[1]}${explicitSidesMidM[2]}`,
+      `ارسم ${explicitSidesMidM[2]}${explicitSidesMidM[3]}`,
+      `ارسم ${explicitSidesMidM[3]}${explicitSidesMidM[1]}`
     );
-  } else if (triVertexM) {
+  } else if (triVertexM && !fourSidesMidM && !nestedMidTriM) {
     const [A, B, C] = triVertexM[1].split("");
     const threeMidM = normAssert.match(
-      /([A-Z])\s*,\s*([A-Z])\s*,\s*([A-Z])\s*(?:هي\s*)?منتصفات\s*أضلاعه(?:\s*الثلاثة)?/
+      /(?<![A-Z]\s*[,،]\s*)([A-Z])\s*[,،]\s*([A-Z])\s*[,،و]\s*([A-Z])\s*(?:هي\s*)?منتصفات\s*أضلاعه(?:\s*الثلاثة)?/
     );
     if (threeMidM) {
       facts.push(
         `${threeMidM[1]} منتصف ${A}${B}`,
         `${threeMidM[2]} منتصف ${B}${C}`,
         `${threeMidM[3]} منتصف ${A}${C}`,
-        `مثلث ${threeMidM[1]}${threeMidM[2]}${threeMidM[3]}`
+        `ارسم ${threeMidM[1]}${threeMidM[2]}`,
+        `ارسم ${threeMidM[2]}${threeMidM[3]}`,
+        `ارسم ${threeMidM[3]}${threeMidM[1]}`
       );
     }
   }
 
-  // 5. ممر / قطعة تصل بين منتصفي ضلعين أو نقطة في منتصف ممر موصلة بركنين (مسألة الحديقة وغيرها)
+  // 5. ممر / كابل / قطعة تصل بين منتصفي ضلعين أو جانبي جسر أو نقطة في منتصف ممر موصلة بركنين
+  const parallelBasesM = normClean.match(
+    /(?:القاعدتان|الدعامتان|الضلعان)\s*المتوازيت?ان[^.؛;]*?\b([A-Z]{2})\b[^.؛;]*?\b([A-Z]{2})\b/
+  );
+  if (parallelBasesM) {
+    facts.push(`${parallelBasesM[1]} // ${parallelBasesM[2]}`);
+  }
   const bridgeMidM = normClean.match(
-    /\b([A-Z])([A-Z])\s*يصل\s*بين\s*منتصفي\s*(?:السياجين\s*الجانبيين|الضلعين)\s*([A-Z]{2})\s*و\s*([A-Z]{2})/
+    /\b([A-Z])([A-Z])\s*(?:يصل|تصل)\s*بين\s*منتصفي\s*[^A-Z.؛;]{0,30}?\b([A-Z]{2})\s*[,،و]\s*([A-Z]{2})/
   );
   if (bridgeMidM) {
     facts.push(
@@ -105,6 +160,16 @@ export function extractPromptQuadMidpointAndMeasureFacts(
         `ارسم ${poleMidM[1]}${poleMidM[3]}`
       );
     }
+  }
+
+  // 5أ-2. برج رأسي AB ودعامة رأسية DE تصل بين منتصف السلك D والأرض E
+  const towerSupportM = normClean.match(
+    /(?:دعامة|قطعة|عارضة)\s*(?:رأسية\s*|أفقية\s*)?([A-Z])([A-Z])\s*(?:تصل|يصل)\s*بين\s*منتصف\s*(?:السلك|الوتر|الضلع)?\s*([A-Z])\s*و\s*(?:الأرض|القاعدة|الحائط)\s*([A-Z])/
+  );
+  if (towerSupportM) {
+    const [, D1, E1] = towerSupportM;
+    if (!facts.some((f) => f.startsWith("مثلث "))) facts.unshift("مثلث ABC قائم في B");
+    facts.push(`${D1} منتصف AC`, `${E1} منتصف BC`, `ارسم ${D1}${E1}`);
   }
 
   // 5ب. منتصفا ضلعين صريحين: E, F منتصفي AB, CD على الترتيب
@@ -144,10 +209,21 @@ export function extractPromptQuadMidpointAndMeasureFacts(
   );
   if (hasDeclaredPolygon) {
     for (const cm of normClean.matchAll(
-      /(?:([A-Z]{2})\s*\/\/\s*[A-Z]{2}|(?<!توازي\s|يوازي\s)\b([A-Z]{2}))\s*(?:ليقطع|يقطع|لتقطع|تقطع)\s*(?:الضلع\s*|المستقيم\s*|القطعة\s*)?([A-Z]{2})\s*في\s*(?:النقطة\s*)?([A-Z])\b(?![\s,،و]*[A-Z]\b)/g
+      /(?:([A-Z]{2})\s*\/\/\s*[A-Z]{2}|(?<!توازي\s|يوازي\s)\b([A-Z]{2}))\s*(?:ليقطع|يقطع|لتقطع|تقطع)\s*(?:الضلع\s*|المستقيم\s*|القطعة\s*)?([A-Z]{2})\s*في\s*(?:النقطة\s*)?([A-Z])\b(?:\s*(?:و|ثم)\s*(?:ليقطع|يقطع|لتقطع|تقطع)\s*(?:الضلع\s*|المستقيم\s*|القطعة\s*)?([A-Z]{2})\s*في\s*(?:النقطة\s*)?([A-Z])\b)?(?![\s,،و]*[A-Z]\b)/g
     )) {
-      const f = cm[1] ? `${cm[4]} ∈ ${cm[3]}` : `${cm[2]} ∩ ${cm[3]} = {${cm[4]}}`;
-      if (!facts.includes(f)) facts.push(f);
+      if (cm[1]) {
+        const f = `${cm[4]} ∈ ${cm[3]}`;
+        if (!facts.includes(f)) facts.push(f);
+      } else if (cm[2]) {
+        for (const extra of [`ارسم ${cm[2]}`, `ارسم ${cm[3]}`, `${cm[2]} ∩ ${cm[3]} = {${cm[4]}}`]) {
+          if (!facts.includes(extra)) facts.push(extra);
+        }
+        if (cm[5] && cm[6]) {
+          for (const extra2 of [`ارسم ${cm[5]}`, `${cm[2]} ∩ ${cm[5]} = {${cm[6]}}`]) {
+            if (!facts.includes(extra2)) facts.push(extra2);
+          }
+        }
+      }
     }
   }
 
@@ -160,7 +236,12 @@ export function mergeCleanedTagClausesIntoParts(
 ): void {
   const canonicalFactKey = (f: string) =>
     f.replace(/\s+/g, "").replace(/m\(∠/gi, "ق(∠").replace(/°/g, "");
-  const tagClauses = cleanTag
+  const normalizedTag = cleanTag.replace(
+    /(?:ال)?مثلث\s*([A-Z]{3})\s+(?:بداخل|مرسوم\s*بربط\s*منتصفات\s*أضلاع)\s*(?:ال)?مثلث\s*([A-Z]{3})/g,
+    (_, inner: string, outer: string) =>
+      `مثلث ${outer} ؛ ${inner[0]} منتصف ${outer[0]}${outer[1]} ؛ ${inner[1]} منتصف ${outer[1]}${outer[2]} ؛ ${inner[2]} منتصف ${outer[2]}${outer[0]} ؛ ارسم ${inner[0]}${inner[1]} ؛ ارسم ${inner[1]}${inner[2]} ؛ ارسم ${inner[2]}${inner[0]}`
+  );
+  const tagClauses = normalizedTag
     .replace(/(تصنع\s+زوايا\s+[^;؛\n]+)/g, (m) => m.replace(/[,،]/g, "§COMMA§"))
     .split(/\s*(?:[;؛\n]+|[,،]+(?![^()]*\)))\s*/)
     .map((c) => c.replace(/§COMMA§/g, "،").replace(/[\[\]]/g, "").trim())

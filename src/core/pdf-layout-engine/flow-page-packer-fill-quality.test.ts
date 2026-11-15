@@ -54,10 +54,10 @@ describe("flow page packer — fill quality", () => {
     expect([...placed].sort()).toEqual(items.map((i) => i.id).sort());
   });
 
-  it("never ends a page with a capsule or starts one with a divider", () => {
+  it("never leaves a capsule alone on a page or starts a page with a divider", () => {
     pages.forEach((page, idx) => {
       const flat = page.segments.flatMap((s) => (s.kind === "full" ? [s.item] : [...s.rightItems, ...s.leftItems]));
-      if (idx < pages.length - 1) expect(flat[flat.length - 1].kind).not.toBe("idea_capsule");
+      if (idx < pages.length - 1 && flat.length === 1) expect(flat[0].kind).not.toBe("idea_capsule");
       expect(flat[0].kind).not.toBe("idea_divider");
     });
   });

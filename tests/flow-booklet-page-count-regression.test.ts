@@ -79,7 +79,7 @@ describe("Flow Booklet Page Count & Honest Raw Fill Regression (Track A)", () =>
     expect(html).toContain("95%");
   });
 
-  it("buildSolutionSplitVariants allows 1-step heads (MIN_HEAD_STEPS = 1) so tight pages can pack prompt + step 1", () => {
+  it("buildSolutionSplitVariants allows 0-step heads (MIN_HEAD_STEPS = 0) and every step k up to total - 1", () => {
     const exItem: FlowItem = {
       id: "ex-1",
       kind: "question",
@@ -93,9 +93,11 @@ describe("Flow Booklet Page Count & Honest Raw Fill Regression (Track A)", () =>
     const map = buildSolutionSplitVariants([exItem]);
     const variants = map.get("ex-1");
     expect(variants).toBeDefined();
-    expect(variants![0].k).toBe(1);
-    expect(variants![0].head.solutionSlice).toEqual({ from: 0, to: 1, total: 4 });
-    expect(variants![0].tail.solutionSlice).toEqual({ from: 1, to: 4, total: 4 });
+    expect(variants!.map((v) => v.k)).toEqual([0, 1, 2, 3]);
+    expect(variants![0].head.solutionSlice).toEqual({ from: 0, to: 0, total: 4, isTail: false });
+    expect(variants![0].tail.solutionSlice).toEqual({ from: 0, to: 4, total: 4, isTail: true });
+    expect(variants![1].head.solutionSlice).toEqual({ from: 0, to: 1, total: 4, isTail: false });
+    expect(variants![1].tail.solutionSlice).toEqual({ from: 1, to: 4, total: 4, isTail: true });
   });
 
   it("optimizePagesWithSolutionSplits splits a worked-example pair across page boundary when prior page rawFill < 72%", () => {

@@ -42,10 +42,10 @@ const OVERSIZED_PENALTY = 1e7;
 
 function isBetter(a: BreakNode, b: BreakNode | undefined): boolean {
   if (!b) return true;
-  const aHasOrphanOrOverflow = a.cost >= ORPHAN_PENALTY;
-  const bHasOrphanOrOverflow = b.cost >= ORPHAN_PENALTY;
-  if (aHasOrphanOrOverflow !== bHasOrphanOrOverflow) {
-    return !aHasOrphanOrOverflow;
+  const aPenalties = Math.floor(a.cost / ORPHAN_PENALTY);
+  const bPenalties = Math.floor(b.cost / ORPHAN_PENALTY);
+  if (aPenalties !== bPenalties) {
+    return aPenalties < bPenalties;
   }
   if (a.pages !== b.pages) return a.pages < b.pages;
   return a.cost < b.cost - 1e-9;
@@ -108,32 +108,20 @@ function packFlowItemsIndivisible(
       let cost = 0;
       if (oversized) cost += OVERSIZED_PENALTY;
 
-      // كبسولة الفكرة لا تنتهي بها صفحة مطلقاً لضمان بقائها دائماً مع أمثلتها المحلولة
-      if (last.kind === "idea_capsule" && !isLastPage) cost += ORPHAN_PENALTY;
+      // التعامل المرن مع كبسولة الفكرة: تمنع فقط إذا انفردت بالصفحة كاملة، بينما يُسمح بها أسفل الصفحة لاستغلال الفراغ وتوفير الورق
+      if (last.kind === "idea_capsule" && !isLastPage) {
+        if (slice.length === 1) {
+          cost += ORPHAN_PENALTY;
+        } else {
+          cost += 35;
+        }
+      }
       if (last.kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice[0].kind === "idea_divider") cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
       if (slice.length === 1 && slice[0].kind === "accreditation_footer" && start > 0) cost += LONE_FOOTER_PENALTY;
 
-      // منع جمع شطري مسألة واحدة منشطرة (الرأس والذيل) في نفس الصفحة: الانشطار مخصص حصراً للعبور بين صفحتين
-      const hasHeadAndTailOfSameQuestion = slice.some(
-        (i) =>
-          i.kind === "question" &&
-          i.solutionSlice?.from === 0 &&
-          slice.some(
-            (j) =>
-              j !== i &&
-              j.kind === "question" &&
-              j.question.id === i.question.id &&
-              j.solutionSlice &&
-              j.solutionSlice.from > 0
-          )
-      );
-      if (hasHeadAndTailOfSameQuestion) {
-        cost += OVERSIZED_PENALTY;
-      }
-
-      // منع فصل ثنائية الأمثلة المحلولة للفكرة بين صفحتين لضمان بقائهما متجاورين يميناً ويساراً في تخطيط العمودين
+      // تماسك زوج الأمثلة المحلولة المتجاورة في نفس الفكرة (عمودان جنباً إلى جنب)
       const nextItem = end < count ? items[end] : undefined;
       if (
         !isLastPage &&
@@ -143,30 +131,26 @@ function packFlowItemsIndivisible(
         nextItem?.kind === "question" &&
         nextItem.span === "column" &&
         nextItem.isWorkedExample &&
-        last.ideaIndex !== undefined &&
         last.ideaIndex === nextItem.ideaIndex
       ) {
-        const sameSliceKind =
-          (!last.solutionSlice && !nextItem.solutionSlice) ||
-          (Boolean(last.solutionSlice) &&
-            Boolean(nextItem.solutionSlice) &&
-            (last.solutionSlice!.from === 0) === (nextItem.solutionSlice!.from === 0));
-        if (sameSliceKind) {
-          cost += ORPHAN_PENALTY;
-        }
+        cost += ORPHAN_PENALTY;
       }
 
-      // تفضيل تماسك الفكرة الرياضية (Idea Cohesion): تفضيل استيعاب تدريبات الفكرة مع أمثلتها في نفس الورقة
-      if (
-        !isLastPage &&
-        last.kind === "question" &&
-        last.isWorkedExample &&
-        nextItem?.kind === "question" &&
-        !nextItem.isWorkedExample &&
-        last.ideaIndex !== undefined &&
-        last.ideaIndex === nextItem.ideaIndex
-      ) {
-        cost += 18;
+      // منع جمع شطري مسألة واحدة منشطرة (الرأس والذيل) في نفس الصفحة: الانشطار مخصص حصراً للعبور بين صفحتين
+      const hasHeadAndTailOfSameQuestion = slice.some(
+        (i) =>
+          i.kind === "question" &&
+          Boolean(i.solutionSlice && !i.solutionSlice.isTail) &&
+          slice.some(
+            (j) =>
+              j !== i &&
+              j.kind === "question" &&
+              j.question.id === i.question.id &&
+              Boolean(j.solutionSlice && (j.solutionSlice.isTail || j.solutionSlice.from > 0))
+          )
+      );
+      if (hasHeadAndTailOfSameQuestion) {
+        cost += OVERSIZED_PENALTY;
       }
 
       if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - effectiveUsed) / budget) ** 2;

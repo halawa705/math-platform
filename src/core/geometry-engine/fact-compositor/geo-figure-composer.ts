@@ -38,29 +38,20 @@ import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fideli
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
 
-
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
 export interface ComposeResult { readonly figure: CanonicalGeometryFigureIR | null; readonly warnings: readonly string[] }
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
-  // 0. فحص اتساق مواصفة المسألة (Problem Spec) قبل الرسم (المتباينة المثلثية، مجموع الزوايا، فيثاغورس)
   const specDual = extractGeometryProblemSpecDual(description);
   const consistency = verifyProblemSpecMathematicalConsistency(specDual.spec);
-  if (!consistency.passed) {
-    return { figure: null, warnings: [...consistency.violations] };
-  }
+  if (!consistency.passed) return { figure: null, warnings: [...consistency.violations] };
 
-  // 1. فحص عائلات التشابه والتطابق ومسائل المنهج البارامترية أولاً على كامل النص المدمج
   const isQuadOrMidpointContext = /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف)/.test(description);
-  const isSimilarityContext = !isQuadOrMidpointContext && isSimilarityGeometryContext(description);
-
-  if (isSimilarityContext) {
+  if (!isQuadOrMidpointContext && isSimilarityGeometryContext(description)) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
-    if (parametricFig) {
-      return { figure: parametricFig, warnings: [] };
-    }
+    if (parametricFig) return { figure: parametricFig, warnings: [] };
   }
 
   const hasTrigKeywords = /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة/i.test(description);
@@ -68,23 +59,17 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !hasExplicitNamedTri))
     ? matchPrepGrade3TrigonometryFigure(description, figureId, notation)
     : undefined;
-  if (trigCatalogFig) {
-    return { figure: trigCatalogFig, warnings: [] };
-  }
+  if (trigCatalogFig) return { figure: trigCatalogFig, warnings: [] };
 
   if (!/°|درجة|زاوي/.test(description)) {
     const earlyParallelTransFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
-    if (earlyParallelTransFig) {
-      return { figure: earlyParallelTransFig, warnings: [] };
-    }
+    if (earlyParallelTransFig) return { figure: earlyParallelTransFig, warnings: [] };
   }
 
   const parallelCatalogFig = !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
     ? matchPrepGrade1ParallelismFigure(description, figureId, notation)
     : undefined;
-  if (parallelCatalogFig) {
-    return { figure: parallelCatalogFig, warnings: [] };
-  }
+  if (parallelCatalogFig) return { figure: parallelCatalogFig, warnings: [] };
 
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
   if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
@@ -252,7 +237,15 @@ export function composeFigureFromGeometryDescription(description: string, figure
     } else if (f.k === "extend") {
       resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
     } else if (f.k === "draw") addExtra(f.seg[0], f.seg[1]);
-    else if (f.k === "equal") { ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup); ticks.set(pairKey(f.b[0], f.b[1]), tickGroup); }
+    else if (f.k === "equal") {
+      if (isPolygonSide(f.a[0], f.a[1]) || isPolygonSide(f.b[0], f.b[1]) || host.has(f.a[0]) || host.has(f.a[1])) {
+        ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup);
+        ticks.set(pairKey(f.b[0], f.b[1]), tickGroup);
+      } else {
+        addExtra(f.a[0], f.a[1], true);
+        addExtra(f.b[0], f.b[1], true);
+      }
+    }
     else if (f.k === "angle") {
       resolveAngleFactHelper({ fact: f, polyOf, extras, host, points, addAngle });
     }
