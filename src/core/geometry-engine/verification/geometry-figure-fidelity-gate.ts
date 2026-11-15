@@ -11,6 +11,7 @@ import { normalizeLabelKey } from "../fact-compositor/geo-label-utils";
 import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
 import { findMissingDimensionalGivensOnFigure } from "./geometry-figure-completeness-checker";
 import { verifyNoSolutionLeakOnFigure } from "./geometry-solution-leak-guard";
+import { assertTransversalCollinearity } from "./geometry-transversal-collinearity-checker";
 import {
   isPurelyTheoreticalNoDiagramProblem,
   THEORETICAL_PROMPT_PATTERNS,
@@ -188,6 +189,13 @@ export function checkFigureFidelityToPrompt(
   if (missingNumbers.length >= 1) {
     reasons.push(
       `الشكل ينقصه معطيات هندسية واردة في المسألة لم تظهر على الرسم: (${missingNumbers.join("، ")})`
+    );
+  }
+
+  const collinearity = assertTransversalCollinearity(figure);
+  if (!collinearity.isCollinear) {
+    reasons.push(
+      `القاطع الهندسي منكسر وليس على استقامة واحدة: (${collinearity.bentChains.join("، ")})`
     );
   }
 

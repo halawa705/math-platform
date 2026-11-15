@@ -240,7 +240,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 /** يدمج وسم الرسم الهندسي مع نص المسألة الكامل في سلسلة حقائق موحدة خالية من التكرار. */
 export function combineProblemAndTagGeometryContext(tagDescription?: string, promptText?: string): string {
   let effectiveTag = tagDescription?.trim();
-  const effectivePrompt = promptText?.trim();
+  const effectivePrompt = promptText?.replace(/\|\s*معرف\s*[^|\n]*/g, " ").trim();
   if (effectiveTag) effectiveTag = effectiveTag.replace(/^\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*/i, "").replace(/\s*\]\s*$/i, "").trim();
   if (!effectiveTag && effectivePrompt) effectiveTag = effectivePrompt.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i)?.[1].trim();
 

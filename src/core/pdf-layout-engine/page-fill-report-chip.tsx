@@ -29,7 +29,7 @@ export function PageFillReportChip({
     <div className="print:hidden inline-flex flex-wrap items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-[11px] font-black text-slate-200">
       <span>امتلاء الصفحات:</span>
       {rows.map((row, idx) => {
-        const pct = Math.min(100, Math.max(0, Math.round(row.fillRatio * 100)));
+        const pct = Math.min(100, Math.max(0, Math.round(row.rawFillRatio * 100)));
         const isLast = idx === rows.length - 1;
         const colorClass =
           pct >= 90 || isLast

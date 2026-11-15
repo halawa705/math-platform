@@ -111,6 +111,8 @@ export default function SideBySideDiagramDocker({
   const autoCompactScale =
     stepsCount >= 5 || totalStepsLength > 240 ? 0.95 : stepsCount >= 3 || totalStepsLength > 130 ? 0.98 : 1;
   const optionsFontEm = question.mcqChoicesAr && question.mcqChoicesAr.some((c) => c.length > 18) ? "0.82em" : "0.88em";
+  const cleanPromptText = cleanStudentFacingMathPromptSSOT(question.promptAr);
+  const visiblePromptLen = cleanPromptText.replace(/\\[a-zA-Z]+|\{|\}|\$/g, "").trim().length;
 
   return (
     <article
@@ -122,7 +124,7 @@ export default function SideBySideDiagramDocker({
       }}
       className="min-w-0 w-full rounded-xl border-2 bg-white flex flex-col flex-1 h-full justify-between break-inside-avoid print:break-inside-avoid"
     >
-      <div className={`${densityMetrics.cardPaddingClass} min-w-0 flex-1 flex flex-col justify-between`}>
+      <div className={`${densityMetrics.cardPaddingClass} min-w-0 flex-1 flex flex-col justify-start gap-1`}>
         {!isContinuation && (
           <QuestionCardBadgeHeader
             isBookletSolvedExample={isBookletSolvedExample}
@@ -146,7 +148,7 @@ export default function SideBySideDiagramDocker({
             <div
               className={
                 question.geometryFigure || question.graphSpec
-                  ? settings.columnsCount === 2 && question.promptAr.length > 220
+                  ? settings.columnsCount === 2 && visiblePromptLen > 320
                     ? "flex flex-col items-start gap-2 min-w-0"
                     : "flex items-start justify-between gap-2 min-w-0"
                   : "block min-w-0"
@@ -160,7 +162,7 @@ export default function SideBySideDiagramDocker({
               >
                 <div>
                   <SafeKaTeXBiDiMathRenderer
-                    text={cleanStudentFacingMathPromptSSOT(question.promptAr)}
+                    text={cleanPromptText}
                     numeralMode={settings.numeralMode}
                     notationLanguage={settings.notationLanguage}
                   />

@@ -34,7 +34,7 @@ const GEOMETRY_BRANCHES: ReadonlySet<MathBranchId> = new Set([
 ]);
 
 const EXPLICIT_VISUAL_CUES_REGEX =
-  /(في\s+الشكل\s+المقابل|من\s+الشكل|بالشكل\s+المرسوم|مستعيناً\s+بالشكل|مستعينا\s+بالشكل|مثل\s+بياني|الشبكة\s+التربيعية|المنحنى\s+المقابل|الدائرة\s+(?:م|مـ)(?![أ-ي])|(?:في\s+(?:أي\s+)?)?(?:المثلث|مثلث|Δ|\\Delta)\s+(?:(?:[أابجدهـوسصع]\s+){2}[أابجدهـوسصع](?![أ-ي])|[A-Za-z]{3}\b)|\b[A-Za-z]{3}\s+مثلث\s+(?:قائم|متساوي)|(?:في\s+)?(?:المربع|المستطيل|المعين|شبه\s+المنحرف)(?:\s+المتساوي\s+الساقين)?\s+[A-Za-z]{4}\b|\b[A-Za-z]{4}\s+شبه\s+منحرف|مربعات\s+متطابقة[\s\S]{0,60}المستطيل\s+[A-Za-z]{4}|طائرة\s+ورقية[\s\S]{0,40}خيط|سلم\s+طوله[\s\S]{0,50}(?:يستند|حائط|أرض)|عمود\s+إنارة\s+ارتفاعه|حبل\s+مشدود\s+من\s+قمة\s+برج)/i;
+  /(في\s+الشكل\s+المقابل|من\s+الشكل|بالشكل\s+المرسوم|مستعيناً\s+بالشكل|مستعينا\s+بالشكل|مثل\s+بياني|الشبكة\s+التربيعية|المنحنى\s+المقابل|الدائرة\s+(?:م|مـ)(?![أ-ي])|(?:في\s+(?:أي\s+)?)?(?:المثلث|مثلث|Δ|△|\\Delta|\\triangle)\s*(?:(?:[أابجدهـوسصع]\s+){2}[أابجدهـوسصع](?![أ-ي])|[A-Za-z]{3}\b)|\b[A-Za-z]{3}\s+مثلث\s+(?:قائم|متساوي)|(?:في\s+)?(?:المربع|المستطيل|المعين|شبه\s+المنحرف)(?:\s+المتساوي\s+الساقين)?\s+[A-Za-z]{4}\b|\b[A-Za-z]{4}\s+شبه\s+منحرف|مربعات\s+متطابقة[\s\S]{0,60}المستطيل\s+[A-Za-z]{4}|طائرة\s+ورقية[\s\S]{0,40}خيط|سلم\s+طوله[\s\S]{0,50}(?:يستند|حائط|أرض)|عمود\s+إنارة\s+ارتفاعه|حبل\s+مشدود\s+من\s+قمة\s+برج|مستقيمات\s+متوازية[\s\S]{0,60}قاطع[\s\S]{0,60}[0-9٠-٩xس]|مقسم\s+لقطعتين\s+متساويتين|سلم\s+طوارئ[\s\S]{0,90}قسمت\s+المسافة|عمود\s+إنارة[\s\S]{0,60}حبلين\s+متوازيين)/i;
 
 /** أسئلة تطلب من الطالب نفسه رسم الشكل بيده فلا يجب إظهار رسم جاهز لها. */
 const STUDENT_MUST_DRAW_REGEX =
@@ -45,7 +45,7 @@ const CONCEPTUAL_OR_IMPOSSIBILITY_NO_DIAGRAM_REGEX =
   /(?:^|\s|،)(?:مجموع\s+قياسات\s+زوايا|قياس\s+(?:أي\s+)?(?:ال)?زاوية\s+(?:ال)?خارجة\s+(?:عن\s+(?:ال)?مثلث|للمثلث)\s+(?:ال)?متساوي\s+الأضلاع|اختبر\s+(?:أي\s*مما\s*يلي\s*يصلح|إمكانية\s+رسم)|[وف]?هل\s+يمكن\s+(?:رسم\s+مثلث|أن\s+[يت]?كون|تشكيل\s+مثلث)|لا\s+يمكن\s+رسم\s+مثلث|أي\s+من\s+مجموع(?:تي|ات)\s+الأطوال|أيهما\s+يصلح\s+أن\s+يكون\s+أطوال\s+أضلاع\s+مثلث|الزاوية\s+الحادة\s+في\s+المثلث\s+القائم|أصغر\s+عدد\s+من\s+الزوايا\s+الحادة)/i;
 
 const EXPLICIT_GEOMETRY_CONCRETE_VERBAL_REGEX =
-  /(?:مثلث|مربع|مستطيل|معين|شبه\s*منحرف|متوازي\s*أضلاع|دائرة|وتر|مماس|زاوية\s+خارجة|الزوايا\s+الداخلة|نصف\s*قطر|فيثاغورس|توازي|متوازيان|متعامد|متقاطع|حظيرة\s+مثلثة|سلم\s+طوله|عمود\s+إنارة|ظل\s+(?:شجرة|برج|عمود)|طائرة\s+ورقية)/i;
+  /(?:مثلث|△|\\triangle|مربع|مستطيل|معين|شبه\s*منحرف|متوازي\s*أضلاع|دائرة|وتر|مماس|زاوية\s+خارجة|الزوايا\s+الداخلة|نصف\s*قطر|فيثاغورس|توازي|متوازيان|متوازية|متوازيين|متعامد|متقاطع|حظيرة\s+مثلثة|سلم\s+طوله|سلم\s+طوارئ|عمود\s+إنارة|ظل\s+(?:شجرة|برج|عمود)|طائرة\s+ورقية)/i;
 
 const EXPLICIT_GEOMETRY_LESSON_HINT_REGEX =
   /(?:مثلث|هندسة|توازي|فيثاغورس|تشابه|تطابق|دائرة|زوايا|رباعي|متوازي|مضلع|مساحة|محيط|إحداثي|مثلثات|إقليدس|طاليس|متوسط)/i;
@@ -55,7 +55,7 @@ const EXPLICIT_GEOMETRY_LESSON_HINT_REGEX =
  */
 export function hasExplicitGeometricOrTrigShapeInPrompt(promptArabic: string): boolean {
   if (!promptArabic) return false;
-  const cleanPrompt = promptArabic.replace(/[\$*]/g, " ").replace(/\s+/g, " ");
+  const cleanPrompt = promptArabic.replace(/[\u064B-\u0652\u0670$*]/g, "").replace(/\s+/g, " ");
   return EXPLICIT_VISUAL_CUES_REGEX.test(cleanPrompt);
 }
 
@@ -68,7 +68,7 @@ export function shouldTriggerGeometryDiagramForPrompt(params: {
   readonly stage?: CurriculumStageKind;
   readonly lessonTitleArabic?: string;
 }): boolean {
-  const cleanPrompt = (params.promptArabic || "").replace(/[\$*]/g, " ").replace(/\s+/g, " ").trim();
+  const cleanPrompt = (params.promptArabic || "").replace(/[\u064B-\u0652\u0670$*]/g, "").replace(/\s+/g, " ").trim();
   if (!cleanPrompt) return false;
 
   const hasShapePictureCue =
@@ -125,7 +125,7 @@ export function isDiagramJustifiedForQuestion(params: {
     return false;
   }
 
-  const cleanPrompt = (promptArabic || "").replace(/[\$*]/g, " ").replace(/\s+/g, " ");
+  const cleanPrompt = (promptArabic || "").replace(/[\u064B-\u0652\u0670$*]/g, "").replace(/\s+/g, " ");
 
   const hasShapePictureCue =
     /(?:في|من|بـ)?\s*الشكل\s*(?:المقابل|المجاور|المرسوم|الموضح|التالي)|مستعيناً\s*بالشكل|مستعينا\s*بالشكل/i.test(

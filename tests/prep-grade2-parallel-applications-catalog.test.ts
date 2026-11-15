@@ -6,7 +6,10 @@
 
 import { describe, it, expect } from "vitest";
 import { matchPrepGrade2ParallelApplicationsFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-2/prep-grade2-parallel-applications-catalog";
-import { matchOptionalGeometryFigureFromArabicDescription } from "../src/core/geometry-engine/natural-arabic-geometry-matcher";
+import {
+  matchGeometryWithDiagnostics,
+  matchOptionalGeometryFigureFromArabicDescription,
+} from "../src/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "../src/core/geometry-engine/vector-svg-figure-projector";
 
 describe("Prep Grade 2 Parallel Applications Geometry Catalog", () => {
@@ -156,5 +159,22 @@ describe("Prep Grade 2 Parallel Applications Geometry Catalog", () => {
 
     const svg = projectGeometryFigureToSVGMarkup(fig!, { numeralMode: "eastern", notationLanguage: "arabic" });
     expect(svg).toContain("<svg");
+  });
+
+  it("13. generates diagrams for concrete verbal parallel-transversal and midpoint problems (Track B4–B5)", () => {
+    const prompts = [
+      "إذا كانت عدة مستقيمات متوازية وقسمت قاطعاً لها إلى 4 أجزاء متساوية طول كل منها 3 سم ، وكان قاطع آخر لها طوله الكلي 20 سم ، فما طول كل جزء من أجزاء القاطع الآخر؟",
+      "مستقيمات متوازية تقطع قاطعاً أول مقسم لقطعتين متساويتين ، وتقطع قاطعاً ثانياً إلى قطعتين طولاهما (4x - 1) سم و (2x + 7) سم . أوجد قيمة x وطول القاطع الثاني.",
+      "سلم طوارئ يتكون من فخذين مائلين وتصل بينهما 3 درجات أفقية متوازية قسمت المسافة إلى 3 أجزاء متساوية. فإذا كانت المسافة المائلة بين كل درجتين متتاليتين على الفخذ الأيمن 45 سم ، وعلى الفخذ الأيسر (5x + 10) سم ، فما قيمة x؟",
+      "ABCD شبه منحرف فيه AD // BC، النقطتان E, F منتصفي AB, CD على الترتيب. إذا كان EF يقطع القطر AC في M وكان AD = 12 سم، فأوجد طول EM.",
+      "عمود إنارة مائل قليلاً دُعّم بحبلين متوازيين مشدودين إلى الأرض، فكانت المسافات المحصورة على الأرض متساوية وتساوي 1.5 متر لكل جزء، وكانت المسافة المائلة على العمود للجزء الأول 1.2 متر. فما طول الجزء الثاني المائل على العمود؟",
+      "في المثلث ABC، النقط D, E, F تقسم الضلع AB إلى 4 أجزاء متساوية، ورُسمت من هذه النقاط مستقيمات توازي BC لتقطع AC في X, Y, Z على الترتيب. إذا كان BC = 24 سم، فإن طول القطعة المتوسطة EY يساوي:",
+    ];
+
+    for (const [idx, prompt] of prompts.entries()) {
+      const res = matchGeometryWithDiagnostics(prompt, `fig_verbal_${idx}`, "english");
+      expect(res.figure, `Expected diagram for prompt #${idx + 1}`).toBeDefined();
+      expect(res.decision, `Expected green decision for prompt #${idx + 1}`).toBe("green");
+    }
   });
 });

@@ -65,11 +65,18 @@ export function composeFigureFromGeometryDescription(description: string, figure
 
   const hasTrigKeywords = /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة/i.test(description);
   const hasExplicitNamedTri = /مثلث\s*[A-Z]{3}/i.test(description);
-  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم)/.test(description) && !hasExplicitNamedTri))
+  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !hasExplicitNamedTri))
     ? matchPrepGrade3TrigonometryFigure(description, figureId, notation)
     : undefined;
   if (trigCatalogFig) {
     return { figure: trigCatalogFig, warnings: [] };
+  }
+
+  if (!/°|درجة|زاوي/.test(description)) {
+    const earlyParallelTransFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
+    if (earlyParallelTransFig) {
+      return { figure: earlyParallelTransFig, warnings: [] };
+    }
   }
 
   const parallelCatalogFig = !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)

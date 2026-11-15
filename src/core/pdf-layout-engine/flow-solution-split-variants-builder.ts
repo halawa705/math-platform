@@ -9,8 +9,8 @@ import type { FlowItem } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_SOLUTION_SPLIT_VARIANTS_BUILDER = "flow_solution_split_variants_builder" as const;
 
-/** أقل عدد خطوات قياسي يبقى في الصفحة الأولى من البطاقة المقسومة (مع السماح بـ 1 للمسائل ذات الخطوتين فقط). */
-export const MIN_HEAD_STEPS = 2;
+/** أقل عدد خطوات قياسي يبقى في الصفحة الأولى من البطاقة المقسومة (مع السماح بـ 1 لأن الرأس يضم السؤال والشكل الهندسي وأول خطوة). */
+export const MIN_HEAD_STEPS = 1;
 
 export interface SolutionSplitVariant {
   readonly k: number;

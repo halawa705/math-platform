@@ -16,6 +16,13 @@ import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
 import { projectGeometrySurfaceShadingSVGMarkup } from "./vector-svg-surface-shading-projector";
 import { projectCirclesArcsAndRegionsSVGMarkup } from "./vector-svg-circles-and-arcs-projector";
 import {
+  GIVEN_LABEL_BACKGROUND_FILL,
+  GIVEN_LABEL_HALO_STROKE,
+  GIVEN_LABEL_HALO_WIDTH,
+  UNKNOWN_LABEL_BORDER,
+  UNKNOWN_LABEL_DASHARRAY,
+} from "./svg-given-label-style-constants";
+import {
   computeExpandedSvgViewBox,
   createCenteredBox,
   isCompositeCollinearSpan,
@@ -185,8 +192,6 @@ export function projectGeometryFigureToSVGMarkup(
     const placement = solveSegmentPillOrBracketPlacement({
       seg: obs, textStr, centerSx, centerSy, occupiedBoxes, allSegments: obstacleSegments, bounds: { width, height },
     });
-    const pillBg = isUnknown ? "#FFFBEB" : "#FFFFFF";
-    const pillBorder = isUnknown ? "#F59E0B" : "#CBD5E1";
     const pillTextCol = isUnknown ? "#D97706" : accentColor;
     let bracketSvg = "";
     if (placement.mode === "bracket" && placement.bracket) {
@@ -202,7 +207,10 @@ export function projectGeometryFigureToSVGMarkup(
       extraPointsForBounds.push({ sx: bx1, sy: by1 }, { sx: bx2, sy: by2 });
       bracketSvg = `<path d="M ${sx1.toFixed(1)} ${sy1.toFixed(1)} L ${bx1.toFixed(1)} ${by1.toFixed(1)} L ${bx2.toFixed(1)} ${by2.toFixed(1)} L ${sx2.toFixed(1)} ${sy2.toFixed(1)}" fill="none" stroke="${accentColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.85" />`;
     }
-    return `${bracketSvg}<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="${pillBg}" stroke="${pillBorder}" stroke-width="0.7" opacity="0.97" /><text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="7.8" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}">${textStr}</text>`;
+    const unknownFrameSvg = isUnknown
+      ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${UNKNOWN_LABEL_BORDER}" stroke-width="0.8" stroke-dasharray="${UNKNOWN_LABEL_DASHARRAY}" />`
+      : "";
+    return `${bracketSvg}${unknownFrameSvg}<text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="8.0" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${textStr}</text>`;
   }).join("");
 
   const interiorBadgesSvg = (figure.interiorBadges ?? []).map((b) => {
@@ -213,8 +221,7 @@ export function projectGeometryFigureToSVGMarkup(
     const fontSz = b.fontSize ?? 8.2;
     const placed = solveInteriorBadgePlacement({ targetCx: sx, targetCy: sy, badgeW, badgeH, geomBounds, occupiedBoxes, allSegments: obstacleSegments });
     const strokeTint = b.badgeType === "area" ? "#0D9488" : b.badgeType === "perimeter" ? "#4F46E5" : "#475569";
-    const bgTint = b.badgeType === "area" ? "#F0FDFA" : b.badgeType === "perimeter" ? "#EEF2FF" : "#F8FAFC";
-    return `<rect x="${(placed.cx - badgeW / 2).toFixed(1)}" y="${(placed.cy - badgeH / 2).toFixed(1)}" width="${badgeW.toFixed(1)}" height="${badgeH}" rx="4" fill="${bgTint}" stroke="${strokeTint}" stroke-width="0.8" opacity="0.97" /><text x="${placed.cx.toFixed(1)}" y="${(placed.cy + 3).toFixed(1)}" text-anchor="middle" font-size="${fontSz}" font-weight="700" font-family="system-ui, sans-serif" fill="${strokeTint}">${localizedText}</text>`;
+    return `<rect x="${(placed.cx - badgeW / 2).toFixed(1)}" y="${(placed.cy - badgeH / 2).toFixed(1)}" width="${badgeW.toFixed(1)}" height="${badgeH}" rx="4" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${strokeTint}" stroke-width="0.8" stroke-dasharray="2.5,1.5" /><text x="${placed.cx.toFixed(1)}" y="${(placed.cy + 3).toFixed(1)}" text-anchor="middle" font-size="${fontSz}" font-weight="700" font-family="system-ui, sans-serif" fill="${strokeTint}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${localizedText}</text>`;
   }).join("");
 
   const vb = computeExpandedSvgViewBox({ baseWidth: width, baseHeight: height, points: extraPointsForBounds, boxes: occupiedBoxes });

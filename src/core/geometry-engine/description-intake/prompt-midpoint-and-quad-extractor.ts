@@ -18,12 +18,20 @@ export function extractPromptQuadMidpointAndMeasureFacts(
   const normClean = cleanPrompt.replace(/\u00a0/g, " ");
   const normAssert = assertionsClean.replace(/\u00a0/g, " ");
 
-  // 1. الأشكال الرباعية الصريحة (شبه منحرف ABCD، متوازي أضلاع EFGH...)
+  // 1. الأشكال الرباعية الصريحة (شبه منحرف ABCD، أو ABCD شبه منحرف، متوازي أضلاع EFGH...)
   for (const qm of normAssert.matchAll(
     /(شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي)\s*(?:قائم[^A-Z]{0,18})?\b([A-Z]{4})\b/g
   )) {
     const kind = qm[1].replace(/\s+/g, " ").trim();
     const lbl = qm[2].toUpperCase();
+    const f = `${kind} ${lbl}`;
+    if (!facts.includes(f)) facts.push(f);
+  }
+  for (const rqm of normAssert.matchAll(
+    /\b([A-Z]{4})\s+(شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي)/g
+  )) {
+    const lbl = rqm[1].toUpperCase();
+    const kind = rqm[2].replace(/\s+/g, " ").trim();
     const f = `${kind} ${lbl}`;
     if (!facts.includes(f)) facts.push(f);
   }
@@ -99,13 +107,44 @@ export function extractPromptQuadMidpointAndMeasureFacts(
     }
   }
 
+  // 5ب. منتصفا ضلعين صريحين: E, F منتصفي AB, CD على الترتيب
+  const twoMidM = normClean.match(
+    /\b([A-Z])\s*[,،و]\s*([A-Z])\s*(?:هما\s*)?(?:منتصفا|منتصفي)\s*(?:الضلعين\s*|الساقين\s*)?([A-Z]{2})\s*[,،و]\s*([A-Z]{2})/
+  );
+  if (twoMidM) {
+    facts.push(
+      `${twoMidM[1]} منتصف ${twoMidM[3]}`,
+      `${twoMidM[2]} منتصف ${twoMidM[4]}`,
+      `ارسم ${twoMidM[1]}${twoMidM[2]}`
+    );
+  }
+
+  // 5ج. تقسيم ضلع مثلث إلى 4 أجزاء متساوية بمستقيمات توازي القاعدة (مثل D, E, F على AB و X, Y, Z على AC)
+  const fourPartM = normClean.match(
+    /([A-Z])\s*[,،و]\s*([A-Z])\s*[,،و]\s*([A-Z])\s*تقسم\s*(?:الضلع\s*)?([A-Z])([A-Z])\s*إلى\s*4\s*أجزاء\s*متساوية[\s\S]{0,80}?(?:لتقطع|تقطع)\s*(?:الضلع\s*)?([A-Z])([A-Z])\s*في\s*([A-Z])\s*[,،و]\s*([A-Z])\s*[,،و]\s*([A-Z])/
+  );
+  if (fourPartM) {
+    const [, D, E, F, A1, B1, A2, C2, X, Y, Z] = fourPartM;
+    facts.push(
+      `${E} منتصف ${A1}${B1}`,
+      `${D} منتصف ${A1}${E}`,
+      `${F} منتصف ${E}${B1}`,
+      `${Y} منتصف ${A2}${C2}`,
+      `${X} منتصف ${A2}${Y}`,
+      `${Z} منتصف ${Y}${C2}`,
+      `ارسم ${D}${X}`,
+      `ارسم ${E}${Y}`,
+      `ارسم ${F}${Z}`
+    );
+  }
+
   // 6. مستقيم أو شعاع يقطع ضلعاً في نقطة، أو توازي يقطع ضلعاً في نقطة (داخل مضلع معلن فقط، لتجنب قواطع التوازي الصرفة)
   const hasDeclaredPolygon = /(?:مثلث|△|Δ|شبه\s+منحرف|متوازي\s+أضلاع|مستطيل|مربع|معين|شكل\s+رباعي)/.test(
     normClean
   );
   if (hasDeclaredPolygon) {
     for (const cm of normClean.matchAll(
-      /(?:([A-Z]{2})\s*\/\/\s*[A-Z]{2}|([A-Z]{2}))\s*(?:ليقطع|يقطع|لتقطع|تقطع)\s*(?:الضلع\s*|المستقيم\s*|القطعة\s*)?([A-Z]{2})\s*في\s*(?:النقطة\s*)?([A-Z])\b/g
+      /(?:([A-Z]{2})\s*\/\/\s*[A-Z]{2}|(?<!توازي\s|يوازي\s)\b([A-Z]{2}))\s*(?:ليقطع|يقطع|لتقطع|تقطع)\s*(?:الضلع\s*|المستقيم\s*|القطعة\s*)?([A-Z]{2})\s*في\s*(?:النقطة\s*)?([A-Z])\b(?![\s,،و]*[A-Z]\b)/g
     )) {
       const f = cm[1] ? `${cm[4]} ∈ ${cm[3]}` : `${cm[2]} ∩ ${cm[3]} = {${cm[4]}}`;
       if (!facts.includes(f)) facts.push(f);

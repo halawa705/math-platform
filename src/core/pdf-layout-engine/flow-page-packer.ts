@@ -140,15 +140,20 @@ function packFlowItemsIndivisible(
         last.kind === "question" &&
         last.span === "column" &&
         last.isWorkedExample &&
-        !last.solutionSlice &&
         nextItem?.kind === "question" &&
         nextItem.span === "column" &&
         nextItem.isWorkedExample &&
-        !nextItem.solutionSlice &&
         last.ideaIndex !== undefined &&
         last.ideaIndex === nextItem.ideaIndex
       ) {
-        cost += ORPHAN_PENALTY;
+        const sameSliceKind =
+          (!last.solutionSlice && !nextItem.solutionSlice) ||
+          (Boolean(last.solutionSlice) &&
+            Boolean(nextItem.solutionSlice) &&
+            (last.solutionSlice!.from === 0) === (nextItem.solutionSlice!.from === 0));
+        if (sameSliceKind) {
+          cost += ORPHAN_PENALTY;
+        }
       }
 
       // تفضيل تماسك الفكرة الرياضية (Idea Cohesion): تفضيل استيعاب تدريبات الفكرة مع أمثلتها في نفس الورقة

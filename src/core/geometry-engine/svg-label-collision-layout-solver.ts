@@ -232,15 +232,16 @@ export function solveInteriorBadgePlacement(params: {
   const maxObsY = occupiedBoxes.reduce((m, b) => (b.minY > geomBounds.maxY - 6 ? Math.max(m, b.maxY) : m), geomBounds.maxY);
   const minObsY = occupiedBoxes.reduce((m, b) => (b.maxY < geomBounds.minY + 6 ? Math.min(m, b.minY) : m), geomBounds.minY);
   const candidates = [
-    { cx: midX, cy: maxObsY + badgeH / 2 + 5 },
-    { cx: midX, cy: geomBounds.maxY + 28 },
-    { cx: midX, cy: minObsY - badgeH / 2 - 5 },
+    { cx: geomBounds.maxX - badgeW / 2 + 4, cy: geomBounds.minY + badgeH / 2 + 2 },
+    { cx: geomBounds.minX + badgeW / 2 - 4, cy: geomBounds.minY + badgeH / 2 + 2 },
+    { cx: midX, cy: maxObsY + badgeH / 2 + 4 },
+    { cx: midX, cy: minObsY - badgeH / 2 - 4 },
   ];
-  let best = { cx: midX, cy: maxObsY + badgeH / 2 + 5, cost: Infinity, box: centerBox };
+  let best = { cx: midX, cy: maxObsY + badgeH / 2 + 4, cost: Infinity, box: centerBox };
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
     const box = createCenteredBox(c.cx, c.cy, badgeW, badgeH);
-    const cost = scoreCandidateBox(box, occupiedBoxes, allSegments) + i * 5;
+    const cost = scoreCandidateBox(box, occupiedBoxes, allSegments) + i * 4;
     if (cost < best.cost) best = { cx: c.cx, cy: c.cy, cost, box };
   }
   occupiedBoxes.push(best.box);
@@ -265,6 +266,16 @@ export function computeExpandedSvgViewBox(params: {
     if (b.maxX > params.baseWidth - 2) maxX = Math.max(maxX, b.maxX + 4);
     if (b.minY < 2) minY = Math.min(minY, b.minY - 4);
     if (b.maxY > params.baseHeight - 2) maxY = Math.max(maxY, b.maxY + 4);
+  }
+  const maxAllowedH = params.baseHeight * 1.15;
+  const rawH = maxY - minY;
+  if (rawH > maxAllowedH) {
+    const excess = rawH - maxAllowedH;
+    const topOver = Math.max(0, -minY);
+    const botOver = Math.max(0, maxY - params.baseHeight);
+    const totalOver = topOver + botOver || 1;
+    minY += excess * (topOver / totalOver);
+    maxY -= excess * (botOver / totalOver);
   }
   return {
     minX: Number(minX.toFixed(1)),

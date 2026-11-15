@@ -28,13 +28,18 @@ const SUBSCRIPT_DIGITS: Record<string, string> = {
 
 export function stripParallelLatexNoise(raw: string): string {
   return raw
+    .replace(/\|\s*معرف\s*[^|\n]*/g, " ")
     .replace(/\\overleftrightarrow\s*\{([^}]+)\}/g, "$1")
     .replace(/\\overrightarrow\s*\{([^}]+)\}/g, "$1")
     .replace(/\\overline\s*\{([^}]+)\}/g, "$1")
+    .replace(/\\text\s*\{([^}]*)\}/g, "$1")
+    .replace(/\\[()[\]]/g, " ")
     .replace(/\\parallel/g, "//")
     .replace(/\$/g, "")
     .replace(/\u00a0/g, " ")
-    .replace(/([a-zA-Z])_\{?(\d+)\}?/g, "$1$2");
+    .replace(/([a-zA-Z])_\{?(\d+)\}?/g, "$1$2")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function formatParallelExpressionValue(raw: string): string {
@@ -140,6 +145,15 @@ export function detectParallelLineCountAndNames(givens: string): {
   const arMatch = givens.match(/(ثلاثة|ثلاث|أربعة|أربع|خمسة|خمس)\s+مستقيمات\s+متوازية/);
   if (arMatch) {
     return { count: countMap[arMatch[1]] ?? 4, namedPairs: null, lineLabels: [] };
+  }
+
+  const partsMatch = givens.match(/قسمت\s+(?:قاطع[اً]?\s+لها|المسافة)\s+إلى\s+([234])\s+أجزاء\s+متساوية/);
+  if (partsMatch) {
+    return { count: Number(partsMatch[1]) + 1, namedPairs: null, lineLabels: [] };
+  }
+
+  if (/مقسم\s+لقطعتين\s+متساويتين|عمود\s+إنارة[\s\S]{0,60}حبلين\s+متوازيين/.test(givens)) {
+    return { count: 3, namedPairs: null, lineLabels: [] };
   }
   return null;
 }

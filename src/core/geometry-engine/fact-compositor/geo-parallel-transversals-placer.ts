@@ -87,7 +87,7 @@ export function tryComposeParallelTransversalsFigure(
     points: t1Pts,
     equalTicks:
       eqChains.length > 0 ||
-      /أجزاؤه\s*متساوية|مقسم\s*إلى\s*\d+\s*أجزاء\s*متساوية/.test(givens),
+      /أجزاؤه\s*متساوية|(?:مقسم|قسمت[^.،؛;]*)\s*إلى\s*\d+\s*أجزاء\s*متساوية|مقسم\s*لقطعتين\s*متساويتين|المسافات\s*المحصورة[^.،؛;]*متساوية/.test(givens),
     uniformSegValue: eqChains[0]?.value,
     segLabels: new Map(),
     compositeSpans: [],
@@ -100,7 +100,10 @@ export function tryComposeParallelTransversalsFigure(
   };
 
   if (!t1.uniformSegValue) {
-    const eachVal = givens.match(/متساوية\s*كل\s*منها\s*([0-9]+(?:\.[0-9]+)?)\s*سم/);
+    const eachVal =
+      givens.match(/متساويت?(?:ة|ين)?\s*و?(?:طول\s*)?كل\s*منه(?:ما|ا)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:سم|متر|م\b)/) ??
+      givens.match(/متساوية\s*وتساوي\s*([0-9]+(?:\.[0-9]+)?)\s*(?:سم|متر|م\b)/) ??
+      givens.match(/(?:المسافة\s*المائلة\s*بين\s*كل\s*درجتين\s*متتاليتين|بين\s*سطح\s*الأرض\s*وأول\s*علامة)[^0-9]*([0-9]+(?:\.[0-9]+)?)\s*(?:سم|متر|م\b)/);
     if (eachVal) t1.uniformSegValue = eachVal[1];
   }
   if (t1.uniformSegValue) t1.segLabels.set(0, t1.uniformSegValue);
@@ -112,16 +115,19 @@ export function tryComposeParallelTransversalsFigure(
   const anonExprSrc =
     givens.match(/القاطع\s*الثاني\s*أجزاؤه\s*([^;؛]+)/)?.[1] ??
     givens.match(/أجزاء\s*القاطع\s*الثاني\s*(?:هي\s*)?([^;؛]+)/)?.[1] ??
+    givens.match(/(?:إلى|لـ?)?\s*قطعتين\s*طولاهما\s*([^.؛;]+)/)?.[1] ??
+    givens.match(/وعلى\s*الفخذ\s*الأيسر\s*([^،؛;.]+?)(?=\s*(?:سم|متر|م\b|،|$))/)?.[1] ??
+    givens.match(/للجزء\s*الأول\s*([0-9]+(?:\.[0-9]+)?)\s*(?:سم|متر|م\b)/)?.[1] ??
     (t2.segLabels.size === 0 ? t2ExprBlock?.[1] : undefined);
   if (anonExprSrc && t2.segLabels.size === 0) {
     const parts = anonExprSrc
       .split(/\s+و\s+/)
-      .map((s) => formatParallelExpressionValue(s))
+      .map((s) => formatParallelExpressionValue(s.replace(/\s*(?:سم|متر|م)\b/g, "")))
       .filter((s) => s.length > 0 && /[0-9xyaXYA]/.test(s) && !/أجزاء|طوله/.test(s));
     for (let i = 0; i < Math.min(parts.length, n - 1); i++) t2.segLabels.set(i, parts[i]);
   }
 
-  const totalT2 = givens.match(/القاطع\s*الثاني\s*طوله\s*(?:الكلي\s*)?([0-9]+(?:\.[0-9]+)?)\s*سم/);
+  const totalT2 = givens.match(/(?:القاطع\s*(?:الثاني|الآخر)|قاطع[اً]?\s*آخر(?:\s*لها)?)\s*طوله\s*(?:الكلي\s*)?([0-9]+(?:\.[0-9]+)?)\s*(?:سم|متر|م\b)/);
   if (totalT2) t2.compositeSpans.push({ startIdx: 0, endIdx: n - 1, label: totalT2[1] });
 
   const yStep = 2.0;
@@ -134,10 +140,10 @@ export function tryComposeParallelTransversalsFigure(
   const t2Coords: { id: string; x: number; y: number }[] = [];
 
   for (let i = 0; i < n; i++) {
-    const y = Number((topY - i * yStep).toFixed(2));
+    const y = topY - i * yStep;
     const frac = i / (n - 1);
-    const x1 = sharedApex ? Number((4.2 - frac * 2.9).toFixed(2)) : Number((2.2 - frac * 1.1).toFixed(2));
-    const x2 = sharedApex ? Number((4.2 + frac * 3.1).toFixed(2)) : Number((6.2 + frac * 1.2).toFixed(2));
+    const x1 = sharedApex ? 4.2 - frac * 2.9 : 2.2 - frac * 1.1;
+    const x2 = sharedApex ? 4.2 + frac * 3.1 : 6.2 + frac * 1.2;
 
     const l1 = t1.points[i];
     const l2 = t2.points[i];
@@ -167,7 +173,7 @@ export function tryComposeParallelTransversalsFigure(
     for (let i = 0; i + 1 < coords.length; i++) {
       const lbl = spec.segLabels.get(i);
       segments.push({
-        id: `${figureId}_s_${segments.length}`,
+        id: `${figureId}_s_trans_${segments.length}`,
         fromVertexId: coords[i].id,
         toVertexId: coords[i + 1].id,
         ...(spec.equalTicks ? { tickMarks: 1 as const } : {}),
@@ -193,7 +199,7 @@ export function tryComposeParallelTransversalsFigure(
   return {
     figureId,
     familyId: "triangle_family",
-    branchId: "triangle_base_general",
+    branchId: "triangle_thales_parallel_line",
     titleArabic: description.slice(0, 70),
     notationLanguage: notation,
     vertices,

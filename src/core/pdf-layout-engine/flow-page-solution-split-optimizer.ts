@@ -98,14 +98,61 @@ export function optimizePagesWithSolutionSplits(
       let bestPagesCount = pages.length;
       let bestScore = baseScore - 1e-9;
 
+      const pairVariants = isFirstOfWorkedPair && afterNext ? variantsById.get(afterNext.id) : undefined;
+      if (pairVariants && afterNext) {
+        const toColVariant = (it: FlowItem): FlowItem => {
+          const colId = heights.has(`${it.id}::col`) ? `${it.id}::col` : it.id;
+          return it.kind === "question" ? { ...it, id: colId, span: "column" } : it;
+        };
+        for (const v1 of variants) {
+          if (!heights.has(v1.head.id) || !heights.has(v1.tail.id)) continue;
+          const h1 = toColVariant(v1.head);
+          const t1 = toColVariant(v1.tail);
+          for (const v2 of pairVariants) {
+            if (!heights.has(v2.head.id) || !heights.has(v2.tail.id)) continue;
+            const h2 = toColVariant(v2.head);
+            const t2 = toColVariant(v2.tail);
+            const candidateItems: FlowItem[] = [];
+            for (let idx = 0; idx < currentItems.length; idx++) {
+              const cur = currentItems[idx];
+              if (cur.id === next.id && currentItems[idx + 1]?.id === afterNext.id) {
+                candidateItems.push(h1, h2, t1, t2);
+                idx++;
+              } else {
+                candidateItems.push(cur);
+              }
+            }
+            const candidatePages = packOnce(candidateItems);
+            if (candidatePages.length > bestPagesCount) continue;
+            if (candidatePages.some((cp) => cp.overflowsBudget)) continue;
+            if (
+              pageIndexOfItem(candidatePages, h1.id) !== p ||
+              pageIndexOfItem(candidatePages, h2.id) !== p ||
+              pageIndexOfItem(candidatePages, t1.id) !== p + 1 ||
+              pageIndexOfItem(candidatePages, t2.id) !== p + 1
+            ) {
+              continue;
+            }
+            const score = slackScore(candidatePages, heights);
+            if (candidatePages.length < bestPagesCount || score < bestScore) {
+              bestPagesCount = candidatePages.length;
+              bestScore = score;
+              best = { items: candidateItems, pages: candidatePages };
+            }
+          }
+        }
+      }
+
       for (const v of variants) {
         if (!heights.has(v.head.id) || !heights.has(v.tail.id)) continue;
-        const candidateItems = currentItems.flatMap((i) => (i.id === next.id ? [v.head, v.tail] : [i]));
+        const fullHead: FlowItem = { ...v.head, span: "full" };
+        const fullTail: FlowItem = { ...v.tail, span: "full" };
+        const candidateItems = currentItems.flatMap((i) => (i.id === next.id ? [fullHead, fullTail] : [i]));
         const candidatePages = packOnce(candidateItems);
         if (candidatePages.length > bestPagesCount) continue;
         if (candidatePages.some((cp) => cp.overflowsBudget)) continue;
-        const headPage = pageIndexOfItem(candidatePages, v.head.id);
-        const tailPage = pageIndexOfItem(candidatePages, v.tail.id);
+        const headPage = pageIndexOfItem(candidatePages, fullHead.id);
+        const tailPage = pageIndexOfItem(candidatePages, fullTail.id);
         if (headPage !== p || tailPage !== p + 1) continue;
         const score = slackScore(candidatePages, heights);
         if (candidatePages.length < bestPagesCount || score < bestScore) {

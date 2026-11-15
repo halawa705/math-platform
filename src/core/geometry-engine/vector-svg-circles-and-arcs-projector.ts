@@ -11,6 +11,11 @@
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage, NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
+import {
+  GIVEN_LABEL_BACKGROUND_FILL,
+  GIVEN_LABEL_HALO_STROKE,
+  GIVEN_LABEL_HALO_WIDTH,
+} from "./svg-given-label-style-constants";
 
 export const MODULE_ID_VECTOR_SVG_CIRCLES_AND_ARCS_PROJECTOR =
   "vector_svg_circles_and_arcs_projector" as const;
@@ -92,11 +97,10 @@ export function projectCirclesArcsAndRegionsSVGMarkup(
         const cy = screenPts.reduce((acc, p) => acc + p.sy, 0) / screenPts.length;
         const isUnknown = reg.labelKind === "unknown" || reg.regionLabel.includes("؟") || reg.regionLabel.includes("?");
         const badgeColor = isUnknown ? "#D97706" : accentColor;
-        const badgeBg = isUnknown ? "#FFFBEB" : "#F0FDFA";
         const formatted = localizeFigureLabelText(reg.regionLabel, notation, numeralMode);
         const pillW = Math.max(formatted.length * 5.8 + 10, 22);
         parts.push(
-          `<rect x="${(cx - pillW / 2).toFixed(1)}" y="${(cy - 8).toFixed(1)}" width="${pillW.toFixed(1)}" height="14" rx="3.5" fill="${badgeBg}" stroke="${badgeColor}" stroke-width="0.9" opacity="0.96" /><text x="${cx.toFixed(1)}" y="${(cy + 2.2).toFixed(1)}" text-anchor="middle" font-size="8.2" font-weight="800" fill="${badgeColor}">${formatted}</text>`
+          `<rect x="${(cx - pillW / 2).toFixed(1)}" y="${(cy - 8).toFixed(1)}" width="${pillW.toFixed(1)}" height="14" rx="3.5" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${badgeColor}" stroke-width="0.9" stroke-dasharray="2,1.5" /><text x="${cx.toFixed(1)}" y="${(cy + 2.2).toFixed(1)}" text-anchor="middle" font-size="8.2" font-weight="800" fill="${badgeColor}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${formatted}</text>`
         );
       }
     }
