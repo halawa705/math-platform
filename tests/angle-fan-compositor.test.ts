@@ -185,7 +185,9 @@ describe("Angle-Fan Family Compositor (Prep Grade 1 Angles & Relationships - All
     const d6 = matchGeometryWithDiagnostics(q6, "q6_test", "english");
     expect(d6.source).toBe("compositor");
     expect(d6.figure).toBeDefined();
-    expect(d6.figure!.segments.length).toBe(5);
+    expect(d6.figure!.segments.length).toBe(3);
+    expect(d6.figure!.segments.filter((s) => s.isLine && s.arrowAtStart && s.arrowAtEnd).length).toBe(2);
+    expect(d6.figure!.segments.filter((s) => s.isRay && s.arrowAtEnd).length).toBe(1);
     const svg6 = projectGeometryFigureToSVGMarkup(d6.figure!, { numeralMode: "western" });
     expect(svg6).toContain("<polygon");
     expect(svg6).toContain("130°");

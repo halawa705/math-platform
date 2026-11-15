@@ -4,7 +4,6 @@
  * لا يعدّل المحرك؛ هو أداة قياس فقط (المرحلة 0).
  */
 import type { GoldenCorpusCase } from "./golden-corpus-case-types-ssot";
-import { combineProblemAndTagGeometryContext } from "../description-intake/problem-geometry-context-extractor";
 import { matchGeometryWithDiagnostics } from "../natural-arabic-geometry-matcher";
 import { verifyGeometryFigure } from "../verification/geometry-figure-verification-orchestrator";
 import {
@@ -72,8 +71,14 @@ function emptyResult(c: GoldenCorpusCase, outcome: BaselineOutcomeKind, flags: B
 
 export function classifyBaselineCase(testCase: GoldenCorpusCase): BaselineCaseResult {
   try {
-    const combined = combineProblemAndTagGeometryContext(testCase.geometryRaw || undefined, testCase.problemText);
-    const diag = matchGeometryWithDiagnostics(combined, `baseline_${testCase.id}`, "arabic");
+    const diag = matchGeometryWithDiagnostics(
+      {
+        geometryTag: testCase.geometryRaw || undefined,
+        problemPrompt: testCase.problemText,
+      },
+      `baseline_${testCase.id}`,
+      "arabic"
+    );
     const figure = diag.figure;
 
     if (!figure) {
@@ -87,7 +92,10 @@ export function classifyBaselineCase(testCase: GoldenCorpusCase): BaselineCaseRe
     const textNumbers = extractNumbersFromProblemText(`${cleanProblem} ${testCase.geometryRaw}`);
     const shown = extractNumbersShownOnFigure(figure);
     const missing = [...expectedNumbersOf(testCase)].filter((n) => !shown.has(n));
-    const leaked = [...shown].filter((n) => n !== "90" && !textNumbers.has(n));
+    const isEquilateral60Allowed = /مثلث\s*متساوي\s*الأضلاع/i.test(`${cleanProblem} ${testCase.geometryRaw}`);
+    const leaked = [...shown].filter(
+      (n) => n !== "90" && !(n === "60" && isEquilateral60Allowed) && !textNumbers.has(n)
+    );
 
     if (missing.length > 0) flags.push("missing_given_on_figure");
     if (leaked.length > 0) flags.push("leaked_number_not_in_text");

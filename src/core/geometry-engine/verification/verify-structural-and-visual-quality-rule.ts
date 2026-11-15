@@ -24,6 +24,7 @@ export function verifyStructuralAndVisualQualityRule(fig: CanonicalGeometryFigur
   const xs = fig.vertices.map((v) => v.position.x); const ys = fig.vertices.map((v) => v.position.y);
   const diag = Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
   for (let i = 0; i < fig.vertices.length; i++) for (let j = i + 1; j < fig.vertices.length; j++) {
+    if (fig.vertices[i].hideVertexDot || fig.vertices[j].hideVertexDot) continue;
     const d = measureDistance(fig.vertices[i].position, fig.vertices[j].position);
     if (diag > 0 && d / diag < 0.005) {
       issues.push({ rule: "collapsed-points", severity: "error", message: `النقطتان ${fig.vertices[i].label} و${fig.vertices[j].label} منطبقتان على نفس الإحداثيات تماماً.` });

@@ -31,22 +31,39 @@ export interface GoldenFigureSpecComparisonReport {
 }
 
 /**
- * يوحّد تسمية الرأس إلى حرف إنجليزي كبير موحد للمقارنة المحايدة (مثلاً "أ" و "A" كلاهما "A").
+ * يوحّد تسمية الرأس إلى حرف إنجليزي كبير موحد للمقارنة المحايدة (مع تجريد إحداثيات النقطة مثل O(0,0)).
  */
 function normalizeVertexCanonicalLetter(label: string): string {
-  const trimmed = label.trim();
-  const english = localizeGeometricVertexLabelSSOT(trimmed, "english");
+  const withoutCoords = toWesternNumeralsSSOT(label.trim())
+    .replace(/\(\s*-?\d+(?:\.\d+)?\s*[,،]\s*-?\d+(?:\.\d+)?\s*\)$/, "")
+    .replace(/['′]$/, "")
+    .trim();
+  const english = localizeGeometricVertexLabelSSOT(withoutCoords, "english");
   return english.toUpperCase();
 }
 
 /**
- * يستخرج الأرقام الصريحة من أي نص هندسي موحد.
+ * يتحقق من مطابقة حرف رأس متوقع ضمن الرؤوس الفعلية مع مراعاة الاشتراك الموثّق لحرف «و» بين O و F في نظام التسمية العربي.
  */
-function extractCanonicalNumber(raw: string | number | undefined): string | null {
-  if (raw === undefined || raw === null) return null;
+function hasExpectedVertex(actualVertices: ReadonlySet<string>, expectedLabel: string): boolean {
+  const canonical = normalizeVertexCanonicalLetter(expectedLabel);
+  if (actualVertices.has(canonical)) return true;
+  if (canonical === "O" && actualVertices.has("F")) return true;
+  return false;
+}
+
+/**
+ * يستخرج الأرقام الصريحة أو مكونات الجذور والإحداثيات من تسمية هندسية معروضة على الشكل.
+ */
+function extractAllDisplayedNumbers(raw: string | number | undefined): string[] {
+  if (raw === undefined || raw === null) return [];
   const western = toWesternNumeralsSSOT(String(raw));
-  const match = western.match(/\d+(?:\.\d+)?/);
-  return match ? match[0] : null;
+  return [...western.matchAll(/\d+(?:\.\d+)?/g)].map((m) => String(parseFloat(m[0])));
+}
+
+function extractCanonicalNumber(raw: string | number | undefined): string | null {
+  const all = extractAllDisplayedNumbers(raw);
+  return all.length > 0 ? all[0] : null;
 }
 
 export function compareFigureAgainstExpectedSpec(params: {
@@ -115,8 +132,7 @@ export function compareFigureAgainstExpectedSpec(params: {
 
   if (expectedSpec?.vertices && expectedSpec.vertices.length > 0) {
     for (const expV of expectedSpec.vertices) {
-      const canonicalExp = normalizeVertexCanonicalLetter(expV);
-      if (!actualVertices.has(canonicalExp)) {
+      if (!hasExpectedVertex(actualVertices, expV)) {
         const msg = `الرأس المتوقع (${expV}) غير موجود بالشكل المولد`;
         vertexDiscrepancies.push(msg);
         discrepancies.push(msg);
@@ -124,7 +140,7 @@ export function compareFigureAgainstExpectedSpec(params: {
     }
   }
 
-  // فحص الأطوال المعروضة
+  // فحص الأطوال والأبعاد المعروضة (بما في ذلك الجذور مثل 1.5√3 وإحداثيات النقاط ونصوص نماذج SVG)
   const actualLengths = new Set<string>();
   let actualHasQuestionMark = false;
 
@@ -134,17 +150,39 @@ export function compareFigureAgainstExpectedSpec(params: {
       if (valStr === "؟" || valStr === "?" || seg.lengthLabel.labelKind === "unknown") {
         actualHasQuestionMark = true;
       }
-      const num = extractCanonicalNumber(seg.lengthLabel.value);
-      if (num) actualLengths.add(num);
+      for (const n of extractAllDisplayedNumbers(seg.lengthLabel.value)) {
+        actualLengths.add(n);
+      }
     }
   }
 
-  // فحص الشارات الداخلية عن علامات الاستفهام أو الأطوال
+  if (figure.familyId === "analytic_coordinate_family") {
+    for (const v of figure.vertices) {
+      const westernLabel = toWesternNumeralsSSOT(v.label);
+      if (/\(\s*-?\d/.test(westernLabel) || /=/.test(westernLabel)) {
+        for (const n of extractAllDisplayedNumbers(v.label)) actualLengths.add(n);
+      }
+    }
+  }
+
+  if (figure.rawSvgMarkup) {
+    const plainSvg = figure.rawSvgMarkup.replace(/<[^>]+>/g, " ");
+    for (const n of extractAllDisplayedNumbers(plainSvg)) actualLengths.add(n);
+  }
+
+  for (const ang of figure.angles) {
+    if (ang.degreesLabel && /(?:tan|sin|cos|cot|ظا|جا|جتا)\s*=/i.test(ang.degreesLabel)) {
+      for (const n of extractAllDisplayedNumbers(ang.degreesLabel)) actualLengths.add(n);
+    }
+  }
+
+  // فحص الشارات الداخلية عن علامات الاستفهام أو القيم البُعدية/المعادلات المعروضة
   if (figure.interiorBadges) {
     for (const badge of figure.interiorBadges) {
       if (badge.text.includes("؟") || badge.labelKind === "unknown") {
         actualHasQuestionMark = true;
       }
+      for (const n of extractAllDisplayedNumbers(badge.text)) actualLengths.add(n);
     }
   }
 

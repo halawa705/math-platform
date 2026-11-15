@@ -12,7 +12,11 @@ import type {
   CanonicalVertexNode,
 } from "@/core/ssot/geometry-archetype-ssot";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
-import { toDisplayLabel } from "../fact-compositor/geo-label-utils";
+import {
+  resolveSegmentLineSemantics,
+  type LinearEntityKindMap,
+} from "../description-intake/linear-entity-kind-extractor";
+import { pairKey, toDisplayLabel } from "../fact-compositor/geo-label-utils";
 import { extractAngleFanSpecFromDescription } from "./angle-fan-fact-extractor";
 import {
   minorAngleDiffDeg,
@@ -32,7 +36,8 @@ const FAN_RAY_RADIUS = 75;
 export function composeAngleFanFigureFromDescription(
   description: string,
   figureId: string,
-  notation: MathNotationLanguage = "arabic"
+  notation: MathNotationLanguage = "arabic",
+  linearKindMap?: LinearEntityKindMap
 ): CanonicalGeometryFigureIR | null {
   const spec = extractAngleFanSpecFromDescription(description);
   if (!spec) return null;
@@ -61,13 +66,26 @@ export function composeAngleFanFigureFromDescription(
     });
   }
 
-  const segments: CanonicalSegmentNode[] = spec.rays.map((r, idx) => ({
-    id: `${figureId}_s_${idx}`,
-    fromVertexId: keyId(spec.vertex),
-    toVertexId: keyId(r),
-    isRay: true,
-    arrowAtEnd: true,
-  }));
+  const segments: CanonicalSegmentNode[] = [];
+  const consumedInLine = new Set<string>();
+  for (let i = 0; i < spec.rays.length; i++) {
+    const r1 = spec.rays[i];
+    if (consumedInLine.has(r1)) continue;
+    const a1 = layout.rayAnglesDeg.get(r1) ?? 0;
+    const opp = spec.rays.slice(i + 1).find((r2) => {
+      if (consumedInLine.has(r2)) return false;
+      const a2 = layout.rayAnglesDeg.get(r2) ?? 0;
+      return Math.abs(minorAngleDiffDeg(a1, a2) - 180) < 3 && linearKindMap?.get(pairKey(r1, r2))?.kind === "line";
+    });
+    if (opp) {
+      consumedInLine.add(r1);
+      consumedInLine.add(opp);
+      segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(r1), toVertexId: keyId(opp), isLine: true, arrowAtStart: true, arrowAtEnd: true });
+      continue;
+    }
+    const lineSem = resolveSegmentLineSemantics(spec.vertex, r1, linearKindMap, linearKindMap?.get(pairKey(spec.vertex, r1))?.kind ?? "ray");
+    segments.push({ id: `${figureId}_s_${segments.length}`, fromVertexId: keyId(spec.vertex), toVertexId: keyId(r1), ...lineSem });
+  }
 
   const angles: CanonicalAngleNode[] = [];
   const addAngleNode = (

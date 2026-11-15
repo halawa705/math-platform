@@ -37,10 +37,10 @@ export function buildSimilarKitesDeltoidsFigure(
   const vC: CanonicalVertexNode = { id: `${opts.figureId}_ktC`, label: localizeGeometricVertexLabelSSOT("جـ", notation), position: { x: 3, y: 2 } };
   const vD: CanonicalVertexNode = { id: `${opts.figureId}_ktD`, label: localizeGeometricVertexLabelSSOT("د", notation), position: { x: 1, y: 5 } };
 
-  const vH: CanonicalVertexNode = { id: `${opts.figureId}_ktH`, label: notation === "english" ? "H" : "ح", position: { x: 11, y: 9.5 } };
-  const vL: CanonicalVertexNode = { id: `${opts.figureId}_ktL`, label: notation === "english" ? "L" : "ل", position: { x: 15, y: 5 } };
-  const vK: CanonicalVertexNode = { id: `${opts.figureId}_ktK`, label: notation === "english" ? "K" : "ك", position: { x: 11, y: 1 } };
-  const vJ: CanonicalVertexNode = { id: `${opts.figureId}_ktJ`, label: notation === "english" ? "J" : "ن", position: { x: 8, y: 5 } };
+  const vH: CanonicalVertexNode = { id: `${opts.figureId}_ktH`, label: localizeGeometricVertexLabelSSOT("H", notation), position: { x: 11, y: 9.5 } };
+  const vL: CanonicalVertexNode = { id: `${opts.figureId}_ktL`, label: localizeGeometricVertexLabelSSOT("L", notation), position: { x: 15, y: 5 } };
+  const vK: CanonicalVertexNode = { id: `${opts.figureId}_ktK`, label: localizeGeometricVertexLabelSSOT("K", notation), position: { x: 11, y: 1 } };
+  const vJ: CanonicalVertexNode = { id: `${opts.figureId}_ktJ`, label: localizeGeometricVertexLabelSSOT("J", notation), position: { x: 8, y: 5 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, lengthLabel: opts.includeLengths ? { value: 5, unit: "سم" } : undefined },

@@ -54,7 +54,7 @@ export function extractGeometryAskedSpecFromPrompt(rawText: string): GeometryAsk
   );
   const clause = tagAskedClause || (askedClauseMatch ? askedClauseMatch[0].trim() : "");
 
-  if (PROOF_PATTERNS.test(clause || clean)) {
+  if (PROOF_PATTERNS.test(clean) || PROOF_PATTERNS.test(clause)) {
     return {
       kind: "proof",
       rawAskedClause: clause || clean,
@@ -63,8 +63,8 @@ export function extractGeometryAskedSpecFromPrompt(rawText: string): GeometryAsk
 
   if (!clause) return undefined;
 
-  // 1. فحص المساحة المطلوبة
-  if (/مساحة/i.test(clause)) {
+  // 1. فحص المساحة المطلوبة (دون الالتباس بمقارنة مساحتين مثل: مساحة المثلث ... = مساحة ...)
+  if (/مساحة/i.test(clause) && !/مساحة[^\n=]*=\s*مساحة/i.test(clause)) {
     const polyM = clause.match(/مساحة\s*(?:ال)?(?:مثلث|مستطيل|مربع|معين|شبه\s*منحرف|متوازي\s*أضلاع|رباعي|شكل)?\s*([A-Za-z]{3,4}|(?:[أ-ي]ـ?\s*){3,4})?/i);
     const parsed = polyM?.[1] ? parseLabelList(polyM[1]) : null;
     return {
@@ -118,9 +118,9 @@ export function extractGeometryAskedSpecFromPrompt(rawText: string): GeometryAsk
     };
   }
 
-  // 6. فحص طول ضلع أو قطعة مستقيمة مطلوبة: أوجد طول أ جـ / احسب طول BC / فإن DE = ...
+  // 6. فحص طول ضلع أو قطعة مستقيمة مطلوبة: أوجد طول أ جـ / احسب طول الارتفاع أ د / فإن DE = ...
   const lenMatch =
-    clause.match(/(?:طول|البعد|المسافة)\s*(?:القطعة\s*|الضلع\s*|الوتر\s*)?([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)(?![A-Za-zء-ي])/i) ||
+    clause.match(/(?:طول|البعد|المسافة)\s*(?:القطعة\s*|الضلع\s*|الوتر\s*|الارتفاع\s*|القاعدة\s*)?([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)(?![A-Za-zء-ي])/i) ||
     clause.match(/(?:أوجد|اوجد|احسب|فإن)\s+([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)(?:\s*=|\s*$)/i);
   if (lenMatch) {
     const segLabels = parseLabelList(lenMatch[1]);
@@ -259,23 +259,10 @@ export function applyAskedQuestionMarkToFigure(
         const hasIntermediateRay = figure.angles.some(
           (a) =>
             a.vertexId === vNode.id &&
-            (a.arm1VertexId === a1Node.id ||
-              a.arm2VertexId === a1Node.id ||
-              a.arm1VertexId === a2Node.id ||
-              a.arm2VertexId === a2Node.id)
+            (a.arm1VertexId === a1Node.id || a.arm2VertexId === a1Node.id || a.arm1VertexId === a2Node.id || a.arm2VertexId === a2Node.id)
         );
         if (!hasIntermediateRay) {
-          angles = [
-            ...angles,
-            {
-              id: `${figure.figureId}_ang_asked_${t}`,
-              vertexId: vNode.id,
-              arm1VertexId: a1Node.id,
-              arm2VertexId: a2Node.id,
-              degreesLabel: "؟",
-              labelKind: "unknown",
-            },
-          ];
+          angles = [...angles, { id: `${figure.figureId}_ang_asked_${t}`, vertexId: vNode.id, arm1VertexId: a1Node.id, arm2VertexId: a2Node.id, degreesLabel: "؟", labelKind: "unknown" }];
         }
       }
     }
@@ -285,23 +272,8 @@ export function applyAskedQuestionMarkToFigure(
   if (askedSpec.kind === "area" && interiorBadges.length === 0 && figure.vertices.length >= 3) {
     const cx = figure.vertices.reduce((acc, v) => acc + v.position.x, 0) / figure.vertices.length;
     const cy = figure.vertices.reduce((acc, v) => acc + v.position.y, 0) / figure.vertices.length;
-    interiorBadges = [
-      ...interiorBadges,
-      {
-        id: `${figure.figureId}_badge_asked_area`,
-        text: "المساحة = ؟",
-        position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) },
-        badgeType: "area",
-        labelKind: "unknown",
-      },
-    ];
+    interiorBadges = [...interiorBadges, { id: `${figure.figureId}_badge_asked_area`, text: "المساحة = ؟", position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, badgeType: "area", labelKind: "unknown" }];
   }
 
-  return {
-    ...figure,
-    segments,
-    angles,
-    interiorBadges: interiorBadges.length > 0 ? interiorBadges : figure.interiorBadges,
-    askedSpec,
-  };
+  return { ...figure, segments, angles, interiorBadges: interiorBadges.length > 0 ? interiorBadges : figure.interiorBadges, askedSpec };
 }

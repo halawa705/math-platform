@@ -8,27 +8,14 @@ import { splitDescriptionIntoFactStrings } from "./geo-fact-splitter";
 import { parseGeoFactString } from "./geo-fact-parser";
 import { pairKey, toDisplayLabel } from "./geo-label-utils";
 import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
+import { applyMedianFactOnTriangle, resolveRatioFractionOnSegment, sortComposerFactsTopologically, tryOrientPerpendicularMediansTriangle } from "./geo-triangle-placer";
 import { buildOutwardAreaSquaresForFacts } from "./geo-pythagoras-squares-helper";
-import {
-  tryPlaceParallelWithMissingEndpoints,
-  tryPlacePointOnWithCollinearExtension,
-} from "./geo-composite-topology-placer";
+import { tryPlaceParallelWithMissingEndpoints, tryPlacePointOnWithCollinearExtension } from "./geo-composite-topology-placer";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { tryComposeParallelTransversalsFigure } from "./geo-parallel-transversals-placer";
-import {
-  buildPerimeterAndAreaBadges,
-  deduplicatePlacedPolygons,
-  registerIntersectingRaySegments,
-  resolveParallelConstraintFact,
-  tryPlaceSegmentRatioVertex,
-} from "./geo-composite-constraint-helpers";
-import {
-  assembleCanonicalFigureSegments,
-  resolveAngleFactHelper,
-  resolveExtendWithEqualHelper,
-  type AssembledExtraSeg,
-} from "./geo-figure-segments-assembler";
+import { buildPerimeterAndAreaBadges, deduplicatePlacedPolygons, registerIntersectingRaySegments, resolveParallelConstraintFact, tryPlaceSegmentRatioVertex } from "./geo-composite-constraint-helpers";
+import { assembleCanonicalFigureSegments, resolveAngleFactHelper, resolveExtendWithEqualHelper, type AssembledExtraSeg } from "./geo-figure-segments-assembler";
 import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
@@ -37,13 +24,21 @@ import { matchPrepGrade1ParallelismFigure } from "../curriculum-catalogs/prep-st
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
+import { extractLinearEntityKinds, type LinearEntityKind, type LinearEntityKindMap } from "../description-intake/linear-entity-kind-extractor";
+import { tryComposeStandaloneLinearFigure } from "./geo-standalone-linear-placer";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
 export interface ComposeResult { readonly figure: CanonicalGeometryFigureIR | null; readonly warnings: readonly string[] }
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
-export function composeFigureFromGeometryDescription(description: string, figureId: string, notation: "english" | "arabic" = "english"): ComposeResult {
+export function composeFigureFromGeometryDescription(
+  description: string,
+  figureId: string,
+  notation: "english" | "arabic" = "english",
+  providedLinearKindMap?: LinearEntityKindMap
+): ComposeResult {
+  const linearKindMap = providedLinearKindMap ?? extractLinearEntityKinds(description);
   const specDual = extractGeometryProblemSpecDual(description);
   const consistency = verifyProblemSpecMathematicalConsistency(specDual.spec);
   if (!consistency.passed) return { figure: null, warnings: [...consistency.violations] };
@@ -66,7 +61,8 @@ export function composeFigureFromGeometryDescription(description: string, figure
     if (earlyParallelTransFig) return { figure: earlyParallelTransFig, warnings: [] };
   }
 
-  const parallelCatalogFig = !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
+  const hasNamedIntersections = /في\s*(?:النقطتين\s*)?(?:[A-Z]|[أ-ي]ـ?)\s*و\s*(?:[A-Z]|[أ-ي]ـ?)\b/.test(description);
+  const parallelCatalogFig = !hasNamedIntersections && !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
     ? matchPrepGrade1ParallelismFigure(description, figureId, notation)
     : undefined;
   if (parallelCatalogFig) return { figure: parallelCatalogFig, warnings: [] };
@@ -96,9 +92,13 @@ export function composeFigureFromGeometryDescription(description: string, figure
     const parallelFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
     if (parallelFig) return { figure: parallelFig, warnings: [] };
     if (!/(?:\/\/|\\parallel|\|\|)|توازي|متوازيان|متوازيين|متوازية|يوازي|توازى/i.test(description)) {
-      const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation);
+      const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation, linearKindMap);
       if (angleFanFig) return { figure: angleFanFig, warnings: [] };
     }
+    const standaloneLinearFig = tryComposeStandaloneLinearFigure({
+      facts, lengths, linearKindMap, description, figureId, notation,
+    });
+    if (standaloneLinearFig) return { figure: standaloneLinearFig, warnings };
     return { figure: null, warnings: [...warnings, "لا يوجد مثلث أو رباعي أو دائرة معلنة في الوصف."] };
   }
   const host = new Map<string, Seg>();
@@ -110,7 +110,11 @@ export function composeFigureFromGeometryDescription(description: string, figure
   const P = (k: string) => points.get(k);
   const polyOf = (v: string): PlacedPolygon | undefined => polygons.find((p) => p.labels.includes(v));
   const trianglesSides = (apex: string): Seg | null => { const p = polyOf(apex); if (!p || p.labels.length !== 3) return null; const o = p.labels.filter((l) => l !== apex); return [o[0], o[1]]; };
-  const addExtra = (a: string, b: string, dashed?: boolean) => { if (!extras.some((e) => pairKey(e.a, e.b) === pairKey(a, b))) extras.push({ a, b, dashed }); };
+  const addExtra = (a: string, b: string, dashed?: boolean, lineKind?: LinearEntityKind) => {
+    const idx = extras.findIndex((e) => pairKey(e.a, e.b) === pairKey(a, b));
+    if (idx < 0) extras.push({ a, b, dashed, lineKind });
+    else if (lineKind && !extras[idx].lineKind) extras[idx] = { ...extras[idx], lineKind };
+  };
   const isPolygonSide = (a: string, b: string) => polygons.some((p) => p.labels.some((l, i) => pairKey(l, p.labels[(i + 1) % p.labels.length]) === pairKey(a, b)));
   const addAngle = (vertex: string, arm1: string, arm2: string, extra: Partial<CanonicalAngleNode> = {}) => angles.push({ id: `${figureId}_ang_${angles.length}`, vertexId: `${figureId}_v_${vertex}`, arm1VertexId: `${figureId}_v_${arm1}`, arm2VertexId: `${figureId}_v_${arm2}`, ...extra });
 
@@ -123,7 +127,12 @@ export function composeFigureFromGeometryDescription(description: string, figure
     }
   }
 
+  const perpMedians = tryOrientPerpendicularMediansTriangle({ facts, polygons, lengths, points });
+  if (perpMedians) addAngle(perpMedians.meetVertex, perpMedians.apex1, perpMedians.apex2, { isRightAngle: true, degrees: 90 });
+
   const ratioOnSeg = (p: string, a: string, b: string): number => {
+    const r = resolveRatioFractionOnSegment(facts, p, a, b);
+    if (r !== undefined) return r;
     const ap = lengths.get(pairKey(a, p))?.numeric; const pb = lengths.get(pairKey(p, b))?.numeric; const ab = lengths.get(pairKey(a, b))?.numeric;
     if (ap && pb) return clamp(ap / (ap + pb));
     if (ap && ab) return clamp(ap / ab);
@@ -147,7 +156,10 @@ export function composeFigureFromGeometryDescription(description: string, figure
     warnings,
   });
 
-  for (const f of facts) {
+  const queue = sortComposerFactsTopologically(facts);
+  const deferredFacts: GeoFact[] = [];
+  for (let pass = 0; pass < 2; pass++) {
+    for (const f of pass === 0 ? queue : deferredFacts.splice(0)) {
     if (f.k === "segmentRatio") {
       tryPlaceSegmentRatioVertex({ fact: f, points, host });
       continue;
@@ -189,7 +201,7 @@ export function composeFigureFromGeometryDescription(description: string, figure
         continue;
       }
       const isDeferredHostLine = f.k === "pointOn" && facts.some((pf) => pf.k === "parallel" && (pairKey(pf.a[0], pf.a[1]) === pairKey(a, b) || pairKey(pf.b[0], pf.b[1]) === pairKey(a, b)));
-      if (!P(a) || !P(b)) { if (!isDeferredHostLine) warnings.push(`نقطتا ${a}${b} غير معرّفتين`); continue; }
+      if (!P(a) || !P(b)) { if (!isDeferredHostLine) { if (pass === 0) deferredFacts.push(f); else warnings.push(`نقطتا ${a}${b} غير معرّفتين`); } continue; }
       points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
       if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
     } else if (f.k === "parallel") {
@@ -199,8 +211,10 @@ export function composeFigureFromGeometryDescription(description: string, figure
       if (awaitsIntersect) { deferredParallels.push(f); continue; }
       runParallel(f);
     } else if (f.k === "perp") {
+      const ka = pairKey(f.a[0], f.a[1]); const kb = pairKey(f.b[0], f.b[1]);
+      if (perpMedians && ((ka === perpMedians.seg1Key && kb === perpMedians.seg2Key) || (kb === perpMedians.seg1Key && ka === perpMedians.seg2Key))) continue;
       let [apex, foot] = f.a; if (f.foot) foot = f.foot; if (!P(apex) && P(foot)) [apex, foot] = [foot, apex];
-      const [b0, b1] = f.b; if (!P(apex) || !P(b0) || !P(b1)) { warnings.push("تعامد بنقاط غير معرّفة"); continue; }
+      const [b0, b1] = f.b; if (!P(apex) || !P(b0) || !P(b1)) { if (pass === 0) deferredFacts.push(f); else warnings.push("تعامد بنقاط غير معرّفة"); continue; }
       const len0 = lengths.get(pairKey(b0, foot))?.numeric;
       const len1 = lengths.get(pairKey(foot, b1))?.numeric;
       const lenAlt = lengths.get(pairKey(apex, foot))?.numeric;
@@ -216,14 +230,12 @@ export function composeFigureFromGeometryDescription(description: string, figure
       addAngle(foot, apex, vDist(P(foot)!, P(b1)!) >= vDist(P(foot)!, P(b0)!) ? b1 : b0, { isRightAngle: true, degrees: 90 });
     } else if (f.k === "bisector") {
       const opp = trianglesSides(f.vertex); const d = f.seg[0] === f.vertex ? f.seg[1] : f.seg[0]; if (!opp || !P(f.vertex)) continue;
-      points.set(d, angleBisectorFoot(P(f.vertex)!, P(opp[0])!, P(opp[1])!)); host.set(d, opp); addExtra(f.vertex, d);
+      points.set(d, angleBisectorFoot(P(f.vertex)!, P(opp[0])!, P(opp[1])!)); host.set(d, opp); addExtra(f.vertex, d, false, f.lineKind);
       addAngle(f.vertex, opp[0], d, { arcCount: 1 }); addAngle(f.vertex, d, opp[1], { arcCount: 1 });
     } else if (f.k === "median") {
-      const apex = f.seg[0]; const d = f.seg[1]; const opp = trianglesSides(apex); if (!opp) continue;
-      points.set(d, vMid(P(opp[0])!, P(opp[1])!)); host.set(d, opp); addExtra(apex, d);
-      ticks.set(pairKey(opp[0], d), ++tickGroup); ticks.set(pairKey(d, opp[1]), tickGroup);
+      applyMedianFactOnTriangle({ seg: f.seg, trianglesSides, points, host, ticks, nextTick: () => ++tickGroup, addExtra });
     } else if (f.k === "intersect") {
-      if (!P(f.a[0]) || !P(f.a[1]) || !P(f.b[0]) || !P(f.b[1])) { warnings.push("تقاطع بنقاط غير معرّفة"); continue; }
+      if (!P(f.a[0]) || !P(f.a[1]) || !P(f.b[0]) || !P(f.b[1])) { if (pass === 0) deferredFacts.push(f); else warnings.push("تقاطع بنقاط غير معرّفة"); continue; }
       if (!P(f.p)) {
         const r = lineIntersection(P(f.a[0])!, P(f.a[1])!, P(f.b[0])!, P(f.b[1])!); if (!r) { warnings.push("مستقيمان متوازيان لا يتقاطعان"); continue; }
         points.set(f.p, r);
@@ -236,7 +248,7 @@ export function composeFigureFromGeometryDescription(description: string, figure
       const r = lineIntersection(P(a)!, P(c)!, P(b)!, P(d)!); if (r) { points.set(f.p, r); addExtra(a, c); addExtra(b, d); }
     } else if (f.k === "extend") {
       resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
-    } else if (f.k === "draw") addExtra(f.seg[0], f.seg[1]);
+    } else if (f.k === "draw") { if (pass === 0) deferredFacts.push(f); else addExtra(f.seg[0], f.seg[1], false, f.lineKind); }
     else if (f.k === "equal") {
       if (isPolygonSide(f.a[0], f.a[1]) || isPolygonSide(f.b[0], f.b[1]) || host.has(f.a[0]) || host.has(f.a[1])) {
         ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup);
@@ -248,6 +260,7 @@ export function composeFigureFromGeometryDescription(description: string, figure
     }
     else if (f.k === "angle") {
       resolveAngleFactHelper({ fact: f, polyOf, extras, host, points, addAngle });
+    }
     }
   }
 
@@ -266,7 +279,7 @@ export function composeFigureFromGeometryDescription(description: string, figure
 
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const segments = assembleCanonicalFigureSegments({
-    figureId, polygons, points, host, lengths, ticks, parallelMarks, extras,
+    figureId, polygons, points, host, lengths, ticks, parallelMarks, extras, linearKindMap,
   });
 
   const areaSquares = buildOutwardAreaSquaresForFacts({ facts, points, polygons, figureId });

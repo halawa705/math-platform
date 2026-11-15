@@ -27,6 +27,7 @@ export interface DisjointTrianglesParametricOptions {
   readonly tri1: readonly [string, string, string];
   readonly tri2: readonly [string, string, string];
   readonly ratio?: number;
+  readonly ratioLabel?: string;
   readonly givenLengths?: ReadonlyMap<string, { readonly text: string; readonly numeric?: number }>;
   readonly givenAngles?: ReadonlyMap<string, { readonly deg?: number; readonly text?: string; readonly isRight?: boolean }>;
 }
@@ -189,5 +190,16 @@ export function buildDisjointSimilarTrianglesFigure(
       [vA1.id, vB1.id, vC1.id],
       [vA2.id, vB2.id, vC2.id],
     ],
+    interiorBadges: opts.ratioLabel
+      ? [
+          {
+            id: `${opts.figureId}_ratio_badge`,
+            text: `ك = ${opts.ratioLabel}`,
+            position: { x: Number((xOffset1 + baseWidth1 + 1.25).toFixed(2)), y: 2.2 },
+            badgeType: "generic",
+            labelKind: "given",
+          },
+        ]
+      : undefined,
   };
 }

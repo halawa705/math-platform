@@ -22,25 +22,29 @@ export const NON_BREAKING_SPACE = "\u00A0";
 const UNIT = `(${ARABIC_UNIT_ALTERNATION_SRC})${NOT_FOLLOWED_BY_ARABIC_LETTER_SRC}`;
 const SWAP_UNIT = `${NOT_PRECEDED_BY_ARABIC_LETTER_SRC}(${ARABIC_SWAPPABLE_UNIT_ALTERNATION_SRC})${NOT_FOLLOWED_BY_ARABIC_LETTER_SRC}`;
 const PLAIN_NUMBER = "(\\d+(?:\\.\\d+)?|[٠-٩]+(?:\\.[٠-٩]+)?)";
-const ENGLISH_UNIT =
-  /(\$|\\dots|\\ldots|\.\.\.|[0-9٠-٩])\s*(cm\s*(?:\^\s*\{?[23]\}?|[²³])?|mm|km|kg|gm|ml|m\s*(?:\^\s*\{?[23]\}?|[²³])|m\s*\/\s*s\s*(?:\^\s*\{?2\}?|²)?)(?![A-Za-z])/gi;
+const ENGLISH_UNIT_AFTER_DIGIT =
+  /([0-9٠-٩])\s*(cm\s*(?:\^\s*\{?[23]\}?|[²³])?|mm|km|kg|gm|ml|m\s*(?:\^\s*\{?[23]\}?|[²³])|m\s*\/\s*s\s*(?:\^\s*\{?2\}?|²)?)(?![A-Za-z])/gi;
+const ENGLISH_UNIT_LOWER_AFTER_PLACEHOLDER =
+  /(\\dots|\\ldots|\.\.\.)\s*(cm\s*(?:\^\s*\{?[23]\}?|[²³])?|mm|km|kg|gm|ml|m\s*(?:\^\s*\{?[23]\}?|[²³])|m\s*\/\s*s\s*(?:\^\s*\{?2\}?|²)?)(?![A-Za-z])/g;
 const ENGLISH_TEXT_WRAPPED_UNIT =
   /(\$|\\dots|\\ldots|\.\.\.|[0-9٠-٩])\s*\\(?:text|mathrm)\{\s*(cm[²³23]?|mm|km|kg|gm|g|ml|l|L|m[²³23]?)\s*\}/g;
 const ENGLISH_STANDALONE_METER =
-  /(\$|\\dots|\\ldots|\.\.\.|[0-9٠-٩])[ \t]+([mM])(?=(?:[\s=،,.:;!?)\]$]|$))(?!\s*\()/g;
+  /([0-9٠-٩]|\\dots|\\ldots|\.\.\.)[ \t]+([mM])(?=(?:[\s=،,.:;!?)\]$]|$))(?!\s*\()/g;
 const ENDS_LIKE_A_NUMBER = /(?:[0-9٠-٩}\)]|\\dots|\\ldots|\.\.\.)\s*$/;
 
 /** `cm^2` ← `سم²` وغيرها، قبل أي معالجة أخرى. */
 export function convertEnglishUnitsToArabic(line: string): string {
+  const replaceUnit = (lead: string, unit: string) => {
+    const key = unit.replace(/\s/g, "").replace(/[\^{}]/g, "").toLowerCase();
+    return `${lead} ${ENGLISH_UNIT_KEY_TO_ARABIC[key] ?? unit}`;
+  };
   return line
     .replace(ENGLISH_TEXT_WRAPPED_UNIT, (_m, lead: string, unit: string) => {
       const key = unit.replace(/\s/g, "").replace(/[\^{}]/g, "").toLowerCase();
       return `${lead} \\text{${ENGLISH_UNIT_KEY_TO_ARABIC[key] ?? unit}}`;
     })
-    .replace(ENGLISH_UNIT, (_m, lead: string, unit: string) => {
-      const key = unit.replace(/\s/g, "").replace(/[\^{}]/g, "").toLowerCase();
-      return `${lead} ${ENGLISH_UNIT_KEY_TO_ARABIC[key] ?? unit}`;
-    })
+    .replace(ENGLISH_UNIT_AFTER_DIGIT, (_m, lead: string, unit: string) => replaceUnit(lead, unit))
+    .replace(ENGLISH_UNIT_LOWER_AFTER_PLACEHOLDER, (_m, lead: string, unit: string) => replaceUnit(lead, unit))
     .replace(ENGLISH_STANDALONE_METER, (_m, lead: string) => `${lead} م`);
 }
 

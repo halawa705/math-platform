@@ -9,7 +9,6 @@ import type { GoldenCorpusCase } from "./golden-corpus-case-types-ssot";
 import type { BaselineCaseResult, BaselineOutcomeKind, BaselineRiskFlag } from "./baseline-case-outcome-classifier";
 import { compareFigureAgainstExpectedSpec } from "./golden-figure-spec-comparator";
 import { matchGeometryWithDiagnostics } from "../natural-arabic-geometry-matcher";
-import { combineProblemAndTagGeometryContext } from "../description-intake/problem-geometry-context-extractor";
 
 export const MODULE_ID_BASELINE_COVERAGE_REPORT_AGGREGATOR =
   "baseline_coverage_report_aggregator" as const;
@@ -38,6 +37,11 @@ export interface BaselineSummary {
   /** المطابقة الآلية لمواصفات الأشكال المرجعية (expectedFigureSpec) */
   readonly specMatchedCount: number;
   readonly specTotalCount: number;
+  readonly specMismatches: readonly {
+    readonly caseId: string;
+    readonly summaryText: string;
+    readonly discrepancies: readonly string[];
+  }[];
 }
 
 const OUTCOMES: readonly BaselineOutcomeKind[] = [
@@ -118,17 +122,29 @@ export function summarizeBaselineResults(
   // فحص مقارنة المواصفات المرجعية الآلية
   let specMatchedCount = 0;
   let specTotalCount = 0;
+  const specMismatches: {
+    readonly caseId: string;
+    readonly summaryText: string;
+    readonly discrepancies: readonly string[];
+  }[] = [];
   for (const c of cases) {
     if (c.expectedFigureSpec) {
       specTotalCount++;
-      const combined = combineProblemAndTagGeometryContext(c.geometryRaw || undefined, c.problemText);
-      const diag = matchGeometryWithDiagnostics(combined, `sum_${c.id}`, "arabic");
+      const diag = matchGeometryWithDiagnostics(
+        {
+          geometryTag: c.geometryRaw || undefined,
+          problemPrompt: c.problemText,
+        },
+        `sum_${c.id}`,
+        "arabic"
+      );
       const report = compareFigureAgainstExpectedSpec({
         figure: diag.figure,
         expectedOutcome: c.expectedOutcome,
         expectedSpec: c.expectedFigureSpec,
       });
       if (report.matches) specMatchedCount++;
+      else specMismatches.push({ caseId: c.id, summaryText: report.summaryText, discrepancies: report.discrepancies });
     }
   }
 
@@ -145,5 +161,6 @@ export function summarizeBaselineResults(
     humanAccuracy: reviewed === 0 ? null : Number((correct / reviewed).toFixed(3)),
     specMatchedCount,
     specTotalCount,
+    specMismatches,
   };
 }

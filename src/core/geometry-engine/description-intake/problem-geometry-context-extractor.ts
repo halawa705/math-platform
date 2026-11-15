@@ -237,6 +237,19 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   if (rightTriM) facts.push(`مثلث ${rightTriM[1]} قائم في ${rightTriM[2]}`);
   const isoTriM = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
   if (isoTriM) facts.push(`مثلث ${isoTriM[1]} متساوي الساقين`);
+
+  // 11. استخراج الارتفاع الساقط على القاعدة (مثل: الارتفاع أ د في المثلث أ ب جـ)
+  const altArM = clean.match(/الارتفاع\s+([أ-ي]ـ?)\s*([أ-ي]ـ?)(?![أ-ي])[\s\S]{0,30}?(?:المثلث|مثلث)\s+([أ-ي]ـ?\s*[أ-ي]ـ?\s*[أ-ي]ـ?)/i);
+  if (altArM) {
+    const triPts = altArM[3].replace(/\s+/g, " ").trim().split(" ");
+    const apex = altArM[1].trim();
+    const foot = altArM[2].trim();
+    const basePts = triPts.filter((p) => p !== apex);
+    if (basePts.length === 2) {
+      const perpFact = `${apex} ${foot} ⊥ ${basePts[0]} ${basePts[1]}`;
+      if (!facts.includes(perpFact)) facts.push(perpFact);
+    }
+  }
   return facts;
 }
 
@@ -250,45 +263,26 @@ export function combineProblemAndTagGeometryContext(tagDescription?: string, pro
   const hasTrig = Boolean(effectivePrompt && /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية/i.test(effectivePrompt));
   const isQuadOrMid = Boolean(effectivePrompt && !hasTrig && /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف)/.test(effectivePrompt));
   if (effectivePrompt && !isQuadOrMid && matchPrepGrade3TrigonometryFigure(effectivePrompt)) {
-    return effectivePrompt
-      .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
-      .replace(/[\[\]]/g, "")
-      .trim();
+    return effectivePrompt.replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ").replace(/[\[\]]/g, "").trim();
   }
   if (effectivePrompt && effectiveTag && !isQuadOrMid && matchPrepGrade3TrigonometryFigure(`${effectivePrompt} ؛ ${effectiveTag}`)) {
-    const cleanPromptForTrig = effectivePrompt
-      .replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ")
-      .replace(/[\[\]]/g, "")
-      .trim();
+    const cleanPromptForTrig = effectivePrompt.replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ").replace(/[\[\]]/g, "").trim();
     return `${cleanPromptForTrig} ؛ ${effectiveTag}`;
   }
 
   const parts: string[] = [];
-
-  // إذا وُجد نص المسألة، نستخرج منه كل الحقائق الحية (مع استبعاد ترويسات أطر الاختبارات الآلية)
-  if (
-    effectivePrompt &&
-    !/^\d+\.\s*(?:matches|projects|supports|verifies|renders)\b/i.test(effectivePrompt)
-  ) {
-    const promptFacts = extractGeometryFactsFromPrompt(effectivePrompt);
-    parts.push(...promptFacts);
+  if (effectivePrompt && !/^\d+\.\s*(?:matches|projects|supports|verifies|renders)\b/i.test(effectivePrompt)) {
+    parts.push(...extractGeometryFactsFromPrompt(effectivePrompt));
   }
-
-  // إذا وُجد وسم رسم، ندمج فقراته غير المكررة بعد فك الأغلفة وتوحيد الصيغة
   if (effectiveTag) {
-    const cleanTag = unwrapStructuredCategoryHeaders(
-      convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, "")
-    );
+    const cleanTag = unwrapStructuredCategoryHeaders(convertGeometryLatexToPlainText(effectiveTag).replace(/(?<=\d),(?=\d{3}(?!\d))/g, ""));
     mergeCleanedTagClausesIntoParts(cleanTag, parts);
   }
   if (!effectiveTag && effectivePrompt) {
-    for (const vf of synthesizeVerbalGeometryFacts(effectivePrompt, parts)) {
-      if (!parts.includes(vf)) parts.push(vf);
-    }
+    for (const vf of synthesizeVerbalGeometryFacts(effectivePrompt, parts)) if (!parts.includes(vf)) parts.push(vf);
   }
   const sanitized = parts.map((p) => p.replace(/[\[\]]/g, "").trim()).filter(Boolean);
   if (sanitized.length === 0) return convertGeometryLatexToPlainText(effectiveTag || effectivePrompt || "").replace(/[\[\]]/g, "").trim();
   const simFacts = sanitized.filter((p) => p.includes("~") || p.includes("≅") || p.includes("تشابه"));
-  const otherFacts = sanitized.filter((p) => !simFacts.includes(p));
-  return Array.from(new Set([...simFacts, ...otherFacts])).join(" ؛ ");
+  return Array.from(new Set([...simFacts, ...sanitized.filter((p) => !simFacts.includes(p))])).join(" ؛ ");
 }

@@ -80,9 +80,10 @@ export function buildParametricSimilarityFigure(
 ): CanonicalGeometryFigureIR | undefined {
   if (!description || !description.trim()) return undefined;
 
+  const rawPlain = convertGeometryLatexToPlainText(description);
   const enriched = combineProblemAndTagGeometryContext(undefined, description);
   const clean = convertGeometryLatexToPlainText(enriched || description);
-  const topologyRes = classifyCurriculumGeometryTopology(clean);
+  const topologyRes = classifyCurriculumGeometryTopology(`${rawPlain} ؛ ${clean}`);
   if (topologyRes.topology === "unknown_topology") return undefined;
 
   // استخراج الحقائق من الوصف المهيكل
@@ -100,16 +101,22 @@ export function buildParametricSimilarityFigure(
   const tri2 = toTri3(topologyRes.secondaryTri || simInfo?.tri2, ["D", "E", "F"]);
 
   switch (topologyRes.topology) {
-    case "disjoint_two_triangles":
+    case "disjoint_two_triangles": {
+      const ratioLabelMatch = `${rawPlain} ؛ ${clean}`.match(
+        /نسبة\s*(?:ال)?تشابه(?:\s*بينهما)?\s*(?:تساوي|=|هي)?\s*\(?\s*(\d+)\s*\)?\s*\/\s*\(?\s*(\d+)\s*\)?/i
+      );
+      const ratioLabel = ratioLabelMatch ? `${ratioLabelMatch[1]}/${ratioLabelMatch[2]}` : undefined;
       return buildDisjointSimilarTrianglesFigure({
         figureId,
         notationLanguage,
         tri1,
         tri2,
         ratio: simInfo?.ratio,
+        ratioLabel,
         givenLengths: lengths,
         givenAngles: angles,
       });
+    }
 
     case "thales_parallel_in_triangle": {
       const commonApex = topologyRes.sharedVertices[0] || tri1[0] || "A";

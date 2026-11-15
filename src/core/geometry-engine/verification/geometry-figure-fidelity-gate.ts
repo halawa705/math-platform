@@ -165,8 +165,9 @@ export function checkFigureFidelityToPrompt(
         continue;
       }
 
+      const isEquilateral = /مثلث\s*متساوي\s*الأضلاع/i.test(rawPromptOrDescription);
       const pureDigits = labelText.replace(/[^0-9.]/g, "");
-      if (pureDigits && pureDigits !== "90" && !promptNumbers.has(pureDigits)) {
+      if (pureDigits && pureDigits !== "90" && !(pureDigits === "60" && isEquilateral) && !promptNumbers.has(pureDigits)) {
         alienNumbers.push(ang.degreesLabel);
       }
     }

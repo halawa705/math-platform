@@ -101,11 +101,11 @@ export function buildParallelogramProofDiagonalsCMBFigure(opts: PrepGrade1Parall
 export function buildParallelogramProofConsecutiveAngles65115Figure(opts: PrepGrade1ParallelogramProofOptions): CanonicalGeometryFigureIR {
   const notation = opts.notationLanguage || "english";
 
-  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 7, y: 8 } };
-  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 8.5, y: 3 } };
-  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 3, y: 3 } };
-  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.5, y: 8 } };
-  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5, y: 3 } };
+  const vA: CanonicalVertexNode = { id: `${opts.figureId}_vA`, label: localizeGeometricVertexLabelSSOT("A", notation), position: { x: 7.1, y: 6.08 } };
+  const vB: CanonicalVertexNode = { id: `${opts.figureId}_vB`, label: localizeGeometricVertexLabelSSOT("B", notation), position: { x: 9, y: 2 } };
+  const vC: CanonicalVertexNode = { id: `${opts.figureId}_vC`, label: localizeGeometricVertexLabelSSOT("C", notation), position: { x: 3, y: 2 } };
+  const vD: CanonicalVertexNode = { id: `${opts.figureId}_vD`, label: localizeGeometricVertexLabelSSOT("D", notation), position: { x: 1.1, y: 6.08 } };
+  const vE: CanonicalVertexNode = { id: `${opts.figureId}_vE`, label: localizeGeometricVertexLabelSSOT("E", notation), position: { x: 5.61, y: 2 } };
 
   const segments: CanonicalSegmentNode[] = [
     { id: `${opts.figureId}_sDA`, fromVertexId: vD.id, toVertexId: vA.id },
@@ -126,7 +126,7 @@ export function buildParallelogramProofConsecutiveAngles65115Figure(opts: PrepGr
     angles: [
       { id: `${opts.figureId}_angD`, vertexId: vD.id, arm1VertexId: vC.id, arm2VertexId: vA.id, degrees: 65, degreesLabel: "65°" },
       { id: `${opts.figureId}_angC`, vertexId: vC.id, arm1VertexId: vD.id, arm2VertexId: vB.id, degrees: 115, degreesLabel: "115°" },
-      { id: `${opts.figureId}_angAEB`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vC.id, degrees: 70, degreesLabel: "70°" },
+      { id: `${opts.figureId}_angAEB`, vertexId: vE.id, arm1VertexId: vA.id, arm2VertexId: vB.id, degrees: 70, degreesLabel: "70°" },
       { id: `${opts.figureId}_angEAB`, vertexId: vA.id, arm1VertexId: vE.id, arm2VertexId: vB.id, degrees: 45, degreesLabel: "45°" },
     ],
   };

@@ -127,7 +127,7 @@ export function buildCongruenceSharedApexAFigure(
     { id: `${opts.figureId}_sAE`, fromVertexId: vA.id, toVertexId: vE.id, lengthLabel: { value: 4, unit: "سم" } },
     { id: `${opts.figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id },
     { id: `${opts.figureId}_sDE`, fromVertexId: vD.id, toVertexId: vE.id },
-    { id: `${opts.figureId}_sDC`, fromVertexId: vD.id, toVertexId: vC.id, lengthLabel: { value: 1, unit: "سم" } },
+    { id: `${opts.figureId}_sDC`, fromVertexId: vD.id, toVertexId: vC.id },
   ];
 
   const angles: CanonicalAngleNode[] = [

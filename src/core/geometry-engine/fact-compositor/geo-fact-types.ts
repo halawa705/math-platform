@@ -3,6 +3,7 @@
  * @description مفردات «الحقائق الهندسية» المغلقة التي يفهمها المركّب. كل حقيقة سطر واحد قصير.
  */
 import type { ArabicMathUnit } from "@/core/ssot/numeral-and-unit-ssot";
+import type { LinearEntityKind } from "../description-intake/linear-entity-kind-extractor";
 
 export const MODULE_ID_GEO_FACT_TYPES = "geo_fact_types" as const;
 
@@ -17,21 +18,22 @@ export type GeoFact =
   | { readonly k: "onCircle"; readonly labels: readonly string[] }
   | { readonly k: "chord"; readonly seg: Seg }
   | { readonly k: "diameter"; readonly seg: Seg }
-  | { readonly k: "tangent"; readonly seg: Seg; readonly at: string }
+  | { readonly k: "tangent"; readonly seg: Seg; readonly at: string; readonly lineKind?: LinearEntityKind }
   | { readonly k: "length"; readonly seg: Seg; readonly text: string; readonly numeric?: number; readonly symbolic?: boolean; readonly unit?: ArabicMathUnit }
   | { readonly k: "areaOnSide"; readonly seg: Seg; readonly area: number; readonly text: string; readonly unit?: ArabicMathUnit }
   | { readonly k: "equal"; readonly a: Seg; readonly b: Seg }
   | { readonly k: "angle"; readonly arms?: readonly [string, string, string]; readonly vertex: string; readonly deg?: number; readonly text?: string; readonly right?: boolean }
   | { readonly k: "pointOn"; readonly p: string; readonly seg: Seg }
   | { readonly k: "midpoint"; readonly p: string; readonly seg: Seg }
-  | { readonly k: "parallel"; readonly a: Seg; readonly b: Seg }
-  | { readonly k: "perp"; readonly a: Seg; readonly b: Seg; readonly foot?: string }
-  | { readonly k: "bisector"; readonly seg: Seg; readonly vertex: string }
+  | { readonly k: "parallel"; readonly a: Seg; readonly b: Seg; readonly lineKindA?: LinearEntityKind; readonly lineKindB?: LinearEntityKind }
+  | { readonly k: "perp"; readonly a: Seg; readonly b: Seg; readonly foot?: string; readonly lineKindA?: LinearEntityKind; readonly lineKindB?: LinearEntityKind }
+  | { readonly k: "bisector"; readonly seg: Seg; readonly vertex: string; readonly lineKind?: LinearEntityKind }
   | { readonly k: "median"; readonly seg: Seg }
-  | { readonly k: "intersect"; readonly a: Seg; readonly b: Seg; readonly p: string }
+  | { readonly k: "intersect"; readonly a: Seg; readonly b: Seg; readonly p: string; readonly lineKindA?: LinearEntityKind; readonly lineKindB?: LinearEntityKind }
   | { readonly k: "diagonalsMeet"; readonly p: string }
-  | { readonly k: "draw"; readonly seg: Seg }
-  | { readonly k: "extend"; readonly from: string; readonly through: string; readonly to: string }
+  | { readonly k: "draw"; readonly seg: Seg; readonly lineKind?: LinearEntityKind }
+  | { readonly k: "extend"; readonly from: string; readonly through: string; readonly to: string; readonly lineKind?: LinearEntityKind }
+  | { readonly k: "collinear"; readonly labels: readonly string[] }
   | { readonly k: "similarity"; readonly tri1: readonly string[]; readonly tri2: readonly string[]; readonly ratio?: number }
   | { readonly k: "congruence"; readonly tri1: readonly string[]; readonly tri2: readonly string[] }
   | { readonly k: "ratio"; readonly a: Seg; readonly b: Seg; readonly num: number; readonly den: number }

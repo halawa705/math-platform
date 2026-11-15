@@ -196,19 +196,25 @@ export function parseSolvedExamplesFromSection(
     .filter((b) => /(?:المثال|مثال|نص\s*المسألة|خطوات\s*الحل|الحل)/i.test(b));
 
   return (exSplits.length > 0 ? exSplits : [cleanSection]).map((exBody) => {
-    const promptMatch = exBody.match(/(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان\s*[:：]|الخطوة\s*[0-9٠-٩:]|الناتج\s*النهائي|المثال|$))/i);
+    const promptMatch = exBody.match(/(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*([\s\S]*?)(?=(?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان(?:\s*والخطوات)?\s*[:：]|الخطوة\s*[0-9٠-٩:]|الناتج\s*النهائي|المثال|$))/i);
     const rawProblem = promptMatch?.[1] ||
-      exBody.split(/(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان\s*[:：]|الخطوة\s*[0-9٠-٩:]))/i)[0]?.trim() || concept || ideaTitle;
+      exBody.split(/(?=(?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل\s*[:：]|البرهان(?:\s*والخطوات)?\s*[:：]|الخطوة\s*[0-9٠-٩:]))/i)[0]?.trim() || concept || ideaTitle;
     const baseProblem = rawProblem
       .replace(/^(?:#{1,6}\s*)?(?:\*\*|__)?(?:المثال\s*\S+|مثال\s*\S+)(?:\*\*|__)?\s*|^(?:\|\s*)?معرف\s*المثال\s*:\s*\S+\s*|^(?:\*\*|__)?(?:نص\s*المسألة|نص\s*المثال|المسألة)(?:\*\*|__)?\s*[:：]\s*/gi, "")
       .split(/(?=(?:المثال|مثال|معرف\s*المثال))/i)[0].trim();
     const cleanProblem = cleanStudentFacingMathPromptSSOT(baseProblem);
     const rawExampleChoices = parseChoicesTupleFromBlock(cleanProblem);
     const finalPrompt = rawExampleChoices ? stripInlineChoicesFromPromptText(cleanProblem) : cleanProblem;
-    const stepsMatch = exBody.match(/(?:\*\*|__)?(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|خطوات_الحل|الحل(?:\s*بالتفصيل)?(?:\*\*|__)?\s*[:：]|البرهان(?:\s*والخطوات)?(?:\*\*|__)?\s*[:：])(?:\*\*|__)?\s*[:：]?\s*([\s\S]*?)(?=(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i);
+    const stepsMatch = exBody.match(/(?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|خطوات_الحل|الحل(?:\s*بالتفصيل)?(?:\*\*|__)?\s*[:：]|البرهان(?:\s*والخطوات)?(?:\*\*|__)?\s*[:：])(?:\*\*|__)?\s*[:：]?\s*([\s\S]*?)(?=(?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*|__)?(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i);
     const rawFinal = exBody.match(/(?:\*\*|__)?(?:الناتج\s*النهائي(?:\s*المعتمد)?|الإجابة\s*النهائية)(?:\*\*|__)?\s*[:：]\s*([^\r\n]+)/i)?.[1]?.replace(/^\*\*|\*\*$/g, "").trim() || "";
+    const stepsBoundaryIdx = exBody.search(/(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل(?:\s*بالتفصيل)?\s*[:：]|البرهان(?:\s*والخطوات)?\s*[:：])/i);
+    const stepsSearchArea = stepsMatch?.[1]
+      ? ""
+      : stepsBoundaryIdx !== -1
+        ? exBody.slice(stepsBoundaryIdx)
+        : exBody.slice(rawProblem.length);
     const fallbackStepsLines = !stepsMatch?.[1]
-      ? exBody
+      ? stepsSearchArea
           .split(/\r?\n/)
           .filter((line) => /^\s*(?:\d+[.\-–)]|\([0-9٠-٩]+\)|(?:الخطوة|خطوة)\s*\S+)\s+/.test(line))
           .join("\n")
@@ -256,31 +262,13 @@ export function buildStage2PrintableItem(params: {
   const graphSpec = graphMatch?.[1] ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined : undefined;
   const geoMatch = !graphMatch ? params.block.rawText.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i) : null;
   const hasExplicitTag = Boolean(geoMatch?.[1]);
-  const hasFigureRef =
-    hasExplicitTag ||
-    shouldTriggerGeometryDiagramForPrompt({
-      promptArabic: rawPrompt,
-      hasExplicitTag,
-      branchId: params.branchId ?? "plane_geometry",
-      gradeId: params.gradeId,
-      stage: params.stage,
-      lessonTitleArabic: params.lessonTitleArabic,
-    });
-  const combinedGeo = !graphSpec && hasFigureRef
-    ? combineProblemAndTagGeometryContext(geoMatch?.[1], rawPrompt)
-    : "";
-  const diagramAllowed = params.branchId
-    ? isDiagramJustifiedForQuestion({
-        promptArabic: rawPrompt,
-        rawDiagramTagText: combinedGeo,
-        hasExplicitTag,
-        branchId: params.branchId,
-        gradeId: params.gradeId,
-        stage: params.stage,
-        lessonTitleArabic: params.lessonTitleArabic,
-      })
-    : true;
-  const geoDiag = diagramAllowed && combinedGeo ? matchGeometryWithDiagnostics(combinedGeo, `${params.id}_geo`) : undefined;
+  const baseGuard = { promptArabic: rawPrompt, hasExplicitTag, branchId: params.branchId ?? "plane_geometry", gradeId: params.gradeId, stage: params.stage, lessonTitleArabic: params.lessonTitleArabic };
+  const hasFigureRef = hasExplicitTag || shouldTriggerGeometryDiagramForPrompt(baseGuard);
+  const combinedGeo = !graphSpec && hasFigureRef ? combineProblemAndTagGeometryContext(geoMatch?.[1], rawPrompt) : "";
+  const diagramAllowed = params.branchId ? isDiagramJustifiedForQuestion({ ...baseGuard, branchId: params.branchId, rawDiagramTagText: combinedGeo }) : true;
+  const geoDiag = diagramAllowed && combinedGeo
+    ? matchGeometryWithDiagnostics({ geometryTag: geoMatch?.[1]?.trim() || undefined, problemPrompt: rawPrompt }, `${params.id}_geo`)
+    : undefined;
   const geometryFigure = geoDiag?.figure;
   const figureDiagnosticsAr = geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
 

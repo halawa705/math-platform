@@ -42,6 +42,7 @@ export interface StudioContextRibbonBarProps {
 
 export default function StudioContextRibbonBar({
   selectedGradeId,
+  selectedBranchId,
   selectedUnitTitle,
   selectedLessonTitle,
   selectedLessonOrder = 15,
@@ -80,7 +81,13 @@ export default function StudioContextRibbonBar({
         onChangeLessonOrder?.(firstUnit.lessons[0].orderIndex);
       }
     } else {
-      const matchedUnit = loaded.find((u) => selectedUnitIds.includes(u.id)) || loaded[0];
+      const matchedUnit =
+        loaded.find((u) => selectedUnitIds.includes(u.id)) ||
+        loaded.find((u) => u.lessons.some((l) => selectedLessonIds.includes(l.id))) ||
+        loaded.find((u) => selectedUnitTitle && (u.titleArabic === selectedUnitTitle || u.titleArabic.includes(selectedUnitTitle))) ||
+        loaded.find((u) => selectedLessonTitle && u.lessons.some((l) => l.titleArabic === selectedLessonTitle)) ||
+        loaded.find((u) => u.branchId === selectedBranchId) ||
+        loaded[0];
       if (matchedUnit) {
         onChangeBranch(matchedUnit.branchId);
       }

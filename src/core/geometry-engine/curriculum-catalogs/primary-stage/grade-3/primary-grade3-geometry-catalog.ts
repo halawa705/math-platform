@@ -70,10 +70,26 @@ export function matchPrimaryGrade3GeometryFigure(
   }
 
   // 2. المحيط والمساحة على الشبكة التربيعية
-  if (/شبكة\s*تربيعية|وحدات\s*مربعة|محيط.*شبكة|مساحة.*شبكة/i.test(d)) {
-    const dimMatch = d.match(/(\d+)\s*(?:في|×|x)\s*(\d+)/i);
-    const sW = dimMatch ? Number(dimMatch[1]) : 4;
-    const sH = dimMatch ? Number(dimMatch[2]) : 3;
+  if (/شبكة\s*تربيعية|شبكة\s*مربعات|شبكة\s*(?:ال)?وحدات|وحدات\s*مربعة|محيط.*شبكة|مساحة.*شبكة/i.test(d)) {
+    const dimMatch =
+      d.match(/(\d+)\s*(?:في|×|x)\s*(\d+)/i) ||
+      d.match(/أبعاد[هـا]?\s*=?\s*(\d+)\s*(?:وحد(?:ة|ات)?\s*)?(?:و|،|×|في)\s*(\d+)/i);
+    const lenWidthMatch = d.match(/طول[هـا]?\s*=?\s*(\d+)[\s\S]{0,25}?عرض[هـا]?\s*=?\s*(\d+)/i);
+    const squareSideMatch = /مربع/.test(d) ? d.match(/طول\s*ضلع[هـا]?\s*=?\s*(\d+)/i) : null;
+    const sW = dimMatch
+      ? Number(dimMatch[1])
+      : lenWidthMatch
+      ? Number(lenWidthMatch[1])
+      : squareSideMatch
+      ? Number(squareSideMatch[1])
+      : 4;
+    const sH = dimMatch
+      ? Number(dimMatch[2])
+      : lenWidthMatch
+      ? Number(lenWidthMatch[2])
+      : squareSideMatch
+      ? Number(squareSideMatch[1])
+      : 3;
     return buildGrade3GridAreaFigure(
       {
         gridCols: Math.max(sW + 2, 6),

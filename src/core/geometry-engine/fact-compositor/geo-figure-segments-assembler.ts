@@ -5,6 +5,11 @@
  */
 
 import type { CanonicalAngleNode, CanonicalSegmentNode } from "@/core/ssot/geometry-archetype-ssot";
+import {
+  resolveSegmentLineSemantics,
+  type LinearEntityKind,
+  type LinearEntityKindMap,
+} from "../description-intake/linear-entity-kind-extractor";
 import type { GeoFact, Seg } from "./geo-fact-types";
 import { pairKey } from "./geo-label-utils";
 import type { PlacedPolygon } from "./geo-shape-placers";
@@ -17,6 +22,7 @@ export interface AssembledExtraSeg {
   readonly a: string;
   readonly b: string;
   readonly dashed?: boolean;
+  readonly lineKind?: LinearEntityKind;
 }
 
 export function resolveAngleFactHelper(params: {
@@ -107,18 +113,30 @@ export function assembleCanonicalFigureSegments(params: {
   ticks: ReadonlyMap<string, number>;
   parallelMarks: ReadonlyMap<string, number>;
   extras: readonly AssembledExtraSeg[];
+  linearKindMap?: LinearEntityKindMap;
 }): CanonicalSegmentNode[] {
-  const { figureId, polygons, points, host, lengths, ticks, parallelMarks, extras } = params;
+  const { figureId, polygons, points, host, lengths, ticks, parallelMarks, extras, linearKindMap } = params;
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const P = (k: string) => points.get(k);
   const segments: CanonicalSegmentNode[] = [];
   const seenSegPairs = new Set<string>();
 
-  const pushSeg = (a: string, b: string, baseKey: string, dashed?: boolean) => {
+  const pushSeg = (
+    a: string,
+    b: string,
+    baseKey: string,
+    dashed?: boolean,
+    explicitLineKind?: LinearEntityKind,
+    allowKindLookup = false
+  ) => {
     const pk = pairKey(a, b);
     if (seenSegPairs.has(pk)) return;
     seenSegPairs.add(pk);
     const len = lengths.get(pk);
+    const lineSem =
+      explicitLineKind || allowKindLookup
+        ? resolveSegmentLineSemantics(a, b, linearKindMap, explicitLineKind)
+        : {};
     segments.push({
       id: `${figureId}_s_${segments.length}`,
       fromVertexId: keyId(a),
@@ -136,6 +154,7 @@ export function assembleCanonicalFigureSegments(params: {
         ? { parallelArrows: parallelMarks.get(baseKey) as 1 | 2 }
         : {}),
       ...(dashed ? { strokeStyle: "dashed" as const } : {}),
+      ...lineSem,
     });
   };
 
@@ -157,6 +176,7 @@ export function assembleCanonicalFigureSegments(params: {
         !chain.some((u, j) => j + 1 < chain.length && lengths.has(pairKey(u, chain[j + 1])))
       ) {
         labeledFullSides.add(base);
+        seenSegPairs.add(base);
         const fullLen = lengths.get(base)!;
         segments.push({
           id: `${figureId}_s_${segments.length}`,
@@ -171,7 +191,7 @@ export function assembleCanonicalFigureSegments(params: {
     });
   }
   for (const e of extras) {
-    if (P(e.a) && P(e.b)) pushSeg(e.a, e.b, pairKey(e.a, e.b), e.dashed);
+    if (P(e.a) && P(e.b)) pushSeg(e.a, e.b, pairKey(e.a, e.b), e.dashed, e.lineKind, true);
   }
   return segments;
 }

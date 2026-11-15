@@ -194,6 +194,8 @@ export function matchPrimaryGrade4GeometryFigure(
   }
   // المجسمات (متوازي مستطيلات/مكعب) ليست أشكالاً مستوية: يرسمها محرك المجسمات لا هذا الكتالوج
   if (/متوازي\s*(?:ال)?مستطيلات|مكعب|مجسم/i.test(d)) return undefined;
+  // أشكال الشبكة التربيعية بالوحدات المربعة يتولاها كتالوج الصف الثالث الابتدائي دون تعارض
+  if (/شبكة\s*تربيعية|شبكة\s*مربعات|شبكة\s*الوحدات\s*المربعة|وحدات\s*مربعة/i.test(d)) return undefined;
 
   // 1. الأشكال المركبة (L, T, U مقلوب، مستطيلان ملتصقان، مقتطع)
   const compositeRes = matchGrade4CompositeFigure(d, { figureId, notationLanguage });

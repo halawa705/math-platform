@@ -116,7 +116,13 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         });
         const geoDiag =
           diagramAllowed && combinedGeo
-            ? matchGeometryWithDiagnostics(combinedGeo, `s1_g_${ideaIdx + 1}_${exIdx + 1}`)
+            ? matchGeometryWithDiagnostics(
+                {
+                  geometryTag: ex.geometryRaw || undefined,
+                  problemPrompt: ex.promptAr,
+                },
+                `s1_g_${ideaIdx + 1}_${exIdx + 1}`
+              )
             : undefined;
         const geoMatch = geoDiag?.figure;
         const figureDiagnosticsAr =

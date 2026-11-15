@@ -4,6 +4,8 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً (< 120 سطراً وفق AGENTS.md).
  */
 
+import { extractPromptMediansAndRaysFacts } from "./prompt-medians-and-rays-extractor";
+
 export const MODULE_ID_PROMPT_MIDPOINT_AND_QUAD_EXTRACTOR =
   "prompt_midpoint_and_quad_extractor" as const;
 
@@ -203,6 +205,10 @@ export function extractPromptQuadMidpointAndMeasureFacts(
     );
   }
 
+  for (const mf of extractPromptMediansAndRaysFacts(normClean, normAssert)) {
+    if (!facts.includes(mf)) facts.push(mf);
+  }
+
   // 6. مستقيم أو شعاع يقطع ضلعاً في نقطة، أو توازي يقطع ضلعاً في نقطة (داخل مضلع معلن فقط، لتجنب قواطع التوازي الصرفة)
   const hasDeclaredPolygon = /(?:مثلث|△|Δ|شبه\s+منحرف|متوازي\s+أضلاع|مستطيل|مربع|معين|شكل\s+رباعي)/.test(
     normClean
@@ -243,6 +249,7 @@ export function mergeCleanedTagClausesIntoParts(
   );
   const tagClauses = normalizedTag
     .replace(/(تصنع\s+زوايا\s+[^;؛\n]+)/g, (m) => m.replace(/[,،]/g, "§COMMA§"))
+    .replace(/((?:النقط|النقاط)\s+[^؛;\n.]*?على\s+استقامة\s+واحدة)/g, (m) => m.replace(/[,،]/g, " "))
     .split(/\s*(?:[;؛\n]+|[,،]+(?![^()]*\)))\s*/)
     .map((c) => c.replace(/§COMMA§/g, "،").replace(/[\[\]]/g, "").trim())
     .filter(Boolean);

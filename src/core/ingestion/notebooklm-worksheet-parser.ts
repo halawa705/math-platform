@@ -9,16 +9,10 @@
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
-import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
-import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
-import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { detectAndBuildAreaModelSvg } from "../geometry-engine/arithmetic-area-model/area-model-arithmetic-svg-builder";
 import { synthesizeEmptyMcqChoices } from "./mcq-empty-choice-synthesizer";
-import {
-  isDiagramJustifiedForQuestion,
-  shouldTriggerGeometryDiagramForPrompt,
-  type CurriculumStageKind,
-} from "./unsolicited-diagram-guard";
+import { type CurriculumStageKind } from "./unsolicited-diagram-guard";
+import { resolveWorksheetItemDiagram } from "./notebooklm-worksheet-diagram-matcher";
 import {
   mergeLogicalSolutionSteps,
   parseChoicesTupleFromBlock,
@@ -217,36 +211,9 @@ export function parseNotebookLMWorksheetResponse(
 
     // فحص نموذج مساحة المستطيل أولاً لتفادي الأشكال الإقليدية الخاطئة
     const areaModelSvg = detectAndBuildAreaModelSvg(fullPrompt);
-
-    let geoMatch;
-    let graphSpec;
-    if (!areaModelSvg) {
-      const hasExplicitTag = Boolean(ex.diagramDesc);
-      const shouldTryGeo =
-        hasExplicitTag ||
-        shouldTriggerGeometryDiagramForPrompt({
-          promptArabic: ex.examplePrompt,
-          hasExplicitTag: false,
-          branchId,
-          gradeId: params.gradeId,
-          stage: params.stage,
-          lessonTitleArabic,
-        });
-      const diagCombined = shouldTryGeo
-        ? combineProblemAndTagGeometryContext(ex.diagramDesc, ex.examplePrompt)
-        : undefined;
-      const diagramAllowed = isDiagramJustifiedForQuestion({
-        promptArabic: ex.examplePrompt,
-        rawDiagramTagText: diagCombined || ex.diagramDesc,
-        hasExplicitTag,
-        branchId,
-        gradeId: params.gradeId,
-        stage: params.stage,
-        lessonTitleArabic,
-      });
-      geoMatch = diagramAllowed && diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
-      graphSpec = diagramAllowed && ex.diagramDesc ? parseCartesianGraphDescription(ex.diagramDesc) : undefined;
-    }
+    const diag = !areaModelSvg
+      ? resolveWorksheetItemDiagram({ promptText: ex.examplePrompt, diagramDesc: ex.diagramDesc, branchId, gradeId: params.gradeId, stage: params.stage, lessonTitleArabic })
+      : {};
 
     output.push({
       id: `ws-concept-${idx + 1}`,
@@ -260,8 +227,8 @@ export function parseNotebookLMWorksheetResponse(
       citationBadgeAr: `💡 مثال محلول: ${ex.conceptTitle}`,
       isWorkedExample: true,
       rawSvgMarkup: areaModelSvg ?? undefined,
-      geometryFigure: geoMatch?.figure,
-      graphSpec: graphSpec ?? undefined,
+      geometryFigure: diag.geometryFigure,
+      graphSpec: diag.graphSpec,
       ideaBannerTitleAr: isFirst ? cleanTitle : undefined,
       conceptExplanationAr: isFirst ? explanationText : undefined,
       framedRuleAr: isFirst ? framedRuleText : undefined,
@@ -272,39 +239,10 @@ export function parseNotebookLMWorksheetResponse(
   questions.forEach((q, idx) => {
     const isFirstQuestion = conceptExamples.length === 0 && idx === 0;
     const fullPrompt = `${q.promptText} ${q.diagramDesc || ""}`;
-
-    // فحص نموذج مساحة المستطيل
     const areaModelSvg = detectAndBuildAreaModelSvg(fullPrompt);
-
-    let geoMatch;
-    let graphSpec;
-    if (!areaModelSvg) {
-      const hasExplicitTag = Boolean(q.diagramDesc);
-      const shouldTryGeo =
-        hasExplicitTag ||
-        shouldTriggerGeometryDiagramForPrompt({
-          promptArabic: q.promptText,
-          hasExplicitTag: false,
-          branchId,
-          gradeId: params.gradeId,
-          stage: params.stage,
-          lessonTitleArabic,
-        });
-      const diagCombined = shouldTryGeo
-        ? combineProblemAndTagGeometryContext(q.diagramDesc, q.promptText)
-        : undefined;
-      const diagramAllowed = isDiagramJustifiedForQuestion({
-        promptArabic: q.promptText,
-        rawDiagramTagText: diagCombined || q.diagramDesc,
-        hasExplicitTag,
-        branchId,
-        gradeId: params.gradeId,
-        stage: params.stage,
-        lessonTitleArabic,
-      });
-      geoMatch = diagramAllowed && diagCombined ? matchGeometryWithDiagnostics(diagCombined, branchId) : undefined;
-      graphSpec = diagramAllowed && q.diagramDesc ? parseCartesianGraphDescription(q.diagramDesc) : undefined;
-    }
+    const diag = !areaModelSvg
+      ? resolveWorksheetItemDiagram({ promptText: q.promptText, diagramDesc: q.diagramDesc, branchId, gradeId: params.gradeId, stage: params.stage, lessonTitleArabic })
+      : {};
 
     const isEssay = q.kind === "essay";
 
@@ -322,8 +260,8 @@ export function parseNotebookLMWorksheetResponse(
       solutionStepsAr: q.steps,
       studentDrillPromptAr: isEssay && includeAnswerLines ? "مساحة إجابة الطالب:" : undefined,
       rawSvgMarkup: areaModelSvg ?? undefined,
-      geometryFigure: geoMatch?.figure,
-      graphSpec: graphSpec ?? undefined,
+      geometryFigure: diag.geometryFigure,
+      graphSpec: diag.graphSpec,
       ideaBannerTitleAr: isFirstQuestion ? cleanTitle : undefined,
       conceptExplanationAr: isFirstQuestion ? explanationText : undefined,
       framedRuleAr: isFirstQuestion ? framedRuleText : undefined,

@@ -1,13 +1,18 @@
 /**
  * @file angle-fan-fact-extractor.ts
  * @description مستخلص حقائق عائلة مراوح الأشعة والزوايا (Angle-Fan Fact Extractor):
- * يفهم كلاً من وسوم `[رسم هندسي: ...]` ونصوص المسائل الكاملة من NotebookLM (بما فيها LaTeX مثل `\cap`، `\vec`،
- * `\overleftrightarrow`، وجمع الزوايا `ق(∠...) + ق(∠...) = 140°`) ويحولها إلى مواصفة مهيكلة (`AngleFanSpec`).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 295 سطراً).
+ * يفهم وسوم `[رسم هندسي: ...]` ونصوص المسائل الكاملة من NotebookLM ويحوّلها إلى مواصفة (`AngleFanSpec`).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 300 سطراً).
  */
 
-import { convertGeometryLatexToPlainText } from "../description-intake/geometry-latex-to-plain-normalizer";
-import { normalizeLabelKey, parseLabelList } from "../fact-compositor/geo-label-utils";
+import { normalizeLabelKey } from "../fact-compositor/geo-label-utils";
+import {
+  extractCleanKeys,
+  splitAngleFanClauses,
+  tryParseCollinearAndSumClause,
+  tryParseFanAndIntersectClause,
+  type AngleFanBuildCtx,
+} from "./angle-fan-clause-parsers";
 import type {
   AngleFanBetweenFact,
   AngleFanBisectorFact,
@@ -17,72 +22,16 @@ import type {
 } from "./angle-fan-fact-types";
 import { parseLinearAngleExpression } from "./angle-linear-expression-parser";
 
+export { splitAngleFanClauses } from "./angle-fan-clause-parsers";
+
 export const MODULE_ID_ANGLE_FAN_FACT_EXTRACTOR = "angle_fan_fact_extractor" as const;
 
 const POLYGON_OR_OTHER_FAMILY_GUARD =
   /(?:^|[\s،؛;])(مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|متوازي\s*مستطيلات|شبه\s*منحرف|دائرة|سداسي|خماسي|هرم|مخروط|أسطوانة|مكعب|خط\s*الأعداد|مستوى\s*إحداثي|دالة\s*تربيعية)(?:$|[\s،؛;])|[△▱⊙]/i;
 
-const GOAL_CLAUSE_RE =
-  /^(?:ثم\s+)?[فو]?\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|استنتج|علل|بين\s*أن|حدد|اذكر|ما\s*(?:هو|هي|قيمة|نوع)|المطلوب|هل\b)/;
-
-function extractCleanKeys(rawSegmentText: string): string[] | null {
-  const stripped = rawSegmentText
-    .replace(/\(\s*\d+\s*°?\s*\)/g, " ")
-    .replace(
-      /(?:الشعاعان|الشعاعين|الشعاع|الأشعة|المستقيمان|المستقيمين|للمستقيم|بالمستقيم|المستقيم|لمستقيم|القطعة|شعاعين|شعاع|مستقيم|النقطة|نقطة|الزاوية|زاوية|ق\s*\(|∠|\)|\{|\})/g,
-      " "
-    )
-    .replace(/\s+/g, " ")
-    .trim();
-  return parseLabelList(stripped);
-}
-
-/**
- * يقسم النص الخام (سواء كان وسم رسم هندسي أو نص مسألة كاملة مع LaTeX) إلى جمل حقائق نظيفة.
- */
-export function splitAngleFanClauses(rawDescription: string): string[] {
-  let plain = convertGeometryLatexToPlainText(rawDescription)
-    .replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:/gi, " ؛ ")
-    .replace(/(?:^|[\s؛;])رسم\s*(?:هندسي|توضيحي|بياني)\s*:/gi, " ؛ ")
-    .replace(/\]\s*(?:\|.*)?$/g, " ")
-    .replace(/\]/g, " ؛ ")
-    .replace(/\|\s*(?:معرف|نوع)\s*[^؛;\n]*/g, " ")
-    .replace(/\|\s*$/g, " ")
-    .replace(/(?<!\d)\.(?!\d)/g, " ؛ ")
-    .replace(/(?:في\s+)?الشكل\s+المقابل\s*[،,:]?/g, " ؛ ")
-    .replace(/(?:^|[،؛;\s])(?:إذا\s+كان|اذا\s+كان|حيث|بحيث|وكان|علماً\s+بأن|علما\s+بأن)\s+/g, " ؛ ");
-
-  // تحويل الفاصلة العربية إلى فاصل جمل إلا إذا كانت داخل قائمة نقاط أو أشعة أو زوايا متتالية
-  plain = plain
-    .replace(
-      /،(?=\s*(?:ق\s*\(|∠|الشعاع|المستقيم|تقاطع|الزوايا|نقطة|مجموع|[فو]?(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن)))/g,
-      "؛"
-    )
-    .replace(
-      /(?:\s+|(?<=[°0-9٠-٩\)]))و(?=\s*(?:ق\s*\(|m\s*\(|∠))/g,
-      " ؛ "
-    );
-
-  const rawParts = plain
-    .split(/\s*[;؛\n]+\s*/)
-    .flatMap((part) => {
-      if (/(?:متتالية|على\s+استقامة|حولها)/.test(part)) return [part];
-      return part.split(/\s*،\s*/);
-    })
-    .map((c) => c.replace(/^[و\s]+(?=(?:الشعاع|المستقيم|ق\s*\(|∠))/, "").trim())
-    .filter((c) => c.length > 1 && !GOAL_CLAUSE_RE.test(c));
-
-  return [...new Set(rawParts)];
-}
-
-/**
- * يستخلص مواصفة مروحة الأشعة والزوايا من الوصف النصي، أو يعيد `null` إذا كان الشكل مضلعاً أو دائرة.
- */
+/** يستخلص مواصفة مروحة الأشعة والزوايا من الوصف النصي، أو يعيد `null` إذا كان الشكل مضلعاً أو دائرة. */
 export function extractAngleFanSpecFromDescription(rawDescription: string): AngleFanSpec | null {
-  if (!rawDescription || POLYGON_OR_OTHER_FAMILY_GUARD.test(rawDescription)) {
-    return null;
-  }
-
+  if (!rawDescription || POLYGON_OR_OTHER_FAMILY_GUARD.test(rawDescription)) return null;
   const clauses = splitAngleFanClauses(rawDescription);
   if (clauses.length === 0) return null;
 
@@ -98,222 +47,40 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
   let consecutiveFanOrder: string[] | undefined;
   let lastPairBounds: [string, string] | null = null;
 
-  const setVertex = (v: string) => {
-    if (!vertex) vertex = v;
-  };
-  const addRay = (r: string) => {
-    if (r && r !== vertex && !rays.includes(r)) rays.push(r);
-  };
+  const setVertex = (v: string) => { if (!vertex) vertex = v; };
+  const addRay = (r: string) => { if (r && r !== vertex && !rays.includes(r)) rays.push(r); };
   const addOpposite = (a: string, b: string) => {
-    addRay(a);
-    addRay(b);
-    if (!oppositePairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) {
-      oppositePairs.push([a, b]);
-    }
+    addRay(a); addRay(b);
+    if (!oppositePairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) oppositePairs.push([a, b]);
   };
   const addPerp = (a: string, b: string) => {
-    addRay(a);
-    addRay(b);
-    if (!perpPairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) {
-      perpPairs.push([a, b]);
-    }
+    addRay(a); addRay(b);
+    if (!perpPairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) perpPairs.push([a, b]);
   };
   const addAngleFact = (arm1: string, arm2: string, expr: AngleFanMeasureFact["expr"]) => {
-    addRay(arm1);
-    addRay(arm2);
+    addRay(arm1); addRay(arm2);
     const exists = angles.some(
-      (x) =>
-        ((x.arm1 === arm1 && x.arm2 === arm2) || (x.arm1 === arm2 && x.arm2 === arm1)) &&
-        x.expr.rawLabel === expr.rawLabel
+      (x) => ((x.arm1 === arm1 && x.arm2 === arm2) || (x.arm1 === arm2 && x.arm2 === arm1)) && x.expr.rawLabel === expr.rawLabel
     );
     if (!exists) angles.push({ arm1, arm2, expr });
   };
 
+  const ctx: AngleFanBuildCtx = {
+    setVertex,
+    getVertex: () => vertex,
+    addRay,
+    addOpposite,
+    addAngleFact,
+    markFullCircle: () => { isFullCircleAroundVertex = true; },
+    setConsecutiveOrder: (order) => { consecutiveFanOrder = order; },
+    setLastPairBounds: (bounds) => { lastPairBounds = bounds; },
+    pushBetween: (midRays, bound1, bound2) => { betweenness.push({ midRays, bound1, bound2 }); },
+    sumEquations,
+  };
+
   for (const clause of clauses) {
-    // 1. نقطة م حولها أربعة أشعة تصنع زوايا 2س°، 3س°، 4س°، 6س°
-    const mAnonFan = clause.match(
-      /(?:ال)?نقطة\s+([أ-ي]ـ?|[A-Z])\s+حولها\s+(?:ثلاثة|ثلاث|أربعة|اربعة|خمسة|خمس|3|٣|4|٤|5|٥|عدة)?\s*أشعة\s+تصنع\s+زوايا\s+(.+)/
-    );
-    if (mAnonFan) {
-      setVertex(normalizeLabelKey(mAnonFan[1]));
-      isFullCircleAroundVertex = true;
-      const exprTokens = mAnonFan[2]
-        .split(/\s*(?:،|,|و(?=\s*[0-9٠-٩(]))\s*/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const pool = ["A", "B", "C", "D", "E", "F"].filter((k) => k !== vertex);
-      const fanRays = pool.slice(0, exprTokens.length);
-      fanRays.forEach(addRay);
-      consecutiveFanOrder = fanRays;
-      exprTokens.forEach((tok, idx) => {
-        const expr = parseLinearAngleExpression(tok);
-        if (expr) addAngleFact(fanRays[idx], fanRays[(idx + 1) % fanRays.length], expr);
-      });
-      continue;
-    }
-
-    // 2. نقطة م حولها الأشعة م أ، م ب، م جـ، م د
-    const mNamedFan = clause.match(/(?:ال)?نقطة\s+([أ-ي]ـ?|[A-Z])\s+حولها\s+الأشعة\s+(.+)/);
-    if (mNamedFan) {
-      const v = normalizeLabelKey(mNamedFan[1]);
-      setVertex(v);
-      isFullCircleAroundVertex = true;
-      const rayParts = mNamedFan[2].split(/\s*[،,و]+\s*/).filter(Boolean);
-      const order: string[] = [];
-      for (const rp of rayParts) {
-        const ks = extractCleanKeys(rp);
-        if (ks && ks.length === 2) {
-          const endPt = ks[0] === v ? ks[1] : ks[0];
-          addRay(endPt);
-          order.push(endPt);
-        }
-      }
-      if (order.length >= 3) consecutiveFanOrder = order;
-      continue;
-    }
-
-    // 3. الزوايا متجمعة حول النقطة م أو أشعة تخرج من النقطة م
-    const mAround =
-      clause.match(/الزوايا\s+متجمعة\s+حول\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/i) ??
-      clause.match(/(?:أربعة|اربعة|ثلاثة|ثلاث|خمسة|خمس|\d+)?\s*أشعة\s+تخرج\s+من\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/i);
-    if (mAround) {
-      setVertex(normalizeLabelKey(mAround[1]));
-      isFullCircleAroundVertex = true;
-      continue;
-    }
-
-    // 4. تقاطع مستقيمين (مقص) والزاويتان المتقابلتان بالرأس هما ... و ...
-    if (/^تقاطع\s+مستقيمين/.test(clause)) {
-      setVertex("M");
-      addOpposite("A", "B");
-      addOpposite("C", "D");
-      continue;
-    }
-    const mVertPair = clause.match(/الزاويتان\s+المتقابلتان\s+بالرأس\s+هما\s+(.+?)\s+و\s*(.+)/);
-    if (mVertPair) {
-      if (!vertex) {
-        setVertex("M");
-        addOpposite("A", "B");
-        addOpposite("C", "D");
-      }
-      const e1 = parseLinearAngleExpression(mVertPair[1]);
-      const e2 = parseLinearAngleExpression(mVertPair[2]);
-      if (e1) addAngleFact("A", "C", e1);
-      if (e2) addAngleFact("B", "D", e2);
-      continue;
-    }
-
-    // 5. تقاطع مستقيمين نصياً أو بالرمز ∩: تقاطع المستقيم أ ب والمستقيم جـ د في م أو أ ب ∩ جـ د = {م}
-    const mIntersect =
-      clause.match(
-        /تقاطع\s+(?:المستقيم\s+|المستقيمان\s+)?(.+?)\s+و\s*(?:المستقيم\s+)?(.+?)\s+في\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/
-      ) ??
-      clause.match(/^(.+?)\s*(?:∩|يتقاطعان\s+في)\s*(.+?)\s*(?:=\s*|\s+في\s+)\{?\s*([أ-ي]ـ?|[A-Z])\s*\}?$/);
-    if (mIntersect) {
-      const s1 = extractCleanKeys(mIntersect[1]);
-      const s2 = extractCleanKeys(mIntersect[2]);
-      const v = normalizeLabelKey(mIntersect[3]);
-      if (s1 && s1.length === 2 && s2 && s2.length === 2) {
-        setVertex(v);
-        addOpposite(s1[0], s1[1]);
-        addOpposite(s2[0], s2[1]);
-        continue;
-      }
-    }
-
-    // 6. ب تنتمي للمستقيم أ جـ
-    const mBelongs = clause.match(
-      /^([أ-ي]ـ?|[A-Z])\s*(?:تنتمي\s*(?:إلى|الى)?\s*(?:للمستقيم|المستقيم|مستقيم)?|∈\s*(?:المستقيم)?)\s*(.+)$/
-    );
-    if (mBelongs) {
-      const v = normalizeLabelKey(mBelongs[1]);
-      const lineKeys = extractCleanKeys(mBelongs[2]);
-      if (lineKeys && lineKeys.length === 2) {
-        setVertex(v);
-        addOpposite(lineKeys[0], lineKeys[1]);
-        lastPairBounds = [lineKeys[0], lineKeys[1]];
-        continue;
-      }
-    }
-
-    // 7. أ، ب، جـ نقط متتالية أو النقاط أ، ب، جـ متتالية
-    const mCollinear = clause.match(
-      /^(?:النقاط|النقط)?\s*(.+?)\s*(?:(?:نقط|نقاط)\s+)?(?:متتالية|على\s+استقامة)/
-    );
-    if (mCollinear) {
-      const pts = mCollinear[1]
-        .split(/\s*[،,و]+\s*/)
-        .map((s) => normalizeLabelKey(s))
-        .filter(Boolean);
-      if (pts.length === 3) {
-        setVertex(pts[1]);
-        addOpposite(pts[0], pts[2]);
-        lastPairBounds = [pts[0], pts[2]];
-        continue;
-      }
-    }
-
-    // 8. أ ب جـ زاوية مقسمة لشعاعين ب د و ب هـ
-    const mSplitAngle = clause.match(/^(.+?)\s+زاوية\s+مقسمة\s+لشعاعين\s+(.+?)\s+و\s*(.+)$/);
-    if (mSplitAngle) {
-      const outer = extractCleanKeys(mSplitAngle[1]);
-      const r1 = extractCleanKeys(mSplitAngle[2]);
-      const r2 = extractCleanKeys(mSplitAngle[3]);
-      if (outer && outer.length === 3 && r1 && r1.length === 2 && r2 && r2.length === 2) {
-        const v = outer[1];
-        setVertex(v);
-        addRay(outer[0]);
-        addRay(outer[2]);
-        const m1 = r1[0] === v ? r1[1] : r1[0];
-        const m2 = r2[0] === v ? r2[1] : r2[0];
-        addRay(m1);
-        addRay(m2);
-        lastPairBounds = [outer[0], outer[2]];
-        betweenness.push({ midRays: [m1, m2], bound1: outer[0], bound2: outer[2] });
-        continue;
-      }
-    }
-
-    // 9. الزوايا متجاورة عند ب
-    const mAdjAt = clause.match(/الزوايا\s+متجاورة\s+عند\s+(?:النقطة\s+)?([أ-ي]ـ?|[A-Z])/);
-    if (mAdjAt) {
-      setVertex(normalizeLabelKey(mAdjAt[1]));
-      continue;
-    }
-
-    // 10. مجموع زاويتين نصياً أو بعلامة الجمع (+): ق(∠أ م جـ) + ق(∠ب م د) = 140°
-    const mSum =
-      clause.match(
-        /مجموع\s+الزاويتين.*?\(\s*∠?\s*(.+?)\s+و\s+∠?\s*(.+?)\s*\)\s*(?:يساوي|=)\s*(\d+(?:\.\d+)?)/
-      ) ??
-      clause.match(
-        /^(?:ق\s*\(\s*∠?\s*([^)]+)\)|∠\s*([^+]+))\s*\+\s*(?:ق\s*\(\s*∠?\s*([^)]+)\)|∠\s*([^=]+))\s*=\s*(\d+(?:\.\d+)?)/
-      );
-    if (mSum) {
-      const rawA1 = mSum.length === 4 ? mSum[1] : (mSum[1] ?? mSum[2]);
-      const rawA2 = mSum.length === 4 ? mSum[2] : (mSum[3] ?? mSum[4]);
-      const rawNum = mSum.length === 4 ? mSum[3] : mSum[5];
-      const a1 = extractCleanKeys(rawA1);
-      const a2 = extractCleanKeys(rawA2);
-      const sumDeg = Number(rawNum);
-      if (a1 && a1.length === 3 && a2 && a2.length === 3 && Number.isFinite(sumDeg)) {
-        setVertex(a1[1]);
-        addRay(a1[0]);
-        addRay(a1[2]);
-        addRay(a2[0]);
-        addRay(a2[2]);
-        if (!sumEquations.some((eq) => eq.sumDeg === sumDeg)) {
-          sumEquations.push({
-            angles: [
-              [a1[0], a1[2]],
-              [a2[0], a2[2]],
-            ],
-            sumDeg,
-          });
-        }
-        continue;
-      }
-    }
+    if (tryParseFanAndIntersectClause(clause, ctx)) continue;
+    if (tryParseCollinearAndSumClause(clause, ctx)) continue;
 
     // 11. التعامد: الشعاع جـ أ ⊥ الشعاع جـ ب أو الشعاع م هـ ⊥ المستقيم أ ب
     const mPerp = clause.match(/^(.+?)\s*(?:⊥|متعامد\s+على|عمودي\s+على)\s*(.+)$/);
@@ -351,7 +118,7 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       }
     }
 
-    // 13. منصف زاوية صريح أو شعاع يقسم زاوية: الشعاع جـ هـ ينصف ∠د جـ س أو الشعاع م هـ داخل ∠أ م د
+    // 13. منصف زاوية صريح أو شعاع يقسم زاوية
     if (!/ينصف\s+المنطقة\s+بينهما/.test(clause)) {
       const mBis = clause.match(/^(.+?)\s+(ينصف|يقسم|داخل|يقع\s+داخل)\s+(?:الزاوية\s+|∠\s*)(.+)$/);
       if (mBis) {
@@ -361,9 +128,7 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
           const v = angKeys[1];
           setVertex(v);
           const bisRay = rayKeys[0] === v ? rayKeys[1] : rayKeys[0];
-          addRay(bisRay);
-          addRay(angKeys[0]);
-          addRay(angKeys[2]);
+          addRay(bisRay); addRay(angKeys[0]); addRay(angKeys[2]);
           if (mBis[2] === "ينصف" && !bisectors.some((b) => b.bisectorRay === bisRay)) {
             bisectors.push({ bisectorRay: bisRay, arm1: angKeys[0], arm2: angKeys[2] });
           }
@@ -390,22 +155,17 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
       }
     }
     if (isBetweenClause && extractedMidRays.length > 0 && lastPairBounds) {
-      betweenness.push({
-        midRays: extractedMidRays,
-        bound1: lastPairBounds[0],
-        bound2: lastPairBounds[1],
-      });
+      betweenness.push({ midRays: extractedMidRays, bound1: lastPairBounds[0], bound2: lastPairBounds[1] });
     }
   }
 
-  // استخراج أي أشعة ذُكرت في جملة المطلوب إن كانت تخرج من نفس الرأس (مثل فأوجد m(∠CMD))
+  // استخراج أي أشعة ذُكرت في جملة المطلوب إن كانت تخرج من نفس الرأس
   if (vertex) {
     const goalMatches = rawDescription.matchAll(
       /(?:أوجد|اوجد|احسب|قياس|قيمة)\s+.*?(?:ق\s*\(\s*∠?\s*([A-Za-z]{3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|∠\s*([A-Za-z]{3}))/gi
     );
     for (const gm of goalMatches) {
-      const rawA = gm[1] || gm[2] || gm[3];
-      const ks = extractCleanKeys(rawA);
+      const ks = extractCleanKeys(gm[1] || gm[2] || gm[3]);
       if (ks && ks.length === 3 && ks[1] === vertex) {
         addRay(ks[0]);
         addRay(ks[2]);
@@ -414,26 +174,12 @@ export function extractAngleFanSpecFromDescription(rawDescription: string): Angl
   }
 
   if (!vertex || rays.length < 2) return null;
-  if (
-    angles.length === 0 &&
-    perpPairs.length === 0 &&
-    oppositePairs.length === 0 &&
-    bisectors.length === 0 &&
-    sumEquations.length === 0
-  ) {
+  if (angles.length === 0 && perpPairs.length === 0 && oppositePairs.length === 0 && bisectors.length === 0 && sumEquations.length === 0) {
     return null;
   }
 
   return {
-    vertex,
-    rays,
-    oppositePairs,
-    perpPairs,
-    angles,
-    bisectors,
-    betweenness,
-    sumEquations,
-    isFullCircleAroundVertex,
-    consecutiveFanOrder,
+    vertex, rays, oppositePairs, perpPairs, angles, bisectors, betweenness, sumEquations,
+    isFullCircleAroundVertex, consecutiveFanOrder,
   };
 }

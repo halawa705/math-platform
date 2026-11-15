@@ -28,9 +28,11 @@ export function normalizeGeometryText(raw: string): string {
 const LEADING_CONNECTORS = /^(?:فيه|فيها|حيث|بحيث|إذا\s*كان|لتكن|ليكن|لتكن|ثم|و(?=\s+(?![أ-ي]ـ?\s*=)))\s*/;
 
 export function splitDescriptionIntoFactStrings(description: string): string[] {
-  const text = restructureGeometryClauses(normalizeGeometryText(convertGeometryLatexToPlainText(description)));
-  const raw = text
-    .split(/[;؛\n]|،(?![^()]*\))|(?<=\D)\.(?=\s)/)
+  const normalized = restructureGeometryClauses(normalizeGeometryText(convertGeometryLatexToPlainText(description)))
+    // حماية فواصل قوائم النقط مثل «أ، ب، جـ» قبل الفصل على الفاصلة العربية
+    .replace(/([A-Za-zأ-ي]ـ?)\s*[،,]\s*(?=[A-Za-zأ-ي]ـ?(?:\s*[،,]\s*[A-Za-zأ-ي]ـ?)*(?:\s+على\s+استقامة|\s+تقع|\s+تنتمي))/gu, "$1 ");
+  const raw = normalized
+    .split(/[;؛\n]|،(?![^()]*\))|(?<=\D)\.(?=\s)|(?<=\s)و(?=\s+(?:[A-Z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?|ق\s*\(|m\s*\(|∠)\s*=)/gu)
     .map((s) => { let t = s.trim(); for (let i = 0; i < 2; i++) t = t.replace(LEADING_CONNECTORS, "").trim(); return t; })
     .filter((s) => s.length > 0);
   return orderFactsByDependency(raw.flatMap(splitDualTrianglePair).flatMap(splitSimilarityPair).flatMap(expandEqualityChain));

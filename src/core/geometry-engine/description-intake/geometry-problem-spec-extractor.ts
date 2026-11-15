@@ -16,7 +16,9 @@ import type {
 import { parseGeoFactString } from "../fact-compositor/geo-fact-parser";
 import { splitDescriptionIntoFactStrings } from "../fact-compositor/geo-fact-splitter";
 import type { GeoFact } from "../fact-compositor/geo-fact-types";
+import { pairKey } from "../fact-compositor/geo-label-utils";
 import { extractGeometryAskedSpecFromPrompt } from "../verification/geometry-asked-question-mark-resolver";
+import { extractLinearEntityKinds } from "./linear-entity-kind-extractor";
 import { combineProblemAndTagGeometryContext } from "./problem-geometry-context-extractor";
 
 export const MODULE_ID_GEOMETRY_PROBLEM_SPEC_EXTRACTOR =
@@ -46,14 +48,28 @@ function buildProblemSpecFromFacts(
     objects.push({ kind: "point", id: pt });
   };
 
-  const ensureSegment = (a: string, b: string) => {
+  const ensureSegment = (
+    a: string,
+    b: string,
+    kind: "segment" | "ray" | "line" = "segment"
+  ) => {
     ensurePoint(a);
     ensurePoint(b);
     const id = `${a}${b}`;
     const rev = `${b}${a}`;
-    if (seenObjects.has(id) || seenObjects.has(rev)) return;
+    const existingIdx = objects.findIndex((o) => o.id === id || o.id === rev);
+    if (existingIdx >= 0) {
+      const prev = objects[existingIdx];
+      if (
+        (kind === "line" && prev.kind !== "line") ||
+        (kind === "ray" && prev.kind === "segment")
+      ) {
+        objects[existingIdx] = { kind, id, vertices: [a, b] };
+      }
+      return;
+    }
     seenObjects.add(id);
-    objects.push({ kind: "segment", id, vertices: [a, b] });
+    objects.push({ kind, id, vertices: [a, b] });
   };
 
   for (const f of facts) {
@@ -132,18 +148,23 @@ function buildProblemSpecFromFacts(
     } else if (f.k === "chord" || f.k === "diameter") {
       ensureSegment(f.seg[0], f.seg[1]);
     } else if (f.k === "tangent") {
-      ensureSegment(f.seg[0], f.seg[1]);
+      ensureSegment(f.seg[0], f.seg[1], f.lineKind ?? "segment");
       relations.push({
         kind: "tangent",
         at: f.at,
         targets: [`${f.seg[0]}${f.seg[1]}`],
       });
+    } else if (f.k === "draw") {
+      ensureSegment(f.seg[0], f.seg[1], f.lineKind ?? "segment");
+    } else if (f.k === "collinear") {
+      f.labels.forEach(ensurePoint);
     } else if (f.k === "length") {
       ensureSegment(f.seg[0], f.seg[1]);
       givens.push({
         target: `${f.seg[0]}${f.seg[1]}`,
         value: f.text,
-        numericValue: f.numeric,
+        // القيمة الرمزية لا تستخدم رقم المقياس الوهمي (5) في فحص التعارض الرقمي
+        numericValue: f.symbolic ? undefined : f.numeric,
         unit: f.unit,
       });
     } else if (f.k === "equal") {
@@ -169,68 +190,34 @@ function buildProblemSpecFromFacts(
         });
       }
     } else if (f.k === "midpoint") {
-      ensurePoint(f.p);
-      ensureSegment(f.seg[0], f.seg[1]);
-      relations.push({
-        kind: "midpoint",
-        at: f.p,
-        targets: [`${f.seg[0]}${f.seg[1]}`],
-      });
+      ensurePoint(f.p); ensureSegment(f.seg[0], f.seg[1]);
+      relations.push({ kind: "midpoint", at: f.p, targets: [`${f.seg[0]}${f.seg[1]}`] });
     } else if (f.k === "pointOn") {
-      ensurePoint(f.p);
-      ensureSegment(f.seg[0], f.seg[1]);
-      relations.push({
-        kind: "point_on",
-        at: f.p,
-        targets: [`${f.seg[0]}${f.seg[1]}`],
-      });
+      ensurePoint(f.p); ensureSegment(f.seg[0], f.seg[1]);
+      relations.push({ kind: "point_on", at: f.p, targets: [`${f.seg[0]}${f.seg[1]}`] });
     } else if (f.k === "parallel") {
-      ensureSegment(f.a[0], f.a[1]);
-      ensureSegment(f.b[0], f.b[1]);
-      relations.push({
-        kind: "parallel",
-        targets: [`${f.a[0]}${f.a[1]}`, `${f.b[0]}${f.b[1]}`],
-      });
+      ensureSegment(f.a[0], f.a[1], f.lineKindA ?? "segment");
+      ensureSegment(f.b[0], f.b[1], f.lineKindB ?? "segment");
+      relations.push({ kind: "parallel", targets: [`${f.a[0]}${f.a[1]}`, `${f.b[0]}${f.b[1]}`] });
     } else if (f.k === "perp") {
-      ensureSegment(f.a[0], f.a[1]);
-      ensureSegment(f.b[0], f.b[1]);
-      relations.push({
-        kind: "perpendicular",
-        at: f.foot,
-        targets: [`${f.a[0]}${f.a[1]}`, `${f.b[0]}${f.b[1]}`],
-      });
+      ensureSegment(f.a[0], f.a[1], f.lineKindA ?? "segment");
+      ensureSegment(f.b[0], f.b[1], f.lineKindB ?? "segment");
+      relations.push({ kind: "perpendicular", at: f.foot, targets: [`${f.a[0]}${f.a[1]}`, `${f.b[0]}${f.b[1]}`] });
     } else if (f.k === "bisector") {
-      ensureSegment(f.seg[0], f.seg[1]);
-      relations.push({
-        kind: "bisector",
-        at: f.vertex,
-        targets: [`${f.seg[0]}${f.seg[1]}`],
-      });
+      ensureSegment(f.seg[0], f.seg[1], f.lineKind ?? "ray");
+      relations.push({ kind: "bisector", at: f.vertex, targets: [`${f.seg[0]}${f.seg[1]}`] });
     } else if (f.k === "median") {
       ensureSegment(f.seg[0], f.seg[1]);
-      relations.push({
-        kind: "median",
-        targets: [`${f.seg[0]}${f.seg[1]}`],
-      });
+      relations.push({ kind: "median", targets: [`${f.seg[0]}${f.seg[1]}`] });
     } else if (f.k === "intersect") {
       ensurePoint(f.p);
-      ensureSegment(f.a[0], f.a[1]);
-      ensureSegment(f.b[0], f.b[1]);
-      relations.push({
-        kind: "intersect",
-        at: f.p,
-        targets: [`${f.a[0]}${f.a[1]}`, `${f.b[0]}${f.b[1]}`],
-      });
+      ensureSegment(f.a[0], f.a[1], f.lineKindA ?? "segment");
+      ensureSegment(f.b[0], f.b[1], f.lineKindB ?? "segment");
+      relations.push({ kind: "intersect", at: f.p, targets: [`${f.a[0]}${f.a[1]}`, `${f.b[0]}${f.b[1]}`] });
     } else if (f.k === "similarity") {
-      relations.push({
-        kind: "similarity",
-        targets: [f.tri1.join(""), f.tri2.join("")],
-      });
+      relations.push({ kind: "similarity", targets: [f.tri1.join(""), f.tri2.join("")] });
     } else if (f.k === "congruence") {
-      relations.push({
-        kind: "congruence",
-        targets: [f.tri1.join(""), f.tri2.join("")],
-      });
+      relations.push({ kind: "congruence", targets: [f.tri1.join(""), f.tri2.join("")] });
     }
   }
 
@@ -249,43 +236,42 @@ export function extractGeometryProblemSpecDual(
   rawProblemOrCombined: string,
   explicitGeometryTag?: string
 ): DualProblemSpecExtractionResult {
-  const combined = combineProblemAndTagGeometryContext(
-    explicitGeometryTag,
-    rawProblemOrCombined
-  );
+  const combined = combineProblemAndTagGeometryContext(explicitGeometryTag, rawProblemOrCombined);
   const directClauses = splitDescriptionIntoFactStrings(rawProblemOrCombined);
   const combinedClauses = splitDescriptionIntoFactStrings(combined);
   const allClauses = Array.from(new Set([...directClauses, ...combinedClauses]));
   const facts: GeoFact[] = [];
   const unparsedClauses: string[] = [];
-
   for (const c of allClauses) {
     const f = parseGeoFactString(c);
     if (f) facts.push(f);
     else unparsedClauses.push(c);
   }
-
-  const spec = buildProblemSpecFromFacts(facts, rawProblemOrCombined);
+  const linearKindMap = extractLinearEntityKinds(rawProblemOrCombined, explicitGeometryTag);
+  const baseSpec = buildProblemSpecFromFacts(facts, rawProblemOrCombined);
+  const upgradedObjects = baseSpec.objects.map((o) => {
+    if (o.kind === "segment" && o.vertices && o.vertices.length === 2) {
+      const k = linearKindMap.get(pairKey(o.vertices[0], o.vertices[1]));
+      if (k && k.kind !== "segment") return { ...o, kind: k.kind, vertices: [k.from, k.to] };
+    }
+    return o;
+  });
+  for (const specEntry of linearKindMap.values()) {
+    const pk = pairKey(specEntry.from, specEntry.to);
+    if (!upgradedObjects.some((o) => o.vertices?.length === 2 && pairKey(o.vertices[0], o.vertices[1]) === pk)) {
+      upgradedObjects.push({ kind: specEntry.kind, id: `${specEntry.from}${specEntry.to}`, vertices: [specEntry.from, specEntry.to] });
+    }
+  }
+  const spec: GeometryProblemSpec = { ...baseSpec, objects: upgradedObjects };
   const conflictReasons: string[] = [];
-
-  // التحقق من عدم وجود معطيين عدديين متناقضين لنفس الهدف (مثلاً AB = 6 في المتن و AB = 8 في الوسم)
   const numericByTarget = new Map<string, number>();
   for (const g of spec.givens) {
     if (g.numericValue === undefined) continue;
     const prev = numericByTarget.get(g.target);
     if (prev !== undefined && Math.abs(prev - g.numericValue) > 1e-6) {
-      conflictReasons.push(
-        `تعارض في قيمة المعطى (${g.target}): ورد بقيمتين مختلفتين (${prev}) و (${g.numericValue}).`
-      );
+      conflictReasons.push(`تعارض في قيمة المعطى (${g.target}): ورد بقيمتين مختلفتين (${prev}) و (${g.numericValue}).`);
     }
     numericByTarget.set(g.target, g.numericValue);
   }
-
-  return {
-    spec,
-    facts,
-    unparsedClauses,
-    dualSourcesAgree: conflictReasons.length === 0,
-    conflictReasons,
-  };
+  return { spec, facts, unparsedClauses, dualSourcesAgree: conflictReasons.length === 0, conflictReasons };
 }

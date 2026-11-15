@@ -16,6 +16,7 @@ import type {
   CanonicalGeometryFigureIR,
   FigureTriStateDecision,
 } from "../../ssot/geometry-archetype-ssot";
+import { findMissingDeclaredConstructionVertices } from "./geometry-figure-completeness-checker";
 import { checkFigureFidelityToPrompt } from "./geometry-figure-fidelity-gate";
 import { verifyGeometryFigure } from "./geometry-figure-verification-orchestrator";
 import { verifyNoSolutionLeakOnFigure } from "./geometry-solution-leak-guard";
@@ -72,6 +73,13 @@ export function evaluateFigureTriStateDecision(
   const leakCheck = verifyNoSolutionLeakOnFigure(figure, rawPromptOrDescription);
 
   const check2CompletenessPassed = fidelity.missingNumbers.length === 0;
+  const checkMedianVertexCompleteness =
+    /(?:المتوسطان|متوسطان|(?:^|[\s،؛])[A-Z]{2}\s+متوسط|متوسطاً|نقطة\s*(?:تلاقي|تقاطع)\s*(?:ال)?متوسطات|تقاطع\s*قطراه)/i.test(
+      rawPromptOrDescription
+    );
+  const missingVertices = checkMedianVertexCompleteness
+    ? findMissingDeclaredConstructionVertices(figure, rawPromptOrDescription)
+    : [];
   const check3NoExtrasOrLeakPassed =
     !fidelity.isPurelyTheoretical &&
     fidelity.alienNumbers.length === 0 &&
@@ -90,6 +98,7 @@ export function evaluateFigureTriStateDecision(
   const passedAllThreeChecks =
     check1MeasurementPassed &&
     check2CompletenessPassed &&
+    missingVertices.length === 0 &&
     check3NoExtrasOrLeakPassed &&
     parallelCheckPassed &&
     compositorWarnings.length === 0;
@@ -108,6 +117,7 @@ export function evaluateFigureTriStateDecision(
   const reasons: string[] = [
     ...compositorWarnings,
     ...fidelity.reasons,
+    ...(missingVertices.length > 0 ? [`نقص نقاط مصرّح ببنائها في الشكل: ${missingVertices.join("، ")}`] : []),
     ...leakCheck.reasons.filter((r) => !fidelity.reasons.includes(r)),
     ...measurementErrors.map((e) => `تحقق القياس: ${e.message}`),
   ];

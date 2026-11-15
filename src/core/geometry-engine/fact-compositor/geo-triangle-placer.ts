@@ -3,6 +3,9 @@
  * @description يحسب إحداثيات رؤوس مثلث (A,B,C) من المعطيات المتاحة بقواعد ثابتة، ويعيد دائماً مثلثاً صالحاً.
  */
 import type { Vec2 } from "./geo-vector-math";
+import { vMid } from "./geo-vector-math";
+import type { GeoFact, Seg } from "./geo-fact-types";
+import { pairKey } from "./geo-label-utils";
 
 export const MODULE_ID_GEO_TRIANGLE_PLACER = "geo_triangle_placer" as const;
 export type TriVertexKey = "A" | "B" | "C";
@@ -148,4 +151,103 @@ export function placeTriangleFromKnowns(k: TriangleKnowns): TrianglePoints {
   }
   const a = k.bc ?? DEFAULT_SIDE; const c = k.ab ?? a * 0.8; const b = k.ca ?? a * 0.9;
   return fromThreeSides(c, a, b) ?? { A: { x: a * 0.4, y: a * 0.8 }, B: { x: 0, y: 0 }, C: { x: a, y: 0 } };
+}
+
+export function resolveRatioFractionOnSegment(
+  facts: readonly GeoFact[],
+  p: string,
+  a: string,
+  b: string
+): number | undefined {
+  const rf = facts.find(
+    (x): x is Extract<GeoFact, { k: "ratio" }> =>
+      x.k === "ratio" &&
+      ((pairKey(x.a[0], x.a[1]) === pairKey(a, p) && pairKey(x.b[0], x.b[1]) === pairKey(p, b)) ||
+        (pairKey(x.b[0], x.b[1]) === pairKey(a, p) && pairKey(x.a[0], x.a[1]) === pairKey(p, b)))
+  );
+  if (!rf || !(rf.num > 0) || !(rf.den > 0)) return undefined;
+  const isApFirst = pairKey(rf.a[0], rf.a[1]) === pairKey(a, p);
+  const frac = (isApFirst ? rf.num : rf.den) / (rf.num + rf.den);
+  return Math.max(0.08, Math.min(0.92, frac));
+}
+
+export function tryOrientPerpendicularMediansTriangle(params: {
+  facts: readonly GeoFact[];
+  polygons: readonly { labels: readonly string[] }[];
+  lengths: ReadonlyMap<string, { numeric?: number }>;
+  points: Map<string, Vec2>;
+}): { meetVertex: string; apex1: string; apex2: string; seg1Key: string; seg2Key: string } | null {
+  const { facts, polygons, lengths, points } = params;
+  const tri = polygons.find((p) => p.labels.length === 3);
+  if (!tri) return null;
+  const perpFact = facts.find(
+    (f): f is Extract<GeoFact, { k: "perp" }> =>
+      f.k === "perp" &&
+      tri.labels.some((v) => f.a.includes(v)) &&
+      tri.labels.some((v) => f.b.includes(v)) &&
+      f.a[0] !== f.b[0] &&
+      pairKey(f.a[0], f.a[1]) !== pairKey(f.b[0], f.b[1])
+  );
+  if (!perpFact) return null;
+  const apex1 = tri.labels.find((v) => perpFact.a.includes(v));
+  const apex2 = tri.labels.find((v) => perpFact.b.includes(v));
+  if (!apex1 || !apex2 || apex1 === apex2) return null;
+  const foot1 = perpFact.a[0] === apex1 ? perpFact.a[1] : perpFact.a[0];
+  const foot2 = perpFact.b[0] === apex2 ? perpFact.b[1] : perpFact.b[0];
+  const hasMed1 = facts.some((f) => f.k === "median" && pairKey(f.seg[0], f.seg[1]) === pairKey(apex1, foot1));
+  const hasMed2 = facts.some((f) => f.k === "median" && pairKey(f.seg[0], f.seg[1]) === pairKey(apex2, foot2));
+  if (!hasMed1 || !hasMed2) return null;
+  const meetFact = facts.find(
+    (f): f is Extract<GeoFact, { k: "intersect" }> =>
+      f.k === "intersect" &&
+      ((pairKey(f.a[0], f.a[1]) === pairKey(apex1, foot1) && pairKey(f.b[0], f.b[1]) === pairKey(apex2, foot2)) ||
+        (pairKey(f.b[0], f.b[1]) === pairKey(apex1, foot1) && pairKey(f.a[0], f.a[1]) === pairKey(apex2, foot2)))
+  );
+  const meetV = meetFact?.p ?? "M";
+  const third = tri.labels.find((v) => v !== apex1 && v !== apex2)!;
+  const amLen = lengths.get(pairKey(apex1, meetV))?.numeric ?? 6;
+  const bmLen = lengths.get(pairKey(apex2, meetV))?.numeric ?? 5;
+  points.set(apex1, { x: 0, y: amLen });
+  points.set(apex2, { x: bmLen, y: 0 });
+  points.set(third, { x: -bmLen, y: -amLen });
+  points.set(meetV, { x: 0, y: 0 });
+  return {
+    meetVertex: meetV,
+    apex1,
+    apex2,
+    seg1Key: pairKey(apex1, foot1),
+    seg2Key: pairKey(apex2, foot2),
+  };
+}
+
+export function applyMedianFactOnTriangle(params: {
+  seg: Seg;
+  trianglesSides: (apex: string) => Seg | null;
+  points: Map<string, Vec2>;
+  host: Map<string, Seg>;
+  ticks: Map<string, number>;
+  nextTick: () => number;
+  addExtra: (a: string, b: string) => void;
+}): void {
+  const { seg, trianglesSides, points, host, ticks, nextTick, addExtra } = params;
+  const apex = trianglesSides(seg[0]) ? seg[0] : trianglesSides(seg[1]) ? seg[1] : seg[0];
+  const d = apex === seg[0] ? seg[1] : seg[0];
+  const opp = trianglesSides(apex);
+  if (!opp) return;
+  const p0 = points.get(opp[0]);
+  const p1 = points.get(opp[1]);
+  if (!points.get(d) && p0 && p1) points.set(d, vMid(p0, p1));
+  host.set(d, opp);
+  addExtra(apex, d);
+  if (!ticks.has(pairKey(opp[0], d))) {
+    const g = nextTick();
+    ticks.set(pairKey(opp[0], d), g);
+    ticks.set(pairKey(d, opp[1]), g);
+  }
+}
+
+export function sortComposerFactsTopologically(facts: readonly GeoFact[]): GeoFact[] {
+  const diags = facts.filter((f) => f.k === "diagonalsMeet");
+  const rest = facts.filter((f) => f.k !== "diagonalsMeet");
+  return [...diags, ...rest];
 }

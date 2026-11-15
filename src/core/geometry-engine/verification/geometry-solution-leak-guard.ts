@@ -86,8 +86,11 @@ export function verifyNoSolutionLeakOnFigure(
 
   const leaked: string[] = [];
 
+  const isEquilateral = /مثلث\s*متساوي\s*الأضلاع/i.test(rawPromptOrDescription);
+
   for (const num of shownOnFigure) {
     if (num === "90") continue;
+    if (num === "60" && isEquilateral) continue;
     // حالة 1: رقم غير موجود إطلاقاً في نص المسألة (محسوب داخلياً مثل وتر فيثاغورس 5 لـ 3 و 4)
     if (!fullNums.has(num)) {
       leaked.push(num);

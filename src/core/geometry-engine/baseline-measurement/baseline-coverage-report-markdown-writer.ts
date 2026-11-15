@@ -37,12 +37,23 @@ export function renderBaselineReportMarkdown(
   const o = summary.byOutcome;
   const produced = o.figure_clean + o.figure_flagged + o.false_figure_on_no_figure_case;
   const flagRows = Object.entries(summary.byFlag).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0));
-  const problematic = results.filter(
-    (r) =>
-      r.outcome === "figure_flagged" ||
-      r.outcome === "false_figure_on_no_figure_case" ||
-      r.outcome === "missed_figure"
-  );
+  const severityRank = (r: BaselineCaseResult): number =>
+    r.outcome === "false_figure_on_no_figure_case"
+      ? 0
+      : r.outcome === "missed_figure"
+        ? 1
+        : r.flags.some((f) => f !== "from_fixed_catalog")
+          ? 2
+          : 3;
+
+  const problematic = results
+    .filter(
+      (r) =>
+        r.outcome === "figure_flagged" ||
+        r.outcome === "false_figure_on_no_figure_case" ||
+        r.outcome === "missed_figure"
+    )
+    .sort((a, b) => severityRank(a) - severityRank(b));
 
   return [
     "# تقرير خط الأساس لدقة الأشكال الهندسية والرسوم (لوحة القياس v2 - المرحلة 0)",
@@ -93,6 +104,14 @@ export function renderBaselineReportMarkdown(
             r.missingNumbers.join("، ") || "—"
           } | ${r.leakedNumbers.join("، ") || "—"} |`
       ),
+    "",
+    "## 4. حالات عدم تطابق المواصفة المرجعية (`expectedFigureSpec`)",
+    "",
+    "| الحالة | الملخص | التفاصيل |",
+    "|---|---|---|",
+    ...summary.specMismatches.map(
+      (m) => `| ${m.caseId} | ${m.summaryText} | ${m.discrepancies.join(" ؛ ")} |`
+    ),
     "",
   ].join("\n");
 }

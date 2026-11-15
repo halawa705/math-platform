@@ -28,10 +28,11 @@ export function buildGrade3GridAreaSvgMarkup(
   const cellSize = 22;
   const padTop = 32;
 
-  const cols = Math.max(3, Math.min(8, spec.gridCols));
-  const rows = Math.max(3, Math.min(6, spec.gridRows));
-  const gridW = cols * cellSize;
-  const gridH = rows * cellSize;
+  const cols = Math.max(3, Math.min(12, spec.gridCols));
+  const rows = Math.max(3, Math.min(8, spec.gridRows));
+  const effCell = cols > 8 ? Math.floor(176 / cols) : cellSize;
+  const gridW = cols * effCell;
+  const gridH = rows * effCell;
 
   const startX = (width - gridW) / 2;
   const startY = padTop + (height - padTop - gridH) / 2;
@@ -48,24 +49,24 @@ export function buildGrade3GridAreaSvgMarkup(
 
   // خطوط الشبكة الرمادية
   for (let c = 0; c <= cols; c++) {
-    const x = startX + c * cellSize;
+    const x = startX + c * effCell;
     svgParts.push(
       `<line x1="${x.toFixed(1)}" y1="${startY.toFixed(1)}" x2="${x.toFixed(1)}" y2="${(startY + gridH).toFixed(1)}" stroke="#E2E8F0" stroke-width="0.8" />`
     );
   }
   for (let r = 0; r <= rows; r++) {
-    const y = startY + r * cellSize;
+    const y = startY + r * effCell;
     svgParts.push(
       `<line x1="${startX.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(startX + gridW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="#E2E8F0" stroke-width="0.8" />`
     );
   }
 
   // الشكل المظلل (مستطيل بمنتصف الشبكة)
-  const shapeX = startX + Math.floor((cols - sW) / 2) * cellSize;
-  const shapeY = startY + Math.floor((rows - sH) / 2) * cellSize;
+  const shapeX = startX + Math.floor((cols - sW) / 2) * effCell;
+  const shapeY = startY + Math.floor((rows - sH) / 2) * effCell;
 
   svgParts.push(
-    `<rect x="${shapeX.toFixed(1)}" y="${shapeY.toFixed(1)}" width="${(sW * cellSize).toFixed(1)}" height="${(sH * cellSize).toFixed(1)}" fill="#3B82F6" opacity="0.35" stroke="#1D4ED8" stroke-width="1.8" />`
+    `<rect x="${shapeX.toFixed(1)}" y="${shapeY.toFixed(1)}" width="${(sW * effCell).toFixed(1)}" height="${(sH * effCell).toFixed(1)}" fill="#3B82F6" opacity="0.35" stroke="#1D4ED8" stroke-width="1.8" />`
   );
 
   // إطار الشبكة الخارجي
@@ -75,10 +76,10 @@ export function buildGrade3GridAreaSvgMarkup(
 
   // تسمية أبعاد الشكل المظلل بوحدات الطول
   svgParts.push(
-    `<text x="${(shapeX + (sW * cellSize) / 2).toFixed(1)}" y="${(shapeY - 4).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="800" fill="#1D4ED8">${formatNumeralsByModeSSOT(sW, numeralMode)} وحدات</text>`
+    `<text x="${(shapeX + (sW * effCell) / 2).toFixed(1)}" y="${(shapeY - 4).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="800" fill="#1D4ED8">${formatNumeralsByModeSSOT(sW, numeralMode)} وحدات</text>`
   );
   svgParts.push(
-    `<text x="${(shapeX + sW * cellSize + 6).toFixed(1)}" y="${(shapeY + (sH * cellSize) / 2 + 3).toFixed(1)}" text-anchor="start" font-size="8" font-weight="800" fill="#1D4ED8">${formatNumeralsByModeSSOT(sH, numeralMode)} وحدات</text>`
+    `<text x="${(shapeX + sW * effCell + 6).toFixed(1)}" y="${(shapeY + (sH * effCell) / 2 + 3).toFixed(1)}" text-anchor="start" font-size="8" font-weight="800" fill="#1D4ED8">${formatNumeralsByModeSSOT(sH, numeralMode)} وحدات</text>`
   );
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="w-full h-auto select-none">${svgParts.join("")}</svg>`;

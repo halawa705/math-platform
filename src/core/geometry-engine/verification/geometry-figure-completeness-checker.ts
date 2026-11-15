@@ -10,6 +10,7 @@ import type { CanonicalGeometryFigureIR } from "../../ssot/geometry-archetype-ss
 import { toWesternNumeralsSSOT } from "../../ssot/numeral-and-unit-ssot";
 import { extractNumbersShownOnFigure } from "../baseline-measurement/baseline-figure-number-extractor";
 import { convertGeometryLatexToPlainText } from "../description-intake/geometry-latex-to-plain-normalizer";
+import { normalizeLabelKey } from "../fact-compositor/geo-label-utils";
 
 export const MODULE_ID_GEOMETRY_FIGURE_COMPLETENESS_CHECKER =
   "geometry_figure_completeness_checker" as const;
@@ -119,4 +120,30 @@ export function findMissingDimensionalGivensOnFigure(
     }
   }
   return missing;
+}
+
+/**
+ * يتحقق من أن جميع نقاط التقاطع والمنتصفات المصرّح ببنائها في نص المسألة مرسومة فعلياً في الشكل.
+ */
+export function findMissingDeclaredConstructionVertices(
+  figure: CanonicalGeometryFigureIR,
+  rawPromptOrDescription: string
+): readonly string[] {
+  if (figure.familyId === "statistics_family" || Boolean(figure.rawSvgMarkup)) return [];
+  const presentKeys = new Set<string>();
+  for (const v of figure.vertices) {
+    const idKey = v.id.match(/_(?:v|center)_([A-Za-z]+)$/)?.[1]?.toUpperCase();
+    if (idKey) presentKeys.add(idKey);
+    const normLbl = normalizeLabelKey(v.label);
+    if (normLbl) presentKeys.add(normLbl.toUpperCase());
+  }
+  const required = new Set<string>();
+  const clean = rawPromptOrDescription.replace(/\$/g, " ");
+  for (const m of clean.matchAll(/(?:تقاطعا?|يتقاطعان|لتقاطعا|قطراه|يقطع|ليقطع|تقطع|لتقطع)\s+(?:[A-Za-z]{2}\s+)?(?:في|عند)\s*(?:النقطة\s*)?([A-Z])\b/g)) {
+    required.add(m[1].toUpperCase());
+  }
+  for (const m of clean.matchAll(/\b([A-Z])\s*منتصف\s*(?:القطعة|الضلع|الوتر|القاعدة)?\s*[A-Z]{2}\b/g)) {
+    required.add(m[1].toUpperCase());
+  }
+  return [...required].filter((k) => !presentKeys.has(k));
 }

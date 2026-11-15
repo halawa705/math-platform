@@ -94,7 +94,7 @@ export function mergeLogicalSolutionSteps(rawStepsText: string): string[] {
         .replace(/\s*---+\s*$/g, "")
         .trim()
     )
-    .filter((s) => s.length > 0 && !/^[-*_]{2,}$/.test(s));
+    .filter((s) => s.length > 0 && !/^[-*_"'«»“”`•.\s]{1,}$/.test(s));
 
   const merged: string[] = [];
   for (const line of rawLines) {

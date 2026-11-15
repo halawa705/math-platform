@@ -113,7 +113,14 @@ export function extractExamQuestionDiagrams(params: {
   }
 
   const geoDiag = combinedGeo
-    ? matchGeometryWithDiagnostics(combinedGeo, `geom_${lessonId}_${orderNumber}`, notationLanguage)
+    ? matchGeometryWithDiagnostics(
+        {
+          geometryTag: explicitTagText || undefined,
+          problemPrompt: basePrompt,
+        },
+        `geom_${lessonId}_${orderNumber}`,
+        notationLanguage
+      )
     : undefined;
 
   return {

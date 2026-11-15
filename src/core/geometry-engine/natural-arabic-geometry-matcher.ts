@@ -16,6 +16,10 @@ import {
 import { applyAskedQuestionMarkToFigure } from "./verification/geometry-asked-question-mark-resolver";
 import { evaluateFigureTriStateDecision } from "./verification/geometry-tri-state-decision-gate";
 import { extractGeometryProblemSpecDual } from "./description-intake/geometry-problem-spec-extractor";
+import {
+  resolveDualGeometryInputContext,
+  type DualGeometryInput,
+} from "./description-intake/dual-geometry-input-context";
 import { verifyProblemSpecMathematicalConsistency } from "./verification/geometry-problem-spec-consistency-checker";
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
@@ -104,7 +108,9 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   }
 
   if (/إقليدس|عمود.*وتر|مسقط/i.test(desc)) return buildTriangleEuclidAltitudeFigure({ figureId, notationLanguage });
-  if (/متوسط|نقطة\s*تقاطع\s*المتوسطات/i.test(desc)) return buildTriangleMediansCentroidFigure({ figureId, notationLanguage });
+  if (/متوسط|نقطة\s*تقاطع\s*المتوسطات/i.test(desc) && !/(?:مثلث|Δ|△)\s*[A-Z]{3}/i.test(desc)) {
+    return buildTriangleMediansCentroidFigure({ figureId, notationLanguage });
+  }
   if (/طاليس|يوازي/i.test(desc) && /مثلث/i.test(desc) && !/منتصف|°|\b[A-Z]{2}\s*\/\/\s*[A-Z]{2}/i.test(desc)) return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
   if (/منصف\s*زاوية/i.test(desc)) return buildTriangleAngleBisectorFigure({ figureId, notationLanguage });
   if (/زاوية\s*خارجة/i.test(desc)) return buildTriangleExteriorAngleFigure({ figureId, notationLanguage });
@@ -181,13 +187,20 @@ function finalizeVerifiedFigure(
     const issues = report.issues.filter((i) => i.severity === "error" && i.rule !== "length-scale" && i.rule !== "length-order").map((i) => `تحقق الشكل: ${i.message}`);
     return { figure, warnings: [...warnings, ...issues] };
   }
+  const origReport = verifyGeometryFigure(figure);
+  const origCollapsed = origReport.issues.filter((i) => i.rule === "collapsed-points").length;
   const refined = refineFigureToMatchGivens(figure);
+  const refinedCollapsed = refined.report.issues.filter((i) => i.rule === "collapsed-points").length;
+  if (refinedCollapsed > origCollapsed) {
+    const origErrors = origReport.issues.filter((i) => i.severity === "error").map((i) => `تحقق الشكل: ${i.message}`);
+    return { figure, warnings: [...warnings, ...origErrors] };
+  }
   const remaining = refined.report.issues.filter((i) => i.severity === "error").map((i) => `تحقق الشكل: ${i.message}`);
   return { figure: refined.figure, warnings: [...warnings, ...remaining] };
 }
 
 export function matchGeometryWithDiagnostics(
-  desc: string,
+  descOrDualInput: string | DualGeometryInput,
   figureId: string,
   notation: MathNotationLanguage = "english"
 ): {
@@ -196,40 +209,47 @@ export function matchGeometryWithDiagnostics(
   readonly source: "compositor" | "catalog" | "none";
   readonly decision: FigureTriStateDecision;
 } {
-  const cleanDesc = healFourRaysHallucination(desc);
-  if (isPurelyTheoreticalNoDiagramProblem(cleanDesc)) {
+  const dualCtx = resolveDualGeometryInputContext(descOrDualInput);
+  const cleanDesc = healFourRaysHallucination(dualCtx.combinedDescription);
+  const rawVerify = healFourRaysHallucination(dualCtx.rawForVerification || cleanDesc);
+  if (isPurelyTheoreticalNoDiagramProblem(rawVerify)) {
     return { warnings: ["المسألة نظرية لفظية عامة ولا تتطلب شكلاً هندسياً."], source: "none", decision: "red" };
   }
-  const specDual = extractGeometryProblemSpecDual(cleanDesc);
+  const specDual = dualCtx.hasSeparateDualSources
+    ? extractGeometryProblemSpecDual(dualCtx.problemPrompt, dualCtx.geometryTag)
+    : extractGeometryProblemSpecDual(rawVerify);
+  if (dualCtx.hasSeparateDualSources && !specDual.dualSourcesAgree) {
+    return { warnings: specDual.conflictReasons, source: "none", decision: "yellow" };
+  }
   const consistency = verifyProblemSpecMathematicalConsistency(specDual.spec);
   if (!consistency.passed) {
     return { warnings: consistency.violations, source: "none", decision: "red" };
   }
-  const composed = composeFigureFromGeometryDescription(cleanDesc, figureId, notation);
+  const composed = composeFigureFromGeometryDescription(cleanDesc, figureId, notation, dualCtx.linearKindMap);
   if (composed.figure) {
-    const withAsked = applyAskedQuestionMarkToFigure(composed.figure, cleanDesc);
+    const withAsked = applyAskedQuestionMarkToFigure(composed.figure, rawVerify);
     const verified = finalizeVerifiedFigure(withAsked, []);
     const isLocked = Boolean(verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId));
-    const tri = evaluateFigureTriStateDecision(verified.figure, cleanDesc, verified.warnings, isLocked);
+    const tri = evaluateFigureTriStateDecision(verified.figure, rawVerify, verified.warnings, isLocked);
     if (tri.decision === "green") return { figure: verified.figure, warnings: [], source: "compositor", decision: "green" };
   }
   const legacy = matchOptionalGeometryFigureFromArabicDescription(cleanDesc, figureId, notation);
   if (legacy) {
-    const withAsked = applyAskedQuestionMarkToFigure(legacy, cleanDesc);
+    const withAsked = applyAskedQuestionMarkToFigure(legacy, rawVerify);
     const verifiedLegacy = finalizeVerifiedFigure(withAsked, []);
     const isLocked = Boolean(verifiedLegacy.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verifiedLegacy.figure.branchId));
-    const triLegacy = evaluateFigureTriStateDecision(verifiedLegacy.figure, cleanDesc, verifiedLegacy.warnings, isLocked);
+    const triLegacy = evaluateFigureTriStateDecision(verifiedLegacy.figure, rawVerify, verifiedLegacy.warnings, isLocked);
     if (triLegacy.decision === "green") return { figure: verifiedLegacy.figure, warnings: [], source: "catalog", decision: "green" };
     return { warnings: triLegacy.reasons, source: "none", decision: triLegacy.decision };
   }
   if (composed.figure) {
-    const withAsked = applyAskedQuestionMarkToFigure(composed.figure, cleanDesc);
+    const withAsked = applyAskedQuestionMarkToFigure(composed.figure, rawVerify);
     const verified = finalizeVerifiedFigure(withAsked, composed.warnings);
     const isLocked = Boolean(verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId));
-    const tri = evaluateFigureTriStateDecision(verified.figure, cleanDesc, verified.warnings, isLocked);
+    const tri = evaluateFigureTriStateDecision(verified.figure, rawVerify, verified.warnings, isLocked);
     return { warnings: tri.reasons.length > 0 ? tri.reasons : ["تعذر التحقق الكامل من مطابقة الشكل للمعطيات."], source: "none", decision: tri.decision };
   }
-  const emptyTri = evaluateFigureTriStateDecision(null, cleanDesc, composed.warnings);
+  const emptyTri = evaluateFigureTriStateDecision(null, rawVerify, composed.warnings);
   return { warnings: emptyTri.reasons, source: "none", decision: emptyTri.decision };
 }
 

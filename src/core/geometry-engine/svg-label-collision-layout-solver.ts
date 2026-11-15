@@ -15,7 +15,7 @@ export interface PlacedPointLike { readonly sx: number; readonly sy: number }
 export interface ScreenSegmentObstacle {
   readonly fromId: string; readonly toId: string;
   readonly x1: number; readonly y1: number; readonly x2: number; readonly y2: number;
-  readonly hasMidDecor?: boolean; readonly isCompositeSpan?: boolean;
+  readonly hasMidDecor?: boolean; readonly isCompositeSpan?: boolean; readonly isInteriorSpan?: boolean;
 }
 export const createCenteredBox = (cx: number, cy: number, w: number, h: number): ScreenBox => ({
   minX: cx - w / 2, minY: cy - h / 2, maxX: cx + w / 2, maxY: cy + h / 2,
@@ -168,7 +168,7 @@ export function solveSegmentPillOrBracketPlacement(params: {
   const pillW = Math.max(textStr.length * 5.3 + 7, 18);
   const pillH = 11.5;
 
-  if (seg.isCompositeSpan) {
+  if (seg.isCompositeSpan && !seg.isInteriorSpan) {
     const offsets = [20, 26, -20, -26, 33];
     const ts = [0.5, 0.35, 0.65];
     let best = { lx: midX + nx * 20, ly: midY + ny * 20 + 2.8, offset: 20, cost: Infinity, box: createCenteredBox(midX, midY, pillW, pillH) };
@@ -196,8 +196,9 @@ export function solveSegmentPillOrBracketPlacement(params: {
     };
   }
 
-  const tList = seg.hasMidDecor ? [0.33, 0.67, 0.5, 0.25, 0.75, 0.4, 0.6] : [0.5, 0.35, 0.65, 0.26, 0.74, 0.42, 0.58];
-  const distList = [9, 13, 17, 22, -10, -14];
+  const isSplitMidAvoid = Boolean(seg.hasMidDecor || seg.isInteriorSpan);
+  const tList = isSplitMidAvoid ? [0.28, 0.72, 0.34, 0.66, 0.22, 0.78, 0.5] : [0.5, 0.35, 0.65, 0.26, 0.74, 0.42, 0.58];
+  const distList = seg.isInteriorSpan ? [0, 7, -7, 11, -11] : [9, 13, 17, 22, -10, -14];
   let best = { lx: midX + nx * 9, ly: midY + ny * 9 + 2.8, cost: Infinity, box: createCenteredBox(midX, midY, pillW, pillH) };
 
   for (let di = 0; di < distList.length; di++) {

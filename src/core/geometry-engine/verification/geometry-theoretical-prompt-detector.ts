@@ -36,6 +36,9 @@ export const THEORETICAL_PROMPT_PATTERNS: readonly RegExp[] = [
   /(?:مساحة|محيط|حجم)\s+(?:ال)?[\u0621-\u064A]+(?:\s+[\u0621-\u064A]+){0,3}\s+(?:تساوي|يساوي)\s+(?:طول|نصف|حاصل|مجموع|ضعف)\s/i,
   // خصائص مجسم أو شكل: «المكعب له 6 أوجه ...»
   /(?:ال[\u0621-\u064A]+)\s+له\s*\d+\s*(?:أوجه|أضلاع|رؤوس|أحرف)/i,
+  // تعاريف ومسلمات هندسية تقريرية بلا مطلوب عددي أو هندسي
+  /^(?:ال[\u0621-\u064A]+)\s+هو\s+(?:شكل|مضلع|مجسم)(?=\s|$|[.،؛])/i,
+  /(?:قياسها|قياسه|قياس)\s+\d+(?:\.\d+)?\s*(?:درجة|°)\s*دائماً/i,
   // مسائل لفظية حسابية بلا شكل: «... فما كتلة/ثمن/سعر ...»
   /فما\s*(?:كتلة|ثمن|سعر|تكلفة)/i,
 ];
@@ -57,7 +60,14 @@ export function isPurelyTheoreticalNoDiagramProblem(text: string): boolean {
   }
 
   const clean = toWesternNumeralsSSOT(text);
+  const hasDirectiveQuestionVerb =
+    /(?:أوجد|اوجد|احسب|ارسم|أثبت|اثبت|برهن|فما|(?:^|\s)كم(?=\s|$)|ما\s+(?:قيمة|طول|قياس|مساحة|محيط|نوع)|[؟?])/i.test(
+      clean
+    );
   for (const pat of THEORETICAL_PROMPT_PATTERNS) {
+    if (hasDirectiveQuestionVerb && (pat.source.includes("هو\\s+") || pat.source.includes("دائماً"))) {
+      continue;
+    }
     if (pat.test(clean)) return true;
   }
   return false;

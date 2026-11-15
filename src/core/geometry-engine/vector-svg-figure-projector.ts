@@ -100,6 +100,14 @@ export function projectGeometryFigureToSVGMarkup(
     if (seg.arrowAtStart || seg.isLine) arrowTipVertexIds.add(seg.fromVertexId);
   }
 
+  const isPolygonBoundaryEdge = (aId: string, bId: string): boolean =>
+    (figure.polygons ?? []).some((poly) => {
+      const idx = poly.indexOf(aId);
+      if (idx === -1) return false;
+      const len = poly.length;
+      return poly[(idx + 1) % len] === bId || poly[(idx - 1 + len) % len] === bId;
+    });
+
   const occupiedBoxes: ScreenBox[] = [];
   const obstacleSegments: ScreenSegmentObstacle[] = [];
   const segmentMeta = figure.segments.map((seg) => {
@@ -107,11 +115,13 @@ export function projectGeometryFigureToSVGMarkup(
     const toV = vertexMap.get(seg.toVertexId);
     if (!fromV || !toV) return null;
     const isCompositeSpan = Boolean(seg.lengthLabel) && isCompositeCollinearSpan(seg.fromVertexId, seg.toVertexId, fromV.screen, toV.screen, vertexMap.values());
+    const isInteriorSpan = !isPolygonBoundaryEdge(seg.fromVertexId, seg.toVertexId);
     const obs: ScreenSegmentObstacle = {
       fromId: seg.fromVertexId, toId: seg.toVertexId,
       x1: fromV.screen.sx, y1: fromV.screen.sy, x2: toV.screen.sx, y2: toV.screen.sy,
       hasMidDecor: Boolean(seg.tickMarks || seg.parallelArrows),
       isCompositeSpan,
+      isInteriorSpan,
     };
     obstacleSegments.push(obs);
     if (!isCompositeSpan && (seg.tickMarks || seg.parallelArrows)) {
@@ -181,6 +191,9 @@ export function projectGeometryFigureToSVGMarkup(
     return `${dotsSvg}<text x="${placed.lx.toFixed(1)}" y="${placed.ly.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}" paint-order="stroke" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round">${localized}</text>`;
   }).join("");
 
+  const wrapLtrMath = (expr: string): string =>
+    /[√A-Za-z+\-×÷/^]/.test(expr) ? `<tspan direction="ltr" unicode-bidi="isolate">${expr}</tspan>` : expr;
+
   const extraPointsForBounds: PlacedPointLike[] = Array.from(vertexMap.values()).map((v) => v.screen);
   const lengthLabelsSvg = segmentMeta.map(({ seg, obs }) => {
     if (!seg.lengthLabel) return "";
@@ -189,6 +202,7 @@ export function projectGeometryFigureToSVGMarkup(
     const formattedVal = localizeFigureLabelText(String(rawVal), notation, numeralMode);
     const unitText = !isUnknown && seg.lengthLabel.unit ? ` ${seg.lengthLabel.unit}` : "";
     const textStr = `${formattedVal}${unitText}`;
+    const displayInnerSvg = `${wrapLtrMath(formattedVal)}${unitText}`;
     const placement = solveSegmentPillOrBracketPlacement({
       seg: obs, textStr, centerSx, centerSy, occupiedBoxes, allSegments: obstacleSegments, bounds: { width, height },
     });
@@ -207,10 +221,12 @@ export function projectGeometryFigureToSVGMarkup(
       extraPointsForBounds.push({ sx: bx1, sy: by1 }, { sx: bx2, sy: by2 });
       bracketSvg = `<path d="M ${sx1.toFixed(1)} ${sy1.toFixed(1)} L ${bx1.toFixed(1)} ${by1.toFixed(1)} L ${bx2.toFixed(1)} ${by2.toFixed(1)} L ${sx2.toFixed(1)} ${sy2.toFixed(1)}" fill="none" stroke="${accentColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.85" />`;
     }
-    const unknownFrameSvg = isUnknown
+    const labelBoxSvg = isUnknown
       ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${UNKNOWN_LABEL_BORDER}" stroke-width="0.8" stroke-dasharray="${UNKNOWN_LABEL_DASHARRAY}" />`
-      : "";
-    return `${bracketSvg}${unknownFrameSvg}<text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="8.0" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${textStr}</text>`;
+      : obs.isCompositeSpan && obs.isInteriorSpan
+        ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="#FFFFFF" fill-opacity="0.92" stroke="${accentColor}" stroke-width="0.45" stroke-opacity="0.45" />`
+        : "";
+    return `${bracketSvg}${labelBoxSvg}<text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="8.0" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${displayInnerSvg}</text>`;
   }).join("");
 
   const interiorBadgesSvg = (figure.interiorBadges ?? []).map((b) => {
