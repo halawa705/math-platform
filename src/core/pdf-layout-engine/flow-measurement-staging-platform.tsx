@@ -59,6 +59,7 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
       ref={stagingRef}
       dir="rtl"
       aria-hidden="true"
+      data-flow-staging="true"
       className={`${settings.boldProseText ? "pdf-bold-prose" : "pdf-normal-prose"} ${
         settings.boldMathExpressions !== false ? "pdf-bold-math" : "pdf-normal-math"
       }`}

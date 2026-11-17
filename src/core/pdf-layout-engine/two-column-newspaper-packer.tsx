@@ -23,7 +23,7 @@ import type { FlowItem } from "./flow-item-model";
 import { PageFillReportChip } from "./page-fill-report-chip";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
-import { useAutoFitSweepController } from "./use-autofit-sweep-controller";
+import { useAutoFitSweepPhaseController } from "./use-autofit-sweep-controller";
 import { useFlowStagingLiveMeasurer } from "./use-flow-staging-live-measurer";
 
 export const MODULE_ID_TWO_COLUMN_NEWSPAPER_PACKER = "two_column_newspaper_packer" as const;
@@ -65,6 +65,17 @@ export default function TwoColumnNewspaperPacker({
   const [activeRung, setActiveRung] = React.useState(0);
   const rung = mode === "off" ? undefined : ladder[Math.min(activeRung, Math.max(0, ladder.length - 1))];
   const hasManualLines = settings.hasManualEssayLinesLock === true;
+  const inputSignature = `${questions.map((q) => `${q.id}:${hasManualLines || q.hasCustomAnswerLines ? (q.answerLinesCount ?? "") : ""}`).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${hasManualLines ? (settings.essayAnswerLinesCount ?? "") : "auto"}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}|${mode}|${settings.targetMaxPages ?? ""}`;
+  const { sweep, submitMeasuredPages } = useAutoFitSweepPhaseController({
+    mode, rungCount: ladder.length, inputSignature,
+  });
+  const settledSigRef = useRef<string>("");
+  if (sweep.phase === "done") settledSigRef.current = inputSignature;
+  const isSweepingOrPending =
+    mode !== "off" &&
+    ladder.length > 0 &&
+    (sweep.phase === "sweeping" || (sweep.phase === "idle" && settledSigRef.current !== inputSignature));
+
   const effSettings = React.useMemo(
     () =>
       rung
@@ -103,7 +114,7 @@ export default function TwoColumnNewspaperPacker({
     [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
-  const stagingStamp = `${flowItems.length}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}`;
+  const stagingStamp = `${flowItems.length}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}:${isSweepingOrPending ? 1 : 0}`;
   const measured = useFlowStagingLiveMeasurer(stagingRef, stagingStamp, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = React.useMemo(
@@ -118,18 +129,18 @@ export default function TwoColumnNewspaperPacker({
       packFlowItemsWithBestPracticeOrder(flowItems, measured.heights, {
         budgets: pageBudgets,
         density: densityProfile,
+        skipSolutionSplits: isSweepingOrPending,
         manualCompactHeader: effSettings.compactHeader,
       }),
-    [flowItems, measured.heights, pageBudgets, densityProfile, effSettings.compactHeader]
+    [flowItems, measured.heights, pageBudgets, densityProfile, isSweepingOrPending, effSettings.compactHeader]
   );
 
-  const inputSignature = `${questions.map((q) => `${q.id}:${q.answerLinesCount ?? ""}`).join(",")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${settings.essayAnswerLinesCount ?? ""}|${settings.hasManualEssayLinesLock ? 1 : 0}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${settings.customDocumentTitle}`;
-  const sweep = useAutoFitSweepController({
-    mode, rungCount: ladder.length, targetMaxPages: settings.targetMaxPages, inputSignature, measureStamp: measured.stamp, pages: discretePages,
-  });
+  useEffect(() => {
+    submitMeasuredPages(measured.stamp, discretePages, settings.targetMaxPages);
+  }, [submitMeasuredPages, measured.stamp, discretePages, settings.targetMaxPages]);
 
   useEffect(() => { setActiveRung(sweep.phase === "idle" ? 0 : sweep.probeRungIndex); }, [sweep.phase, sweep.probeRungIndex]);
-  useEffect(() => { if (sweep.phase !== "sweeping") onPagesCountChange?.(discretePages.length); }, [discretePages.length, sweep.phase, onPagesCountChange]);
+  useEffect(() => { if (!isSweepingOrPending) onPagesCountChange?.(discretePages.length); }, [discretePages.length, isSweepingOrPending, onPagesCountChange]);
   const sweepDoneReportedRef = useRef<boolean>(false);
   useEffect(() => {
     if (sweep.phase === "sweeping") {
@@ -141,18 +152,21 @@ export default function TwoColumnNewspaperPacker({
   }, [sweep.phase, rung?.answerLines, hasManualLines, onAutoFitResolvedLines]);
 
   const stableRef = useRef({ pages: discretePages, settings: effSettings, heights: measured.heights });
-  if (sweep.phase !== "sweeping" || stableRef.current.pages.length === 0) {
+  if (!isSweepingOrPending || stableRef.current.pages.length === 0) {
     stableRef.current = { pages: discretePages, settings: effSettings, heights: measured.heights };
   }
-  const viewPages = sweep.phase === "sweeping" ? stableRef.current.pages : discretePages;
-  const viewSettings = sweep.phase === "sweeping" ? stableRef.current.settings : effSettings;
-  const viewHeights = sweep.phase === "sweeping" ? stableRef.current.heights : measured.heights;
+  const viewPages = isSweepingOrPending ? stableRef.current.pages : discretePages;
+  const viewSettings = isSweepingOrPending ? stableRef.current.settings : effSettings;
+  const viewHeights = isSweepingOrPending ? stableRef.current.heights : measured.heights;
 
   const renderStagingItem = (item: FlowItem) => (
     <FlowItemRenderer key={item.id} item={item} settings={effSettings} palette={palette} identity={identity} questions={questions} />
   );
-  const renderViewItem = (item: FlowItem) => (
-    <FlowItemRenderer key={item.id} item={item} settings={viewSettings} palette={palette} identity={identity} questions={questions} />
+  const renderViewItem = React.useCallback(
+    (item: FlowItem) => (
+      <FlowItemRenderer key={item.id} item={item} settings={viewSettings} palette={palette} identity={identity} questions={questions} />
+    ),
+    [viewSettings, palette, identity, questions]
   );
 
   return (
@@ -172,6 +186,7 @@ export default function TwoColumnNewspaperPacker({
         stagingRef={stagingRef} flowItems={flowItems} renderFlowItem={renderStagingItem} settings={effSettings}
         identity={identity} palette={palette} activeFont={activeFont} subtitleAr={subtitleAr} isSolvedMode={isSolvedMode}
         totalIdeasCount={totalIdeasCount} totalQuestionsCount={questions.length} totalMarks={totalMarks}
+        skipSplitVariants={isSweepingOrPending}
       />
 
       {sweep.phase === "sweeping" && (

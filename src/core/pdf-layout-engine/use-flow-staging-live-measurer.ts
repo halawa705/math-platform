@@ -65,12 +65,15 @@ export function useFlowStagingLiveMeasurer(
   useIsomorphicLayoutEffect(() => {
     const container = stagingRef.current;
     if (!container) return;
+    let cancelled = false;
 
     const measure = () => {
+      if (cancelled) return;
       const next = readSnapshot(container, stamp);
       setSnapshot((prev) => (isSameSnapshot(prev, next) ? prev : next));
     };
     const schedule = () => {
+      if (cancelled) return;
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
       frameRef.current = requestAnimationFrame(measure);
     };
@@ -78,10 +81,13 @@ export function useFlowStagingLiveMeasurer(
     measure();
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(schedule) : null;
     container.querySelectorAll<HTMLElement>("[data-flow-item-id], [data-flow-chrome]").forEach((n) => observer?.observe(n));
-    document.fonts?.ready.then(schedule).catch(() => {});
+    if (typeof document !== "undefined" && document.fonts && document.fonts.status !== "loaded") {
+      document.fonts.ready.then(schedule).catch(() => {});
+    }
     container.addEventListener("load", schedule, true);
 
     return () => {
+      cancelled = true;
       observer?.disconnect();
       container.removeEventListener("load", schedule, true);
       if (frameRef.current) cancelAnimationFrame(frameRef.current);

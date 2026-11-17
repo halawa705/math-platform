@@ -81,7 +81,7 @@ function FlowColumn({ items, gapPx, targets, renderFlowItem, isSchoolExam = fals
   );
 }
 
-export function SovereignDiscretePageView({
+export const SovereignDiscretePageView = React.memo(function SovereignDiscretePageView({
   page, totalPagesCount, settings, identity, palette, activeFont, subtitleAr = "",
   isSolvedMode, totalIdeasCount, totalQuestionsCount, totalMarks, renderFlowItem,
 }: SovereignDiscretePageViewProps) {
@@ -217,4 +217,4 @@ export function SovereignDiscretePageView({
       </div>
     </section>
   );
-}
+});

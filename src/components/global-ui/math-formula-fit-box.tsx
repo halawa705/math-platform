@@ -11,7 +11,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 export const MODULE_ID_MATH_FORMULA_FIT_BOX = "math_formula_fit_box" as const;
 
-const FIT_SCALE_STEPS_DESCENDING: readonly number[] = [1, 0.92, 0.85, 0.78, 0.72, 0.66];
+const FIT_SCALE_STEPS_DESCENDING: readonly number[] = [0.92, 0.85, 0.78, 0.72, 0.66];
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export interface MathFormulaFitBoxProps {
@@ -20,15 +20,22 @@ export interface MathFormulaFitBoxProps {
 }
 
 function fitFormulaIntoContainer(box: HTMLElement): void {
-  box.classList.remove("math-fit-wrap");
+  const hadWrap = box.classList.contains("math-fit-wrap");
+  const hadScale = box.style.fontSize !== "";
+  if (hadWrap) box.classList.remove("math-fit-wrap");
+  if (hadScale) box.style.fontSize = "";
+
   const containerEl =
     (box.closest("div, p, li, td, th") as HTMLElement | null) || box.parentElement;
   const availableWidth =
     containerEl && containerEl.clientWidth > 10 ? containerEl.clientWidth - 4 : box.clientWidth;
   if (availableWidth <= 0) return;
 
+  // المسار السريع: أغلب المعادلات تتسع بالحجم الطبيعي دون أي كتابة على DOM أو إعادة تدفق
+  if (box.scrollWidth <= availableWidth + 1) return;
+
   for (const scale of FIT_SCALE_STEPS_DESCENDING) {
-    box.style.fontSize = scale === 1 ? "" : `${scale}em`;
+    box.style.fontSize = `${scale}em`;
     if (box.scrollWidth <= availableWidth + 1) return;
   }
   box.style.fontSize = "0.82em";
@@ -41,16 +48,26 @@ export default function MathFormulaFitBox({ html, isBlock = false }: MathFormula
   useIsomorphicLayoutEffect(() => {
     const box = boxRef.current;
     if (!box) return;
-    const refit = () => fitFormulaIntoContainer(box);
+    let cancelled = false;
+    const isStaging = Boolean(box.closest('[data-flow-staging="true"]'));
+    const refit = () => {
+      if (!cancelled) fitFormulaIntoContainer(box);
+    };
     refit();
-    const targetEl =
-      (box.closest("div, p, li, td, th") as HTMLElement | null) || box.parentElement;
-    const observer = typeof ResizeObserver !== "undefined" && targetEl
-      ? new ResizeObserver(refit)
+
+    const targetEl = !isStaging
+      ? (box.closest("div, p, li, td, th") as HTMLElement | null) || box.parentElement
       : null;
+    const observer =
+      targetEl && typeof ResizeObserver !== "undefined" ? new ResizeObserver(refit) : null;
     if (observer && targetEl) observer.observe(targetEl);
-    document.fonts?.ready.then(refit).catch(() => {});
-    return () => observer?.disconnect();
+    if (!isStaging) {
+      document.fonts?.ready.then(refit).catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+    };
   }, [html]);
 
   return (
