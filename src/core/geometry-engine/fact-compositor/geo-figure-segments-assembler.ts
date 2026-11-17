@@ -173,7 +173,11 @@ export function assembleCanonicalFigureSegments(params: {
         mids.length > 0 &&
         lengths.has(base) &&
         !labeledFullSides.has(base) &&
-        !chain.some((u, j) => j + 1 < chain.length && lengths.has(pairKey(u, chain[j + 1])))
+        !chain.some(
+          (u, j) =>
+            j + 1 < chain.length &&
+            lengths.get(pairKey(u, chain[j + 1]))?.text === lengths.get(base)?.text
+        )
       ) {
         labeledFullSides.add(base);
         seenSegPairs.add(base);
@@ -191,7 +195,67 @@ export function assembleCanonicalFigureSegments(params: {
     });
   }
   for (const e of extras) {
-    if (P(e.a) && P(e.b)) pushSeg(e.a, e.b, pairKey(e.a, e.b), e.dashed, e.lineKind, true);
+    const pA = P(e.a);
+    const pB = P(e.b);
+    if (!pA || !pB) continue;
+    const base = pairKey(e.a, e.b);
+    const segLen = vDist(pA, pB);
+    const mids =
+      segLen > 1e-4
+        ? [...points.entries()]
+            .filter(([k, pk]) => {
+              if (k === e.a || k === e.b) return false;
+              const h = host.get(k);
+              if (h && pairKey(h[0], h[1]) === base) return true;
+              const t =
+                ((pk.x - pA.x) * (pB.x - pA.x) + (pk.y - pA.y) * (pB.y - pA.y)) /
+                (segLen * segLen);
+              if (t <= 0.05 || t >= 0.95) return false;
+              const cross =
+                Math.abs((pB.x - pA.x) * (pk.y - pA.y) - (pB.y - pA.y) * (pk.x - pA.x)) /
+                segLen;
+              return cross <= 1e-2 * segLen;
+            })
+            .map(([k]) => k)
+            .sort((m, n) => vDist(pA, P(m)!) - vDist(pA, P(n)!))
+        : [];
+    const chain = [e.a, ...mids, e.b];
+    const hasSubLenOrTick =
+      mids.length > 0 &&
+      chain.some(
+        (u, j) =>
+          j + 1 < chain.length &&
+          (lengths.has(pairKey(u, chain[j + 1])) || ticks.has(pairKey(u, chain[j + 1])))
+      );
+    if (hasSubLenOrTick) {
+      for (let j = 0; j + 1 < chain.length; j++) {
+        const isLast = j + 2 === chain.length;
+        pushSeg(
+          chain[j],
+          chain[j + 1],
+          base,
+          e.dashed,
+          isLast ? e.lineKind : undefined,
+          isLast
+        );
+      }
+      if (lengths.has(base) && !labeledFullSides.has(base)) {
+        labeledFullSides.add(base);
+        seenSegPairs.add(base);
+        const fullLen = lengths.get(base)!;
+        segments.push({
+          id: `${figureId}_s_${segments.length}`,
+          fromVertexId: keyId(e.a),
+          toVertexId: keyId(e.b),
+          lengthLabel: {
+            value: fullLen.symbolic ? fullLen.text : (fullLen.numeric ?? fullLen.text),
+            unit: (fullLen.unit ?? "سم") as "سم",
+          },
+        });
+      }
+    } else {
+      pushSeg(e.a, e.b, base, e.dashed, e.lineKind, true);
+    }
   }
   return segments;
 }

@@ -171,55 +171,6 @@ export function resolveRatioFractionOnSegment(
   return Math.max(0.08, Math.min(0.92, frac));
 }
 
-export function tryOrientPerpendicularMediansTriangle(params: {
-  facts: readonly GeoFact[];
-  polygons: readonly { labels: readonly string[] }[];
-  lengths: ReadonlyMap<string, { numeric?: number }>;
-  points: Map<string, Vec2>;
-}): { meetVertex: string; apex1: string; apex2: string; seg1Key: string; seg2Key: string } | null {
-  const { facts, polygons, lengths, points } = params;
-  const tri = polygons.find((p) => p.labels.length === 3);
-  if (!tri) return null;
-  const perpFact = facts.find(
-    (f): f is Extract<GeoFact, { k: "perp" }> =>
-      f.k === "perp" &&
-      tri.labels.some((v) => f.a.includes(v)) &&
-      tri.labels.some((v) => f.b.includes(v)) &&
-      f.a[0] !== f.b[0] &&
-      pairKey(f.a[0], f.a[1]) !== pairKey(f.b[0], f.b[1])
-  );
-  if (!perpFact) return null;
-  const apex1 = tri.labels.find((v) => perpFact.a.includes(v));
-  const apex2 = tri.labels.find((v) => perpFact.b.includes(v));
-  if (!apex1 || !apex2 || apex1 === apex2) return null;
-  const foot1 = perpFact.a[0] === apex1 ? perpFact.a[1] : perpFact.a[0];
-  const foot2 = perpFact.b[0] === apex2 ? perpFact.b[1] : perpFact.b[0];
-  const hasMed1 = facts.some((f) => f.k === "median" && pairKey(f.seg[0], f.seg[1]) === pairKey(apex1, foot1));
-  const hasMed2 = facts.some((f) => f.k === "median" && pairKey(f.seg[0], f.seg[1]) === pairKey(apex2, foot2));
-  if (!hasMed1 || !hasMed2) return null;
-  const meetFact = facts.find(
-    (f): f is Extract<GeoFact, { k: "intersect" }> =>
-      f.k === "intersect" &&
-      ((pairKey(f.a[0], f.a[1]) === pairKey(apex1, foot1) && pairKey(f.b[0], f.b[1]) === pairKey(apex2, foot2)) ||
-        (pairKey(f.b[0], f.b[1]) === pairKey(apex1, foot1) && pairKey(f.a[0], f.a[1]) === pairKey(apex2, foot2)))
-  );
-  const meetV = meetFact?.p ?? "M";
-  const third = tri.labels.find((v) => v !== apex1 && v !== apex2)!;
-  const amLen = lengths.get(pairKey(apex1, meetV))?.numeric ?? 6;
-  const bmLen = lengths.get(pairKey(apex2, meetV))?.numeric ?? 5;
-  points.set(apex1, { x: 0, y: amLen });
-  points.set(apex2, { x: bmLen, y: 0 });
-  points.set(third, { x: -bmLen, y: -amLen });
-  points.set(meetV, { x: 0, y: 0 });
-  return {
-    meetVertex: meetV,
-    apex1,
-    apex2,
-    seg1Key: pairKey(apex1, foot1),
-    seg2Key: pairKey(apex2, foot2),
-  };
-}
-
 export function applyMedianFactOnTriangle(params: {
   seg: Seg;
   trianglesSides: (apex: string) => Seg | null;

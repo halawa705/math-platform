@@ -192,7 +192,9 @@ export function projectGeometryFigureToSVGMarkup(
   }).join("");
 
   const wrapLtrMath = (expr: string): string =>
-    /[√A-Za-z+\-×÷/^]/.test(expr) ? `<tspan direction="ltr" unicode-bidi="isolate">${expr}</tspan>` : expr;
+    /[√A-Za-z+\-×÷/^]/.test(expr)
+      ? `<tspan direction="ltr" unicode-bidi="isolate" style="direction:ltr;unicode-bidi:bidi-override">\u2066${expr}\u2069</tspan>`
+      : expr;
 
   const extraPointsForBounds: PlacedPointLike[] = Array.from(vertexMap.values()).map((v) => v.screen);
   const lengthLabelsSvg = segmentMeta.map(({ seg, obs }) => {
@@ -245,5 +247,5 @@ export function projectGeometryFigureToSVGMarkup(
     ? `<rect x="${vb.minX}" y="${vb.minY}" width="${vb.width}" height="${vb.height}" rx="8" fill="${backgroundColor}" />`
     : "";
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" dir="ltr" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%;direction:ltr" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
 }

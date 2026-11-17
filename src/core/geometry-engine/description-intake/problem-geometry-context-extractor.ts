@@ -36,7 +36,7 @@ export const MODULE_ID_PROBLEM_GEOMETRY_CONTEXT_EXTRACTOR =
 function stripGoalClausesForAssertions(text: string): string {
   return text
     .replace(/\b(?:to\s+(?:find|prove|calculate|show|determine|get|obtain)|for|giving)\b[^;\n]*(?=\b(?:where|if|given\s+that)\b|$)/gi, " ")
-    .replace(/(?:أوجد|اوجد|احسب|فاحسب|لإيجاد|لايجاد|لحساب|أثبت\s*أن|اثبت\s*ان|إثبات\s*أن|اثبات\s*ان|برهن\s*أن|برهن\s*ان|المطلوب|فإن|فان)(?:\s*[:：]?\s*|\s+)[\s\S]*?(?=\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s|[؛;]|$)/gi, " ");
+    .replace(/(?:أوجد|اوجد|احسب|فاحسب|لإيجاد|لايجاد|لحساب|(?:أثبت|اثبت|إثبات|اثبات|برهن|بيّن|بين)(?:\s*(?:بالبرهان|هندسياً|هندسيا|رياضياً|رياضيا))?\s*أن|(?:أثبت|اثبت|برهن)\s+ان|المطلوب|فإن|فان)(?:\s*[:：]?\s*|\s+)[\s\S]*?(?=\s(?:حيث|إذا\s*كان|اذا\s*كان|علماً\s*بأن|علما\s*بأن|وفيه)\s|[؛;]|$)/gi, " ");
 }
 
 /**
@@ -79,7 +79,7 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
 
   // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (من المعطيات فقط لا المطلوب ولا المعاملات المضروبة)
   const lengthMatches = assertionsClean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?|\())(?=[\s،,;؛|.)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?(?:\s*√\s*[0-9]+)?|[0-9.xyzسصع²^+\-\s]*[0-9xyzسصع][0-9.xyzسصع²^+\-\s]*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?|\([0-9A-Za-zxyzسصع]))(?=[\s،,;؛|.)]|$)/gi
   );
   for (const lm of lengthMatches) {
     const segRaw = lm[1].replace(/\s+/g, "");
@@ -231,12 +231,20 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (!facts.includes(extraFact)) facts.push(extraFact);
   }
 
-  // 10. المثلث القائم والمتساوي الساقين
+  // 10. المثلث القائم والمتساوي الساقين ومتساوي الأضلاع
   const rightTriM = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i)
     ?? assertionsClean.match(/\b([A-Za-z]{3})\s*مثلث\s*قائم(?:\s*الزاوية)?\s*(?:في|عند)\s*([A-Za-z])/i);
-  if (rightTriM) facts.push(`مثلث ${rightTriM[1]} قائم في ${rightTriM[2]}`);
+  if (rightTriM) {
+    const plainIdx = facts.indexOf(`مثلث ${rightTriM[1]}`);
+    if (plainIdx >= 0) facts.splice(plainIdx, 1);
+    facts.unshift(`مثلث ${rightTriM[1]} قائم في ${rightTriM[2]}`);
+  }
   const isoTriM = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
-  if (isoTriM) facts.push(`مثلث ${isoTriM[1]} متساوي الساقين`);
+  if (isoTriM) {
+    const plainIdx = facts.indexOf(`مثلث ${isoTriM[1]}`);
+    if (plainIdx >= 0) facts.splice(plainIdx, 1);
+    facts.unshift(`مثلث ${isoTriM[1]} متساوي الساقين`);
+  }
 
   // 11. استخراج الارتفاع الساقط على القاعدة (مثل: الارتفاع أ د في المثلث أ ب جـ)
   const altArM = clean.match(/الارتفاع\s+([أ-ي]ـ?)\s*([أ-ي]ـ?)(?![أ-ي])[\s\S]{0,30}?(?:المثلث|مثلث)\s+([أ-ي]ـ?\s*[أ-ي]ـ?\s*[أ-ي]ـ?)/i);

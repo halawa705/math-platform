@@ -28,7 +28,7 @@ export const THEORETICAL_PROMPT_PATTERNS: readonly RegExp[] = [
   /فإن\s*معامل\s*تشابه.*يساوي/i,
   /فإن\s*نسبة\s*تشابه.*تساوي/i,
   /محيط\s*(?:مثلث|Δ)[^\n]*[\/:]\s*محيط/i,
-  /فإن\s*محيط\s*(?:مثلث|Δ)/i,
+  /فإن\s*محيط\s*(?:مثلث|Δ)(?![^\n]*(?:منتصف|متوسط|نقطة\s*(?:تلاقي|تقاطع)))/i,
   /يكون\s*المثلث.*قائماً\s*في\s*:/i,
   /أطوال\s*أضلاع\s*مثلث\s*هي\s*[0-9٠-٩]+.*ومحيط\s*مثلث\s*آخر/i,
   /مثلثان\s*متشابهان\s*معامل\s*التشابه\s*بينهما/i,
@@ -60,6 +60,9 @@ export function isPurelyTheoreticalNoDiagramProblem(text: string): boolean {
   }
 
   const clean = toWesternNumeralsSSOT(text);
+  if (/(?:منتصف|متوسط|نقطة\s*(?:تلاقي|تقاطع)\s*(?:ال)?متوسطات)/.test(clean) && /[0-9]/.test(clean)) {
+    return false;
+  }
   const hasDirectiveQuestionVerb =
     /(?:أوجد|اوجد|احسب|ارسم|أثبت|اثبت|برهن|فما|(?:^|\s)كم(?=\s|$)|ما\s+(?:قيمة|طول|قياس|مساحة|محيط|نوع)|[؟?])/i.test(
       clean

@@ -54,7 +54,7 @@ export function extractPromptQuadMidpointAndMeasureFacts(
     facts.push(`محيط = ${perimM[1]} ${perimM[2] === "م" ? "م" : "سم"}`);
   }
   const areaM = normAssert.match(
-    /مساحت?(?:ه|ها|\s*(?:ال)?(?:مثلث|مربع|مستطيل|شبه\s*منحرف)\s*[A-Z]{0,4})?\s*(?:تساوي|يساوي|=)?\s*(\d+(?:\.\d+)?)\s*(سم|م)\s*[²2]?/
+    /مساح(?:ة|ته|تها)(?:\s*الكلية|\s*سطح|\s*(?:ال)?(?:مثلث|مربع|مستطيل|شبه\s*منحرف|متوازي\s*أضلاع)\s*[A-Z]{0,4})*\s*(?:تساوي|يساوي|=)?\s*(\d+(?:\.\d+)?)\s*(سم|م)\s*[²2]?/
   );
   if (areaM) {
     facts.push(`مساحة = ${areaM[1]} ${areaM[2] === "م" ? "م²" : "سم²"}`);
@@ -267,6 +267,10 @@ export function mergeCleanedTagClausesIntoParts(
       }
     }
     const normClause = canonicalFactKey(clause);
+    const plainTri = clause.match(/^(?:ال)?مثلث\s+([A-Z]{3})$/i);
+    if (plainTri && parts.some((p) => new RegExp(`مثلث\\s+${plainTri[1]}\\b`, "i").test(p))) {
+      continue;
+    }
     const isDuplicate = parts.some((p) => {
       const normP = canonicalFactKey(p);
       return (

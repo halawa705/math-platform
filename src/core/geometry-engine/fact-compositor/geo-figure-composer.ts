@@ -8,7 +8,8 @@ import { splitDescriptionIntoFactStrings } from "./geo-fact-splitter";
 import { parseGeoFactString } from "./geo-fact-parser";
 import { pairKey, toDisplayLabel } from "./geo-label-utils";
 import { placeDeclaredShapes, type PlacedPolygon } from "./geo-shape-placers";
-import { applyMedianFactOnTriangle, resolveRatioFractionOnSegment, sortComposerFactsTopologically, tryOrientPerpendicularMediansTriangle } from "./geo-triangle-placer";
+import { applyMedianFactOnTriangle, resolveRatioFractionOnSegment, sortComposerFactsTopologically } from "./geo-triangle-placer";
+import { tryOrientCentroidAndPerpMediansTriangle } from "./geo-centroid-triangle-solver";
 import { buildOutwardAreaSquaresForFacts } from "./geo-pythagoras-squares-helper";
 import { tryPlaceParallelWithMissingEndpoints, tryPlacePointOnWithCollinearExtension } from "./geo-composite-topology-placer";
 import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
@@ -22,6 +23,7 @@ import { isSimilarityGeometryContext } from "../similarity-family/similarity-con
 import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
 import { matchPrepGrade1ParallelismFigure } from "../curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
+import { findMissingDeclaredConstructionVertices } from "../verification/geometry-figure-completeness-checker";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
 import { extractLinearEntityKinds, type LinearEntityKind, type LinearEntityKindMap } from "../description-intake/linear-entity-kind-extractor";
@@ -33,34 +35,25 @@ export interface ComposeResult { readonly figure: CanonicalGeometryFigureIR | nu
 const clamp = (t: number) => Math.min(0.92, Math.max(0.08, t));
 
 export function composeFigureFromGeometryDescription(
-  description: string,
-  figureId: string,
-  notation: "english" | "arabic" = "english",
-  providedLinearKindMap?: LinearEntityKindMap
+  description: string, figureId: string, notation: "english" | "arabic" = "english", providedLinearKindMap?: LinearEntityKindMap
 ): ComposeResult {
   const linearKindMap = providedLinearKindMap ?? extractLinearEntityKinds(description);
   const specDual = extractGeometryProblemSpecDual(description);
   const consistency = verifyProblemSpecMathematicalConsistency(specDual.spec);
   if (!consistency.passed) return { figure: null, warnings: [...consistency.violations] };
 
-  const isQuadOrMidpointContext = /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف)/.test(description);
+  const isQuadOrMidpointContext = /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف|متوسط|تلاقي)/.test(description);
   if (!isQuadOrMidpointContext && isSimilarityGeometryContext(description)) {
     const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
     if (parametricFig) return { figure: parametricFig, warnings: [] };
   }
-
   const hasTrigKeywords = /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة/i.test(description);
-  const hasExplicitNamedTri = /مثلث\s*[A-Z]{3}/i.test(description);
-  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !hasExplicitNamedTri))
-    ? matchPrepGrade3TrigonometryFigure(description, figureId, notation)
-    : undefined;
+  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !/مثلث\s*[A-Z]{3}/i.test(description))) ? matchPrepGrade3TrigonometryFigure(description, figureId, notation) : undefined;
   if (trigCatalogFig) return { figure: trigCatalogFig, warnings: [] };
-
   if (!/°|درجة|زاوي/.test(description)) {
     const earlyParallelTransFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
     if (earlyParallelTransFig) return { figure: earlyParallelTransFig, warnings: [] };
   }
-
   const hasNamedIntersections = /في\s*(?:النقطتين\s*)?(?:[A-Z]|[أ-ي]ـ?)\s*و\s*(?:[A-Z]|[أ-ي]ـ?)\b/.test(description);
   const parallelCatalogFig = !hasNamedIntersections && !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
     ? matchPrepGrade1ParallelismFigure(description, figureId, notation)
@@ -70,7 +63,7 @@ export function composeFigureFromGeometryDescription(
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
   if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
     const fromTag = composeFigureFromGeometryDescription(embeddedTagMatch[1].trim(), figureId, notation);
-    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description)) return fromTag;
+    if (fromTag.figure && fromTag.warnings.length === 0 && isFigureFaithfulToPrompt(fromTag.figure, description) && findMissingDeclaredConstructionVertices(fromTag.figure, description).length === 0) return fromTag;
   }
   const warnings: string[] = [];
   const facts: GeoFact[] = [];
@@ -116,7 +109,10 @@ export function composeFigureFromGeometryDescription(
     else if (lineKind && !extras[idx].lineKind) extras[idx] = { ...extras[idx], lineKind };
   };
   const isPolygonSide = (a: string, b: string) => polygons.some((p) => p.labels.some((l, i) => pairKey(l, p.labels[(i + 1) % p.labels.length]) === pairKey(a, b)));
-  const addAngle = (vertex: string, arm1: string, arm2: string, extra: Partial<CanonicalAngleNode> = {}) => angles.push({ id: `${figureId}_ang_${angles.length}`, vertexId: `${figureId}_v_${vertex}`, arm1VertexId: `${figureId}_v_${arm1}`, arm2VertexId: `${figureId}_v_${arm2}`, ...extra });
+  const addAngle = (vertex: string, arm1: string, arm2: string, extra: Partial<CanonicalAngleNode> = {}) => {
+    if (extra.isRightAngle && angles.some((a) => a.isRightAngle && a.vertexId === `${figureId}_v_${vertex}`)) return;
+    angles.push({ id: `${figureId}_ang_${angles.length}`, vertexId: `${figureId}_v_${vertex}`, arm1VertexId: `${figureId}_v_${arm1}`, arm2VertexId: `${figureId}_v_${arm2}`, ...extra });
+  };
 
   for (const p of polygons) {
     if (p.rightAt && p.labels.length === 3) addAngle(p.rightAt, ...(p.labels.filter((l) => l !== p.rightAt) as [string, string]), { isRightAngle: true, degrees: 90 });
@@ -127,7 +123,8 @@ export function composeFigureFromGeometryDescription(
     }
   }
 
-  const perpMedians = tryOrientPerpendicularMediansTriangle({ facts, polygons, lengths, points });
+  const centroidOriented = tryOrientCentroidAndPerpMediansTriangle({ facts, polygons, lengths, points });
+  const perpMedians = centroidOriented.perpRightAngle ?? null;
   if (perpMedians) addAngle(perpMedians.meetVertex, perpMedians.apex1, perpMedians.apex2, { isRightAngle: true, degrees: 90 });
 
   const ratioOnSeg = (p: string, a: string, b: string): number => {
@@ -287,11 +284,13 @@ export function composeFigureFromGeometryDescription(
   const allSegments: CanonicalSegmentNode[] = [...segments, ...areaSquares.segments];
   const hasQuad = polygons.some((p) => p.labels.length === 4);
   const mergedBadges = [...areaSquares.interiorBadges, ...buildPerimeterAndAreaBadges({ facts, polygons, points, figureId })];
+  const baseTitle = description.slice(0, 60);
+  const titleArabic = centroidOriented.notToScale ? `${baseTitle} — غير مرسوم بمقياس رسم` : baseTitle;
   return {
     warnings,
     figure: {
       figureId, familyId: hasQuad ? "quadrilateral_family" : "triangle_family", branchId: hasQuad ? "quad_parallelogram_diagonals" : "triangle_base_general",
-      titleArabic: description.slice(0, 60), notationLanguage: notation, vertices, segments: allSegments, angles, polygons: polygons.map((p) => p.labels.map(keyId)),
+      titleArabic, notationLanguage: notation, vertices, segments: allSegments, angles, polygons: polygons.map((p) => p.labels.map(keyId)),
       ...(mergedBadges.length > 0 ? { interiorBadges: mergedBadges } : {}),
       ...(areaSquares.shadedRegions.length > 0 ? { shadedRegions: areaSquares.shadedRegions } : {}),
     },

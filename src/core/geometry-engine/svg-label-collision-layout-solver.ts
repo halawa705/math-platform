@@ -27,57 +27,39 @@ export function boxOverlapArea(a: ScreenBox, b: ScreenBox, pad = 2): number {
   return ox > 0 && oy > 0 ? ox * oy : 0;
 }
 
-function pointToSegmentDist(
-  px: number,
-  py: number,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-): number {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const l2 = dx * dx + dy * dy;
+function pointToSegmentDist(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+  const dx = x2 - x1; const dy = y2 - y1; const l2 = dx * dx + dy * dy;
   if (l2 < 1e-6) return Math.hypot(px - x1, py - y1);
   const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / l2));
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
-export function segmentIntersectsBox(
-  seg: ScreenSegmentObstacle,
-  box: ScreenBox,
-  clearance = 2.5
-): boolean {
-  const bMinX = box.minX - clearance;
-  const bMaxX = box.maxX + clearance;
-  const bMinY = box.minY - clearance;
-  const bMaxY = box.maxY + clearance;
-  if (
-    Math.max(seg.x1, seg.x2) < bMinX ||
-    Math.min(seg.x1, seg.x2) > bMaxX ||
-    Math.max(seg.y1, seg.y2) < bMinY ||
-    Math.min(seg.y1, seg.y2) > bMaxY
-  ) {
-    return false;
-  }
-  const cx = (box.minX + box.maxX) / 2;
-  const cy = (box.minY + box.maxY) / 2;
-  const hw = (box.maxX - box.minX) / 2 + clearance;
-  const hh = (box.maxY - box.minY) / 2 + clearance;
+export function segmentIntersectsBox(seg: ScreenSegmentObstacle, box: ScreenBox, clearance = 2.5): boolean {
+  const bMinX = box.minX - clearance; const bMaxX = box.maxX + clearance;
+  const bMinY = box.minY - clearance; const bMaxY = box.maxY + clearance;
+  if (Math.max(seg.x1, seg.x2) < bMinX || Math.min(seg.x1, seg.x2) > bMaxX || Math.max(seg.y1, seg.y2) < bMinY || Math.min(seg.y1, seg.y2) > bMaxY) return false;
+  const cx = (box.minX + box.maxX) / 2; const cy = (box.minY + box.maxY) / 2;
+  const hw = (box.maxX - box.minX) / 2 + clearance; const hh = (box.maxY - box.minY) / 2 + clearance;
   for (let i = 0; i <= 8; i++) {
     const t = i / 8;
-    const px = seg.x1 + (seg.x2 - seg.x1) * t;
-    const py = seg.y1 + (seg.y2 - seg.y1) * t;
-    if (Math.abs(px - cx) <= hw && Math.abs(py - cy) <= hh) return true;
+    if (Math.abs(seg.x1 + (seg.x2 - seg.x1) * t - cx) <= hw && Math.abs(seg.y1 + (seg.y2 - seg.y1) * t - cy) <= hh) return true;
   }
   return false;
+}
+
+function isCollinearWithTargetSeg(s: ScreenSegmentObstacle, target?: ScreenSegmentObstacle): boolean {
+  if (!target) return false;
+  if (s === target) return true;
+  if (Math.hypot(target.x2 - target.x1, target.y2 - target.y1) < 1e-3) return false;
+  return pointToSegmentDist(s.x1, s.y1, target.x1, target.y1, target.x2, target.y2) <= 2.5 && pointToSegmentDist(s.x2, s.y2, target.x1, target.y1, target.x2, target.y2) <= 2.5;
 }
 
 function scoreCandidateBox(
   box: ScreenBox,
   occupiedBoxes: readonly ScreenBox[],
   segments: readonly ScreenSegmentObstacle[],
-  preferBounds?: { width: number; height: number }
+  preferBounds?: { width: number; height: number },
+  ignoreCollinearTarget?: ScreenSegmentObstacle
 ): number {
   let cost = 0;
   for (const ob of occupiedBoxes) {
@@ -86,6 +68,7 @@ function scoreCandidateBox(
   }
   for (const seg of segments) {
     if (seg.isCompositeSpan) continue;
+    if (isCollinearWithTargetSeg(seg, ignoreCollinearTarget)) continue;
     if (segmentIntersectsBox(seg, box, 2)) cost += 350;
   }
   if (preferBounds) {
@@ -196,10 +179,11 @@ export function solveSegmentPillOrBracketPlacement(params: {
     };
   }
 
-  const isSplitMidAvoid = Boolean(seg.hasMidDecor || seg.isInteriorSpan);
-  const tList = isSplitMidAvoid ? [0.28, 0.72, 0.34, 0.66, 0.22, 0.78, 0.5] : [0.5, 0.35, 0.65, 0.26, 0.74, 0.42, 0.58];
-  const distList = seg.isInteriorSpan ? [0, 7, -7, 11, -11] : [9, 13, 17, 22, -10, -14];
+  const isSplitMidAvoid = Boolean(seg.hasMidDecor || seg.isCompositeSpan);
+  const tList = isSplitMidAvoid ? [0.28, 0.72, 0.34, 0.66, 0.22, 0.78, 0.5] : [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74];
+  const distList = seg.isInteriorSpan ? [0, 6, -6, 10, -10] : [9, 13, 17, 22, -10, -14];
   let best = { lx: midX + nx * 9, ly: midY + ny * 9 + 2.8, cost: Infinity, box: createCenteredBox(midX, midY, pillW, pillH) };
+  const ignoreOwn = seg.isInteriorSpan ? seg : undefined;
 
   for (let di = 0; di < distList.length; di++) {
     const dist = distList[di];
@@ -208,8 +192,8 @@ export function solveSegmentPillOrBracketPlacement(params: {
       const cx = seg.x1 + dx * t + nx * dist;
       const cy = seg.y1 + dy * t + ny * dist;
       const box = createCenteredBox(cx, cy, pillW, pillH);
-      const prefPenalty = (dist < 0 ? 45 : 0) + di * 6 + ti * 3;
-      const cost = scoreCandidateBox(box, occupiedBoxes, allSegments, bounds) + prefPenalty;
+      const prefPenalty = (dist < 0 ? (seg.isInteriorSpan ? 8 : 45) : 0) + di * (seg.isInteriorSpan ? 22 : 6) + ti * 3;
+      const cost = scoreCandidateBox(box, occupiedBoxes, allSegments, bounds, ignoreOwn) + prefPenalty;
       if (cost < best.cost) {
         best = { lx: cx, ly: cy + 2.8, cost, box };
       }

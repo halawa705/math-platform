@@ -179,7 +179,13 @@ function finalizeVerifiedFigure(
   figure: CanonicalGeometryFigureIR,
   warnings: readonly string[]
 ): { readonly figure: CanonicalGeometryFigureIR; readonly warnings: readonly string[] } {
-  if (figure.familyId === "statistics_family" || figure.familyId === "analytic_coordinate_family" || figure.familyId === "solid3d_mechanics_family" || Boolean(figure.rawSvgMarkup)) {
+  if (
+    figure.familyId === "statistics_family" ||
+    figure.familyId === "analytic_coordinate_family" ||
+    figure.familyId === "solid3d_mechanics_family" ||
+    Boolean(figure.rawSvgMarkup) ||
+    Boolean(figure.titleArabic?.includes("غير مرسوم بمقياس رسم"))
+  ) {
     return { figure, warnings };
   }
   if (figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(figure.branchId)) {
