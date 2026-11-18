@@ -11,6 +11,7 @@ import React from "react";
 import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
+import { PdfPhoneIcon, PdfSparkleIcon, PdfUserIcon } from "./pdf-inline-vector-badge-icons";
 
 export const MODULE_ID_OFFICIAL_SCHOOL_EXAM_PAGE_CHROME =
   "official_school_exam_page_chrome" as const;
@@ -47,18 +48,38 @@ export function OfficialSchoolCornerCropMarks({
       aria-hidden="true"
     >
       {/* الإطار الداخلي المتقطع */}
-      <div
+      <svg
+        width="776"
+        height="1105"
+        viewBox="0 0 776 1105"
+        preserveAspectRatio="none"
+        aria-hidden="true"
         style={{
           position: "absolute",
           top: "3px",
           right: "3px",
           bottom: "3px",
           left: "3px",
-          border: `1.2px dashed ${accentHex}99`,
-          borderRadius: "7px",
+          width: "calc(100% - 6px)",
+          height: "calc(100% - 6px)",
           pointerEvents: "none",
+          display: "block",
         }}
-      />
+      >
+        <rect
+          x="0.6"
+          y="0.6"
+          width="774.8"
+          height="1103.8"
+          rx="7"
+          ry="7"
+          fill="none"
+          stroke={accentHex}
+          strokeOpacity={0.6}
+          strokeWidth={1.2}
+          strokeDasharray="5 3.5"
+        />
+      </svg>
       {/* الزوايا الأربع البارزة */}
       <span
         style={{
@@ -214,8 +235,9 @@ export function OfficialSchoolFirstPageHeader({
       {/* 2. الصف الثاني: بيانات الطالب مع كبسولات بيضاء مؤطرة */}
       <div className="grid grid-cols-12 gap-2.5 text-xs font-bold text-slate-900 items-center">
         <div className="col-span-6 flex items-center gap-1.5">
-          <span style={{ color: primaryHex }} className="shrink-0 font-black text-[11px]">
-            👤 اسم الطالب:
+          <span style={{ color: primaryHex }} className="shrink-0 font-black text-[11px] inline-flex items-center gap-1">
+            <PdfUserIcon />
+            <span>اسم الطالب:</span>
           </span>
           <span
             style={{ borderBottom: `1.5px dotted ${primaryHex}88` }}
@@ -389,9 +411,10 @@ export function OfficialSchoolPageFooterBar({
               borderRadius: "6px",
               padding: "1px 6px",
             }}
-            className="font-mono font-black text-[10px]"
+            className="font-mono font-black text-[10px] inline-flex items-center gap-1"
           >
-            📞 {formatNumeralsByModeSSOT(teacherPhone, numeralMode)}
+            <PdfPhoneIcon />
+            <span>{formatNumeralsByModeSSOT(teacherPhone, numeralMode)}</span>
           </span>
         )}
         {academyName && (
@@ -427,7 +450,11 @@ export function OfficialSchoolEndWishBanner({ palette }: { readonly palette?: Pr
       }}
       className="w-full text-center text-[10.5px] font-black flex items-center justify-center gap-1.5 break-inside-avoid print:break-inside-avoid"
     >
-      <span>✨ مع أطيب تمنياتي لكم بالتفوق والدرجة النهائية ✨</span>
+      <span className="inline-flex items-center gap-1.5">
+        <PdfSparkleIcon />
+        <span>مع أطيب تمنياتي لكم بالتفوق والدرجة النهائية</span>
+        <PdfSparkleIcon />
+      </span>
     </div>
   );
 }

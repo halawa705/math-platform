@@ -17,6 +17,7 @@ import type {
   PrintableMathQuestionItem,
   PrintThemePaletteTokens,
 } from "./a4-vector-html-sheet-renderer";
+import { PdfKeyIcon } from "./pdf-inline-vector-badge-icons";
 
 export const MODULE_ID_OFFICIAL_MCQ_ANSWER_KEY_SUMMARY_TABLE =
   "official_mcq_answer_key_summary_table" as const;
@@ -50,7 +51,10 @@ export function OfficialMcqAnswerKeySummaryTable({
         style={{ backgroundColor: "#FFFFFF", color: palette.primaryHex }}
         className="px-2 py-0.5 rounded-t-md bg-white font-black text-[0.82em] flex items-center justify-between border border-b-0 border-slate-300 shadow-2xs"
       >
-        <span>🔑 جدول مفتاح إجابات الاختيار من متعدد السريع</span>
+        <span className="inline-flex items-center gap-1.5">
+          <PdfKeyIcon />
+          <span>جدول مفتاح إجابات الاختيار من متعدد السريع</span>
+        </span>
         <span>إجمالي الأسئلة الموضوعية: {formatNumeralsByModeSSOT(mcqItems.length, numeralMode)}</span>
       </div>
       <div

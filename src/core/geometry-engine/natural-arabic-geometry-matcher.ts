@@ -27,7 +27,6 @@ import { verifyGeometryFigure } from "./verification/geometry-figure-verificatio
 import { matchFromCatalogRegistry } from "./curriculum-catalogs/geometry-catalog-match-registry";
 import { buildTriangleMidsegmentFigure } from "./triangle-family/triangle-midsegment-branch";
 import { buildTriangleThalesParallelFigure } from "./triangle-family/triangle-thales-parallel-branch";
-import { buildTriangleMediansCentroidFigure } from "./triangle-family/triangle-medians-centroid-branch";
 import { buildTriangleEuclidAltitudeFigure } from "./triangle-family/triangle-euclid-altitude-branch";
 import { isSimilarityGeometryContext } from "./similarity-family/similarity-context-detector";
 import { buildTriangleAngleBisectorFigure } from "./triangle-family/triangle-angle-bisector-branch";
@@ -108,9 +107,6 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   }
 
   if (/إقليدس|عمود.*وتر|مسقط/i.test(desc)) return buildTriangleEuclidAltitudeFigure({ figureId, notationLanguage });
-  if (/متوسط|نقطة\s*تقاطع\s*المتوسطات/i.test(desc) && !/(?:مثلث|Δ|△)\s*[A-Z]{3}/i.test(desc)) {
-    return buildTriangleMediansCentroidFigure({ figureId, notationLanguage });
-  }
   if (/طاليس|يوازي/i.test(desc) && /مثلث/i.test(desc) && !/منتصف|°|\b[A-Z]{2}\s*\/\/\s*[A-Z]{2}/i.test(desc)) return buildTriangleThalesParallelFigure({ figureId, notationLanguage });
   if (/منصف\s*زاوية/i.test(desc)) return buildTriangleAngleBisectorFigure({ figureId, notationLanguage });
   if (/زاوية\s*خارجة/i.test(desc)) return buildTriangleExteriorAngleFigure({ figureId, notationLanguage });

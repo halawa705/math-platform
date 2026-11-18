@@ -21,6 +21,7 @@ import {
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
 import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
+import { PdfPinIcon } from "./pdf-inline-vector-badge-icons";
 
 export const MODULE_ID_COMPACT_TEXTBOOK_MCQ_ROW = "compact_textbook_mcq_row" as const;
 
@@ -309,9 +310,10 @@ export function CompactTextbookMcqRow({
                   borderRadius: "5px",
                   padding: "0 5px",
                 }}
-                className="shrink-0 text-[0.70em] font-black whitespace-nowrap"
+                className="shrink-0 text-[0.70em] font-black whitespace-nowrap inline-flex items-center gap-1"
               >
-                📍 {formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}
+                <PdfPinIcon />
+                <span>{formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}</span>
               </span>
             )}
           </div>

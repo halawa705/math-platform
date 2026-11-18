@@ -20,6 +20,7 @@ import type {
 import type { FlowSolutionSlice } from "./flow-item-model";
 import type { PrintColorThemeId } from "../ssot/pdf-print-settings-ssot";
 import { resolveAnswerThemeTokens } from "./question-card-palette-resolver";
+import { PdfPenIcon } from "./pdf-inline-vector-badge-icons";
 
 export const MODULE_ID_STRUCTURED_STEP_BY_STEP_SOLUTION_BOX =
   "structured_step_by_step_solution_box" as const;
@@ -98,9 +99,14 @@ export function StructuredStepByStepSolutionBox({
               background: answerTokens.badgeGradientCss,
               boxShadow: "0 1.5px 4px rgba(0, 0, 0, 0.12)",
             }}
-            className="px-1.5 py-0.2 rounded text-white text-[0.82em] font-black shrink-0"
+            className="px-1.5 py-0.2 rounded text-white text-[0.82em] font-black shrink-0 inline-flex items-center gap-1"
           >
-            ✍️ {isContinuation ? `تابع حل سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}` : `إجابة سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
+            <PdfPenIcon />
+            <span>
+              {isContinuation
+                ? `تابع حل سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`
+                : `إجابة سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
+            </span>
           </span>
           {!isContinuation && (
             <span className="text-slate-600 font-bold text-[0.8em]">

@@ -21,6 +21,12 @@ import {
   TrigSpecialAnglesPedagogicalTable,
   isSpecialAnglesTrigRule,
 } from "./trig-special-angles-pedagogical-table";
+import {
+  PdfBoltIcon,
+  PdfBookIcon,
+  PdfBulbIcon,
+  PdfRuleRulerIcon,
+} from "./pdf-inline-vector-badge-icons";
 
 export const MODULE_ID_A4_PEDAGOGICAL_CAPSULE_AND_KEY_TABLE =
   "a4_pedagogical_capsule_and_key_table" as const;
@@ -104,9 +110,10 @@ export function PedagogicalIdeaAndRuleCapsule({
             {isWorksheetSection ? (
               <span
                 style={{ backgroundColor: "#4338CA" }}
-                className="px-2 py-0.5 rounded-md text-white text-[0.8em] font-black shrink-0 shadow-2xs"
+                className="px-2 py-0.5 rounded-md text-white text-[0.8em] font-black shrink-0 shadow-2xs inline-flex items-center gap-1"
               >
-                ⚡ ورقة عمل وتطبيق شامل
+                <PdfBoltIcon />
+                <span>ورقة عمل وتطبيق شامل</span>
               </span>
             ) : isPlainSection ? null : !isHomeworkSection ? (
               <span
@@ -118,9 +125,10 @@ export function PedagogicalIdeaAndRuleCapsule({
             ) : (
               <span
                 style={{ backgroundColor: "#BE185D" }}
-                className="text-white px-2 py-0.5 rounded-md text-[0.82em] font-black shrink-0 shadow-2xs"
+                className="text-white px-2 py-0.5 rounded-md text-[0.82em] font-black shrink-0 shadow-2xs inline-flex items-center gap-1"
               >
-                📚 الواجب المنزلي
+                <PdfBookIcon />
+                <span>الواجب المنزلي</span>
               </span>
             )}
             <span
@@ -176,7 +184,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 }}
                 className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-middle"
               >
-                <span>💡</span>
+                <PdfBulbIcon />
                 <span>{isWorksheetSection ? "الفكرة العامة:" : "المفهوم والشرح:"}</span>
               </span>
               <span
@@ -236,7 +244,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                     }}
                     className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-middle"
                   >
-                    <span>📐</span>
+                    <PdfRuleRulerIcon />
                     <span>{isWorksheetSection ? "مفاتيح الحل:" : "القاعدة والقانون:"}</span>
                   </span>
                   <div

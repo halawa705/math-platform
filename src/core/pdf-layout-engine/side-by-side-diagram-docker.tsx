@@ -23,6 +23,7 @@ import { AdaptiveMCQChoicesCard } from "./adaptive-mcq-choices-card";
 import { StudentAnswerSpaceDocker } from "./student-answer-space-docker";
 import { QuestionGivenRequiredBadges } from "./question-given-required-badges";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
+import { PdfPenIcon } from "./pdf-inline-vector-badge-icons";
 import { resolveQuestionCardColorScheme } from "./question-card-palette-resolver";
 import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
 import { resolveQuestionCardDensity } from "./question-card-compact-density-resolver";
@@ -223,7 +224,10 @@ export default function SideBySideDiagramDocker({
             style={{ backgroundColor: "#FFFFFF", borderColor: palette.ruleBorderHex }}
             className="mt-1.5 px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.84em] font-bold text-slate-900 shadow-2xs"
           >
-            <span style={{ color: palette.accentHex }} className="font-black ml-1.5">✍️ حاول بنفسك:</span>
+            <span style={{ color: palette.accentHex }} className="font-black ml-1.5 inline-flex items-center gap-1">
+              <PdfPenIcon />
+              <span>حاول بنفسك:</span>
+            </span>
             <SafeKaTeXBiDiMathRenderer
               text={question.studentDrillPromptAr}
               numeralMode={settings.numeralMode}

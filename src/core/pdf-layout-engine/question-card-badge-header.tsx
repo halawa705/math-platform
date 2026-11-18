@@ -8,6 +8,7 @@
  */
 
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
+import { PdfPenIcon, PdfPinIcon, PdfTargetIcon } from "./pdf-inline-vector-badge-icons";
 
 export interface QuestionCardBadgeHeaderProps {
   readonly isBookletSolvedExample: boolean;
@@ -50,15 +51,16 @@ export function QuestionCardBadgeHeader({
           }}
           className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1.5"
         >
-          <span>✍️</span>
+          <PdfPenIcon />
           <span>إجابة سؤال {formattedQNum}</span>
         </span>
         {citationBadgeAr && (
           <span
             style={{ color: badgeBgColorHex, borderColor: cardBorderColorHex }}
-            className="px-1.5 py-0.2 rounded bg-white border text-[0.72em] font-black truncate shadow-2xs"
+            className="px-1.5 py-0.2 rounded bg-white border text-[0.72em] font-black truncate shadow-2xs inline-flex items-center gap-1"
           >
-            📍 {citationBadgeAr}
+            <PdfPinIcon />
+            <span>{citationBadgeAr}</span>
           </span>
         )}
       </div>
@@ -72,7 +74,7 @@ export function QuestionCardBadgeHeader({
           style={{ backgroundColor: badgeBgColorHex }}
           className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1 shadow-2xs"
         >
-          <span>✍️</span>
+          <PdfPenIcon />
           <span>
             مثال توضيحي {formattedQNum} ({exampleRoleLabel})
           </span>
@@ -80,9 +82,10 @@ export function QuestionCardBadgeHeader({
         {citationBadgeAr && (
           <span
             style={{ color: palette.secondaryHex, borderColor: cardBorderColorHex }}
-            className="px-1.5 py-0.2 rounded bg-white border text-[0.72em] font-black truncate"
+            className="px-1.5 py-0.2 rounded bg-white border text-[0.72em] font-black truncate inline-flex items-center gap-1"
           >
-            📍 {citationBadgeAr}
+            <PdfPinIcon />
+            <span>{citationBadgeAr}</span>
           </span>
         )}
       </div>
@@ -96,7 +99,7 @@ export function QuestionCardBadgeHeader({
           style={{ backgroundColor: "#4338CA" }}
           className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1 shadow-2xs"
         >
-          <span>🎯</span>
+          <PdfTargetIcon />
           <span>حاول بنفسك ({formattedQNum})</span>
         </span>
         <span
@@ -129,9 +132,10 @@ export function QuestionCardBadgeHeader({
         {citationBadgeAr && (
           <span
             style={{ color: palette.secondaryHex, borderColor: palette.borderHex }}
-            className="px-1.5 py-0.2 rounded bg-white border text-[0.75em] font-black truncate"
+            className="px-1.5 py-0.2 rounded bg-white border text-[0.75em] font-black truncate inline-flex items-center gap-1"
           >
-            📍 {citationBadgeAr}
+            <PdfPinIcon />
+            <span>{citationBadgeAr}</span>
           </span>
         )}
       </div>
