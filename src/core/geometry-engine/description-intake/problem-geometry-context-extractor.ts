@@ -91,17 +91,20 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     }
   }
 
-  // 4. قياسات الزوايا: m(∠A) = 40° أو ق(∠D) = (3x - 12)° أو ق(∠أ ب جـ) = 90° (مع استبعاد النسب المتسلسلة مثل = 4 : 5 : 9)
+  // 4. قياسات الزوايا (مع استبعاد النسب المتسلسلة ومعادلات الجمع/الطرح مثل m(∠A) + m(∠C) = 160°)
+  for (const eqm of assertionsClean.matchAll(/(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)\s*=\s*(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)\s*=\s*(\d+(?:\.\d+)?)\s*(?:°|درجة)?/gi)) {
+    if (!facts.some((f) => f.includes(`∠${eqm[1]}`))) facts.push(`ق(∠${eqm[1]}) = ${eqm[3]}°`);
+    if (!facts.some((f) => f.includes(`∠${eqm[2]}`))) facts.push(`ق(∠${eqm[2]}) = ${eqm[3]}°`);
+  }
   const angleMatches = assertionsClean.matchAll(
     /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?!\s*:)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
+    if (/[+\-−×÷*:/]\s*$/.test(assertionsClean.slice(Math.max(0, (am.index ?? 0) - 8), am.index ?? 0))) continue;
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
     const degVal = am[4].trim();
     const angExactRx = new RegExp(`∠\\s*${angRaw}(?![A-Za-zأ-يـ])`);
-    if (angRaw && degVal && !facts.some((f) => angExactRx.test(f))) {
-      facts.push(`ق(∠${angRaw}) = ${degVal}°`);
-    }
+    if (angRaw && degVal && !facts.some((f) => angExactRx.test(f))) facts.push(`ق(∠${angRaw}) = ${degVal}°`);
   }
 
   // 4-أ. نسبة متسلسلة بين زوايا مثلث: m(∠A):m(∠B):m(∠C) = 4:5:9

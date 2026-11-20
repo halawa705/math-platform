@@ -16,8 +16,8 @@ import { composeCircleFigureFromFacts } from "./geo-circle-composer-helper";
 import { composeAngleFanFigureFromDescription } from "../angle-fan-family/angle-fan-figure-builder";
 import { tryComposeParallelTransversalsFigure } from "./geo-parallel-transversals-placer";
 import { buildPerimeterAndAreaBadges, deduplicatePlacedPolygons, registerIntersectingRaySegments, resolveParallelConstraintFact, tryPlaceSegmentRatioVertex } from "./geo-composite-constraint-helpers";
-import { assembleCanonicalFigureSegments, resolveAngleFactHelper, resolveExtendWithEqualHelper, type AssembledExtraSeg } from "./geo-figure-segments-assembler";
-import { angleBisectorFoot, footOfPerpendicular, lineIntersection, vAdd, vDist, vLerp, vMid, vScale, vSub, type Vec2 } from "./geo-vector-math";
+import { assembleCanonicalFigureSegments, resolveAngleFactHelper, resolveExtendWithEqualHelper, resolvePerpFactHelper, type AssembledExtraSeg } from "./geo-figure-segments-assembler";
+import { angleBisectorFoot, lineIntersection, vAdd, vDist, vLerp, vScale, vSub, type Vec2 } from "./geo-vector-math";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
 import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
@@ -28,6 +28,8 @@ import { extractGeometryProblemSpecDual } from "../description-intake/geometry-p
 import { verifyProblemSpecMathematicalConsistency } from "../verification/geometry-problem-spec-consistency-checker";
 import { extractLinearEntityKinds, type LinearEntityKind, type LinearEntityKindMap } from "../description-intake/linear-entity-kind-extractor";
 import { tryComposeStandaloneLinearFigure } from "./geo-standalone-linear-placer";
+import { autoConnectReferencedSubPolygons } from "./geo-subpolygon-autoconnect-helper";
+import { resolveEqualSegmentRatioOnHost } from "./geo-quad-angle-and-shared-placer";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
@@ -128,7 +130,7 @@ export function composeFigureFromGeometryDescription(
   if (perpMedians) addAngle(perpMedians.meetVertex, perpMedians.apex1, perpMedians.apex2, { isRightAngle: true, degrees: 90 });
 
   const ratioOnSeg = (p: string, a: string, b: string): number => {
-    const r = resolveRatioFractionOnSegment(facts, p, a, b);
+    const r = resolveRatioFractionOnSegment(facts, p, a, b) ?? resolveEqualSegmentRatioOnHost(facts, p, a, b, points);
     if (r !== undefined) return r;
     const ap = lengths.get(pairKey(a, p))?.numeric; const pb = lengths.get(pairKey(p, b))?.numeric; const ab = lengths.get(pairKey(a, b))?.numeric;
     if (ap && pb) return clamp(ap / (ap + pb));
@@ -210,21 +212,9 @@ export function composeFigureFromGeometryDescription(
     } else if (f.k === "perp") {
       const ka = pairKey(f.a[0], f.a[1]); const kb = pairKey(f.b[0], f.b[1]);
       if (perpMedians && ((ka === perpMedians.seg1Key && kb === perpMedians.seg2Key) || (kb === perpMedians.seg1Key && ka === perpMedians.seg2Key))) continue;
-      let [apex, foot] = f.a; if (f.foot) foot = f.foot; if (!P(apex) && P(foot)) [apex, foot] = [foot, apex];
-      const [b0, b1] = f.b; if (!P(apex) || !P(b0) || !P(b1)) { if (pass === 0) deferredFacts.push(f); else warnings.push("تعامد بنقاط غير معرّفة"); continue; }
-      const len0 = lengths.get(pairKey(b0, foot))?.numeric;
-      const len1 = lengths.get(pairKey(foot, b1))?.numeric;
-      const lenAlt = lengths.get(pairKey(apex, foot))?.numeric;
-      if (Math.abs(P(b0)!.y - P(b1)!.y) < 1e-6 && (len0 || len1 || lenAlt)) {
-        const y0 = P(b0)!.y; const x0 = Math.min(P(b0)!.x, P(b1)!.x);
-        const d0 = len0 ?? 3; const d1 = len1 ?? 5; const h = lenAlt ?? 4;
-        points.set(b0, { x: x0, y: y0 }); points.set(foot, { x: x0 + d0, y: y0 });
-        points.set(b1, { x: x0 + d0 + d1, y: y0 }); points.set(apex, { x: x0 + d0, y: y0 + h });
-      } else {
-        points.set(foot, footOfPerpendicular(P(apex)!, P(b0)!, P(b1)!));
+      if (!resolvePerpFactHelper({ fact: f, points, host, lengths, addExtra, addAngle })) {
+        if (pass === 0) deferredFacts.push(f); else warnings.push("تعامد بنقاط غير معرّفة");
       }
-      host.set(foot, f.b); addExtra(apex, foot);
-      addAngle(foot, apex, vDist(P(foot)!, P(b1)!) >= vDist(P(foot)!, P(b0)!) ? b1 : b0, { isRightAngle: true, degrees: 90 });
     } else if (f.k === "bisector") {
       const opp = trianglesSides(f.vertex); const d = f.seg[0] === f.vertex ? f.seg[1] : f.seg[0]; if (!opp || !P(f.vertex)) continue;
       points.set(d, angleBisectorFoot(P(f.vertex)!, P(opp[0])!, P(opp[1])!)); host.set(d, opp); addExtra(f.vertex, d, false, f.lineKind);
@@ -274,6 +264,7 @@ export function composeFigureFromGeometryDescription(
     }
   }
 
+  autoConnectReferencedSubPolygons({ description, points, isPolygonSide, addExtra });
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const segments = assembleCanonicalFigureSegments({
     figureId, polygons, points, host, lengths, ticks, parallelMarks, extras, linearKindMap,

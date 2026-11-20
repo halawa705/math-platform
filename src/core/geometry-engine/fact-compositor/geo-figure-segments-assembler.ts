@@ -13,7 +13,7 @@ import {
 import type { GeoFact, Seg } from "./geo-fact-types";
 import { pairKey } from "./geo-label-utils";
 import type { PlacedPolygon } from "./geo-shape-placers";
-import { vAdd, vDist, vScale, vSub, type Vec2 } from "./geo-vector-math";
+import { footOfPerpendicular, lineIntersection, vAdd, vDist, vScale, vSub, type Vec2 } from "./geo-vector-math";
 
 export const MODULE_ID_GEO_FIGURE_SEGMENTS_ASSEMBLER =
   "geo_figure_segments_assembler" as const;
@@ -23,6 +23,44 @@ export interface AssembledExtraSeg {
   readonly b: string;
   readonly dashed?: boolean;
   readonly lineKind?: LinearEntityKind;
+}
+
+export function resolvePerpFactHelper(params: {
+  fact: Extract<GeoFact, { k: "perp" }>;
+  points: Map<string, Vec2>;
+  host: Map<string, Seg>;
+  lengths: ReadonlyMap<string, { numeric?: number }>;
+  addExtra: (a: string, b: string, dashed?: boolean) => void;
+  addAngle: (v: string, a1: string, a2: string, extra?: Partial<CanonicalAngleNode>) => void;
+}): boolean {
+  const { fact, points, host, lengths, addExtra, addAngle } = params;
+  const P = (k: string) => points.get(k);
+  const [a0, a1] = fact.a; const [b0, b1] = fact.b;
+  if (!fact.foot && P(a0) && P(a1) && P(b0) && P(b1)) {
+    const hit = lineIntersection(P(a0)!, P(a1)!, P(b0)!, P(b1)!);
+    if (hit) {
+      const existingMeet = [...points.entries()].find(([, pt]) => vDist(pt, hit) < 0.08)?.[0];
+      addExtra(a0, a1); addExtra(b0, b1);
+      if (existingMeet && existingMeet !== a0 && existingMeet !== b0) addAngle(existingMeet, a0, b0, { isRightAngle: true, degrees: 90 });
+      return true;
+    }
+  }
+  let [apex, foot] = fact.a;
+  if (fact.foot) foot = fact.foot;
+  if (!P(apex) && P(foot)) [apex, foot] = [foot, apex];
+  if (!P(apex) || !P(b0) || !P(b1)) return false;
+  const len0 = lengths.get(pairKey(b0, foot))?.numeric;
+  const len1 = lengths.get(pairKey(foot, b1))?.numeric;
+  const lenAlt = lengths.get(pairKey(apex, foot))?.numeric;
+  if (Math.abs(P(b0)!.y - P(b1)!.y) < 1e-6 && (len0 || len1 || lenAlt)) {
+    const y0 = P(b0)!.y; const x0 = Math.min(P(b0)!.x, P(b1)!.x);
+    const d0 = len0 ?? 3; const d1 = len1 ?? 5; const h = lenAlt ?? 4;
+    points.set(b0, { x: x0, y: y0 }); points.set(foot, { x: x0 + d0, y: y0 });
+    points.set(b1, { x: x0 + d0 + d1, y: y0 }); points.set(apex, { x: x0 + d0, y: y0 + h });
+  } else points.set(foot, footOfPerpendicular(P(apex)!, P(b0)!, P(b1)!));
+  host.set(foot, fact.b); addExtra(apex, foot);
+  addAngle(foot, apex, vDist(P(foot)!, P(b1)!) >= vDist(P(foot)!, P(b0)!) ? b1 : b0, { isRightAngle: true, degrees: 90 });
+  return true;
 }
 
 export function resolveAngleFactHelper(params: {

@@ -13,6 +13,12 @@ import {
   placeOrientedTrapezoid,
   tryPlaceAdjacentSquares,
 } from "./geo-composite-quad-placer";
+import {
+  adjustRectangleDimsForPointOnEquality,
+  inferParallelogramOrRhombusAngleADeg,
+  tryPlaceSharedEdgeQuad,
+  tryPlaceSharedEdgeTriangle,
+} from "./geo-quad-angle-and-shared-placer";
 import { placeTriangleFromKnowns, type TriVertexKey } from "./geo-triangle-placer";
 import type { Vec2 } from "./geo-vector-math";
 
@@ -117,10 +123,20 @@ export function placeDeclaredShapes(
       });
       local = [tri.A, tri.B, tri.C];
     } else {
+      if (tryPlaceSharedEdgeQuad(f, facts, num, points, polygons)) continue;
       const [a, b, c, d] = labels;
-      const w = num(a, b) ?? num(c, d) ?? 6;
-      const dPar = num(d, a) ?? num(b, c) ?? w * 0.6;
-      const th = rad(angleOf(a) ?? 60);
+      const rawW = num(a, b) ?? num(c, d);
+      const rawH = num(d, a) ?? num(b, c);
+      const dims = f.kind === "rectangle"
+        ? adjustRectangleDimsForPointOnEquality(labels, facts, rawW ?? 6, rawH ?? (rawW ?? 6) * 0.6, rawW !== undefined, rawH !== undefined)
+        : { w: rawW ?? 6, h: rawH ?? (rawW ?? 6) * 0.6 };
+      const w = dims.w;
+      const dPar = dims.h;
+      const th = rad(
+        f.kind === "rhombus" || f.kind === "parallelogram"
+          ? inferParallelogramOrRhombusAngleADeg(labels, f.kind, facts)
+          : (angleOf(a) ?? 60)
+      );
       if (f.kind === "rectangle") local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: dPar }, { x: 0, y: dPar }];
       else if (f.kind === "square") local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: w }, { x: 0, y: w }];
       else if (f.kind === "rhombus") { const D = { x: w * Math.cos(th), y: w * Math.sin(th) }; local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D]; }
@@ -128,30 +144,8 @@ export function placeDeclaredShapes(
       else if (f.kind === "trapezoid") local = placeOrientedTrapezoid(labels, facts, num, angleOf);
       else local = placeGeneralCompositeQuad(labels, facts, num, angleOf);
     }
-    if (f.k === "triangle" && labels.filter((l) => points.has(l)).length === 2) {
-      const existing = labels.filter((l) => points.has(l));
-      const missing = labels.find((l) => !points.has(l))!;
-      const U = points.get(existing[0])!;
-      const V = points.get(existing[1])!;
-      const baseLen = Math.hypot(V.x - U.x, V.y - U.y);
-      if (baseLen > 1e-6) {
-        const uw = num(existing[0], missing) ?? baseLen * 0.85;
-        const vw = num(existing[1], missing) ?? uw;
-        const ex = { x: (V.x - U.x) / baseLen, y: (V.y - U.y) / baseLen };
-        let ey = { x: -ex.y, y: ex.x };
-        const otherPt = [...points.entries()].find(([k]) => k !== existing[0] && k !== existing[1])?.[1];
-        if (otherPt && (otherPt.x - U.x) * ey.x + (otherPt.y - U.y) * ey.y > 0) {
-          ey = { x: -ey.x, y: -ey.y };
-        }
-        const cosU = Math.max(-0.9, Math.min(0.9, (baseLen * baseLen + uw * uw - vw * vw) / (2 * baseLen * uw)));
-        const sinU = Math.sqrt(Math.max(0.08, 1 - cosU * cosU));
-        points.set(missing, {
-          x: U.x + ex.x * uw * cosU + ey.x * uw * sinU,
-          y: U.y + ex.y * uw * cosU + ey.y * uw * sinU,
-        });
-        polygons.push({ labels, kind: "triangle", rightAt: f.right });
-        continue;
-      }
+    if (f.k === "triangle" && tryPlaceSharedEdgeTriangle(f, facts, num, angleOf, points, polygons)) {
+      continue;
     }
     const minX = Math.min(...local.map((p) => p.x));
     const maxX = Math.max(...local.map((p) => p.x));

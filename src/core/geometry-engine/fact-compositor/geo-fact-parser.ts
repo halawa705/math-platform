@@ -32,8 +32,8 @@ function seg(raw?: string): Seg | null { if (!raw) return null; const k = parseL
 function one(raw: string): string { return normalizeLabelKey(raw.trim()); }
 
 const QUAD_WORDS: Array<[RegExp, QuadKind]> = [
-  [/^مستطيل/, "rectangle"], [/^مربع/, "square"], [/^معين/, "rhombus"], [/^متوازي\s*أضلاع/, "parallelogram"],
-  [/^شبه\s*منحرف/, "trapezoid"], [/^(?:شكل\s*)?رباعي/, "general"],
+  [/^(?:ال)?مستطيل/, "rectangle"], [/^(?:ال)?مربع/, "square"], [/^(?:ال)?معين/, "rhombus"], [/^(?:ال)?متوازي\s*(?:ال)?أضلاع/, "parallelogram"],
+  [/^(?:ال)?شبه\s*(?:ال)?منحرف/, "trapezoid"], [/^(?:(?:ال)?شكل\s*)?(?:ال)?رباعي/, "general"],
 ];
 
 export function parseGeoFactString(s: string): GeoFact | null {
@@ -196,6 +196,9 @@ export function parseGeoFactString(s: string): GeoFact | null {
   }
   if ((m = s.match(/^مساحة\s*=\s*(\d+(?:\.\d+)?)\s*(سم²|سم\^2|م²)?$/))) {
     return { k: "area", value: Number(m[1]), unit: (m[2] || "سم²").replace(/\^2/g, "²") };
+  }
+  if ((m = s.match(new RegExp(`^(?:h|H|ع|(?:ال)?ارتفاع(?:\\s*العمودي)?)\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}$`, "u")))) {
+    return { k: "height", value: Number(m[1]), unit: normalizeArabicGeometryUnitSSOT(m[2]) ?? "سم" };
   }
   if ((m = s.match(re(`${SEGRX}\\s*=\\s*(\\d+)\\s*/\\s*(\\d+)\\s*${SEGRX}`)))) {
     const a = seg(m[1]); const b = seg(m[4]);

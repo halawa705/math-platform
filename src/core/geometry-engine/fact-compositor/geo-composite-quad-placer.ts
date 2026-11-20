@@ -96,13 +96,30 @@ export function placeOrientedTrapezoid(
     facts.some((f) => f.k === "midpoint" && pairKey(f.seg[0], f.seg[1]) === pairKey(c, d));
   const adParallelBc =
     hasExplicitAdBcParallel || (!hasExplicitAbCdParallel && (hasAdBcBaseLengthsOnly || hasAbCdLegMidpoints));
+  const degToRad = (deg: number) => (deg * Math.PI) / 180;
+  const heightFact = facts.find((f): f is Extract<GeoFact, { k: "height" }> => f.k === "height");
+  const isIsoTrap =
+    facts.some((f) => f.k === "quad" && f.kind === "trapezoid" && f.isoLegs) ||
+    facts.some(
+      (f) =>
+        f.k === "equal" &&
+        ((pairKey(f.a[0], f.a[1]) === pairKey(a, b) && pairKey(f.b[0], f.b[1]) === pairKey(c, d)) ||
+          (pairKey(f.a[0], f.a[1]) === pairKey(d, a) && pairKey(f.b[0], f.b[1]) === pairKey(b, c)))
+    );
+
   if (adParallelBc) {
     const wBot = num(b, c) ?? 12;
     const wTop = num(a, d) ?? wBot * 0.5;
     const isRightLeft = angleOf(b) === 90 || angleOf(a) === 90;
+    const baseAngB = angleOf(b) ?? (angleOf(a) !== undefined ? 180 - angleOf(a)! : undefined);
+    const baseAngC = angleOf(c) ?? (angleOf(d) !== undefined ? 180 - angleOf(d)! : undefined);
     const offset = isRightLeft ? 0 : (wBot - wTop) / 2;
     const leg = num(a, b) ?? num(c, d);
-    const h = isRightLeft ? (leg ?? wBot * 0.55) : leg && leg > Math.abs(offset) ? Math.sqrt(leg * leg - offset * offset) : wBot * 0.55;
+    const angForH = baseAngB ?? baseAngC;
+    const hFromAngle = !isRightLeft && angForH && angForH > 20 && angForH < 85 && offset > 0.2
+      ? Math.min(wBot * 0.9, Math.max(wBot * 0.35, Math.abs(offset) * Math.tan(degToRad(angForH))))
+      : undefined;
+    const h = heightFact?.value ?? (isRightLeft ? (leg ?? wBot * 0.55) : hFromAngle ?? (leg && leg > Math.abs(offset) ? Math.sqrt(leg * leg - offset * offset) : wBot * 0.55));
     return [
       { x: offset, y: h },
       { x: 0, y: 0 },
@@ -113,9 +130,15 @@ export function placeOrientedTrapezoid(
   const w = num(a, b) ?? num(c, d) ?? 8;
   const top = num(c, d) ?? w * 0.5;
   const isRightAtA = angleOf(a) === 90 || angleOf(d) === 90;
+  const baseAngA = angleOf(a) ?? (angleOf(d) !== undefined ? 180 - angleOf(d)! : undefined);
+  const baseAngB = angleOf(b) ?? (angleOf(c) !== undefined ? 180 - angleOf(c)! : undefined);
   const o = isRightAtA ? 0 : (w - top) / 2;
   const leg = num(d, a) ?? num(b, c);
-  const h = isRightAtA ? (leg ?? w * 0.55) : leg && leg > Math.abs(o) ? Math.sqrt(leg * leg - o * o) : w * 0.55;
+  const effBaseAng = isIsoTrap ? (baseAngA ?? baseAngB) : (baseAngA ?? baseAngB);
+  const hFromAngle = !isRightAtA && effBaseAng && effBaseAng > 20 && effBaseAng < 85 && o > 0.2
+    ? Math.min(w * 0.9, Math.max(w * 0.35, Math.abs(o) * Math.tan(degToRad(effBaseAng))))
+    : undefined;
+  const h = heightFact?.value ?? (isRightAtA ? (leg ?? w * 0.55) : hFromAngle ?? (leg && leg > Math.abs(o) && leg < w * 1.5 ? Math.sqrt(leg * leg - o * o) : w * 0.55));
   return [
     { x: 0, y: 0 },
     { x: w, y: 0 },

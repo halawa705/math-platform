@@ -119,10 +119,11 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (/دائرتان\s*متقاطعتان|خط\s*المركزين/i.test(desc)) return buildCircleIntersectingPairFigure({ figureId, notationLanguage });
   if (/دائرة|وتر\s*في\s*دائرة/i.test(desc)) return buildCircleChordBisectorFigure({ figureId, notationLanguage });
 
-  if (/شبه\s*منحرف/i.test(desc)) return buildTrapezoidAltitudesFigure({ figureId, notationLanguage });
+  const hasExtraConstructionPoints = /∈|امتداد|نمد|منتصف|[A-Z]{2}\s*(?:\/\/|⊥|∩)\s*[A-Z]{2}|مثلث\s*[A-Z]{3}/.test(cleanDesc);
+  if (/شبه\s*منحرف/i.test(desc) && !hasExtraConstructionPoints) return buildTrapezoidAltitudesFigure({ figureId, notationLanguage });
   if (/ساعة\s*رملية|فراشة|تقاطع\s*قطعتين/i.test(desc)) return buildHourglassButterflySimilarityFigure({ figureId, notationLanguage });
-  if (/(?:^|\s)(?:مستطيل|مربع|معين)(?:\s|$|[،.])/i.test(desc) && !/مستطيلان|مربعان/i.test(desc)) return buildRectangleSquareRhombusFigure({ figureId, notationLanguage });
-  if (/متوازي\s*أضلاع/i.test(desc) && !/متوازيا/i.test(desc)) return buildParallelogramDiagonalsFigure({ figureId, notationLanguage });
+  if (/(?:^|\s)(?:ال)?(?:مستطيل|مربع|معين)(?:\s|$|[،.])/i.test(desc) && !/مستطيلان|مربعان/i.test(desc) && !hasExtraConstructionPoints) return buildRectangleSquareRhombusFigure({ figureId, notationLanguage });
+  if (/متوازي\s*(?:ال)?أضلاع/i.test(desc) && !/متوازيا/i.test(desc) && !hasExtraConstructionPoints) return buildParallelogramDiagonalsFigure({ figureId, notationLanguage });
 
   if (/هرم/i.test(desc)) {
     const baseM = cleanDesc.match(/(?:طول\s*)?(?:ضلع\s*قاعدت[هـا]?|ضلعه)\s*=?\s*(\d+(?:\.\d+)?)/i);

@@ -57,6 +57,8 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
   const solutionsMap = parseStage3SolutionsMap(cleanS3);
   const { drillsByIdea, allHomework } = parseStage2ByIdeas(cleanS2);
   const resultItems: PrintableMathQuestionItem[] = [];
+  let exampleCounter = 0;
+  let drillCounter = 0;
 
   if (cleanS1) {
     const cleanBlocksText = cleanS1.replace(/(?:^|\n)\s*نهاية\s*الفكرة[^\n]*/gi, "").replace(/\s*(?:---|___|\*\*\*)\s*/g, "\n\n");
@@ -129,7 +131,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
           geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
         resultItems.push({
           id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
-          questionNumber: resultItems.length + 1,
+          questionNumber: ++exampleCounter,
           ideaIndex: ideaIdx + 1,
           kind: ex.mcqChoicesAr ? "mcq" : geoMatch || graphSpec ? "essay_geometry" : "essay_algebra",
           branchBadgeAr: params.branchNameAr,
@@ -155,7 +157,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         resultItems.push(
           buildStage2PrintableItem({
             id: `booklet-s1-drill-${ideaIdx + 1}-${dIdx + 1}`,
-            questionNumber: resultItems.length + 1,
+            questionNumber: ++drillCounter,
             block: { ...drill, ideaIndex: ideaIdx + 1 },
             branchNameAr: params.branchNameAr,
             branchId: params.branchId,
@@ -199,7 +201,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         resultItems.push(
           buildStage2PrintableItem({
             id: `booklet-s2-only-drill-${seenIdx}-${dIdx + 1}`,
-            questionNumber: resultItems.length + 1,
+            questionNumber: ++drillCounter,
             block: { ...drill, ideaIndex: seenIdx },
             branchNameAr: params.branchNameAr,
             branchId: params.branchId,

@@ -203,12 +203,12 @@ export function buildPerimeterAndAreaBadges(params: {
       const text = `المساحة = ${f.value} ${f.unit ?? "سم²"}`;
       if (seenTexts.has(text)) continue;
       seenTexts.add(text);
-      badges.push({
-        id: `${figureId}_badge_area_${idx++}`,
-        text,
-        position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) },
-        labelKind: "given",
-      });
+      badges.push({ id: `${figureId}_badge_area_${idx++}`, text, position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, labelKind: "given" });
+    } else if (f.k === "height") {
+      const text = `الارتفاع = ${f.value} ${f.unit ?? "سم"}`;
+      if (seenTexts.has(text)) continue;
+      seenTexts.add(text);
+      badges.push({ id: `${figureId}_badge_h_${idx++}`, text, position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, labelKind: "given" });
     }
   }
   return badges;
@@ -250,8 +250,12 @@ export function resolveParallelConstraintFact(params: {
     return;
   }
   const d = vSub(points.get(q)!, points.get(p)!);
-  const hy = host.get(y);
-  const hx = host.get(x);
+  const extOf = (pt: string): Seg | undefined => {
+    const ef = facts.find((f): f is Extract<GeoFact, { k: "extend" }> => f.k === "extend" && f.to === pt);
+    return ef ? [ef.from, ef.through] : undefined;
+  };
+  const hy = host.get(y) ?? extOf(y);
+  const hx = host.get(x) ?? extOf(x);
   const isMidX = facts.some((f) => f.k === "midpoint" && f.p === x);
   const isMidY = facts.some((f) => f.k === "midpoint" && f.p === y);
   let movedPt: string | null = null;
@@ -281,4 +285,6 @@ export function resolveParallelConstraintFact(params: {
   addParallelMark(x, y, grp);
   addParallelMark(p, q, grp);
   addExtra(x, y);
+  const isPolyEdge = polygons.some((pl) => pl.labels.some((l, i) => pairKey(l, pl.labels[(i + 1) % pl.labels.length]) === pairKey(p, q)));
+  if (!isPolyEdge) addExtra(p, q);
 }

@@ -192,7 +192,7 @@ export function projectGeometryFigureToSVGMarkup(
   }).join("");
 
   const wrapLtrMath = (expr: string): string =>
-    /[√A-Za-z+\-×÷/^]/.test(expr)
+    /[()√A-Za-z+\-−×÷/^]/.test(expr)
       ? `<tspan direction="ltr" unicode-bidi="isolate" style="direction:ltr;unicode-bidi:bidi-override">\u2066${expr}\u2069</tspan>`
       : expr;
 

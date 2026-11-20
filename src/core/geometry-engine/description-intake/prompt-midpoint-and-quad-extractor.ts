@@ -20,21 +20,25 @@ export function extractPromptQuadMidpointAndMeasureFacts(
   const normClean = cleanPrompt.replace(/\u00a0/g, " ");
   const normAssert = assertionsClean.replace(/\u00a0/g, " ");
 
-  // 1. الأشكال الرباعية الصريحة (شبه منحرف ABCD، أو ABCD شبه منحرف، متوازي أضلاع EFGH...)
+  // 1. الأشكال الرباعية الصريحة (شبه منحرف ABCD، متوازي الأضلاع ABCD، المستطيل ABCD، أو ABCD شبه منحرف...)
+  const normQuadKind = (raw: string) =>
+    raw.replace(/\s+/g, " ").replace(/^ال/, "").replace(/متوازي\s+الأضلاع/, "متوازي أضلاع").replace(/شبه\s+المنحرف/, "شبه منحرف").replace(/شكل\s+الرباعي/, "شكل رباعي").trim();
+  const quadKindPat = `(?:ال)?شبه\\s*(?:ال)?منحرف|(?:ال)?متوازي\\s*(?:ال)?أضلاع|(?:ال)?مستطيل|(?:ال)?معين|(?:ال)?مربع|(?:ال)?شكل\\s*(?:ال)?رباعي`;
   for (const qm of normAssert.matchAll(
-    /(شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي)\s*(?:قائم[^A-Z]{0,18})?\b([A-Z]{4})\b/g
+    new RegExp(`(${quadKindPat})\\s*(?:قائم[^A-Z]{0,18})?\\b([A-Z]{4})\\b`, "g")
   )) {
-    const kind = qm[1].replace(/\s+/g, " ").trim();
-    const lbl = qm[2].toUpperCase();
-    const f = `${kind} ${lbl}`;
+    const f = `${normQuadKind(qm[1])} ${qm[2].toUpperCase()}`;
     if (!facts.includes(f)) facts.push(f);
   }
   for (const rqm of normAssert.matchAll(
-    /\b([A-Z]{4})\s+(شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي)/g
+    new RegExp(`\\b([A-Z]{4})\\s+(${quadKindPat})`, "g")
   )) {
-    const lbl = rqm[1].toUpperCase();
-    const kind = rqm[2].replace(/\s+/g, " ").trim();
-    const f = `${kind} ${lbl}`;
+    const f = `${normQuadKind(rqm[2])} ${rqm[1].toUpperCase()}`;
+    if (!facts.includes(f)) facts.push(f);
+  }
+  const diagMeetM = normAssert.match(/(?:تقاطع\s*قطرا(?:ه|ها)|قطرا(?:ه|ها)\s*يتقاطعان)\s*(?:في|عند)\s*(?:النقطة\s+)?([A-Z])\b/);
+  if (diagMeetM) {
+    const f = `قطراه يتقاطعان في ${diagMeetM[1]}`;
     if (!facts.includes(f)) facts.push(f);
   }
 
