@@ -1,9 +1,8 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PageFillReportChip } from "../src/core/pdf-layout-engine/page-fill-report-chip";
 import { buildSolutionSplitVariants } from "../src/core/pdf-layout-engine/flow-solution-split-variants-builder";
-import { optimizePagesWithSolutionSplits } from "../src/core/pdf-layout-engine/flow-page-solution-split-optimizer";
 import { packFlowItemsIntoPages } from "../src/core/pdf-layout-engine/flow-page-packer";
 import { auditFlowPages } from "../src/core/pdf-layout-engine/flow-layout-quality-audit";
 import { FLOW_DENSITY_PROFILES } from "../src/core/pdf-layout-engine/flow-page-geometry-constants";
@@ -100,7 +99,7 @@ describe("Flow Booklet Page Count & Honest Raw Fill Regression (Track A)", () =>
     expect(variants![1].tail.solutionSlice).toEqual({ from: 1, to: 4, total: 4, isTail: true });
   });
 
-  it("optimizePagesWithSolutionSplits splits a worked-example pair across page boundary when prior page rawFill < 72%", () => {
+  it("unified page breaker cuts a worked-example solution across the page boundary when prior page rawFill < 72%", () => {
     const items: FlowItem[] = [
       {
         id: "drill-1",
@@ -181,6 +180,10 @@ describe("Flow Booklet Page Count & Honest Raw Fill Regression (Track A)", () =>
       ["ex-2-2~tail1", 220],
       ["ex-2-2~head2", 310],
       ["ex-2-2~tail2", 170],
+      // القياس الحقيقي يقيس كل نسخة رأس/ذيل بعرض العمود أيضاً (::col)
+      ...["ex-2-1", "ex-2-2"].flatMap((ex) =>
+        ([["head1", 260], ["tail1", 220], ["head2", 310], ["tail2", 170]] as const).map(([v, h]) => [`${ex}~${v}::col`, h] as [string, number])
+      ),
     ]);
 
     const packOnce = (cand: readonly FlowItem[]) =>
@@ -189,8 +192,7 @@ describe("Flow Booklet Page Count & Honest Raw Fill Regression (Track A)", () =>
         density: FLOW_DENSITY_PROFILES.standard_balanced,
       });
 
-    const basePages = packOnce(items);
-    const optimized = optimizePagesWithSolutionSplits(items, heights, basePages, packOnce);
+    const optimized = { pages: packOnce(items) };
 
     const audit = auditFlowPages(optimized.pages, heights);
     expect(optimized.pages.length).toBe(2);

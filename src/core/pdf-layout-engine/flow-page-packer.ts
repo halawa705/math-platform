@@ -1,189 +1,145 @@
 /**
  * @file flow-page-packer.ts
- * @description فاصل الصفحات الأمثل (Optimal Page Breaker): بدل التعبئة الجشعة التي ترمي الكائن الذي لا يتسع إلى صفحة جديدة وتترك فراغاً،
- * يبحث بالبرمجة الديناميكية عن أفضل مواضع كسر الصفحات: أولاً أقل عدد أوراق، ثم أقل فراغ سفلي وأقل عدم تساوٍ بين الأعمدة.
- * قيود الأيتام: كبسولة الفكرة لا تنتهي بها صفحة (تبقى مع أول أمثلتها)، والفاصل لا يبدأ به صفحة، وخاتمة الاعتماد لا تنفرد بصفحة.
- * بعد اختيار الكسر تُوزَّع الفراغات بواسطة flow-page-slack-distributor (مسافات ثم تمديد بطاقات)، ولا يوجد أي تصغير للخط.
+ * @description فاصل الصفحات الأمثل الموحَّد: برمجة ديناميكية واحدة تقارن كل حدود الصفحة الممكنة معاً —
+ * الكسر بين الكائنات، أو إنهاء الصفحة برأس مثال (السؤال + أول k خطوة) وترحيل ذيله، أو برأسَي زوج أمثلة معاً —
+ * وتختار: أولاً أقل قيود مكسورة، ثم أقل عدد أوراق، ثم أقل تكلفة (فراغ بالمساحة، تفاوت أعمدة، قطع حلول).
+ * لا مرحلة ترقيع لاحقة ولا قواعد اختيار خاصة: الحالة يحسمها مقياس الفراغ الصادق فقط. لا تصغير للخط ولا تجزئة لخطوة.
  */
 
-import {
-  buildSegmentsForSlice,
-  columnsImbalancePx,
-  pageContentHeightPx,
-} from "./flow-page-segments-builder";
+import { FLOW_LAYOUT_COST_WEIGHTS as W } from "../ssot/flow-layout-cost-weights-ssot";
 import { distributePageSlack } from "./flow-page-slack-distributor";
 import { fallbackFlowItemHeightPx, isStretchableFlowItem, type FlowItem, type FlowPage } from "./flow-item-model";
 import type { FlowDensityProfile } from "./flow-page-geometry-constants";
 import type { FlowPageBudgetsPx } from "./flow-page-budget-resolver";
-import { optimizePagesWithSolutionSplits } from "./flow-page-solution-split-optimizer";
-import { resolveElasticPageFit } from "./flow-elastic-fit-resolver";
-import { resolveAdaptiveFirstPageHeader } from "./adaptive-page-header-budget-resolver";
+import { pageContentHeightPx } from "./flow-page-segments-builder";
+import { buildInlineSolutionCutLookup, type InlineSolutionCutLookup } from "./flow-dp-inline-solution-cut-options";
+import {
+  buildPageSegments,
+  evaluatePageCandidate,
+  resolvePageBudget,
+  type PageCostContext,
+} from "./flow-page-break-cost-evaluator";
 
 export const MODULE_ID_FLOW_PAGE_PACKER = "flow_page_packer" as const;
 
 export interface FlowPackOptions {
   readonly budgets: FlowPageBudgetsPx;
   readonly density: FlowDensityProfile;
+  /** تعطيل خيارات قطع الحلول (أثناء المسح السريع قبل اكتمال قياس نسخ الرأس/الذيل). */
   readonly skipSolutionSplits?: boolean;
   readonly manualCompactHeader?: boolean;
 }
 
-interface BreakNode {
+interface DpNode {
   readonly pages: number;
   readonly cost: number;
-  readonly from: number;
+  readonly prevKey: string | undefined;
+  readonly pageItems: readonly FlowItem[];
 }
 
-const ORPHAN_PENALTY = 1e5;
-const LONE_FOOTER_PENALTY = 30;
-const SLACK_WEIGHT = 22;
-const IMBALANCE_WEIGHT = 8;
-const OVERSIZED_PENALTY = 1e7;
+const END_KEY = "END";
+const NO_CUTS: InlineSolutionCutLookup = () => [];
 
-function isBetter(a: BreakNode, b: BreakNode | undefined): boolean {
+function nodeKey(index: number, carryKey: string): string {
+  return `${index}|${carryKey}`;
+}
+
+function isBetter(a: DpNode, b: DpNode | undefined): boolean {
   if (!b) return true;
-  const aPenalties = Math.floor(a.cost / ORPHAN_PENALTY);
-  const bPenalties = Math.floor(b.cost / ORPHAN_PENALTY);
-  if (aPenalties !== bPenalties) {
-    return aPenalties < bPenalties;
-  }
+  const aPenalties = Math.floor(a.cost / W.orphanPenalty);
+  const bPenalties = Math.floor(b.cost / W.orphanPenalty);
+  if (aPenalties !== bPenalties) return aPenalties < bPenalties;
   if (a.pages !== b.pages) return a.pages < b.pages;
   return a.cost < b.cost - 1e-9;
 }
 
-/** يوزّع الكائنات على الصفحات ثم يملأ الفراغ السفلي بتقسيم حل المثال التالي (إن توفرت قياساته) دون تجزئة أي خطوة. */
 export function packFlowItemsIntoPages(
-  items: readonly FlowItem[],
-  heights: ReadonlyMap<string, number>,
-  options: FlowPackOptions
-): readonly FlowPage[] {
-  const base = packFlowItemsIndivisible(items, heights, options);
-  if (options.skipSolutionSplits) return base;
-  return optimizePagesWithSolutionSplits(items, heights, base, (candidate) =>
-    packFlowItemsIndivisible(candidate, heights, options)
-  ).pages;
-}
-
-function packFlowItemsIndivisible(
   items: readonly FlowItem[],
   heights: ReadonlyMap<string, number>,
   options: FlowPackOptions
 ): readonly FlowPage[] {
   const count = items.length;
   if (count === 0) return [];
-  const { gapMinPx } = options.density;
   const heightOf = (item: FlowItem) => heights.get(item.id) ?? fallbackFlowItemHeightPx(item);
-  const stretchRoomOf = (item: FlowItem) =>
-    isStretchableFlowItem(item) ? Math.min(options.density.maxStretchPerItemPx, heightOf(item) * options.density.maxStretchRatio) : 0;
-  const budgetFor = (startIndex: number, requiredH: number) => {
-    if (startIndex !== 0) return { budget: options.budgets.nextPagePx, isHeaderCompact: false };
-    const decision = resolveAdaptiveFirstPageHeader({
-      standardFirstPageBudgetPx: options.budgets.firstPagePx,
-      compactFirstPageBudgetPx: options.budgets.firstPageCompactPx,
-      requiredFirstPageHeightPx: requiredH,
-      manualCompactHeaderSetting: options.manualCompactHeader,
-    });
-    return { budget: decision.effectiveFirstPageBudgetPx, isHeaderCompact: decision.isHeaderCompact };
+  const ctx: PageCostContext = {
+    heights,
+    heightOf,
+    stretchRoomOf: (item) =>
+      isStretchableFlowItem(item) ? Math.min(options.density.maxStretchPerItemPx, heightOf(item) * options.density.maxStretchRatio) : 0,
+    budgets: options.budgets,
+    density: options.density,
+    manualCompactHeader: options.manualCompactHeader,
+  };
+  const cutsAt = options.skipSolutionSplits ? NO_CUTS : buildInlineSolutionCutLookup(items, heights);
+
+  const nodes = new Map<string, DpNode>();
+  const carryItems = new Map<string, readonly FlowItem[]>([["", []]]);
+  const carryKeysAt: Array<Set<string>> = Array.from({ length: count + 1 }, () => new Set<string>());
+  const relax = (key: string, candidate: DpNode) => {
+    if (isBetter(candidate, nodes.get(key))) nodes.set(key, candidate);
+  };
+  nodes.set(nodeKey(0, ""), { pages: 0, cost: 0, prevKey: undefined, pageItems: [] });
+
+  const expand = (start: number, carryKey: string) => {
+    const fromKey = nodeKey(start, carryKey);
+    const from = nodes.get(fromKey);
+    if (!from) return;
+    const carry = carryItems.get(carryKey) ?? [];
+    const isFirstPage = start === 0 && carry.length === 0;
+    for (let end = start; end <= count; end++) {
+      const base = [...carry, ...items.slice(start, end)];
+      if (base.length > 0) {
+        const isLastPage = end === count;
+        const ev = evaluatePageCandidate(ctx, base, { isFirstPage, isLastPage, nextItem: items[end] });
+        if (!ev.oversized || base.length === 1) {
+          relax(isLastPage ? END_KEY : nodeKey(end, ""), { pages: from.pages + 1, cost: from.cost + ev.cost, prevKey: fromKey, pageItems: base });
+        }
+        if (ev.oversized && base.length > 1) break;
+      }
+      if (end >= count) continue;
+      for (const opt of cutsAt(end)) {
+        const pageItems = [...base, ...opt.heads];
+        const ev = evaluatePageCandidate(ctx, pageItems, { isFirstPage, isLastPage: false, cutTailStepCounts: opt.tailStepCounts });
+        if (ev.oversized) continue;
+        const target = end + opt.consumed;
+        carryItems.set(opt.carryKey, opt.tails);
+        carryKeysAt[target].add(opt.carryKey);
+        relax(nodeKey(target, opt.carryKey), { pages: from.pages + 1, cost: from.cost + ev.cost, prevKey: fromKey, pageItems });
+      }
+    }
   };
 
-  const best: Array<BreakNode | undefined> = new Array(count + 1).fill(undefined);
-  best[0] = { pages: 0, cost: 0, from: -1 };
-
-  for (let start = 0; start < count; start++) {
-    const base = best[start];
-    if (!base) continue;
-
-    for (let end = start + 1; end <= count; end++) {
-      const slice = items.slice(start, end);
-      const segments = buildSegmentsForSlice(slice, heightOf, heights, gapMinPx, stretchRoomOf);
-      const used = pageContentHeightPx(segments, heightOf, gapMinPx);
-      const { budget } = budgetFor(start, used);
-      const elastic = resolveElasticPageFit({ segments, usedHeightPx: used, budgetPx: budget, gapPx: gapMinPx });
-      const oversized = !elastic.fits;
-      if (oversized && end > start + 1) break;
-
-      const effectiveUsed = Math.min(budget, used - elastic.absorbedPx);
-      const last = slice[slice.length - 1];
-      const isLastPage = end === count;
-      let cost = 0;
-      if (oversized) cost += OVERSIZED_PENALTY;
-
-      // التعامل المرن مع كبسولة الفكرة: تمنع فقط إذا انفردت بالصفحة كاملة، بينما يُسمح بها أسفل الصفحة لاستغلال الفراغ وتوفير الورق
-      if (last.kind === "idea_capsule" && !isLastPage) {
-        if (slice.length === 1) {
-          cost += ORPHAN_PENALTY;
-        } else {
-          cost += 35;
-        }
-      }
-      if (last.kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
-      if (slice[0].kind === "idea_divider") cost += ORPHAN_PENALTY;
-      if (slice.length === 1 && slice[0].kind === "answer_section_banner" && !isLastPage) cost += ORPHAN_PENALTY;
-      if (slice.length === 1 && slice[0].kind === "accreditation_footer" && start > 0) cost += LONE_FOOTER_PENALTY;
-
-      // تماسك زوج الأمثلة المحلولة المتجاورة في نفس الفكرة (عمودان جنباً إلى جنب)
-      const nextItem = end < count ? items[end] : undefined;
-      if (
-        !isLastPage &&
-        last.kind === "question" &&
-        last.span === "column" &&
-        last.isWorkedExample &&
-        nextItem?.kind === "question" &&
-        nextItem.span === "column" &&
-        nextItem.isWorkedExample &&
-        last.ideaIndex === nextItem.ideaIndex
-      ) {
-        cost += ORPHAN_PENALTY;
-      }
-
-      // منع جمع شطري مسألة واحدة منشطرة (الرأس والذيل) في نفس الصفحة: الانشطار مخصص حصراً للعبور بين صفحتين
-      const hasHeadAndTailOfSameQuestion = slice.some(
-        (i) =>
-          i.kind === "question" &&
-          Boolean(i.solutionSlice && !i.solutionSlice.isTail) &&
-          slice.some(
-            (j) =>
-              j !== i &&
-              j.kind === "question" &&
-              j.question.id === i.question.id &&
-              Boolean(j.solutionSlice && (j.solutionSlice.isTail || j.solutionSlice.from > 0))
-          )
-      );
-      if (hasHeadAndTailOfSameQuestion) {
-        cost += OVERSIZED_PENALTY;
-      }
-
-      if (!isLastPage) cost += (SLACK_WEIGHT * Math.max(0, budget - effectiveUsed) / budget) ** 2;
-      cost += (IMBALANCE_WEIGHT * columnsImbalancePx(segments, heightOf, gapMinPx) / budget) ** 2;
-
-      const candidate: BreakNode = { pages: base.pages + 1, cost: base.cost + cost, from: start };
-      if (isBetter(candidate, best[end])) best[end] = candidate;
-    }
+  for (let index = 0; index < count; index++) {
+    // الصفحات التي تبدأ بذيل مرحَّل أولاً (قد تنتج عقدة بلا ترحيل عند نفس الفهرس)، ثم العقدة بلا ترحيل.
+    for (const carryKey of carryKeysAt[index]) expand(index, carryKey);
+    expand(index, "");
+  }
+  // ذيل مرحَّل في نهاية المستند (الكائن الأخير مقطوع) يحتاج صفحة أخيرة خاصة.
+  for (const carryKey of carryKeysAt[count]) {
+    const from = nodes.get(nodeKey(count, carryKey));
+    const carry = carryItems.get(carryKey) ?? [];
+    if (!from || carry.length === 0) continue;
+    const ev = evaluatePageCandidate(ctx, carry, { isFirstPage: false, isLastPage: true });
+    relax(END_KEY, { pages: from.pages + 1, cost: from.cost + ev.cost, prevKey: nodeKey(count, carryKey), pageItems: carry });
   }
 
-  const cuts: number[] = [];
-  for (let cursor = count; cursor > 0; cursor = best[cursor]!.from) cuts.unshift(cursor);
+  const pageSlices: Array<readonly FlowItem[]> = [];
+  for (let node = nodes.get(END_KEY); node && node.prevKey !== undefined; node = nodes.get(node.prevKey)) {
+    pageSlices.unshift(node.pageItems);
+  }
 
-  const pages: FlowPage[] = [];
-  let startIndex = 0;
-  cuts.forEach((endIndex, pageIdx) => {
-    const slice = items.slice(startIndex, endIndex);
-    const segments = buildSegmentsForSlice(slice, heightOf, heights, gapMinPx, stretchRoomOf);
-    const used = pageContentHeightPx(segments, heightOf, gapMinPx);
-    const { budget, isHeaderCompact } = budgetFor(startIndex, used);
-    pages.push(
-      distributePageSlack({
-        pageNumber: pageIdx + 1,
-        segments,
-        budgetPx: budget,
-        heightOf,
-        density: options.density,
-        isLastPage: endIndex === count,
-        isHeaderCompact,
-      })
-    );
-    startIndex = endIndex;
+  return pageSlices.map((slice, pageIdx) => {
+    const segments = buildPageSegments(ctx, slice);
+    const used = pageContentHeightPx(segments, heightOf, options.density.gapMinPx);
+    const { budget, isHeaderCompact } = resolvePageBudget(ctx, pageIdx === 0, used);
+    return distributePageSlack({
+      pageNumber: pageIdx + 1,
+      segments,
+      budgetPx: budget,
+      heightOf,
+      density: options.density,
+      isLastPage: pageIdx === pageSlices.length - 1,
+      isHeaderCompact,
+    });
   });
-  return pages;
 }
-
