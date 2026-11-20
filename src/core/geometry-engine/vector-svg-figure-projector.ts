@@ -225,9 +225,7 @@ export function projectGeometryFigureToSVGMarkup(
     }
     const labelBoxSvg = isUnknown
       ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${UNKNOWN_LABEL_BORDER}" stroke-width="0.8" stroke-dasharray="${UNKNOWN_LABEL_DASHARRAY}" />`
-      : obs.isCompositeSpan && obs.isInteriorSpan
-        ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="#FFFFFF" fill-opacity="0.92" stroke="${accentColor}" stroke-width="0.45" stroke-opacity="0.45" />`
-        : "";
+      : "";
     return `${bracketSvg}${labelBoxSvg}<text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="8.0" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${displayInnerSvg}</text>`;
   }).join("");
 

@@ -33,4 +33,21 @@ describe("SVG No-Fill Givens Rendering with Crisp Text Halo (Track C)", () => {
       expect(svg).toContain(`fill="none" stroke="${UNKNOWN_LABEL_BORDER}"`);
     }
   });
+
+  it("never draws an opaque white pill behind interior composite diagonal labels (AC = 10 سم, BD = 8 سم)", () => {
+    const res = matchGeometryWithDiagnostics(
+      "[رسم هندسي: متوازي أضلاع ABCD تقاطع قطراه في M ؛ AB = 6 سم ؛ AC = 10 سم ؛ BD = 8 سم]",
+      "fig_diag_no_fill",
+      "english"
+    );
+    expect(res.figure).toBeDefined();
+    const svg = projectGeometryFigureToSVGMarkup(res.figure!, {
+      numeralMode: "western",
+      notationLanguage: "english",
+    });
+    expect(svg).toContain("10 سم");
+    expect(svg).toContain("8 سم");
+    expect(svg).not.toMatch(/<rect[^>]*height="11"[^>]*fill="#FFFFFF"/i);
+    expect(svg).not.toContain('fill-opacity="0.92"');
+  });
 });
