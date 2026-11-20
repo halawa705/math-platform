@@ -106,6 +106,8 @@ export interface GeometryAskedTargetSpec {
   readonly kind: GeometryAskedKind;
   /** الرؤوس أو القطعة أو الزاوية المطلوبة بعد التطبيع اللاتيني (مثل "AB" أو "ABC" أو "B"). */
   readonly targetKey?: string;
+  /** قائمة الأهداف المتعددة عند طلب زاويتين معاً في نفس المسألة (مثل ["AEB", "AEC"]). */
+  readonly targetKeys?: readonly string[];
   /** المتغير الجبري الصريح إن كان السؤال يطلب قيمة متغير موجود على الرسم (مثل "x" أو "س"). */
   readonly variableSymbol?: string;
   /** النص الأصلي لجملة المطلوب في المسألة. */

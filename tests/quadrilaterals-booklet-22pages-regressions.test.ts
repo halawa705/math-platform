@@ -294,4 +294,21 @@ describe("Quadrilaterals 22-page booklet regressions (all 11 issues)", () => {
     expect(svg).toContain('stroke-dasharray="3,2"');
     expect(svg).toContain(">؟<");
   });
+
+  it("15. Dual asked angles (∠AEB و ∠AEC in HW 36) render two distinct unknown arcs labeled ؟₁ and ؟₂", () => {
+    const hw36 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD مستطيل، رُسم القطر AC، وكانت النقطة E ∈ BC بحيث كان المثلث ABE متساوي الساقين فيه AB = BE. أوجد قياس ∠AEB، ثم احسب قياس ∠AEC.",
+        geometryTag: "[رسم هندسي: الرؤوس (مستطيل ABCD) ؛ أطوال الأضلاع ووحداتها (AB = BE) ؛ الزوايا والتعامد (E ∈ BC) ؛ المطلوب: قياس ∠AEB وقياس ∠AEC]",
+      },
+      "reg_hw36_dual_q"
+    );
+    expect(hw36.decision).toBe("green");
+    expect(hw36.figure!.askedSpec?.targetKeys).toEqual(["AEB", "AEC"]);
+    const unknownLabels = hw36.figure!.angles.filter((a) => a.labelKind === "unknown").map((a) => a.degreesLabel);
+    expect(unknownLabels).toEqual(["؟₁", "؟₂"]);
+    const svg = projectGeometryFigureToSVGMarkup(hw36.figure!, { notationLanguage: "english", numeralMode: "western" });
+    expect(svg).toContain(">؟₁<");
+    expect(svg).toContain(">؟₂<");
+  });
 });

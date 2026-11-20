@@ -103,8 +103,9 @@ export function projectGeometryAnglesSVGMarkup(
     const isUnknownAngle =
       ang.labelKind === "unknown" ||
       Boolean(ang.degreesLabel && (ang.degreesLabel.includes("؟") || ang.degreesLabel.includes("?")));
+    const sameVertexPriorCount = opts.angles.slice(0, opts.angles.indexOf(ang)).filter((o) => o.vertexId === ang.vertexId).length;
     const sharesVertexWithOther = isUnknownAngle && opts.angles.some((o) => o !== ang && o.vertexId === ang.vertexId);
-    const rArc = sharesVertexWithOther ? 17 : 14;
+    const rArc = sharesVertexWithOther ? (sameVertexPriorCount > 0 ? 18 : 14) : 14;
     const arcStrokeColor = isUnknownAngle ? "#D97706" : opts.accentColor;
     const arcFillColor = isUnknownAngle ? "#F59E0B" : opts.accentColor;
     const arcDashAttr = isUnknownAngle ? ` stroke-dasharray="3,2"` : "";

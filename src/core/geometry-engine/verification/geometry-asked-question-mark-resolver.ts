@@ -92,20 +92,22 @@ export function extractGeometryAskedSpecFromPrompt(rawText: string): GeometryAsk
     };
   }
 
-  // 4. فحص قياس الزاوية المطلوبة: ق(∠ABC) أو ق(∠B) أو قياس زاوية جـ
-  const angMatch =
-    clause.match(/ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|(?:[أ-ي]ـ?\s*){1,3})\s*\)/i) ||
-    clause.match(/(?:قياس\s*)?(?:ال)?زاوية\s*∠?\s*([A-Za-z]{1,3}|(?:[أ-ي]ـ?\s*){1,3})(?![A-Za-zء-ي])/i) ||
-    clause.match(/∠\s*([A-Za-z]{1,3}|(?:[أ-ي]ـ?\s*){1,3})(?![A-Za-zء-ي])/i);
-  if (angMatch) {
-    const labels = parseLabelList(angMatch[1]);
+  // 4. فحص قياس الزاوية أو الزاويتين المطلوبتين: ق(∠ABC) أو ∠AEB و ∠AEC
+  const foundAngles: string[] = [];
+  for (const m of clause.matchAll(/(?:ق\s*\(\s*∠?\s*|قياس\s*(?:ال)?زاوية\s*∠?\s*|∠\s*)([A-Za-z]{1,3}|(?:[أ-ي]ـ?\s*){1,3})(?![A-Za-zء-ي])/gi)) {
+    const labels = parseLabelList(m[1]);
     if (labels && (labels.length === 1 || labels.length === 3)) {
-      return {
-        kind: "angle",
-        targetKey: labels.join(""),
-        rawAskedClause: clause,
-      };
+      const key = labels.join("");
+      if (!foundAngles.includes(key)) foundAngles.push(key);
     }
+  }
+  if (foundAngles.length > 0) {
+    return {
+      kind: "angle",
+      targetKey: foundAngles[0],
+      ...(foundAngles.length > 1 ? { targetKeys: foundAngles.slice(0, 2) } : {}),
+      rawAskedClause: clause,
+    };
   }
 
   // 5. فحص متغير جبري مطلوب: أوجد قيمة س / قيمة x
@@ -226,50 +228,45 @@ export function applyAskedQuestionMarkToFigure(
     });
   }
 
-  // تطبيق «؟» داخل قوس الزاوية المطلوبة
+  // تطبيق «؟» داخل قوس الزاوية (أو الزاويتين «؟₁» و «؟₂») المطلوبة
   if (askedSpec.kind === "angle" && askedSpec.targetKey) {
-    const t = askedSpec.targetKey;
-    const targetVertexKey = t.length === 3 ? t[1] : t[0];
-    const armA = t.length === 3 ? t[0] : undefined;
-    const armB = t.length === 3 ? t[2] : undefined;
-
-    let matchedExisting = false;
-    angles = angles.map((a) => {
-      const vk = vKeyById.get(a.vertexId) ?? "";
-      const ak1 = vKeyById.get(a.arm1VertexId) ?? "";
-      const ak2 = vKeyById.get(a.arm2VertexId) ?? "";
-      const armsMatch =
-        !armA || !armB || pairKey(ak1, ak2) === pairKey(armA, armB);
-      if (vk === targetVertexKey && armsMatch && !a.isRightAngle && !a.degreesLabel && a.degrees === undefined) {
-        matchedExisting = true;
-        return {
-          ...a,
-          degreesLabel: "؟",
-          labelKind: "unknown",
-        };
-      }
-      return a;
-    });
-
-    if (!matchedExisting && armA && armB && (figure.polygons?.length ?? 0) > 0) {
-      const vNode = figure.vertices.find((v) => vKeyById.get(v.id) === targetVertexKey);
-      const a1Node = figure.vertices.find((v) => vKeyById.get(v.id) === armA);
-      const a2Node = figure.vertices.find((v) => vKeyById.get(v.id) === armB);
-      if (vNode && a1Node && a2Node) {
-        const exactAlreadyExists = figure.angles.some(
-          (a) => a.vertexId === vNode.id && pairKey(a.arm1VertexId, a.arm2VertexId) === pairKey(a1Node.id, a2Node.id)
-        );
-        const hasIntermediateRay = figure.angles.some(
-          (a) =>
-            a.vertexId === vNode.id &&
-            (a.arm1VertexId === a1Node.id || a.arm2VertexId === a1Node.id || a.arm1VertexId === a2Node.id || a.arm2VertexId === a2Node.id)
-        );
-        const isCompositeMultiPoly = (figure.polygons?.length ?? 0) >= 2;
-        if (!exactAlreadyExists && (!hasIntermediateRay || isCompositeMultiPoly)) {
-          angles = [...angles, { id: `${figure.figureId}_ang_asked_${t}`, vertexId: vNode.id, arm1VertexId: a1Node.id, arm2VertexId: a2Node.id, degreesLabel: "؟", labelKind: "unknown" }];
+    const angleTargets = askedSpec.targetKeys && askedSpec.targetKeys.length > 1 ? askedSpec.targetKeys : [askedSpec.targetKey];
+    const multiLabels = ["؟₁", "؟₂"];
+    angleTargets.forEach((t, tIdx) => {
+      const qLabel = angleTargets.length > 1 ? (multiLabels[tIdx] ?? "؟") : "؟";
+      const targetVertexKey = t.length === 3 ? t[1] : t[0];
+      const armA = t.length === 3 ? t[0] : undefined;
+      const armB = t.length === 3 ? t[2] : undefined;
+      let matchedExisting = false;
+      angles = angles.map((a) => {
+        const vk = vKeyById.get(a.vertexId) ?? "";
+        const ak1 = vKeyById.get(a.arm1VertexId) ?? "";
+        const ak2 = vKeyById.get(a.arm2VertexId) ?? "";
+        const armsMatch = !armA || !armB || pairKey(ak1, ak2) === pairKey(armA, armB);
+        if (vk === targetVertexKey && armsMatch && !a.isRightAngle && !a.degreesLabel && a.degrees === undefined) {
+          matchedExisting = true;
+          return { ...a, degreesLabel: qLabel, labelKind: "unknown" };
+        }
+        return a;
+      });
+      if (!matchedExisting && armA && armB && (figure.polygons?.length ?? 0) > 0) {
+        const vNode = figure.vertices.find((v) => vKeyById.get(v.id) === targetVertexKey);
+        const a1Node = figure.vertices.find((v) => vKeyById.get(v.id) === armA);
+        const a2Node = figure.vertices.find((v) => vKeyById.get(v.id) === armB);
+        if (vNode && a1Node && a2Node) {
+          const exactAlreadyExists = angles.some(
+            (a) => a.vertexId === vNode.id && pairKey(a.arm1VertexId, a.arm2VertexId) === pairKey(a1Node.id, a2Node.id)
+          );
+          const hasIntermediateRay = figure.angles.some(
+            (a) => a.vertexId === vNode.id && (a.arm1VertexId === a1Node.id || a.arm2VertexId === a1Node.id || a.arm1VertexId === a2Node.id || a.arm2VertexId === a2Node.id)
+          );
+          const isCompositeOrMulti = (figure.polygons?.length ?? 0) >= 2 || angleTargets.length > 1;
+          if (!exactAlreadyExists && (!hasIntermediateRay || isCompositeOrMulti)) {
+            angles = [...angles, { id: `${figure.figureId}_ang_asked_${t}`, vertexId: vNode.id, arm1VertexId: a1Node.id, arm2VertexId: a2Node.id, degreesLabel: qLabel, labelKind: "unknown" }];
+          }
         }
       }
-    }
+    });
   }
 
   // تطبيق «؟» للمساحة المطلوبة داخل مركز ثقل الشكل
