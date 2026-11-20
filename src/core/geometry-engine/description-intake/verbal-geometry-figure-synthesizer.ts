@@ -196,10 +196,18 @@ export function synthesizeVerbalGeometryFacts(
   }
   if (/(?:مستطيل|مربع|معين|متوازي\s*أضلاع)/i.test(plain)) {
     const shape = plain.match(/مستطيل|مربع|معين|متوازي\s*أضلاع/i)![0];
-    const lens = extractMeasuredLengths(body);
+    const bodyWithoutPerimArea = body
+      .replace(/محيط[هـا]?(?:\s*(?:ال)?(?:مثلث|مربع|مستطيل|معين|متوازي\s*(?:ال)?أضلاع|شبه\s*(?:ال)?منحرف))?\s*(?:يساوي|تساوي|=)?\s*\d+(?:\.\d+)?\s*(?:سم|م|كم|مم|ديسم)?/gi, " ")
+      .replace(/مساح(?:ة|ته|تها)[^،؛.\n]{0,25}?\d+(?:\.\d+)?\s*(?:سم²?|م²?|كم|مم|ديسم)?/gi, " ");
+    const lens = extractMeasuredLengths(bodyWithoutPerimArea);
+    const algSideM = bodyWithoutPerimArea.match(/(?:طول\s*(?:أحد\s*)?(?:ضلع[هـا]?|أضلاع[هـا]?)\s*(?:يساوي|=)?\s*)(\([^()]{2,26}\))\s*(سم|م|كم|مم|ديسم)?/i);
     out.push(`${shape} ABCD`);
-    if (lens[0]) out.push(`AB = ${lens[0].value} ${lens[0].unit}`);
-    if (lens[1]) out.push(`BC = ${lens[1].value} ${lens[1].unit}`);
+    if (algSideM) {
+      out.push(`AB = ${algSideM[1].trim()} ${algSideM[2] || "سم"}`);
+    } else if (lens[0]) {
+      out.push(`AB = ${lens[0].value} ${lens[0].unit}`);
+    }
+    if (lens[1] && !algSideM) out.push(`BC = ${lens[1].value} ${lens[1].unit}`);
     return out;
   }
   if (/دائرة/i.test(plain)) {

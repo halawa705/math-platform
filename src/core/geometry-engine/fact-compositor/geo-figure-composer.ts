@@ -264,7 +264,7 @@ export function composeFigureFromGeometryDescription(
     }
   }
 
-  autoConnectReferencedSubPolygons({ description, points, isPolygonSide, addExtra });
+  autoConnectReferencedSubPolygons({ description, facts, polygons, points, lengths, parallelMarks, isPolygonSide, addExtra, addAngle });
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const segments = assembleCanonicalFigureSegments({
     figureId, polygons, points, host, lengths, ticks, parallelMarks, extras, linearKindMap,

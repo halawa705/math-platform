@@ -88,9 +88,22 @@ export function placeDeclaredShapes(
     }
   }
 
+  // ترتيب المضلعات طوبولوجياً: الرباعيات الأساسية أولاً، ثم الرباعيات المشتركة مع نقطة تقاطع أقطار، ثم المثلثات الفرعية
+  const diagMeetPts = new Set(facts.filter((x): x is Extract<GeoFact, { k: "diagonalsMeet" }> => x.k === "diagonalsMeet").map((x) => x.p));
+  const polyPriority = (f: GeoFact): number => {
+    if (f.k === "quad") return f.labels.some((l) => diagMeetPts.has(l)) ? 1 : 0;
+    if (f.k === "triangle") return 2;
+    return 3;
+  };
+  effectiveFacts.sort((a, b) => polyPriority(a) - polyPriority(b));
+
   for (const f of effectiveFacts) {
     if (f.k !== "triangle" && f.k !== "quad") continue;
     const labels = f.labels;
+    if (f.k === "triangle" && labels.every((l) => points.has(l))) continue;
+    if (f.k === "triangle" && points.size >= 4 && labels.filter((l) => points.has(l)).length === 2 && facts.some((pf) => (pf.k === "pointOn" || pf.k === "diagonalsMeet") && labels.includes(pf.p))) {
+      continue;
+    }
     let local: Vec2[];
     if (f.k === "triangle") {
       const [a, b, c] = labels;
@@ -137,10 +150,15 @@ export function placeDeclaredShapes(
           ? inferParallelogramOrRhombusAngleADeg(labels, f.kind, facts)
           : (angleOf(a) ?? 60)
       );
+      const heightFact = facts.find((hf): hf is Extract<GeoFact, { k: "height" }> => hf.k === "height");
       if (f.kind === "rectangle") local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: dPar }, { x: 0, y: dPar }];
       else if (f.kind === "square") local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: w }, { x: 0, y: w }];
       else if (f.kind === "rhombus") { const D = { x: w * Math.cos(th), y: w * Math.sin(th) }; local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D]; }
-      else if (f.kind === "parallelogram") { const D = { x: dPar * Math.cos(th), y: dPar * Math.sin(th) }; local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D]; }
+      else if (f.kind === "parallelogram") {
+        const effSide = !rawH && heightFact ? heightFact.value / Math.max(0.35, Math.sin(th)) : dPar;
+        const D = { x: effSide * Math.cos(th), y: effSide * Math.sin(th) };
+        local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D];
+      }
       else if (f.kind === "trapezoid") local = placeOrientedTrapezoid(labels, facts, num, angleOf);
       else local = placeGeneralCompositeQuad(labels, facts, num, angleOf);
     }

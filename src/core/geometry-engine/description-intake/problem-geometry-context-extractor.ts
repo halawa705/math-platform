@@ -77,9 +77,9 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     facts.push(`${chm[1]} = ${chm[3]} سم`, `${chm[2]} = ${chm[3]} سم`);
   }
 
-  // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (من المعطيات فقط لا المطلوب ولا المعاملات المضروبة)
+  // 3. أطوال الأضلاع الفردية الصريحة: AB = 6 سم أو س ص = 8 (مع منع ابتلاع «س» من وحدة «سم» كمتغير عربي!)
   const lengthMatches = assertionsClean.matchAll(
-    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?(?:\s*√\s*[0-9]+)?|[0-9.xyzسصع²^+\-\s]*[0-9xyzسصع][0-9.xyzسصع²^+\-\s]*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?|\([0-9A-Za-zxyzسصع]))(?=[\s،,;؛|.)]|$)/gi
+    /(?<![A-Za-zء-ي])([A-Za-z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?(?:\s*√\s*[0-9]+)?|(?:[0-9.xyz²^+\-\s]|(?<!\S)[سصع](?![أ-ي]))*(?:[0-9xyz]|[سصع](?![أ-ي]))(?:[0-9.xyz²^+\-\s]|(?<!\S)[سصع](?![أ-ي]))*?)\s*(سم|م|كم|مم|ديسم|وحدة)?(?!\s*(?:[A-Z]{2,4}|[أ-ي]ـ?\s*[أ-ي]ـ?|\([0-9A-Za-zxyzسصع]))(?=[\s،,;؛|.)]|$)/gi
   );
   for (const lm of lengthMatches) {
     const segRaw = lm[1].replace(/\s+/g, "");
@@ -184,14 +184,11 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (!facts.includes(capStr)) facts.push(capStr);
   }
 
-  // 9. المثلث العام في متن المسألة (جزء المعطيات فقط حتى لا يُعلن مثلث المطلوب أو المثلث الداخلي للمنتصفات كمثلث منفصل)
-  const outerMidTriMatch = assertionsClean.match(
-    /(?:مرسوم\s*بربط|رؤوسه|الناتج\s*من\s*توصيل|بداخل)\s*(?:منتصفات\s*أضلاع\s*)?(?:ال)?مثلث\s*(?:الأصلي\s*|الأكبر\s*)?([A-Z]{3})\b/
-  );
+  const hasQuadInAssert = /(?:شبه\s*(?:ال)?منحرف|متوازي\s*(?:ال)?أضلاع|مستطيل|معين|مربع|شكل\s*(?:ال)?رباعي)\s*(?:قائم[^A-Z]{0,18})?[A-Z]{4}|\b[A-Z]{4}\s+(?:شبه\s*(?:ال)?منحرف|متوازي\s*(?:ال)?أضلاع|مستطيل|معين|مربع|شكل\s*(?:ال)?رباعي)/.test(assertionsClean);
+  const addTriFact = (tf: string) => (hasQuadInAssert ? facts.push(tf) : facts.unshift(tf));
+  const outerMidTriMatch = assertionsClean.match(/(?:مرسوم\s*بربط|رؤوسه|الناتج\s*من\s*توصيل|بداخل)\s*(?:منتصفات\s*أضلاع\s*)?(?:ال)?مثلث\s*(?:الأصلي\s*|الأكبر\s*)?([A-Z]{3})\b/);
   const plainTriMatch = outerMidTriMatch ?? assertionsClean.match(/(?:في\s+)?(?:ال)?مثلث\s*([A-Z]{3})\b/);
-  if (plainTriMatch && !facts.some((f) => f.includes(`مثلث ${plainTriMatch[1]}`))) {
-    facts.unshift(`مثلث ${plainTriMatch[1]}`);
-  }
+  if (plainTriMatch && !facts.some((f) => f.includes(`مثلث ${plainTriMatch[1]}`))) addTriFact(`مثلث ${plainTriMatch[1]}`);
 
   // 9-ب. الزاوية الخارجة بالاسم الصريح (مثل ∠ABD زاوية خارجة عن المثلث ABC قياسها 74°) أو عند رأس محدد بدون وسم امتداد
   const explicitExtMatch = clean.match(
@@ -240,13 +237,13 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   if (rightTriM) {
     const plainIdx = facts.indexOf(`مثلث ${rightTriM[1]}`);
     if (plainIdx >= 0) facts.splice(plainIdx, 1);
-    facts.unshift(`مثلث ${rightTriM[1]} قائم في ${rightTriM[2]}`);
+    addTriFact(`مثلث ${rightTriM[1]} قائم في ${rightTriM[2]}`);
   }
   const isoTriM = assertionsClean.match(/(?:المثلث|مثلث|Δ)\s*([A-Za-z]{3})\s*(?:ال)?متساوي\s*الساقين/i);
   if (isoTriM) {
     const plainIdx = facts.indexOf(`مثلث ${isoTriM[1]}`);
     if (plainIdx >= 0) facts.splice(plainIdx, 1);
-    facts.unshift(`مثلث ${isoTriM[1]} متساوي الساقين`);
+    addTriFact(`مثلث ${isoTriM[1]} متساوي الساقين`);
   }
 
   // 11. استخراج الارتفاع الساقط على القاعدة (مثل: الارتفاع أ د في المثلث أ ب جـ)

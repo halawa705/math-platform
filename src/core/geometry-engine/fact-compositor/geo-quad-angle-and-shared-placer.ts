@@ -264,7 +264,7 @@ export function tryPlaceSharedEdgeTriangle(
   } else if (isIsoAtMissing && apexDeg !== undefined && apexDeg > 10 && apexDeg < 170 && uw === undefined && vw === undefined) {
     const leg = baseLen / (2 * Math.sin(degToRad(apexDeg / 2)));
     // تقييد الارتفاع البصري حتى لا يتمدد المثلث الحاد جداً خارج حدود الصفحة بشكل مفرط
-    const cappedLeg = Math.min(leg, baseLen * 1.65);
+    const cappedLeg = Math.min(leg, baseLen * 1.25);
     uw = cappedLeg;
     vw = cappedLeg;
   } else {

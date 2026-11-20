@@ -204,11 +204,6 @@ export function buildPerimeterAndAreaBadges(params: {
       if (seenTexts.has(text)) continue;
       seenTexts.add(text);
       badges.push({ id: `${figureId}_badge_area_${idx++}`, text, position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, labelKind: "given" });
-    } else if (f.k === "height") {
-      const text = `الارتفاع = ${f.value} ${f.unit ?? "سم"}`;
-      if (seenTexts.has(text)) continue;
-      seenTexts.add(text);
-      badges.push({ id: `${figureId}_badge_h_${idx++}`, text, position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, labelKind: "given" });
     }
   }
   return badges;

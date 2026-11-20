@@ -216,4 +216,66 @@ describe("Quadrilaterals 22-page booklet regressions (all 11 issues)", () => {
     expect(drills.map((d) => d.questionNumber)).toEqual([1, 2, 3]);
     expect(hw.map((h) => h.questionNumber)).toEqual([1, 2]);
   });
+
+  it("12. Prompt extractor never splits '2x سم' into '2x س' + 'م', and never puts perimeter onto side AB", () => {
+    const ex10 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD متوازي أضلاع فيه طول AB = (4x - 7) سم، وطول CD = 2x سم، وطول AD = (y - 5) سم، وطول BC = 5 سم.",
+        geometryTag: "[رسم هندسي: الرؤوس (متوازي أضلاع ABCD) ؛ أطوال الأضلاع ووحداتها (AB = (4x - 7) سم ; CD = 2x سم ; AD = (y - 5) سم ; BC = 5 سم)]",
+      },
+      "reg_ex_10_unit"
+    );
+    expect(ex10.decision).toBe("green");
+    const cdSeg = ex10.figure!.segments.find((s) => s.lengthLabel && String(s.lengthLabel.value).includes("2x"));
+    expect(cdSeg?.lengthLabel?.value).toBe("2x");
+    expect(cdSeg?.lengthLabel?.unit).toBe("سم");
+
+    const perimOnly = matchGeometryWithDiagnostics({ problemPrompt: "معين محيطه 200 سم، فإن طول ضلعه يساوي:" }, "reg_perim_200");
+    expect(perimOnly.decision).toBe("green");
+    expect(perimOnly.figure!.segments.some((s) => String(s.lengthLabel?.value) === "200")).toBe(false);
+    expect(perimOnly.figure!.interiorBadges?.some((b) => b.text.includes("200"))).toBe(true);
+  });
+
+  it("13. Topological polygon ordering keeps ABCD primary before MBNE (drill 43), CDE (drill 44), ABE (hw 36), ABEF (hw 13), and AM=6 (hw 8)", () => {
+    const p43 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD مستطيل تقاطع قطراه في M، رُسم المعين MBNE بحيث تشارك القطران في النقطة M. إذا كان m(∠BNE) = 80°. احسب قياس ∠MBN.",
+        geometryTag: "[رسم هندسي: الرؤوس (مستطيل ABCD تقاطع قطراه في M ; معين MBNE) ؛ الزوايا والتعامد (m(∠BNE) = 80°) ؛ المطلوب: قياس ∠MBN]",
+      },
+      "reg_p43_order"
+    );
+    expect(p43.decision).toBe("green");
+    const v43 = new Map(p43.figure!.vertices.map((v) => [v.label, v.position]));
+    // M must be the exact midpoint of rectangle ABCD (not outside)
+    expect(v43.get("M")!.x).toBeCloseTo((v43.get("A")!.x + v43.get("C")!.x) / 2, 1);
+    expect(v43.get("M")!.y).toBeCloseTo((v43.get("A")!.y + v43.get("C")!.y) / 2, 1);
+
+    const hw36 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD مستطيل، رُسم القطر AC، وكانت النقطة E ∈ BC بحيث كان المثلث ABE متساوي الساقين فيه AB = BE. أوجد قياس ∠AEB، ثم احسب قياس ∠AEC.",
+        geometryTag: "[رسم هندسي: الرؤوس (مستطيل ABCD) ؛ أطوال الأضلاع ووحداتها (AB = BE) ؛ الزوايا والتعامد (E ∈ BC) ؛ المطلوب: قياس ∠AEB وقياس ∠AEC]",
+      },
+      "reg_hw36_both"
+    );
+    expect(hw36.decision).toBe("green");
+    expect(hw36.figure!.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "C", "D", "E"]));
+
+    const hw13 = matchGeometryWithDiagnostics(
+      { problemPrompt: "في الشكل المقابل، إذا كان ABCD متوازي أضلاع و ABEF متوازي أضلاع آخر مشترك معه في القاعدة AB، فإن القطعة المستقيمة CD بالنسبة للقطعة EF:" },
+      "reg_hw13_shared"
+    );
+    expect(hw13.decision).toBe("green");
+    expect(hw13.figure!.polygons?.length).toBe(2);
+
+    const hw8 = matchGeometryWithDiagnostics(
+      { problemPrompt: "في متوازي الأضلاع ABCD، إذا كان طول نصف القطر AM = 6 سم، فإن طول القطر AC يساوي:" },
+      "reg_hw8_halfdiag"
+    );
+    expect(hw8.decision).toBe("green");
+    expect(hw8.figure!.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "C", "D", "M"]));
+
+    const d34 = matchGeometryWithDiagnostics({ problemPrompt: "معين محيطه يساوي 48 سم، وطول أحد أضلاعه (2x + 4) سم. احسب قيمة x." }, "reg_d34_alg");
+    expect(d34.decision).toBe("green");
+    expect(d34.figure!.segments.some((s) => String(s.lengthLabel?.value).includes("2x + 4"))).toBe(true);
+  });
 });
