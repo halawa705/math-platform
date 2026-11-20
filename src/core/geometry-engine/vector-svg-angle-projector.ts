@@ -100,19 +100,26 @@ export function projectGeometryAnglesSVGMarkup(
     const startAng = ang1;
     const endAng = ang1 + diff;
     const sweepFlag = diff > 0 ? 1 : 0;
-    const rArc = 14;
+    const isUnknownAngle =
+      ang.labelKind === "unknown" ||
+      Boolean(ang.degreesLabel && (ang.degreesLabel.includes("؟") || ang.degreesLabel.includes("?")));
+    const sharesVertexWithOther = isUnknownAngle && opts.angles.some((o) => o !== ang && o.vertexId === ang.vertexId);
+    const rArc = sharesVertexWithOther ? 17 : 14;
+    const arcStrokeColor = isUnknownAngle ? "#D97706" : opts.accentColor;
+    const arcFillColor = isUnknownAngle ? "#F59E0B" : opts.accentColor;
+    const arcDashAttr = isUnknownAngle ? ` stroke-dasharray="3,2"` : "";
 
     const sx = vx + Math.cos(startAng) * rArc;
     const sy = vy + Math.sin(startAng) * rArc;
     const ex = vx + Math.cos(endAng) * rArc;
     const ey = vy + Math.sin(endAng) * rArc;
 
-    // قطاع زاوي ممتلئ بلون شفاف مضيء + قوس ناصع
+    // قطاع زاوي ممتلئ بلون شفاف مضيء + قوس ناصع (متقطع برتقالي للزاوية المطلوبة «؟»)
     elements.push(
-      `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${opts.accentColor}" fill-opacity="0.14" stroke="none" />`
+      `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${arcFillColor}" fill-opacity="${isUnknownAngle ? "0.11" : "0.14"}" stroke="none" />`
     );
     elements.push(
-      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${opts.accentColor}" stroke-width="1.4" />`
+      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${arcStrokeColor}" stroke-width="1.4"${arcDashAttr} />`
     );
 
     // 3. كتابة قياس الزاوية (نص أو درجات) - لا يُكتب أي قياس رقمي إذا وُجدت علامة تطابق أو تنصيف رمزية (نقطة أو علامة x)

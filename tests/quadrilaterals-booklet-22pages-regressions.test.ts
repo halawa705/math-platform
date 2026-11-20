@@ -278,4 +278,20 @@ describe("Quadrilaterals 22-page booklet regressions (all 11 issues)", () => {
     expect(d34.decision).toBe("green");
     expect(d34.figure!.segments.some((s) => String(s.lengthLabel?.value).includes("2x + 4"))).toBe(true);
   });
+
+  it("14. Asked composite angles (∠ADE, ∠MBN) render dashed orange unknown arc with ؟", () => {
+    const p42 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD مربع، أُنشئ على ضلعه CD مثلث متساوي الساقين CDE بحيث ED = EC و m(∠DEC) = 40°. احسب بالبرهان قياس ∠ADE.",
+        geometryTag: "[رسم هندسي: الرؤوس (ABCD مربع ; CDE مثلث متساوي الساقين خارجي) ؛ أطوال الأضلاع ووحداتها (ED = EC) ؛ الزوايا والتعامد (m(∠DEC) = 40°) ؛ المطلوب: قياس ∠ADE]",
+      },
+      "reg_p42_asked_arc"
+    );
+    expect(p42.decision).toBe("green");
+    expect(p42.figure!.angles.some((a) => a.labelKind === "unknown" && a.vertexId.endsWith("_D"))).toBe(true);
+    const svg = projectGeometryFigureToSVGMarkup(p42.figure!, { notationLanguage: "english", numeralMode: "western" });
+    expect(svg).toContain('stroke="#D97706"');
+    expect(svg).toContain('stroke-dasharray="3,2"');
+    expect(svg).toContain(">؟<");
+  });
 });

@@ -256,12 +256,16 @@ export function applyAskedQuestionMarkToFigure(
       const a1Node = figure.vertices.find((v) => vKeyById.get(v.id) === armA);
       const a2Node = figure.vertices.find((v) => vKeyById.get(v.id) === armB);
       if (vNode && a1Node && a2Node) {
+        const exactAlreadyExists = figure.angles.some(
+          (a) => a.vertexId === vNode.id && pairKey(a.arm1VertexId, a.arm2VertexId) === pairKey(a1Node.id, a2Node.id)
+        );
         const hasIntermediateRay = figure.angles.some(
           (a) =>
             a.vertexId === vNode.id &&
             (a.arm1VertexId === a1Node.id || a.arm2VertexId === a1Node.id || a.arm1VertexId === a2Node.id || a.arm2VertexId === a2Node.id)
         );
-        if (!hasIntermediateRay) {
+        const isCompositeMultiPoly = (figure.polygons?.length ?? 0) >= 2;
+        if (!exactAlreadyExists && (!hasIntermediateRay || isCompositeMultiPoly)) {
           angles = [...angles, { id: `${figure.figureId}_ang_asked_${t}`, vertexId: vNode.id, arm1VertexId: a1Node.id, arm2VertexId: a2Node.id, degreesLabel: "؟", labelKind: "unknown" }];
         }
       }
