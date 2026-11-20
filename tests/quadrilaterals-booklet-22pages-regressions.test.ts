@@ -311,4 +311,30 @@ describe("Quadrilaterals 22-page booklet regressions (all 11 issues)", () => {
     expect(svg).toContain(">؟₁<");
     expect(svg).toContain(">؟₂<");
   });
+
+  it("16. Pure theoretical quadrilateral property MCQs (Q1, Q9, Q30, Q33, Q37) do not trigger false figure diagnostics", () => {
+    const stage2 = `
+### الفكرة الأولى: خواص الأشكال الرباعية | معرف الفكرة: idea-1
+**الواجب المنزلي:**
+#1 [اختر] مجموع قياسات الزوايا الداخلة للشكل الرباعي يساوي: (أ) 180° (ب) 360° (جـ) 540° (د) 720°
+#2 [اختر] الشكل الرباعي الذي فيه ضلعان فقط متوازيان يسمى: (أ) متوازي أضلاع (ب) مستطيلاً (جـ) شبه منحرف (د) معيناً
+#3 [اختر] القطران متساويان في الطول وغير متعامدين في: (أ) المعين (ب) المستطيل (جـ) المربع (د) متوازي الأضلاع
+#4 [اختر] القطران متعامدان وغير متساويين في الطول في: (أ) المربع (ب) المعين (جـ) المستطيل (د) شبه المنحرف
+#5 [اختر] القطران متساويان في الطول ومتعامدان في: (أ) المستطيل (ب) المعين (جـ) المربع (د) متوازي الأضلاع
+`;
+    const items = mergeBookletThreeStagesRepliesToPrintableItems({
+      stage1Raw: "",
+      stage2Raw: stage2,
+      branchId: "plane_geometry",
+      branchNameAr: "الهندسة",
+      unitId: "u1",
+      lessonId: "l1",
+      lessonTitleArabic: "الأشكال الرباعية",
+    });
+    expect(items.length).toBe(5);
+    for (const item of items) {
+      expect(item.geometryFigure).toBeUndefined();
+      expect(item.figureDiagnosticsAr).toBeUndefined();
+    }
+  });
 });
