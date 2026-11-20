@@ -200,6 +200,10 @@ export function parseGeoFactString(s: string): GeoFact | null {
   if ((m = s.match(new RegExp(`^(?:h|H|ع|(?:ال)?ارتفاع(?:\\s*العمودي)?)\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}$`, "u")))) {
     return { k: "height", value: Number(m[1]), unit: normalizeArabicGeometryUnitSSOT(m[2]) ?? "سم" };
   }
+  if ((m = s.match(re(`${SEGRX}\\s*([+\\-−])\\s*${SEGRX}\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}`)))) {
+    const a = seg(m[1]); const b = seg(m[3]);
+    if (a && b) return { k: "relationNote", text: `${a.join("")} ${m[2] === "−" ? "-" : m[2]} ${b.join("")} = ${m[4]} ${normalizeArabicGeometryUnitSSOT(m[5]) ?? "سم"}` };
+  }
   if ((m = s.match(re(`${SEGRX}\\s*=\\s*(\\d+)\\s*/\\s*(\\d+)\\s*${SEGRX}`)))) {
     const a = seg(m[1]); const b = seg(m[4]);
     const num = Number(m[2]); const den = Number(m[3]);

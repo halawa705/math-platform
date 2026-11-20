@@ -118,6 +118,14 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     if (!facts.some((f) => f.includes(`∠${v3}`))) facts.push(`ق(∠${v3}) = ${r3}x`);
   }
 
+  const twoAngleRatioMatch = !chainedAngleRatioMatch
+    ? assertionsClean.match(/(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]|[أ-ي])\s*\)\s*:\s*(?:ق|m)\s*\(\s*∠?\s*([A-Za-z]|[أ-ي])\s*\)\s*=\s*(\d+)\s*:\s*(\d+)/i)
+    : null;
+  if (twoAngleRatioMatch) {
+    const [, v1, v2, r1, r2] = twoAngleRatioMatch;
+    if (!facts.some((f) => f.includes(`∠${v1}`))) facts.push(`ق(∠${v1}) = ${r1}x`);
+    if (!facts.some((f) => f.includes(`∠${v2}`))) facts.push(`ق(∠${v2}) = ${r2}x`);
+  }
   // 4-ب. الزوايا المنعكسة أو المقسمة بالعمل (مثل ق(∠AEC) المنعكسة = 290° أو زاوية تبادل 50° وزاوية تبادل 35°)
   const reflexMatch = assertionsClean.match(/(?:ق\s*\(\s*∠?\s*([A-Za-z]{3})\s*\)|∠\s*([A-Za-z]{3}))\s*المنعكسة\s*=\s*(\d+(?:\.\d+)?)/i);
   if (reflexMatch) {

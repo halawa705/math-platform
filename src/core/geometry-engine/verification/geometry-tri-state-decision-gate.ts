@@ -90,7 +90,7 @@ export function evaluateFigureTriStateDecision(
     /(?:أثبت|اثبت|إثبات|اثبات|بيّن|بين|برهن).*?(?:توازي|\\parallel|\/\/|\|\|)/i.test(rawPromptOrDescription);
   const hasParallelPremise =
     (/(?:[A-Z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?)\s*(?:\/\/|\\parallel|\|\|)/i.test(rawPromptOrDescription) ||
-      /إذا\s*كان.*?(?:توازي|متوازيان|متوازيين|يوازي)/i.test(rawPromptOrDescription)) &&
+      /إذا\s*كان.*?(?<![أ-ي])(?:توازي|متوازيان|متوازيين|يوازي)/i.test(rawPromptOrDescription)) &&
     !hasParallelProofGoal;
   const parallelCheckPassed =
     !hasParallelPremise || figure.segments.some((s) => (s.parallelArrows ?? 0) > 0);

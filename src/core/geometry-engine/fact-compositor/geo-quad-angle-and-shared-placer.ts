@@ -130,6 +130,25 @@ export function inferParallelogramOrRhombusAngleADeg(
   if (vertexAngles.has(b)) return clampAngle(180 - vertexAngles.get(b)!);
   if (vertexAngles.has(d)) return clampAngle(180 - vertexAngles.get(d)!);
 
+  // في متوازي الأضلاع: إذا أُعطي تساوي القطرين (AC = BD) أو تساوي نصفي قطرين متجاورين (AM = BM)، فالشكل قائم عملياً
+  if (kind === "parallelogram") {
+    const dmPt = facts.find((x): x is Extract<GeoFact, { k: "diagonalsMeet" }> => x.k === "diagonalsMeet")?.p;
+    const hasEqualDiags = facts.some((ef) => {
+      if (ef.k !== "equal") return false;
+      const ka = pairKey(ef.a[0], ef.a[1]); const kb = pairKey(ef.b[0], ef.b[1]);
+      if ((ka === pairKey(a, c) && kb === pairKey(b, d)) || (kb === pairKey(a, c) && ka === pairKey(b, d))) return true;
+      if (dmPt && ef.a.includes(dmPt) && ef.b.includes(dmPt)) {
+        const o1 = ef.a[0] === dmPt ? ef.a[1] : ef.a[0];
+        const o2 = ef.b[0] === dmPt ? ef.b[1] : ef.b[0];
+        const onAC = (o1 === a || o1 === c) && (o2 === b || o2 === d);
+        const onBD = (o2 === a || o2 === c) && (o1 === b || o1 === d);
+        return onAC || onBD;
+      }
+      return false;
+    });
+    if (hasEqualDiags) return 90;
+  }
+
   if (kind === "rhombus" && diagHalfAngles.length > 0) {
     const first = diagHalfAngles[0];
     const full = first.deg * 2;

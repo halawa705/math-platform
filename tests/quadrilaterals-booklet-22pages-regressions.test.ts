@@ -337,4 +337,47 @@ describe("Quadrilaterals 22-page booklet regressions (all 11 issues)", () => {
       expect(item.figureDiagnosticsAr).toBeUndefined();
     }
   });
+
+  it("17. Special quads systemic fixes: visible composite diagonals, non-false parallel gate, symmetric multi-pointOn, and side difference", () => {
+    // 1. Visible diagonal line when full diagonal BD=14 is labeled and sub-segments BM/MD are not emitted separately
+    const d5 = matchGeometryWithDiagnostics(
+      "[رسم هندسي: الرؤوس (مستطيل ABCD تقاطع قطراه في M) ؛ أطوال الأضلاع ووحداتها (BD = 14 سم)]",
+      "reg_diag_vis"
+    );
+    expect(d5.decision).toBe("green");
+    const svg5 = projectGeometryFigureToSVGMarkup(d5.figure!, { notationLanguage: "english", numeralMode: "western" });
+    expect((svg5.match(/<line /g) ?? []).length).toBeGreaterThanOrEqual(6);
+
+    // 2. 'إذا كان ... متوازي الأضلاع' does not falsely trigger missing parallel arrows
+    const ex15 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD متوازي أضلاع تقاطع قطراه في M. إذا كان m(∠AMB) = (4x - 10)°. احسب بالبرهان قيمة x التي تجعل متوازي الأضلاع معيناً.",
+        geometryTag: "[رسم هندسي: الرؤوس (متوازي أضلاع ABCD تقاطع قطراه في M) ؛ الزوايا والتعامد (m(∠AMB) = (4x - 10)°)]",
+      },
+      "reg_ex15_no_false_par"
+    );
+    expect(ex15.decision).toBe("green");
+
+    // 3. Two pointOn vertices on the same host (E ∈ AD ; F ∈ AD) never collapse onto identical coordinates
+    const ex19 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD مستطيل، ورسم الشكل الرباعي EBCF بحيث كان متوازي أضلاع، والنقطتان E ∈ AD و F ∈ AD. أثبت بالبرهان أن AE = DF.",
+        geometryTag: "[رسم هندسي: الرؤوس (مستطيل ABCD ; EBCF متوازي أضلاع) ؛ الزوايا والتعامد (E ∈ AD ; F ∈ AD)]",
+      },
+      "reg_ex19_sym_pts"
+    );
+    expect(ex19.decision).toBe("green");
+    const v19 = new Map(ex19.figure!.vertices.map((v) => [v.label, v.position]));
+    expect(Math.hypot(v19.get("E")!.x - v19.get("F")!.x, v19.get("E")!.y - v19.get("F")!.y)).toBeGreaterThan(1);
+
+    // 4. Side difference relation BC - AB = 2 سم renders green with badge
+    const hw3 = matchGeometryWithDiagnostics(
+      {
+        problemPrompt: "في الشكل المقابل، ABCD مستطيل محيطه 36 سم، فإذا كان طول BC يزيد عن طول AB بمقدار 2 سم.",
+        geometryTag: "[رسم هندسي: الرؤوس (مستطيل ABCD) ؛ أطوال الأضلاع ووحداتها (المحيط = 36 سم ; BC - AB = 2 سم)]",
+      },
+      "reg_hw3_diff"
+    );
+    expect(hw3.decision).toBe("green");
+  });
 });

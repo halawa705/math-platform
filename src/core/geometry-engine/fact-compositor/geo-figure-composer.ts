@@ -139,6 +139,12 @@ export function composeFigureFromGeometryDescription(
     const A = P(a); const B = P(b);
     if (ap && A && B) return clamp(ap / vDist(A, B));
     if (pb && A && B) return clamp(1 - pb / vDist(A, B));
+    const sameHostPts = facts.filter((pf): pf is Extract<GeoFact, { k: "pointOn" }> => pf.k === "pointOn" && pairKey(pf.seg[0], pf.seg[1]) === pairKey(a, b)).map((pf) => pf.p);
+    const uniqueHostPts = Array.from(new Set(sameHostPts));
+    if (uniqueHostPts.length >= 2) {
+      const idx = uniqueHostPts.indexOf(p);
+      if (idx >= 0) return uniqueHostPts.length === 2 ? (idx === 0 ? 0.25 : 0.75) : clamp((idx + 1) / (uniqueHostPts.length + 1));
+    }
     return 0.4;
   };
 
@@ -237,7 +243,11 @@ export function composeFigureFromGeometryDescription(
       resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
     } else if (f.k === "draw") { if (pass === 0) deferredFacts.push(f); else addExtra(f.seg[0], f.seg[1], false, f.lineKind); }
     else if (f.k === "equal") {
-      if (isPolygonSide(f.a[0], f.a[1]) || isPolygonSide(f.b[0], f.b[1]) || host.has(f.a[0]) || host.has(f.a[1])) {
+      const lenA = P(f.a[0]) && P(f.a[1]) ? vDist(P(f.a[0])!, P(f.a[1])!) : null;
+      const lenB = P(f.b[0]) && P(f.b[1]) ? vDist(P(f.b[0])!, P(f.b[1])!) : null;
+      const dmPt = facts.find((x): x is Extract<GeoFact, { k: "diagonalsMeet" }> => x.k === "diagonalsMeet")?.p;
+      const isDegenerateDiagEq = Boolean(dmPt && (f.a.includes(dmPt) || f.b.includes(dmPt)) && lenA && lenB && Math.abs(lenA - lenB) / Math.max(lenA, lenB) > 0.2);
+      if (!isDegenerateDiagEq && (isPolygonSide(f.a[0], f.a[1]) || isPolygonSide(f.b[0], f.b[1]) || host.has(f.a[0]) || host.has(f.a[1]))) {
         ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup);
         ticks.set(pairKey(f.b[0], f.b[1]), tickGroup);
       } else {

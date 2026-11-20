@@ -136,7 +136,17 @@ export function projectGeometryFigureToSVGMarkup(
   }
 
   const segmentLinesSvg = segmentMeta.map(({ seg, obs }) => {
-    if (obs.isCompositeSpan) return "";
+    if (obs.isCompositeSpan) {
+      const hasSubSegments = segmentMeta.some(
+        (other) =>
+          other.obs !== obs &&
+          !other.obs.isCompositeSpan &&
+          (other.obs.fromId === obs.fromId || other.obs.toId === obs.fromId || other.obs.fromId === obs.toId || other.obs.toId === obs.toId) &&
+          Math.abs((obs.x2 - obs.x1) * (other.obs.y2 - other.obs.y1) - (obs.y2 - obs.y1) * (other.obs.x2 - other.obs.x1)) /
+            (Math.hypot(obs.x2 - obs.x1, obs.y2 - obs.y1) * Math.hypot(other.obs.x2 - other.obs.x1, other.obs.y2 - other.obs.y1) || 1) < 0.03
+      );
+      if (hasSubSegments) return "";
+    }
     const { x1, y1, x2, y2 } = obs;
     const mx = (x1 + x2) / 2;
     const my = (y1 + y2) / 2;

@@ -204,6 +204,10 @@ export function buildPerimeterAndAreaBadges(params: {
       if (seenTexts.has(text)) continue;
       seenTexts.add(text);
       badges.push({ id: `${figureId}_badge_area_${idx++}`, text, position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, labelKind: "given" });
+    } else if (f.k === "relationNote") {
+      if (seenTexts.has(f.text)) continue;
+      seenTexts.add(f.text);
+      badges.push({ id: `${figureId}_badge_rel_${idx++}`, text: f.text, position: { x: Number(cx.toFixed(2)), y: Number(cy.toFixed(2)) }, labelKind: "given" });
     }
   }
   return badges;

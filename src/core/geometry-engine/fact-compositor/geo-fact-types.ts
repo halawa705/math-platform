@@ -40,4 +40,5 @@ export type GeoFact =
   | { readonly k: "perimeter"; readonly target?: readonly string[]; readonly value: number; readonly unit?: string }
   | { readonly k: "area"; readonly target?: readonly string[]; readonly value: number; readonly unit?: string }
   | { readonly k: "height"; readonly value: number; readonly unit?: string }
+  | { readonly k: "relationNote"; readonly text: string }
   | { readonly k: "segmentRatio"; readonly part: Seg; readonly whole: Seg; readonly num: number; readonly den: number };
