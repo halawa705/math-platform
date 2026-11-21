@@ -24,6 +24,8 @@ export interface EmbeddedGeometrySVGDockerProps {
   readonly notationLanguage?: MathNotationLanguage;
   readonly figureScale?: number;
   readonly columnsCount?: 1 | 2;
+  readonly monochromePrintSafe?: boolean;
+  readonly strokeWidthMultiplier?: number;
 }
 
 export function EmbeddedGeometrySVGDocker({
@@ -38,6 +40,8 @@ export function EmbeddedGeometrySVGDocker({
   notationLanguage,
   figureScale = 1,
   columnsCount = 2,
+  monochromePrintSafe = false,
+  strokeWidthMultiplier = 1,
 }: EmbeddedGeometrySVGDockerProps) {
   if (!geometryFigure && !graphSpec && !rawSvgMarkup) return null;
 
@@ -52,6 +56,8 @@ export function EmbeddedGeometrySVGDocker({
       accentColorHex: accentHex,
       numeralMode,
       notationLanguage,
+      monochromePrintSafe,
+      strokeWidthMultiplier,
     }
   );
   if (!svgMarkup) return null;

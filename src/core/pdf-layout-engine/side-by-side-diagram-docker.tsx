@@ -161,6 +161,8 @@ export default function SideBySideDiagramDocker({
                     notationLanguage={settings.notationLanguage}
                     figureScale={effectiveFigureScale}
                     columnsCount={settings.columnsCount}
+                    monochromePrintSafe={settings.colorThemeId === "photocopy_black"}
+                    strokeWidthMultiplier={settings.exactFontSizePt >= 15 ? 1.35 : settings.exactFontSizePt >= 14 ? 1.2 : 1}
                   />
                 </div>
               )}

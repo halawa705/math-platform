@@ -18,6 +18,7 @@ import { ARABIC_CHOICE_LETTERS } from "@/core/ssot/numeral-and-unit-ssot";
 import type { ExamQuestionReviewInfo } from "./use-exam-session";
 import ExamQuestionFigureZoomModal from "./exam-question-figure-zoom-modal";
 import StudentProofPhotoCaptureBox from "./student-proof-photo-capture-box";
+import ExamCoordinateAnswerDrawer from "./exam-coordinate-answer-drawer";
 
 export const MODULE_ID_EXAM_QUESTION_CARD = "exam_question_card" as const;
 
@@ -80,29 +81,12 @@ export default function ExamQuestionCard({
   const modalWidthPx = 310;
   const modalHeightPx = Math.max(170, Math.min(245, Math.round(modalWidthPx / figureAspect)));
 
-  const cardSvg = hasSvgSource
-    ? renderQuestionFigureSvg(question, {
-        widthPx: cardWidthPx,
-        heightPx: cardHeightPx,
-        numeralMode,
-        notationLanguage,
-        backgroundColorHex: "#FFFFFF",
-        strokeColorHex: "#0F172A",
-        accentColorHex: "#0D9488",
-      })
-    : null;
-
-  const modalSvg = hasSvgSource
-    ? renderQuestionFigureSvg(question, {
-        widthPx: modalWidthPx,
-        heightPx: modalHeightPx,
-        numeralMode,
-        notationLanguage,
-        backgroundColorHex: "#FFFFFF",
-        strokeColorHex: "#0F172A",
-        accentColorHex: "#0D9488",
-      })
-    : null;
+  const renderSvgBox = (widthPx: number, heightPx: number) =>
+    hasSvgSource
+      ? renderQuestionFigureSvg(question, { widthPx, heightPx, numeralMode, notationLanguage, backgroundColorHex: "#FFFFFF", strokeColorHex: "#0F172A", accentColorHex: "#0D9488" })
+      : null;
+  const cardSvg = renderSvgBox(cardWidthPx, cardHeightPx);
+  const modalSvg = renderSvgBox(modalWidthPx, modalHeightPx);
 
   return (
     <div key={question.questionId} className={`exam-pop p-5 rounded-3xl bg-white dark:bg-[#111827] border ${borderClass} shadow-sm space-y-4`}>
@@ -266,6 +250,14 @@ export default function ExamQuestionCard({
             }
             className="w-full min-h-[48px] px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-teal-600"
           />
+          {!isSubmitted && question.attachedGeometryFigure?.coordinateGrid?.enabled && (
+            <ExamCoordinateAnswerDrawer
+              quadrantMode={question.attachedGeometryFigure.coordinateGrid.quadrantMode}
+              notationLanguage={notationLanguage}
+              numeralMode={numeralMode}
+              onInsertAnswerText={(coords) => onChangeAnswer({ text: (textVal ? `${textVal} ` : "") + coords })}
+            />
+          )}
           {!isSubmitted && (
             <StudentVirtualMathKeypad
               onInsertSymbol={(sym) => onChangeAnswer({ text: textVal + sym })}

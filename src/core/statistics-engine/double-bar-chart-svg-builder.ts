@@ -19,6 +19,7 @@ export interface DoubleBarChartSvgOptions {
   readonly heightPx?: number;
   readonly numeralMode?: NumeralDisplayMode;
   readonly strokeColorHex?: string;
+  readonly monochromePrintSafe?: boolean;
 }
 
 export function buildDoubleBarChartSvgMarkup(
@@ -68,23 +69,28 @@ export function buildDoubleBarChartSvgMarkup(
     const attr1 = spec.omitDataGivenValues ? "" : ` data-given-values="${b.series1Value}"`;
     const attr2 = spec.omitDataGivenValues ? "" : ` data-given-values="${b.series2Value}"`;
 
+    const fillS1 = options.monochromePrintSafe ? "url(#double_bar_hatch_s1)" : "#2563EB";
+    const fillS2 = options.monochromePrintSafe ? "url(#double_bar_hatch_s2)" : "#10B981";
+    const textS1 = options.monochromePrintSafe ? "#0F172A" : "#1E40AF";
+    const textS2 = options.monochromePrintSafe ? "#0F172A" : "#047857";
+
     if (b.series1Value > 0) {
       barsSvg.push(
-        `<rect${attr1} x="${x1.toFixed(1)}" y="${(baseY - h1).toFixed(1)}" width="${barW.toFixed(1)}" height="${h1.toFixed(1)}" fill="#2563EB" stroke="${stroke}" stroke-width="1" rx="1.5" opacity="0.9" />`
+        `<rect${attr1} x="${x1.toFixed(1)}" y="${(baseY - h1).toFixed(1)}" width="${barW.toFixed(1)}" height="${h1.toFixed(1)}" fill="${fillS1}" stroke="${stroke}" stroke-width="1" rx="1.5" opacity="0.95" />`
       );
       if (!spec.omitDataGivenValues) {
         barsSvg.push(
-          `<text x="${(x1 + barW / 2).toFixed(1)}" y="${(baseY - h1 - 3).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#1E40AF">${formatNumeralsByModeSSOT(b.series1Value, numMode)}</text>`
+          `<text x="${(x1 + barW / 2).toFixed(1)}" y="${(baseY - h1 - 3).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="${textS1}">${formatNumeralsByModeSSOT(b.series1Value, numMode)}</text>`
         );
       }
     }
     if (b.series2Value > 0) {
       barsSvg.push(
-        `<rect${attr2} x="${x2.toFixed(1)}" y="${(baseY - h2).toFixed(1)}" width="${barW.toFixed(1)}" height="${h2.toFixed(1)}" fill="#10B981" stroke="${stroke}" stroke-width="1" rx="1.5" opacity="0.9" />`
+        `<rect${attr2} x="${x2.toFixed(1)}" y="${(baseY - h2).toFixed(1)}" width="${barW.toFixed(1)}" height="${h2.toFixed(1)}" fill="${fillS2}" stroke="${stroke}" stroke-width="1" rx="1.5" opacity="0.95" />`
       );
       if (!spec.omitDataGivenValues) {
         barsSvg.push(
-          `<text x="${(x2 + barW / 2).toFixed(1)}" y="${(baseY - h2 - 3).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#047857">${formatNumeralsByModeSSOT(b.series2Value, numMode)}</text>`
+          `<text x="${(x2 + barW / 2).toFixed(1)}" y="${(baseY - h2 - 3).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="${textS2}">${formatNumeralsByModeSSOT(b.series2Value, numMode)}</text>`
         );
       }
     }
@@ -93,22 +99,33 @@ export function buildDoubleBarChartSvgMarkup(
     );
   });
 
+  const defsSvg =
+    `<defs>` +
+    `<pattern id="double_bar_hatch_s1" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
+    `<rect width="6" height="6" fill="#1E293B" /><line x1="0" y1="0" x2="0" y2="6" stroke="#CBD5E1" stroke-width="1.6" /></pattern>` +
+    `<pattern id="double_bar_hatch_s2" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">` +
+    `<rect width="6" height="6" fill="#F8FAFC" /><line x1="0" y1="0" x2="0" y2="6" stroke="#334155" stroke-width="1.8" /></pattern>` +
+    `</defs>`;
+
+  const legendS1Fill = options.monochromePrintSafe ? "url(#double_bar_hatch_s1)" : "#2563EB";
+  const legendS2Fill = options.monochromePrintSafe ? "url(#double_bar_hatch_s2)" : "#10B981";
   const legendSvg =
-    `<rect x="${width - 140}" y="24" width="8" height="8" rx="1.5" fill="#2563EB" />` +
+    `<rect x="${width - 140}" y="24" width="8" height="8" rx="1.5" fill="${legendS1Fill}" stroke="${stroke}" stroke-width="0.6" />` +
     `<text x="${width - 129}" y="31" font-size="7.5" font-weight="700" fill="${stroke}">${spec.series1Label}</text>` +
-    `<rect x="${width - 75}" y="24" width="8" height="8" rx="1.5" fill="#10B981" />` +
+    `<rect x="${width - 75}" y="24" width="8" height="8" rx="1.5" fill="${legendS2Fill}" stroke="${stroke}" stroke-width="0.6" />` +
     `<text x="${width - 64}" y="31" font-size="7.5" font-weight="700" fill="${stroke}">${spec.series2Label}</text>`;
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" style="background-color:#ffffff;">
+  ${defsSvg}
   <text x="${(width / 2).toFixed(1)}" y="15" text-anchor="middle" font-size="10.5" font-weight="800" font-family="system-ui, sans-serif" fill="${stroke}">${spec.titleArabic}</text>
   ${legendSvg}
-  <text x="${padLeft}" y="${padTop - 8}" text-anchor="start" font-size="8" font-weight="700" fill="#0D9488">${spec.yLabelArabic}</text>
+  <text x="${padLeft}" y="${padTop - 8}" text-anchor="start" font-size="8" font-weight="700" fill="${options.monochromePrintSafe ? "#0F172A" : "#0D9488"}">${spec.yLabelArabic}</text>
   ${gridSvg.join("\n  ")}
   ${barsSvg.join("\n  ")}
   <line x1="${padLeft}" y1="${padTop - 4}" x2="${padLeft}" y2="${baseY}" stroke="${stroke}" stroke-width="1.4" />
   <line x1="${padLeft}" y1="${baseY}" x2="${(width - padRight).toFixed(1)}" y2="${baseY}" stroke="${stroke}" stroke-width="1.4" />
   ${xLabelsSvg.join("\n  ")}
-  <text x="${(width / 2).toFixed(1)}" y="${height - 5}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#0D9488">${spec.xLabelArabic}</text>
+  <text x="${(width / 2).toFixed(1)}" y="${height - 5}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${options.monochromePrintSafe ? "#0F172A" : "#0D9488"}">${spec.xLabelArabic}</text>
 </svg>`.trim();
 }

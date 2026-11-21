@@ -11,6 +11,7 @@
 import { useState, useEffect } from "react";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
 import StudentVirtualMathKeypad from "@/features/electronic-exams-hub/student-virtual-math-keypad";
+import ExamCoordinateAnswerDrawer from "@/features/student-learning-portal/exam-session/exam-coordinate-answer-drawer";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import {
   loadActiveOnlineHomeworkAssignment,
@@ -119,6 +120,14 @@ export default function StudentHomeworkInteractiveSolver({
                   <StudentVirtualMathKeypad
                     onInsertSymbol={(sym) => setWrittenAnswers((prev) => ({ ...prev, [q.questionId]: (prev[q.questionId] || "") + sym }))}
                     onClear={() => setWrittenAnswers((prev) => ({ ...prev, [q.questionId]: "" }))}
+                  />
+                )}
+                {(q.attachedGeometryFigure?.coordinateGrid?.enabled || /مستوى\s*(?:ال)?إحداثي|شبكة\s*(?:ال)?إحداثيات|عي[ّ]?ن\s*النقط/i.test(q.promptArabic)) && (
+                  <ExamCoordinateAnswerDrawer
+                    quadrantMode={q.attachedGeometryFigure?.coordinateGrid?.quadrantMode}
+                    notationLanguage={q.attachedGeometryFigure?.notationLanguage}
+                    numeralMode="western"
+                    onInsertAnswerText={(coords) => setWrittenAnswers((prev) => ({ ...prev, [q.questionId]: ((prev[q.questionId] || "").trim() ? `${prev[q.questionId]} ` : "") + coords }))}
                   />
                 )}
               </div>

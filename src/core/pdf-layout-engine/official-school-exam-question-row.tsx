@@ -151,6 +151,8 @@ export function OfficialSchoolExamQuestionRow({
                 notationLanguage={notationLanguage}
                 figureScale={settings.figureScale ?? 0.85}
                 columnsCount={settings.columnsCount}
+                monochromePrintSafe={settings.colorThemeId === "photocopy_black"}
+                strokeWidthMultiplier={settings.exactFontSizePt >= 15 ? 1.35 : settings.exactFontSizePt >= 14 ? 1.2 : 1}
               />
               <div className="flex items-center gap-1.5 pt-1 text-xs font-bold text-slate-700">
                 {question.citationBadgeAr && (

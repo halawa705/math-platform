@@ -10,6 +10,7 @@ import type { CanonicalGeometryFigureIR, CanonicalShadedRegionNode, CanonicalVer
 import { localizeGeometricVertexLabelSSOT, toWesternNumeralsSSOT, type MathNotationLanguage } from "../../ssot/numeral-and-unit-ssot";
 import { extractCoordinatePointsFromText } from "./coordinate-plane-polygon-plotter";
 import type { CanonicalCoordinateCurveNode } from "./coordinate-grid-and-curve-types";
+import { tryBuildLinearSystemOrInequalityFigure } from "./coordinate-linear-systems-and-inequalities-plotter";
 
 export const MODULE_ID_COORDINATE_FUNCTIONS_AND_LINES_PLOTTER =
   "coordinate_functions_and_lines_plotter" as const;
@@ -173,9 +174,13 @@ export function tryBuildCoordinateFunctionOrLineFigure(opts: {
   const desc = opts.description || "";
   const notation = opts.notationLanguage ?? "arabic";
 
-  if (extractQuadraticEquation(desc) || /دالة\s*تربيعية|منحنى\s*(?:ال)?دالة|رأس\s*المنحنى|شبكة\s*بيانية/i.test(desc)) {
+  const quadSpec = extractQuadraticEquation(desc);
+  if (quadSpec || /دالة\s*تربيعية|منحنى\s*(?:ال)?دالة|رأس\s*المنحنى|شبكة\s*بيانية/i.test(desc)) {
     return buildQuadraticFunctionCurveFigure({ figureId: opts.figureId, description: desc, notationLanguage: notation });
   }
+
+  const systemOrIneq = tryBuildLinearSystemOrInequalityFigure({ figureId: opts.figureId, description: desc, notationLanguage: notation });
+  if (systemOrIneq) return systemOrIneq;
 
   const lin = parseLinearEquationSpec(desc);
   if (!lin) return undefined;
