@@ -268,7 +268,9 @@ export default function StudentLearningPortalView() {
         )}
         {activeTabId === "videos" && <StudentAssignedVideosTab gradeId={studentGradeId} />}
         {activeTabId === "booklets" && <StudentAssignedBookletsTab gradeId={studentGradeId} />}
-        {activeTabId === "homework" && <StudentAssignedHomeworkTab gradeId={studentGradeId} />}
+        {activeTabId === "homework" && (
+          <StudentAssignedHomeworkTab gradeId={studentGradeId} studentCode={studentCode} />
+        )}
       </main>
 
       <footer className="max-w-4xl mx-auto w-full px-4 pt-10 text-center text-xs font-bold text-slate-400">{footerText}</footer>

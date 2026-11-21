@@ -8,7 +8,10 @@
 
 import { useState, useMemo } from "react";
 import type { PublishedOnlineExam } from "./published-online-exams-store";
-import type { OnlineExamSubmissionRecord } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import {
+  removeStudentSubmissionLocalSSOT,
+  type OnlineExamSubmissionRecord,
+} from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 import { loadRegisteredStudentsSSOT } from "@/core/ssot/teacher-identity-ssot";
 import TeacherManualEssayGradingBox from "./teacher-manual-essay-grading-box";
 
@@ -27,6 +30,9 @@ export default function ExamSubmissionsDetailDrawer({
   submissions,
 }: ExamSubmissionsDetailDrawerProps) {
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
+  const [confirmResetId, setConfirmResetId] = useState<string | null>(null);
+  const [resettingId, setResettingId] = useState<string | null>(null);
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
   const siblingCodeSet = useMemo(() => {
     const students = loadRegisteredStudentsSSOT();
     const set = new Set<string>();
@@ -45,16 +51,53 @@ export default function ExamSubmissionsDetailDrawer({
     return set;
   }, [submissions.length]);
 
+  const handleResetStudentAttempt = async (sub: OnlineExamSubmissionRecord) => {
+    setResettingId(sub.submissionId);
+    setResetNotice(null);
+    try {
+      const res = await fetch("/api/exams/reset-attempt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examCode: exam.examId, studentCode: sub.studentCode }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setResetNotice(data.error || "تعذر إعادة فتح المحاولة.");
+        return;
+      }
+      removeStudentSubmissionLocalSSOT(exam.examId, sub.studentCode);
+      setConfirmResetId(null);
+      setSelectedSubId(null);
+      setResetNotice(`✓ تم إعادة فتح الاختبار للطالب ${sub.studentNameAr} (${sub.studentCode}).`);
+    } catch {
+      setResetNotice("تعذر الاتصال بالخادم لإعادة فتح المحاولة.");
+    } finally {
+      setResettingId(null);
+    }
+  };
+
   if (submissions.length === 0) {
     return (
-      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 text-center">
-        لا توجد تسليمات لهذا الاختبار حتى الآن.
+      <div className="space-y-2">
+        {resetNotice && (
+          <div className="p-2.5 rounded-xl bg-teal-50 text-teal-900 text-xs font-black text-center">
+            {resetNotice}
+          </div>
+        )}
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 text-center">
+          لا توجد تسليمات لهذا الاختبار حتى الآن.
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+      {resetNotice && (
+        <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 text-xs font-black">
+          {resetNotice}
+        </div>
+      )}
       {submissions.map((sub) => {
         const isOpen = selectedSubId === sub.submissionId;
         const durationMs = (exam.durationMinutes || 60) * 60_000;
@@ -167,6 +210,38 @@ export default function ExamSubmissionsDetailDrawer({
                   examQuestions={exam.questions}
                   submission={sub}
                 />
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                  {confirmResetId === sub.submissionId ? (
+                    <>
+                      <span className="text-[11px] font-black text-rose-700 dark:text-rose-300">
+                        سيُحذف تسليم الطالب الحالي ليتمكن من الإعادة كمحاولة أولى:
+                      </span>
+                      <button
+                        type="button"
+                        disabled={resettingId === sub.submissionId}
+                        onClick={() => void handleResetStudentAttempt(sub)}
+                        className="min-h-[38px] px-3 rounded-xl bg-rose-600 text-white text-[11px] font-black cursor-pointer"
+                      >
+                        {resettingId === sub.submissionId ? "جارٍ الفتح..." : "تأكيد إعادة الفتح ✓"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmResetId(null)}
+                        className="min-h-[38px] px-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-[11px] font-black cursor-pointer"
+                      >
+                        إلغاء
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmResetId(sub.submissionId)}
+                      className="min-h-[38px] px-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-[11px] font-black cursor-pointer"
+                    >
+                      🔓 إعادة فتح المحاولة للطالب (عذر قهري)
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

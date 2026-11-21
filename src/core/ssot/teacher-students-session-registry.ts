@@ -4,11 +4,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
  */
 
-import { EGYPTIAN_MATH_GRADES_SSOT } from "./curriculum-hierarchy-ssot";
-import {
-  pullStudentsRegistryFromSupabaseCloud,
-  syncStudentRecordToSupabaseCloud,
-} from "../supabase/supabase-cloud-sync-ssot";
+import { pullStudentsRegistryFromSupabaseCloud } from "../supabase/supabase-cloud-sync-ssot";
 
 export const MODULE_ID_TEACHER_STUDENTS_SESSION_REGISTRY =
   "teacher_students_session_registry" as const;
@@ -86,37 +82,6 @@ export async function refreshRegisteredStudentsFromSupabaseSSOT(): Promise<
   const merged = Array.from(byCode.values());
   persistStudentsList(merged);
   return merged;
-}
-
-export function registerNewStudentSSOT(input: {
-  readonly fullNameAr: string;
-  readonly studentPhone: string;
-  readonly passwordPin: string;
-  readonly gradeId: string;
-}): RegisteredStudentRecordSSOT {
-  const existing = loadRegisteredStudentsSSOT();
-  const maxExistingCode = existing.reduce((max, s) => {
-    const num = Number(s.altNumericCode || s.studentCode.replace(/^MATH-/i, ""));
-    return Number.isFinite(num) && num > max ? num : max;
-  }, 1000);
-  const nextNumber = maxExistingCode + 1;
-  const gradeObj = EGYPTIAN_MATH_GRADES_SSOT.find((g) => g.id === input.gradeId);
-
-  const newStudent: RegisteredStudentRecordSSOT = {
-    id: `student-${Date.now()}`,
-    studentCode: `MATH-${nextNumber}`,
-    altNumericCode: String(nextNumber),
-    fullNameAr: input.fullNameAr.trim(),
-    studentPhone: input.studentPhone.trim(),
-    passwordPin: input.passwordPin.trim(),
-    gradeId: input.gradeId,
-    gradeNameAr: gradeObj?.nameArabic || "الصف الثالث الإعدادي",
-    createdAtIso: new Date().toISOString(),
-  };
-
-  persistStudentsList([...existing, newStudent]);
-  void syncStudentRecordToSupabaseCloud(newStudent);
-  return newStudent;
 }
 
 export function saveRememberedSessionSSOT(

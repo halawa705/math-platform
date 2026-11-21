@@ -104,7 +104,6 @@ export async function executeExamSubmitAction(params: {
         totalAllocatedMarks: res.totalAllocatedMarks ?? 0,
         percentage: pct,
       },
-      skipCloudSync: true,
     });
     if (draftKey) clearPersistentExamDraft(draftKey);
     return {

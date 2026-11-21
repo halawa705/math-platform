@@ -2,14 +2,12 @@
 
 /**
  * @file student-auth-submission-helper.tsx
- * @description دوال الاتصال بالخادم (تسجيل دخول/تسجيل طالب جديد مع احتياطي محلي) وبطاقة نجاح التسجيل لبوابة الدخول الموحدة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
+ * @description دوال الاتصال بالخادم (تسجيل دخول/تسجيل طالب جديد عبر Supabase فقط بدون حسابات محلية وهمية).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 145 سطراً).
  */
 
 import {
   isStealthTeacherTriggerCodeSSOT,
-  loadRegisteredStudentsSSOT,
-  registerNewStudentSSOT,
   saveRememberedSessionSSOT,
   type RegisteredStudentRecordSSOT,
 } from "@/core/ssot/teacher-identity-ssot";
@@ -87,40 +85,16 @@ export async function attemptStudentOrTeacherLogin(params: {
       );
       return { kind: "student", student: data.student };
     }
-    if (data.error) return { kind: "error", message: data.error };
-  } catch {
-    // احتياطي محلي في حال انقطاع الشبكة
-  }
-
-  const matched = loadRegisteredStudentsSSOT().find(
-    (s) =>
-      s.studentCode.toLowerCase() === trimmed.toLowerCase() ||
-      s.altNumericCode === trimmed ||
-      s.studentPhone === trimmed
-  );
-  if (!matched) {
     return {
       kind: "error",
-      message:
-        "لم يتم العثور على هذا الكود أو الرقم. إذا كنت طالباً جديداً اضغط على تبويب «تسجيل طالب جديد».",
+      message: data.error || "تعذر تسجيل الدخول بهذه البيانات.",
+    };
+  } catch {
+    return {
+      kind: "error",
+      message: "تعذر الاتصال بالخادم حالياً، يرجى التحقق من الإنترنت والمحاولة مجدداً.",
     };
   }
-  if (matched.passwordPin && matched.passwordPin !== pin) {
-    return { kind: "error", message: "الرقم السري غير صحيح" };
-  }
-
-  saveRememberedSessionSSOT(
-    {
-      role: "student",
-      studentCode: matched.studentCode,
-      studentNameAr: matched.fullNameAr,
-      gradeId: matched.gradeId,
-      isSibling: Boolean(matched.isSibling),
-      savedAtIso: new Date().toISOString(),
-    },
-    params.rememberMe
-  );
-  return { kind: "student", student: matched };
 }
 
 export async function attemptNewStudentRegistration(params: {
@@ -176,46 +150,15 @@ export async function attemptNewStudentRegistration(params: {
       );
       return { ok: true, student: data.student };
     }
-    if (data.error) {
-      return {
-        ok: false,
-        message: data.error,
-        needsSiblingFlag: data.code === "DUPLICATE_PHONE_NEEDS_SIBLING_FLAG",
-      };
-    }
-  } catch {
-    // احتياطي محلي عند عدم توفر الخادم
-  }
-
-  const normalizedPhone = params.studentPhone.trim();
-  const samePhoneExisting = loadRegisteredStudentsSSOT().filter(
-    (s) => s.studentPhone === normalizedPhone
-  );
-  if (samePhoneExisting.length > 0 && !params.isSiblingAccount) {
     return {
       ok: false,
-      needsSiblingFlag: true,
-      message:
-        "رقم الهاتف مسجل لطالب آخر. إذا كنتما إخوة فعّل خيار «تسجيل أخ / أخت على نفس رقم ولي الأمر» واكتب اسمك الثلاثي المختلف.",
+      message: data.error || "تعذر إتمام تسجيل الحساب في الخادم.",
+      needsSiblingFlag: data.code === "DUPLICATE_PHONE_NEEDS_SIBLING_FLAG",
+    };
+  } catch {
+    return {
+      ok: false,
+      message: "تعذر الاتصال بالخادم حالياً، يرجى التحقق من الإنترنت والمحاولة مجدداً.",
     };
   }
-
-  const created = registerNewStudentSSOT({
-    fullNameAr: params.fullNameAr,
-    studentPhone: params.studentPhone,
-    passwordPin: params.passwordPin,
-    gradeId: params.gradeId,
-  });
-  saveRememberedSessionSSOT(
-    {
-      role: "student",
-      studentCode: created.studentCode,
-      studentNameAr: created.fullNameAr,
-      gradeId: created.gradeId,
-      isSibling: samePhoneExisting.length > 0,
-      savedAtIso: new Date().toISOString(),
-    },
-    params.rememberMe
-  );
-  return { ok: true, student: created };
 }

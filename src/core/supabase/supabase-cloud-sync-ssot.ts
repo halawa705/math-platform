@@ -107,30 +107,6 @@ export async function wipeCurriculumUnitsFromSupabaseCloud(): Promise<boolean> {
   return await syncCurriculumUnitsToSupabaseCloud([]);
 }
 
-export async function syncStudentRecordToSupabaseCloud(student: RegisteredStudentRecordSSOT): Promise<boolean> {
-  if (typeof window === "undefined") return false;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/students?on_conflict=student_code`, {
-      method: "POST",
-      headers: buildSupabaseHeaders(),
-      body: JSON.stringify({
-        student_code: student.studentCode,
-        alt_numeric_code: student.altNumericCode,
-        full_name: student.fullNameAr,
-        grade_id: student.gradeId,
-        grade_name_ar: student.gradeNameAr,
-        phone: student.studentPhone,
-        pin_code: student.passwordPin,
-        is_active: true,
-        created_at: student.createdAtIso,
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
 export async function pullStudentsRegistryFromSupabaseCloud(): Promise<readonly RegisteredStudentRecordSSOT[] | null> {
   if (typeof window === "undefined") return null;
   try {
@@ -185,6 +161,5 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<readonly 
 
 export {
   pullPublishedExamsFromSupabaseCloud,
-  syncExamSubmissionToSupabaseCloud,
   pullExamSubmissionsFromSupabaseCloud,
 } from "./supabase-exams-cloud-puller";

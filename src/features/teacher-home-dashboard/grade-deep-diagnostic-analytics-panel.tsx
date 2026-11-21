@@ -186,6 +186,7 @@ export default function GradeDeepDiagnosticAnalyticsPanel({
             studentTiers={activeProfessional.studentTiers}
           />
           <GradeDiagnosticPsychometricAndRemediationCard
+            gradeId={gradeId}
             psychometricQuestions={activeProfessional.psychometricQuestions}
             remediationPlan={activeProfessional.remediationPlan}
           />

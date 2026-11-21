@@ -12,10 +12,7 @@ import type {
   OnlineExamGradeResult,
   StudentAnswerInput,
 } from "@/core/exam-grading/online-exam-grader";
-import {
-  pullExamSubmissionsFromSupabaseCloud,
-  syncExamSubmissionToSupabaseCloud,
-} from "@/core/supabase/supabase-cloud-sync-ssot";
+import { pullExamSubmissionsFromSupabaseCloud } from "@/core/supabase/supabase-cloud-sync-ssot";
 import { notifyRealtimeTableUpdated } from "@/core/supabase/supabase-realtime-submissions-channel";
 import type { PublishedOnlineExam } from "@/features/electronic-exams-hub/published-online-exams-store";
 
@@ -97,7 +94,6 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
   readonly startedAtIso?: string;
   readonly answersJson?: Readonly<Record<string, StudentAnswerInput | undefined>>;
   readonly resultJson?: OnlineExamGradeResult;
-  readonly skipCloudSync?: boolean;
 }): OnlineExamSubmissionRecord {
   const record: OnlineExamSubmissionRecord = {
     submissionId: `${input.exam.examId}__${input.studentCode}`,
@@ -122,9 +118,6 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
   );
   persistSubmissions([record, ...others]);
   notifyRealtimeTableUpdated("exam_submissions");
-  if (!input.skipCloudSync) {
-    void syncExamSubmissionToSupabaseCloud(record);
-  }
   return record;
 }
 
@@ -140,16 +133,23 @@ export function findStudentSubmissionForExamSSOT(
   );
 }
 
+export function removeStudentSubmissionLocalSSOT(
+  examId: string,
+  studentCode: string
+): void {
+  const cleanCode = studentCode.trim().toUpperCase();
+  const remaining = loadAllExamSubmissionsSSOT().filter(
+    (s) => !(s.examId === examId && s.studentCode.toUpperCase() === cleanCode)
+  );
+  persistSubmissions(remaining);
+  notifyRealtimeTableUpdated("exam_submissions");
+}
+
 export function markExamSubmissionsReviewedSSOT(examId: string): void {
   const updated = loadAllExamSubmissionsSSOT().map((s) =>
     s.examId === examId ? { ...s, isReviewedByTeacher: true } : s
   );
   persistSubmissions(updated);
-  for (const s of updated) {
-    if (s.examId === examId) {
-      void syncExamSubmissionToSupabaseCloud(s);
-    }
-  }
 }
 
 export function updateSubmissionManualGradesSSOT(params: {

@@ -89,7 +89,11 @@ export async function loadExamAttemptMetaServer(
   studentCode: string
 ): Promise<ExamAttemptServerMeta | null> {
   const key = buildAttemptStateId(examCode, studentCode);
-  const cloud = await readStateJson<ExamAttemptServerMeta>(key);
+  const cloud = await readStateJson<ExamAttemptServerMeta & { deleted?: boolean }>(key);
+  if (cloud?.deleted) {
+    memoryAttemptMeta.delete(key);
+    return null;
+  }
   if (cloud && cloud.examCode && cloud.studentCode) {
     memoryAttemptMeta.set(key, cloud);
     return cloud;
@@ -108,6 +112,27 @@ export async function saveExamAttemptMetaServer(
   memoryAttemptMeta.set(key, normalized);
   await writeStateJson(key, normalized);
   return normalized;
+}
+
+export async function deleteExamAttemptMetaServer(
+  examCode: string,
+  studentCode: string
+): Promise<void> {
+  const key = buildAttemptStateId(examCode, studentCode);
+  memoryAttemptMeta.delete(key);
+  // كتابة علامة الحذف أولاً لضمان التعطيل حتى إذا منعت سياسات RLS الحذف المباشر، ثم إرسال DELETE
+  await writeStateJson(key, { deleted: true, deletedAtIso: new Date().toISOString() });
+  try {
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/platform_ssot_state?id=eq.${encodeURIComponent(key)}`,
+      {
+        method: "DELETE",
+        headers: buildHeaders("return=minimal"),
+      }
+    );
+  } catch {
+    // fallback tombstone and in-memory cleanup already succeeded
+  }
 }
 
 export function mergeDraftPreservingLockedQuestions(params: {

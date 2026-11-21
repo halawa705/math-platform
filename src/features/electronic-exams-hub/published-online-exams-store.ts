@@ -270,28 +270,3 @@ export function archiveOnlineExamSSOT(examId: string): void {
     });
   }
 }
-
-export function formatExamExpiryRemainingAr(expiresAtIso: string): {
-  readonly isExpired: boolean;
-  readonly labelAr: string;
-} {
-  const diffMs = Date.parse(expiresAtIso) - Date.now();
-  if (!Number.isFinite(diffMs) || diffMs <= 0) {
-    return { isExpired: true, labelAr: "انتهى المؤقت (مؤرشف تلقائياً)" };
-  }
-  const totalMinutes = Math.max(1, Math.floor(diffMs / 60_000));
-  const days = Math.floor(totalMinutes / (60 * 24));
-  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-  const minutes = totalMinutes % 60;
-
-  if (days > 0) {
-    return {
-      isExpired: false,
-      labelAr: hours > 0 ? `متبقي ${days} يوم و ${hours} ساعة قبل الأرشفة` : `متبقي ${days} يوم قبل الأرشفة`,
-    };
-  }
-  if (hours > 0) {
-    return { isExpired: false, labelAr: `متبقي ${hours} ساعة و ${minutes} دقيقة قبل الأرشفة` };
-  }
-  return { isExpired: false, labelAr: `متبقي ${minutes} دقيقة قبل الأرشفة` };
-}

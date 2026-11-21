@@ -67,8 +67,13 @@ export default function HonorRollPodium({
                 {entry.studentNameAr}
               </div>
               {showStudentCodes && (
-                <div className="text-[10px] font-mono font-bold text-slate-400">
-                  كود: {entry.studentCode}
+                <div className="text-[10px] font-mono font-bold text-slate-400 flex items-center justify-center gap-1.5 flex-wrap">
+                  <span>كود: {entry.studentCode}</span>
+                  {entry.isSibling && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-sans">
+                      👨‍👧‍👦 إخوة
+                    </span>
+                  )}
                 </div>
               )}
               <div className="inline-block px-3 py-0.5 rounded-full bg-emerald-600 text-white text-xs font-black">

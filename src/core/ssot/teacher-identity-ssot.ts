@@ -185,7 +185,6 @@ export {
   type RememberedUserSessionSSOT,
   loadRegisteredStudentsSSOT,
   refreshRegisteredStudentsFromSupabaseSSOT,
-  registerNewStudentSSOT,
   saveRememberedSessionSSOT,
   loadRememberedSessionSSOT,
   clearRememberedSessionSSOT,

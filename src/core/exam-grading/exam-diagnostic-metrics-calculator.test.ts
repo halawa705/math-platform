@@ -4,6 +4,7 @@ import {
   inferMathBranchIdForQuestion,
 } from "./exam-diagnostic-metrics-calculator";
 import { computeStudentPersonalDiagnostics } from "./student-personal-diagnostics-calculator";
+import { buildRemedialWorksheetDirectives } from "@/features/teacher-home-dashboard/remedial-worksheet-studio-launcher";
 import type { PublishedOnlineExam, PublishedExamQuestionItem } from "@/features/electronic-exams-hub/published-online-exams-store";
 import type { OnlineExamSubmissionRecord } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
 
@@ -112,6 +113,13 @@ describe("exam-diagnostic-metrics-calculator", () => {
     expect(diagnostics.studentTiers.urgentInterventionCount).toBe(1);
     expect(diagnostics.studentTiers.atRiskStudents[0]?.isSibling).toBe(true);
     expect(diagnostics.remediationPlan.some((r) => r.priority === "high")).toBe(true);
+
+    const remedial = buildRemedialWorksheetDirectives({
+      weakestQuestions: diagnostics.psychometricQuestions,
+    });
+    expect(remedial.branchId).toBe("plane_geometry");
+    expect(remedial.lessonTitle).toContain("نظرية فيثاغورس");
+    expect(remedial.customDirectives).toContain("البديل (جـ)");
   });
 
   it("computes personal student diagnostics and detects improving performance trend", () => {

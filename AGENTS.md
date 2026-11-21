@@ -103,6 +103,8 @@
      > ⚠️ **REMINDER — PENDING LEGACY CLEANUP STEP:** The old/superseded code and files (`[list exact file/function names]`) are still pending final deletion and will be completely eradicated immediately upon your human review confirmation.
 2. **Continuous Tracking:**
    - You MUST keep repeating this reminder across turns until the human review is confirmed and the legacy deletion step is executed.
+3. **Mandatory Final Position Rule (`تذكير الحذف يظهر دائماً في نهاية الرد`):**
+   - Whenever a Phase 3 deletion reminder is required, it **MUST ALWAYS** appear as the **very last section at the absolute end of your response**, strictly **AFTER** all summaries, verification results, and Section 9 Holistic Platform Assessments (never placed before Section 9).
 
 ### Phase 4: Total Legacy Eradication After Human Confirmation (`Zero Orphan / Dead Code Law`)
 
@@ -216,9 +218,10 @@ Defining any shared state or reference data in more than one place is **STRICTLY
   1. **New Complementary Feature(s):** Propose concrete new capabilities or features that complete, strengthen, or broaden the scope of the newly implemented/modified feature.
   2. **Existing Feature Synergy Upgrades:** Propose targeted improvements to existing platform features/modules so they harmonize with and benefit from the new addition, ensuring continuous holistic advancement of the entire platform.
 
-1. **Execution Completeness Criterion:**
+1. **Execution Completeness & Ordering Criterion:**
 
 * Omitting this proactive assessment upon the completion of any architectural change, feature addition, or bug-fix task constitutes an **incomplete execution** and violates the operational protocol.
+* **Mandatory Response Order:** Present implemented results & verification first $\rightarrow$ Section 9 Proactive Assessment second $\rightarrow$ Phase 3 Pending Legacy Deletion Reminder (whenever applicable) strictly **LAST** at the end of the reply.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

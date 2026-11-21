@@ -74,13 +74,6 @@ export async function pullPublishedExamsFromSupabaseCloud(): Promise<
   }
 }
 
-export async function syncExamSubmissionToSupabaseCloud(
-  _submission: OnlineExamSubmissionRecord
-): Promise<boolean> {
-  void _submission;
-  return false;
-}
-
 export async function pullExamSubmissionsFromSupabaseCloud(): Promise<
   readonly OnlineExamSubmissionRecord[] | null
 > {

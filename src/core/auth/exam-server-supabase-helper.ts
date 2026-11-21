@@ -185,6 +185,41 @@ export async function sbPatch(
   }
 }
 
+export async function sbDelete(pathAndQuery: string): Promise<boolean> {
+  const [table, queryStr] = pathAndQuery.split("?");
+  if (table && table in memoryFallbackTables) {
+    const params = new URLSearchParams(queryStr || "");
+    const eqMap: Record<string, string> = {};
+    for (const [k, v] of params.entries()) {
+      if (v.startsWith("eq.")) eqMap[k] = v.slice(3);
+    }
+    memoryFallbackTables[table] = memoryFallbackTables[table].filter(
+      (r) => !Object.entries(eqMap).every(([k, expected]) => String(r[k] ?? "") === expected)
+    );
+    const stateId = buildStateFallbackId(table, eqMap);
+    if (stateId) {
+      try {
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/platform_ssot_state?id=eq.${encodeURIComponent(stateId)}`,
+          { method: "DELETE", headers: headers("return=minimal") }
+        );
+      } catch {
+        // ignore fallback delete error
+      }
+    }
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${pathAndQuery}`, {
+      method: "DELETE",
+      headers: headers("return=minimal"),
+    });
+    return res.ok;
+  } catch {
+    return table ? table in memoryFallbackTables : false;
+  }
+}
+
 export function readCookieFromRequest(
   req: Request,
   name: string

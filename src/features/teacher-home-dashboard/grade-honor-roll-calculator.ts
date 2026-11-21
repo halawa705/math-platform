@@ -24,6 +24,7 @@ export interface HonorStudentEntry {
   readonly studentCode: string;
   readonly gradeId: string;
   readonly averagePercentage: number;
+  readonly isSibling?: boolean;
 }
 
 export interface GradeAnalyticsMetric {
@@ -50,9 +51,13 @@ export function getGradeAnalyticsAndHonorRollSSOT(
   gradeId: string,
   gradeNameAr: string
 ): GradeAnalyticsMetric {
-  const registeredCount = loadRegisteredStudentsSSOT().filter(
+  const registeredStudents = loadRegisteredStudentsSSOT();
+  const registeredCount = registeredStudents.filter(
     (s) => s.gradeId === gradeId
   ).length;
+  const siblingCodeSet = new Set(
+    registeredStudents.filter((s) => s.isSibling).map((s) => s.studentCode.toUpperCase())
+  );
 
   const activeExams = loadActiveExamsForGradeSSOT(gradeId);
   const activeExamIds = new Set(activeExams.map((e) => e.examId));
@@ -101,6 +106,7 @@ export function getGradeAnalyticsAndHonorRollSSOT(
       studentCode: s.studentCode,
       gradeId: s.gradeId,
       averagePercentage: s.percentageScore,
+      isSibling: siblingCodeSet.has(s.studentCode.toUpperCase()),
     }));
 
   return {

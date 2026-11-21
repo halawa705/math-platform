@@ -6,36 +6,61 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
  */
 
+import { useRouter } from "next/navigation";
 import type {
   PsychometricQuestionDiagnostic,
   RemediationRecommendationItem,
 } from "@/core/exam-grading/exam-diagnostic-metrics-calculator";
+import { prepareRemedialWorksheetInStudio } from "./remedial-worksheet-studio-launcher";
 
 export const MODULE_ID_GRADE_DIAGNOSTIC_PSYCHOMETRIC_AND_REMEDIATION_CARD =
   "grade_diagnostic_psychometric_and_remediation_card" as const;
 
 export interface GradeDiagnosticPsychometricAndRemediationCardProps {
+  readonly gradeId: string;
   readonly psychometricQuestions: readonly PsychometricQuestionDiagnostic[];
   readonly remediationPlan: readonly RemediationRecommendationItem[];
 }
 
 export default function GradeDiagnosticPsychometricAndRemediationCard({
+  gradeId,
   psychometricQuestions,
   remediationPlan,
 }: GradeDiagnosticPsychometricAndRemediationCardProps) {
+  const router = useRouter();
   if (psychometricQuestions.length === 0 && remediationPlan.length === 0) return null;
 
   const hardestOrFlagged = [...psychometricQuestions]
     .sort((a, b) => Number(b.isFlaggedAmbiguous) - Number(a.isFlaggedAmbiguous) || b.errorPct - a.errorPct)
     .slice(0, 6);
+  const hasWeakTargets = psychometricQuestions.some((q) => q.errorPct >= 30 || q.isFlaggedAmbiguous);
+
+  const handleLaunchRemedial = () => {
+    prepareRemedialWorksheetInStudio({
+      gradeId,
+      weakestQuestions: psychometricQuestions,
+    });
+    router.push("/studio");
+  };
 
   return (
     <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
       {remediationPlan.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigo-950 dark:text-teal-300">
-            🩺 خطة العمل العلاجية والتدريسية المقترحة للمعلم
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-xs font-black text-indigo-950 dark:text-teal-300">
+              🩺 خطة العمل العلاجية والتدريسية المقترحة للمعلم
+            </h3>
+            {hasWeakTargets && (
+              <button
+                type="button"
+                onClick={handleLaunchRemedial}
+                className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-indigo-900 hover:bg-indigo-800 dark:bg-teal-600 text-white text-[11px] font-black shadow-xs cursor-pointer"
+              >
+                ⚡ توليد شيت واجب علاجي بالاستوديو ⬅
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {remediationPlan.map((rec, idx) => {
               const cardCls =
