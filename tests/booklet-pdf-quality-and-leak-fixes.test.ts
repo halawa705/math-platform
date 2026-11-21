@@ -6,7 +6,7 @@ import {
   extractConceptAndRule,
   parseSolvedExamplesFromSection,
 } from "../src/core/ingestion/notebooklm-stage-parsers-helper";
-import { matchPrepGrade1ParallelismFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
+import { matchParallelTransversalParametricFigure } from "../src/core/geometry-engine/parallel-transversal-family/parallel-transversal-parametric-orchestrator";
 import { projectGeometryFigureToSVGMarkup } from "../src/core/geometry-engine/vector-svg-figure-projector";
 
 const NBSP = "\u00A0";
@@ -77,7 +77,7 @@ AB/XY = BC/YZ = k
   });
 
   it("Purifies geometry SVG: never draws thin 0.8px connecting lines or fake polygons on parallel transversal figures", () => {
-    const zFig = matchPrepGrade1ParallelismFigure(
+    const zFig = matchParallelTransversalParametricFigure(
       "في الشكل المقابل، إذا كان AB // CD والقطعة AC قاطعة لهما، وكان m(∠BAC) = 55° فأوجد بالبرهان m(∠ACD)",
       "test_z_fig",
       "english"
@@ -87,7 +87,7 @@ AB/XY = BC/YZ = k
     expect(zSvg).not.toContain("geometry-surface-tints");
     expect(zSvg).not.toContain('stroke-width="0.8"');
 
-    const efFig = matchPrepGrade1ParallelismFigure(
+    const efFig = matchParallelTransversalParametricFigure(
       "في الشكل المقابل، إذا كان AB // CD والمستقيم EF يقطع AB في G ويقطع CD في H، وكان m(∠EGB) = 75° فأوجد قياس ∠GHD",
       "test_ef_fig",
       "english"

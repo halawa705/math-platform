@@ -111,21 +111,20 @@ describe("Phase 2 Task 2.2: Unified Similarity Context Detector", () => {
 });
 
 describe("Phase 2 Task 2.3: Geometry Catalog Match Registry", () => {
-  it("registry contains all curriculum catalogs across primary (including Grade 3) and prep", () => {
-    expect(GEOMETRY_CATALOG_MATCHERS.length).toBe(26);
+  it("registry contains only primary-stage curriculum catalogs after prep-stage legacy eradication", () => {
+    expect(GEOMETRY_CATALOG_MATCHERS.length).toBe(5);
     const stages = new Set(GEOMETRY_CATALOG_MATCHERS.map((c) => c.stage));
     expect(stages.has("primary")).toBe(true);
-    expect(stages.has("preparatory")).toBe(true);
+    expect(stages.size).toBe(1);
   });
 
-  it("matches a valid prep 1 congruence description without ambiguity", () => {
+  it("blocks primary-stage catalogs when the description is an explicit prep-stage context", () => {
     const desc = "في الشكل المقابل أ ب جـ د متوازي أضلاع قطراه يتقاطعان في م";
     const res = matchFromCatalogRegistry(desc, "test_cat");
 
     expect(res.ambiguity).toBe(false);
-    if (res.figure) {
-      expect(res.matchedCatalogId).toBeDefined();
-    }
+    expect(res.figure).toBeUndefined();
+    expect(res.candidateCatalogIds).toHaveLength(0);
   });
 
   it("returns no ambiguity and empty result for unrecognized non-geometry text", () => {
@@ -135,10 +134,11 @@ describe("Phase 2 Task 2.3: Geometry Catalog Match Registry", () => {
     expect(res.candidateCatalogIds).toHaveLength(0);
   });
 
-  it("prevents triangle congruence catalog from hijacking explicit similarity contexts", () => {
+  it("keeps similarity contexts strictly isolated from primary-stage catalogs", () => {
     const simDesc = "مثلثان متشابهان ABC ~ DEF فيهما زاوية B = 60°";
     const res = matchFromCatalogRegistry(simDesc, "test_cat", "english", true);
 
-    expect(res.candidateCatalogIds).not.toContain("prep-2-triangle-congruence");
+    expect(res.figure).toBeUndefined();
+    expect(res.candidateCatalogIds).toHaveLength(0);
   });
 });

@@ -15,6 +15,7 @@ import { projectGeometryAnglesSVGMarkup } from "./vector-svg-angle-projector";
 import { localizeFigureLabelText } from "./figure-label-symbol-localizer";
 import { projectGeometrySurfaceShadingSVGMarkup } from "./vector-svg-surface-shading-projector";
 import { projectCirclesArcsAndRegionsSVGMarkup } from "./vector-svg-circles-and-arcs-projector";
+import { projectExplicitConstraintsOverlaySVGMarkup } from "./vector-svg-explicit-constraints-overlay";
 import {
   GIVEN_LABEL_BACKGROUND_FILL,
   GIVEN_LABEL_HALO_STROKE,
@@ -184,6 +185,7 @@ export function projectGeometryFigureToSVGMarkup(
   }).join("");
 
   const surfaceTintsSvg = projectGeometrySurfaceShadingSVGMarkup({ figure, vertexMap });
+  const explicitOverlaySvg = projectExplicitConstraintsOverlaySVGMarkup({ figure, vertexMap, strokeColor, accentColor });
   const anglesSvg = projectGeometryAnglesSVGMarkup({
     angles: figure.angles, vertexMap, strokeColor, accentColor, numeralMode, notation, occupiedBoxes, obstacleSegments,
   });
@@ -255,5 +257,5 @@ export function projectGeometryFigureToSVGMarkup(
     ? `<rect x="${vb.minX}" y="${vb.minY}" width="${vb.width}" height="${vb.height}" rx="8" fill="${backgroundColor}" />`
     : "";
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" dir="ltr" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%;direction:ltr" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" dir="ltr" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%;direction:ltr" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${explicitOverlaySvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
 }

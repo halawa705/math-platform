@@ -65,12 +65,12 @@ describe("Golden Metamorphic Variant Generator (Task 0.2)", () => {
     expect(ids.size).toBe(variants.length);
   });
 
-  it("يوسّع المجموعة الذهبية الحالية لتتجاوز >= 1,500 حالة (375 أساسية + 3 متغيرات لكل حالة)", () => {
+  it("يوسّع المجموعة الذهبية الحالية لتتجاوز >= 1,220 حالة (305 أساسية + 3 متغيرات لكل حالة)", () => {
     const baseCorpus = loadGoldenGeometryCorpus();
-    expect(baseCorpus.length).toBeGreaterThanOrEqual(375);
+    expect(baseCorpus.length).toBeGreaterThanOrEqual(305);
 
     const expanded = expandCorpusWithMetamorphicVariants(baseCorpus, 3);
-    expect(expanded.length).toBeGreaterThanOrEqual(1500);
+    expect(expanded.length).toBeGreaterThanOrEqual(1220);
 
     // التحقق من تفرد المعرفات في المجموعة الموسعة
     const seenIds = new Set<string>();

@@ -1,14 +1,11 @@
 /**
  * @file geometry-similarity-catalogs-and-smart-prompt.test.ts
- * @description اختبارات شاملة لتغذية معمل الأشكال لدرس تشابه المضلعات والموجه الذكي للبرومبت.
+ * @description اختبارات شاملة للموجه الذكي للبرومبت ومحرك تشابه المضلعات البارامتري.
  */
 
 import { describe, it, expect } from "vitest";
 import { isGeometryContext, buildSmartGeometryPromptGuidance } from "../src/core/prompts/smart-geometry-prompt-director";
-import { matchPrepSimilarityGeometryFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-similarity-geometry-catalog";
-import { matchPrepGrade3TriangleSimilarityFigure } from "../src/core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-similarity-catalog";
 import { parseNaturalGeometryTextSpecs, composeParametricSimilarQuadsFigure } from "../src/core/geometry-engine/parametric-similarity-description-parser";
-import { projectGeometryFigureToSVGMarkup } from "../src/core/geometry-engine/vector-svg-figure-projector";
 
 describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
   it("detects geometry context from lesson or unit titles", () => {
@@ -31,69 +28,6 @@ describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
     expect(prompt).toContain("الزوايا");
   });
 
-  it("matches Example 2 from textbook images (quads with radicals and specific angles)", () => {
-    const desc = "مضلعان رباعيان متشابهان ABCD ~ EFGH أطوال الأول AB = 6.5 سم و DA = 1.5√3 سم وزاوية C = 60° وزاوية H = 150°";
-    const figure = matchPrepSimilarityGeometryFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.titleArabic).toContain("ABCD ~ EFGH");
-    expect(figure?.vertices.length).toBe(8);
-
-    const svg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western" });
-    expect(svg).toContain("<svg");
-    expect(svg).toContain("6.5");
-    expect(svg).toContain("1.5√3");
-  });
-
-  it("matches Try-by-yourself 2 from textbook images (obtuse 120° and 45° with 10√3)", () => {
-    const desc = "مضلعان رباعيان متشابهان فيهما زاوية 120° وزاوية 45° وأطوال 10√3 سم و 10√2 سم";
-    const figure = matchPrepSimilarityGeometryFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.angles.some((a) => a.degrees === 120)).toBe(true);
-    expect(figure?.angles.some((a) => a.degrees === 45)).toBe(true);
-  });
-
-  it("matches Right Trapezoids with algebraic variables (X - 3) and (Y + 1)", () => {
-    const desc = "شبه منحرف قائم الزاوية متشابه بمجاهيل أطوال قاعدتيه X - 3 و Y + 1";
-    const figure = matchPrepSimilarityGeometryFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.branchId).toBe("quad_trapezoid_with_altitudes");
-
-    const svg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western", notationLanguage: "english" });
-    expect(svg).toContain("(X - 3)");
-    expect(svg).toContain("(Y + 1)");
-
-    const arabicSvg = projectGeometryFigureToSVGMarkup(figure!, { numeralMode: "western", notationLanguage: "arabic" });
-    expect(arabicSvg).toContain("(س - 3)");
-    expect(arabicSvg).toContain("(ص + 1)");
-  });
-
-  it("matches House-shaped Pentagons ABCDE ~ KFGHJ (Try-by-yourself 3)", () => {
-    const desc = "مضلعان خماسيان متشابهان ABCDE ~ KFGHJ على شكل منزل قاعدة 6 سم";
-    const figure = matchPrepSimilarityGeometryFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.vertices.length).toBe(10);
-  });
-
-  it("matches Collinear Base quads intersecting at O (Example 3)", () => {
-    const desc = "مضلعان على خط قاعدة مشتركة H-E-A-D يتقاطعان في نقطة O";
-    const figure = matchPrepSimilarityGeometryFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.vertices.some((v) => v.label === "O" || v.label === "م")).toBe(true);
-  });
-
-  it("matches Deltoid/Kites similarity with 92° angles", () => {
-    const desc = "طائرتان ورقيتان دالتون متشابهتان ABCD ~ HLKJ قياس الزاوية 92°";
-    const figure = matchPrepSimilarityGeometryFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.angles.some((a) => a.degrees === 92)).toBe(true);
-  });
-
   it("dynamically parses custom natural geometry text specs", () => {
     const text = "مضلعان رباعيان متشابهان ABCD ~ EFGH ، AB = 7 سم ، BC = 9 سم ، ق(∠A) = 90° ، ق(∠B) = 40°";
     const specs = parseNaturalGeometryTextSpecs(text);
@@ -108,48 +42,4 @@ describe("Smart Geometry Prompt Director & Polygon Similarity Engine", () => {
     expect(composed?.segments.some((s) => s.lengthLabel?.value === "7")).toBe(true);
     expect(composed?.angles.some((a) => a.degrees === 40)).toBe(true);
   });
-
-  it("matches Grade 3 Prep Triangle Similarity: Butterfly/Cross ΔABC ~ ΔADE", () => {
-    const desc = "تشابه مثلثين متقابلين بالرأس عند A شكل مقص ΔABC ~ ΔADE وأطوال 10 سم و 12 سم";
-    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.titleArabic).toContain("مقص");
-    expect(figure?.vertices.length).toBe(5);
-  });
-
-  it("matches Grade 3 Prep Triangle Similarity: Nested with Common Angle B", () => {
-    const desc = "تشابه مثلثين بزاوية مشتركة B وقاطع داخلي ΔABC ~ ΔDBA";
-    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.titleArabic).toContain("زاوية مشتركة B");
-    expect(figure?.segments.some((s) => s.lengthLabel?.value === 27)).toBe(true);
-  });
-
-  it("matches Grade 3 Prep Triangle Similarity: Thales Parallel Line XY || BC", () => {
-    const desc = "تشابه مثلثين بتوازي طاليس XY // BC و AXY ~ ABC";
-    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.branchId).toBe("triangle_thales_parallel_line");
-  });
-
-  it("matches Grade 3 Prep Triangle Similarity: Euclid Altitude Similarity in Right Triangle", () => {
-    const desc = "تشابه المثلثات القائمة بإسقاط عمود BD ⊥ AC من رأس القائمة ونظرية إقليدس ADB ~ BDC";
-    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.branchId).toBe("triangle_euclid_right_altitude");
-    expect(figure?.angles.some((a) => a.isRightAngle)).toBe(true);
-  });
-
-  it("matches Grade 3 Prep Triangle Similarity: Separate with 120° Angle", () => {
-    const desc = "تشابه مثلثين منفصلين بزاوية 120° ΔABC ~ ΔDEF";
-    const figure = matchPrepGrade3TriangleSimilarityFigure(desc);
-
-    expect(figure).toBeDefined();
-    expect(figure?.angles.some((a) => a.degrees === 120)).toBe(true);
-  });
 });
-

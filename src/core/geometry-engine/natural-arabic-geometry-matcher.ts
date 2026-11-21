@@ -44,6 +44,9 @@ import { buildHourglassButterflySimilarityFigure } from "./quadrilateral-family/
 import { buildQuadraticParabolaCurveFigure } from "./analytic-function-family/linear-quadratic-curve-branch";
 import { buildNumberLineIntervalFigure } from "./analytic-function-family/number-line-intervals-branch";
 import { buildCoordinatePlanePolygonFigure } from "./analytic-function-family/coordinate-plane-polygon-plotter";
+import { tryBuildParametricCoordinateAnalysisFigure } from "./analytic-function-family/coordinate-plane-projections-and-midpoint-builder";
+import { matchTrigonometryParametricFigure } from "./trigonometry-family/trigonometry-parametric-orchestrator";
+import { matchParallelTransversalParametricFigure } from "./parallel-transversal-family/parallel-transversal-parametric-orchestrator";
 import { buildRegularPyramid3DFigure } from "./spatial-3d-family/pyramid-spatial-planes-branch";
 import { buildCubeCuboid3DFigure } from "./spatial-3d-family/cube-cuboid-prism-branch";
 import { buildRightCircularCone3DFigure } from "./spatial-3d-family/cylinder-cone-sphere-branch";
@@ -56,8 +59,7 @@ export const MODULE_ID_NATURAL_ARABIC_GEOMETRY_MATCHER = "natural_arabic_geometr
 export function matchOptionalGeometryFigureFromArabicDescription(
   arabicDescription: string,
   figureId = "matched_geom_fig",
-  notationLanguage: MathNotationLanguage = "english",
-  options?: { readonly excludeLegacyPrepCatalogs?: boolean }
+  notationLanguage: MathNotationLanguage = "english"
 ): CanonicalGeometryFigureIR | undefined {
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
@@ -78,13 +80,22 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     }
   }
 
-  const stageRes = matchFromCatalogRegistry(desc, figureId, notationLanguage, isSimilarity, options);
+  const stageRes = matchFromCatalogRegistry(desc, figureId, notationLanguage, isSimilarity);
   if (stageRes.ambiguity) {
     return undefined;
   }
   if (stageRes.figure) {
     return stageRes.figure;
   }
+
+  const trigFig = matchTrigonometryParametricFigure(desc, figureId, notationLanguage);
+  if (trigFig) return trigFig;
+
+  const parallelTransFig = matchParallelTransversalParametricFigure(desc, figureId, notationLanguage);
+  if (parallelTransFig) return parallelTransFig;
+
+  const coordAnalysis = tryBuildParametricCoordinateAnalysisFigure({ figureId, description: desc, notationLanguage });
+  if (coordAnalysis) return coordAnalysis;
 
   const elementaryVisual = detectAndBuildMathElementaryVisualFigure(desc, figureId, notationLanguage);
   if (elementaryVisual) {

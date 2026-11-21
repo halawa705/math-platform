@@ -100,3 +100,50 @@ export function extractPromptCollinearAndCompositeFacts(
 
   return facts;
 }
+
+/**
+ * يستخرج حقائق الزاوية الخارجة بالاسم الصريح (∠ABD خارجة عن ABC) أو عند رأس محدد بدون وسم امتداد.
+ */
+export function extractExteriorAngleFactsForTriangle(
+  clean: string,
+  assertionsClean: string,
+  plainTriName: string | undefined,
+  existingFacts: readonly string[]
+): string[] {
+  const out: string[] = [];
+  const explicitExtMatch = clean.match(
+    /(?:الزاوية\s+|∠\s*)([A-Za-z]{3})\s*(?:زاوية\s+)?خارجة\s*(?:عن\s*(?:ال)?مثلث\s*([A-Za-z]{3}))?(?:[^.،؛\n]{0,24}?(?:و?قياسها|يساوي|تساوي|=|هو|هي)\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?)?/i
+  );
+  if (explicitExtMatch) {
+    const angRaw = explicitExtMatch[1].toUpperCase();
+    const angChars = angRaw.split("");
+    const triChars = (explicitExtMatch[2] || plainTriName || "").toUpperCase().split("");
+    const extVertex = angChars[1];
+    const extPt = angChars.find((c) => !triChars.includes(c));
+    const intArm = angChars[0] === extVertex ? angChars[2] : angChars[0];
+    const fromPt = triChars.find((c) => c !== extVertex && c !== intArm);
+    if (triChars.length === 3 && extPt && fromPt && triChars.includes(extVertex) && !existingFacts.some((f) => f.startsWith("نمد "))) {
+      out.push(`نمد ${fromPt}${extVertex} إلى ${extPt}`);
+    }
+    const extDegVal = explicitExtMatch[3]?.trim();
+    if (extDegVal && !existingFacts.some((f) => f.includes(`∠${angRaw}`))) {
+      out.push(`ق(∠${angRaw}) = ${extDegVal}°`);
+    }
+  }
+  const extAtVertexMatch = assertionsClean.match(
+    /(?:ال)?زاوية\s*(?:ال)?خارجة\s*(?:عن\s*المثلث\s*)?عند\s*(?:الرأس\s*)?([A-Za-z])\s*(?:هو|هي|تساوي|يساوي|=|قياسها)?\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?/i
+  );
+  if (extAtVertexMatch && plainTriName) {
+    const extV = extAtVertexMatch[1].toUpperCase();
+    const extVal = extAtVertexMatch[2].trim();
+    const triChars = plainTriName.split("");
+    if (triChars.includes(extV)) {
+      const others = triChars.filter((c) => c !== extV);
+      const extEnd = ["W", "D", "K", "M"].find((ch) => !triChars.includes(ch)) ?? "W";
+      if (others.length === 2 && !existingFacts.some((f) => f.startsWith("نمد ")) && !out.some((f) => f.startsWith("نمد "))) {
+        out.push(`نمد ${others[1]}${extV} إلى ${extEnd}`, `ق(∠${others[0]}${extV}${extEnd}) = ${extVal}°`);
+      }
+    }
+  }
+  return out;
+}

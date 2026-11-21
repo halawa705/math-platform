@@ -20,8 +20,8 @@ import { assembleCanonicalFigureSegments, resolveAngleFactHelper, resolveExtendW
 import { angleBisectorFoot, lineIntersection, vAdd, vDist, vLerp, vScale, vSub, type Vec2 } from "./geo-vector-math";
 import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
 import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
-import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
-import { matchPrepGrade1ParallelismFigure } from "../curriculum-catalogs/prep-stage/grade-1/prep-grade1-parallelism-catalog";
+import { matchTrigonometryParametricFigure } from "../trigonometry-family/trigonometry-parametric-orchestrator";
+import { matchParallelTransversalParametricFigure } from "../parallel-transversal-family/parallel-transversal-parametric-orchestrator";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { findMissingDeclaredConstructionVertices } from "../verification/geometry-figure-completeness-checker";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
@@ -32,6 +32,7 @@ import { autoConnectReferencedSubPolygons } from "./geo-subpolygon-autoconnect-h
 import { resolveEqualSegmentRatioOnHost } from "./geo-quad-angle-and-shared-placer";
 import { resolveCollinearFactInComposer } from "./geo-collinear-constraint-resolver";
 import { buildExplicitConstraintsFromGeoFacts } from "../constraint-refiner/geo-explicit-constraints-bridge";
+import { tryBuildParametricCoordinateAnalysisFigure } from "../analytic-function-family/coordinate-plane-projections-and-midpoint-builder";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
@@ -52,7 +53,7 @@ export function composeFigureFromGeometryDescription(
     if (parametricFig) return { figure: parametricFig, warnings: [] };
   }
   const hasTrigKeywords = /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة/i.test(description);
-  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !/مثلث\s*[A-Z]{3}/i.test(description))) ? matchPrepGrade3TrigonometryFigure(description, figureId, notation) : undefined;
+  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !/مثلث\s*[A-Z]{3}/i.test(description))) ? matchTrigonometryParametricFigure(description, figureId, notation) : undefined;
   if (trigCatalogFig) return { figure: trigCatalogFig, warnings: [] };
   if (!/°|درجة|زاوي/.test(description)) {
     const earlyParallelTransFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
@@ -60,7 +61,7 @@ export function composeFigureFromGeometryDescription(
   }
   const hasNamedIntersections = /في\s*(?:النقطتين\s*)?(?:[A-Z]|[أ-ي]ـ?)\s*و\s*(?:[A-Z]|[أ-ي]ـ?)\b/.test(description);
   const parallelCatalogFig = !hasNamedIntersections && !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
-    ? matchPrepGrade1ParallelismFigure(description, figureId, notation) : undefined;
+    ? matchParallelTransversalParametricFigure(description, figureId, notation) : undefined;
   if (parallelCatalogFig) return { figure: parallelCatalogFig, warnings: [] };
 
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
@@ -91,6 +92,8 @@ export function composeFigureFromGeometryDescription(
       const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation, linearKindMap);
       if (angleFanFig) return { figure: angleFanFig, warnings: [] };
     }
+    const coordAnalysisFig = tryBuildParametricCoordinateAnalysisFigure({ figureId, description, notationLanguage: notation });
+    if (coordAnalysisFig) return { figure: coordAnalysisFig, warnings: [] };
     const standaloneLinearFig = tryComposeStandaloneLinearFigure({
       facts, lengths, linearKindMap, description, figureId, notation,
     });

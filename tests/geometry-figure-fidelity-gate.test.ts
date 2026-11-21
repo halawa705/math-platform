@@ -18,8 +18,59 @@ import {
 } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { localizeFigureLabelText } from "@/core/geometry-engine/figure-label-symbol-localizer";
 import { verifySegmentLengthScaleRule } from "@/core/geometry-engine/verification/verify-segment-length-scale-rule";
-import { buildCongruenceReflectionInDBFigure } from "@/core/geometry-engine/curriculum-catalogs/prep-stage/grade-2/prep-grade2-congruence-shared-base-builder";
-import { buildTriangleButterflyAtApexAFigure } from "@/core/geometry-engine/curriculum-catalogs/prep-stage/grade-3/prep-grade3-triangle-butterfly-similarity-builder";
+import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-ssot";
+
+function makeAlienKiteFigure(): CanonicalGeometryFigureIR {
+  return {
+    figureId: "alien_kite",
+    familyId: "quadrilateral_family",
+    branchId: "quad_parallelogram_diagonals",
+    titleArabic: "شكل رباعي طائرة ورقية",
+    notationLanguage: "english",
+    vertices: [
+      { id: "vA", label: "A", position: { x: 2, y: 8 } },
+      { id: "vB", label: "B", position: { x: 6, y: 5 } },
+      { id: "vC", label: "C", position: { x: 2, y: 1 } },
+      { id: "vD", label: "D", position: { x: 0, y: 5 } },
+    ],
+    segments: [
+      { id: "sAB", fromVertexId: "vA", toVertexId: "vB", lengthLabel: { value: 30, unit: "سم" } },
+      { id: "sBC", fromVertexId: "vB", toVertexId: "vC", lengthLabel: { value: 20, unit: "سم" } },
+      { id: "sCD", fromVertexId: "vC", toVertexId: "vD" },
+      { id: "sDA", fromVertexId: "vD", toVertexId: "vA" },
+    ],
+    angles: [
+      { id: "aA", vertexId: "vA", arm1VertexId: "vD", arm2VertexId: "vB", degrees: 100, degreesLabel: "100°" },
+      { id: "aC", vertexId: "vC", arm1VertexId: "vB", arm2VertexId: "vD", degreesLabel: "(2y)°" },
+    ],
+  };
+}
+
+function makeAlienButterflyFigure(): CanonicalGeometryFigureIR {
+  return {
+    figureId: "alien_butterfly",
+    familyId: "quadrilateral_family",
+    branchId: "quad_hourglass_butterfly_similarity",
+    titleArabic: "فراشة متشابهة",
+    notationLanguage: "arabic",
+    vertices: [
+      { id: "vA", label: "أ", position: { x: 5, y: 5 } },
+      { id: "vB", label: "ب", position: { x: 2, y: 8 } },
+      { id: "vC", label: "جـ", position: { x: 8, y: 8 } },
+      { id: "vD", label: "د", position: { x: 2, y: 2 } },
+      { id: "vE", label: "هـ", position: { x: 8, y: 2 } },
+    ],
+    segments: [
+      { id: "sAB", fromVertexId: "vA", toVertexId: "vB", lengthLabel: { value: 8, unit: "سم" } },
+      { id: "sAC", fromVertexId: "vA", toVertexId: "vC", lengthLabel: { value: 12, unit: "سم" } },
+      { id: "sBC", fromVertexId: "vB", toVertexId: "vC", lengthLabel: { value: 18, unit: "سم" } },
+      { id: "sAD", fromVertexId: "vA", toVertexId: "vD" },
+      { id: "sAE", fromVertexId: "vA", toVertexId: "vE" },
+      { id: "sDE", fromVertexId: "vD", toVertexId: "vE" },
+    ],
+    angles: [],
+  };
+}
 
 describe("المرحلة المحورية الأولى: بوابة الصدق البصري ومنع خطف المسائل", () => {
   describe("1. فحص المسائل النظرية الصرفة (Purely Theoretical No-Diagram Problems)", () => {
@@ -59,10 +110,7 @@ describe("المرحلة المحورية الأولى: بوابة الصدق ا
 
   describe("2. بوابة كشف الأرقام والرؤوس الدخيلة (Fidelity Check against Alien Artifacts)", () => {
     it("ترفض شكل الانعكاس ذي الزاوية (2y)° و 100° و 30 و 20 إذا أُرفق بمسألة زواياها 40° و 65°", () => {
-      const alienKiteFigure = buildCongruenceReflectionInDBFigure({
-        figureId: "alien_kite",
-        notationLanguage: "english",
-      });
+      const alienKiteFigure = makeAlienKiteFigure();
 
       const similarityPrompt =
         "إذا كان ΔABC ~ ΔDEF وكان m(∠A) = 40° و m(∠B) = 65°، فإن m(∠F) = 75°";
@@ -74,10 +122,7 @@ describe("المرحلة المحورية الأولى: بوابة الصدق ا
     });
 
     it("ترفض شكل الفراشة بأبعاد 8 و 12 و 18 إذا أُرفق بمسألة أبعادها 3 و 4 و 5", () => {
-      const alienButterfly = buildTriangleButterflyAtApexAFigure({
-        figureId: "alien_butterfly",
-        notationLanguage: "arabic",
-      });
+      const alienButterfly = makeAlienButterflyFigure();
 
       const promptWithSmallDims =
         "مثلثان متشابهان أطوال أضلاع الأول هي 3 سم، 4 سم، 5 سم، ونسبة التشابه تساوي 2";

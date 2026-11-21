@@ -10,11 +10,12 @@
 import { convertGeometryLatexToPlainText } from "./geometry-latex-to-plain-normalizer";
 import { unwrapStructuredCategoryHeaders } from "./geometry-clause-restructurer";
 import { synthesizeVerbalGeometryFacts } from "./verbal-geometry-figure-synthesizer";
-import { matchPrepGrade3TrigonometryFigure } from "../curriculum-catalogs/prep-stage/grade-3/prep-grade3-trigonometry-catalog";
+import { matchTrigonometryParametricFigure } from "../trigonometry-family/trigonometry-parametric-orchestrator";
 import {
   extractPromptQuadMidpointAndMeasureFacts,
   mergeCleanedTagClausesIntoParts,
 } from "./prompt-midpoint-and-quad-extractor";
+import { extractExteriorAngleFactsForTriangle } from "./prompt-collinear-and-composite-extractor";
 import {
   type ExtractedSimilarityCorrespondence,
   extractOrderedSimilarityTriangles,
@@ -198,41 +199,9 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
   const plainTriMatch = outerMidTriMatch ?? assertionsClean.match(/(?:في\s+)?(?:ال)?مثلث\s*([A-Z]{3})\b/);
   if (plainTriMatch && !facts.some((f) => f.includes(`مثلث ${plainTriMatch[1]}`))) addTriFact(`مثلث ${plainTriMatch[1]}`);
 
-  // 9-ب. الزاوية الخارجة بالاسم الصريح (مثل ∠ABD زاوية خارجة عن المثلث ABC قياسها 74°) أو عند رأس محدد بدون وسم امتداد
-  const explicitExtMatch = clean.match(
-    /(?:الزاوية\s+|∠\s*)([A-Za-z]{3})\s*(?:زاوية\s+)?خارجة\s*(?:عن\s*(?:ال)?مثلث\s*([A-Za-z]{3}))?(?:[^.،؛\n]{0,24}?(?:و?قياسها|يساوي|تساوي|=|هو|هي)\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?)?/i
-  );
-  if (explicitExtMatch) {
-    const angRaw = explicitExtMatch[1].toUpperCase();
-    const angChars = angRaw.split("");
-    const triChars = (explicitExtMatch[2] || plainTriMatch?.[1] || "").toUpperCase().split("");
-    const extVertex = angChars[1];
-    const extPt = angChars.find((c) => !triChars.includes(c));
-    const intArm = angChars[0] === extVertex ? angChars[2] : angChars[0];
-    const fromPt = triChars.find((c) => c !== extVertex && c !== intArm);
-    if (triChars.length === 3 && extPt && fromPt && triChars.includes(extVertex) && !facts.some((f) => f.startsWith("نمد "))) {
-      facts.push(`نمد ${fromPt}${extVertex} إلى ${extPt}`);
-    }
-    const extDegVal = explicitExtMatch[3]?.trim();
-    if (extDegVal && !facts.some((f) => f.includes(`∠${angRaw}`))) {
-      facts.push(`ق(∠${angRaw}) = ${extDegVal}°`);
-    }
-  }
-
-  const extAtVertexMatch = assertionsClean.match(
-    /(?:ال)?زاوية\s*(?:ال)?خارجة\s*(?:عن\s*المثلث\s*)?عند\s*(?:الرأس\s*)?([A-Za-z])\s*(?:هو|هي|تساوي|يساوي|=|قياسها)?\s*(\([^()]{1,28}\)|\d+(?:\.\d+)?)\s*(?:°|درجة)?/i
-  );
-  if (extAtVertexMatch && plainTriMatch) {
-    const extV = extAtVertexMatch[1].toUpperCase();
-    const extVal = extAtVertexMatch[2].trim();
-    const triChars = plainTriMatch[1].split("");
-    if (triChars.includes(extV)) {
-      const others = triChars.filter((c) => c !== extV);
-      const extEnd = ["W", "D", "K", "M"].find((ch) => !triChars.includes(ch)) ?? "W";
-      if (others.length === 2 && !facts.some((f) => f.startsWith("نمد "))) {
-        facts.push(`نمد ${others[1]}${extV} إلى ${extEnd}`, `ق(∠${others[0]}${extV}${extEnd}) = ${extVal}°`);
-      }
-    }
+  // 9-ب. الزاوية الخارجة بالاسم الصريح أو عند رأس محدد بدون وسم امتداد
+  for (const ef of extractExteriorAngleFactsForTriangle(clean, assertionsClean, plainTriMatch?.[1], facts)) {
+    if (!facts.includes(ef)) facts.push(ef);
   }
 
   for (const extraFact of extractPromptQuadMidpointAndMeasureFacts(clean, assertionsClean)) {
@@ -278,10 +247,10 @@ export function combineProblemAndTagGeometryContext(tagDescription?: string, pro
 
   const hasTrig = Boolean(effectivePrompt && /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية/i.test(effectivePrompt));
   const isQuadOrMid = Boolean(effectivePrompt && !hasTrig && /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف)/.test(effectivePrompt));
-  if (effectivePrompt && !isQuadOrMid && matchPrepGrade3TrigonometryFigure(effectivePrompt)) {
+  if (effectivePrompt && !isQuadOrMid && matchTrigonometryParametricFigure(effectivePrompt)) {
     return effectivePrompt.replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ").replace(/[\[\]]/g, "").trim();
   }
-  if (effectivePrompt && effectiveTag && !isQuadOrMid && matchPrepGrade3TrigonometryFigure(`${effectivePrompt} ؛ ${effectiveTag}`)) {
+  if (effectivePrompt && effectiveTag && !isQuadOrMid && matchTrigonometryParametricFigure(`${effectivePrompt} ؛ ${effectiveTag}`)) {
     const cleanPromptForTrig = effectivePrompt.replace(/(?<![mqق∠\\])\s*\([أ-دABCD]\)(?!\s*=)[^()]*/gi, " ").replace(/[\[\]]/g, "").trim();
     return `${cleanPromptForTrig} ؛ ${effectiveTag}`;
   }

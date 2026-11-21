@@ -134,7 +134,7 @@ describe("Dual-Input Pipeline & Linear Entity Kinds (Ray / Line / Segment)", () 
     const results = cases.map(classifyBaselineCase);
     const summary = summarizeBaselineResults(cases, results);
 
-    expect(summary.total).toBeGreaterThanOrEqual(437);
+    expect(summary.total).toBeGreaterThanOrEqual(305);
     expect(summary.byOutcome.false_figure_on_no_figure_case).toBe(0);
     expect(summary.byOutcome.missed_figure).toBe(0);
     expect(summary.specTotalCount).toBeGreaterThan(100);

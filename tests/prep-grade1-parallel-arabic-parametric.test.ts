@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import { matchGeometryWithDiagnostics } from "../src/core/geometry-engine/natural-arabic-geometry-matcher";
 import { combineProblemAndTagGeometryContext } from "../src/core/geometry-engine/description-intake/problem-geometry-context-extractor";
 import { verifyGeometryFigure } from "../src/core/geometry-engine/verification/geometry-figure-verification-orchestrator";
+import { renderKatexHtmlCached } from "../src/components/global-ui/math-katex-cached-html-renderer";
 
 const REAL_NOTEBOOKLM_CASES: readonly { readonly id: string; readonly tag?: string; readonly prompt: string }[] = [
   {
@@ -116,5 +117,73 @@ describe("Prep Grade 1 Parallelism — Full 6 Ideas Parametric Coverage", () => 
       expect(res.figure).toBeDefined();
       expect(verifyGeometryFigure(res.figure!).issues.filter((x) => x.severity === "error")).toEqual([]);
     });
+  });
+
+  it("ex1: AB // CD cut by EF at G & H with alternate (9x-5)° and (5x+15)°", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || CD، وكان المستقيم EF قاطعاً لهما في G و H على الترتيب، حيث m(∠AGH) = (9x - 5)° و m(∠GHD) = (5x + 15)° وهما زاويتان متبادلتان داخلياً، فأوجد قيمة x.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex1", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "C", "D", "E", "F", "G", "H"]));
+    expect(res.figure?.segments.some((s) => (s.parallelArrows ?? 0) > 0)).toBe(true);
+    expect(res.figure?.angles.length).toBe(2);
+  });
+
+  it("ex2: BA // CD cut by BC with consecutive interior angle 60°", () => {
+    const desc = "في الشكل المقابل، إذا كان BA || CD، وكان المستقيم BC قاطعاً لهما، حيث قياس الزاوية الداخلة m(∠C) = 60°، فأوجد قياس الزاوية الداخلة m(∠B).";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex2", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["B", "A", "C", "D"]));
+    expect(res.figure?.angles.some((a) => a.degrees === 60)).toBe(true);
+  });
+
+  it("ex3: AB // DE with broken angle at C (40° and 25°) to find ∠ACE", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || DE، وكانت الزاوية المنكسرة عند الرأس C تتكون من الشعاعين CA و CD، حيث m(∠CAB) = 40° و m(∠CDE) = 25°، فأوجد قياس ∠ACE.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex3", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "C", "D", "E"]));
+    expect(res.figure?.segments.some((s) => s.strokeStyle === "dashed")).toBe(true);
+  });
+
+  it("ex4: AB // CD with point E between lines (45° and 130°) to find m(∠AEC)", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || CD، وكانت نقطة E تقع بين المستقيمين، حيث m(∠A) = 45° و m(∠C) = 130°، فأوجد قياس الزاوية المنكسرة m(∠AEC).";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex4", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B", "E", "C", "D"]));
+  });
+
+  it("ex5: CA // BE with 125°, 55°, 55° to prove AB // CD", () => {
+    const desc = "في الشكل المقابل، إذا كان CA || BE، وكان m(∠C) = 125° و m(∠B) = 55° و m(∠A) = 55°، فأثبت أن AB || CD.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex5", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["C", "D", "A", "B", "E"]));
+  });
+
+  it("ex6: EC cuts AB and CD with corresponding angles 110° and 110°", () => {
+    const desc = "في الشكل المقابل، إذا كان القاطع EC يقطع المستقيمين AB و CD في النقطتين B و C على الترتيب، حيث m(∠EBA) = 110° و m(∠BCD) = 110°، فأثبت أن AB || CD.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex6", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["E", "B", "C", "A", "D"]));
+  });
+
+  it("ex7: AB // CD with bisector BF and corresponding (2x+10)°", () => {
+    const desc = "في الشكل المقابل، إذا كان AB || CD، وكان الشعاع BF ينصف ∠EBA حيث m(∠FBA) = 55°، وكان m(∠DCB) = (2x + 10)° بالتناظر مع ∠EBA، فأوجد قيمة x.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex7", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["E", "B", "C", "A", "D", "F"]));
+    expect(res.figure?.segments.some((s) => s.isRay)).toBe(true);
+  });
+
+  it("ex8: l1 // l2 with perpendicular transversal n ⊥ l1", () => {
+    const desc = "في الشكل المقابل، إذا كان l1 || l2 وكان المستقيم n عمودياً على l1 (n ⊥ l1) عند نقطة A ويقطع l2 في نقطة B، فأثبت برهانياً أن المستقيم n عمودي على l2 (n ⊥ l2) واحسب قياس الزاوية القائمة الناتجة.";
+    const res = matchGeometryWithDiagnostics(desc, "fig_ex8", "english");
+    expect(res.decision).toBe("green");
+    expect(res.figure?.vertices.map((v) => v.label)).toEqual(expect.arrayContaining(["A", "B"]));
+    expect(res.figure?.angles.some((a) => a.isRightAngle)).toBe(true);
+  });
+
+  it("renders slanted double solidus for \\parallel in KaTeX output", () => {
+    const html = renderKatexHtmlCached("AB \\parallel CD");
+    expect(html).toContain("mspace");
+    expect(html).not.toContain("<span class=\"mrel\">∥</span>");
   });
 });
