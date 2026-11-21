@@ -2,32 +2,19 @@
 
 /**
  * @file use-exam-session.ts
- * @description خطاف إدارة جلسة الاختبار الإلكتروني للطالب + وضع محاكاة وتجربة الحل للمعلم المالك:
- * يستدعي `/api/exams/start` لحساب الوقت المتبقي من وقت الخادم الفعلي،
- * ويسمح للمعلم بتجربة حل الاختبار وتصحيحه تلقائياً مع إظهار الحلول النموذجية وإمكانية إعادة التجربة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 215 سطراً).
+ * @description خطاف إدارة جلسة الاختبار الإلكتروني للطالب (اختيار الوضع، الحفظ السحابي كل 30 ثانية ضد الانقطاع،
+ * قفل وضع التدريب باتجاه واحد، المحاولة الرسمية الأولى فقط، والتدريب المؤقت بلا تخزين) + محاكاة المعلم.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 295 سطراً).
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import {
-  gradeOnlineExam,
-  type OnlineQuestionResult,
-  type StudentAnswerInput,
-} from "@/core/exam-grading/online-exam-grader";
-import {
-  loadLocalExamAnswerKeySSOT,
-  type PublishedOnlineExam,
-} from "@/features/electronic-exams-hub/published-online-exams-store";
-import {
-  findStudentSubmissionForExamSSOT,
-  recordStudentOnlineExamSubmissionSSOT,
-} from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
-import {
-  buildExamDraftStorageKey,
-  clearPersistentExamDraft,
-  loadPersistentExamDraft,
-  savePersistentExamDraft,
-} from "./exam-draft-persistent-storage";
+import type { LockedTrainingQuestionFeedback, OnlineExamSessionMode } from "@/core/auth/exam-attempt-state-server-store";
+import type { OnlineQuestionResult, StudentAnswerInput } from "@/core/exam-grading/online-exam-grader";
+import type { PublishedOnlineExam } from "@/features/electronic-exams-hub/published-online-exams-store";
+import { findStudentSubmissionForExamSSOT } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import { buildExamDraftStorageKey, loadPersistentExamDraft, savePersistentExamDraft } from "./exam-draft-persistent-storage";
+import { checkTrainingQuestionApi, saveExamDraftApi, startExamSessionApi } from "./exam-session-api-client";
+import { executeExamSubmitAction } from "./exam-session-submit-helper";
 
 export const MODULE_ID_USE_EXAM_SESSION = "use_exam_session" as const;
 
@@ -48,8 +35,17 @@ export function useExamSession(params: {
   const { exam, studentCode, studentNameAr, isTeacherPreview, onExamSubmitted } = params;
   const [answers, setAnswers] = useState<Record<string, StudentAnswerInput>>({});
   const [flaggedIds, setFlaggedIds] = useState<Record<string, boolean>>({});
-  const [remainingSeconds, setRemainingSeconds] = useState<number>((exam?.durationMinutes || 30) * 60);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>((exam?.durationMinutes || 60) * 60);
   const [startedAtIso, setStartedAtIso] = useState<string>("");
+  const [needsModeSelection, setNeedsModeSelection] = useState(false);
+  const [startingMode, setStartingMode] = useState<OnlineExamSessionMode | null>(null);
+  const [lockedMode, setLockedMode] = useState<OnlineExamSessionMode | null>(null);
+  const [lockedQuestionIds, setLockedQuestionIds] = useState<readonly string[]>([]);
+  const [lockedFeedbackByQuestion, setLockedFeedbackByQuestion] = useState<Record<string, LockedTrainingQuestionFeedback>>({});
+  const [checkingQuestionId, setCheckingQuestionId] = useState<string | null>(null);
+  const [isEphemeralPracticeMode, setIsEphemeralPracticeMode] = useState(false);
+  const [officialResultPct, setOfficialResultPct] = useState<number | null>(null);
+  const [autoSubmittedFromDraftNotice, setAutoSubmittedFromDraftNotice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resultPct, setResultPct] = useState<number | null>(null);
@@ -57,213 +53,205 @@ export function useExamSession(params: {
   const [reviewList, setReviewList] = useState<readonly ExamQuestionReviewInfo[] | null>(null);
   const [lastDraftSavedAtIso, setLastDraftSavedAtIso] = useState<string | null>(null);
   const deadlineMsRef = useRef<number | null>(null);
-
+  const answersRef = useRef<Record<string, StudentAnswerInput>>({});
+  answersRef.current = answers;
   const draftKey = exam ? buildExamDraftStorageKey(exam.examId, studentCode) : "";
 
   const resetSimulation = useCallback(() => {
-    setErrorMsg(null);
-    setResultPct(null);
-    setResultItems([]);
-    setReviewList(null);
-    setFlaggedIds({});
-    setAnswers({});
+    setErrorMsg(null); setResultPct(null); setResultItems([]); setReviewList(null);
+    setFlaggedIds({}); setAnswers({}); setLockedMode("exam");
     if (exam) {
-      const initialSec = (exam.durationMinutes || 30) * 60;
+      const initialSec = (exam.durationMinutes || 60) * 60;
       setRemainingSeconds(initialSec);
       deadlineMsRef.current = Date.now() + initialSec * 1000;
     }
   }, [exam]);
 
   useEffect(() => {
-    setErrorMsg(null);
-    setResultPct(null);
-    setResultItems([]);
-    setReviewList(null);
-    setFlaggedIds({});
+    setErrorMsg(null); setResultPct(null); setOfficialResultPct(null); setResultItems([]);
+    setReviewList(null); setFlaggedIds({}); setNeedsModeSelection(false); setStartingMode(null);
+    setLockedMode(isTeacherPreview ? "exam" : null); setLockedQuestionIds([]); setLockedFeedbackByQuestion({});
+    setCheckingQuestionId(null); setIsEphemeralPracticeMode(false); setAutoSubmittedFromDraftNotice(false);
     if (!exam) return;
 
-    const initialSec = (exam.durationMinutes || 30) * 60;
+    const initialSec = (exam.durationMinutes || 60) * 60;
     setRemainingSeconds(initialSec);
-    deadlineMsRef.current = Date.now() + initialSec * 1000;
-
-    if (draftKey) {
-      const restored = loadPersistentExamDraft(draftKey);
-      if (restored) {
-        setAnswers({ ...restored.answers });
-        setLastDraftSavedAtIso(restored.savedAtIso);
-      } else {
-        setAnswers({});
-        setLastDraftSavedAtIso(null);
-      }
-    } else {
-      setAnswers({});
-      setLastDraftSavedAtIso(null);
-    }
-
-    if (studentCode) {
-      const prev = findStudentSubmissionForExamSSOT(exam.examId, studentCode);
-      if (prev) {
-        setResultPct(prev.percentageScore);
-        if (prev.resultJson?.items) setResultItems(prev.resultJson.items);
-        if (prev.answersJson) setAnswers(prev.answersJson as Record<string, StudentAnswerInput>);
-        return;
-      }
-    }
-
+    deadlineMsRef.current = isTeacherPreview ? Date.now() + initialSec * 1000 : null;
+    const restoredLocal = draftKey ? loadPersistentExamDraft(draftKey) : null;
+    setAnswers(restoredLocal ? { ...restoredLocal.answers } : {});
+    setLastDraftSavedAtIso(restoredLocal?.savedAtIso ?? null);
     if (isTeacherPreview || !studentCode) return;
+
+    const prevLocalSub = findStudentSubmissionForExamSSOT(exam.examId, studentCode);
+    if (prevLocalSub) {
+      setResultPct(prevLocalSub.percentageScore);
+      setOfficialResultPct(prevLocalSub.percentageScore);
+      if (prevLocalSub.resultJson?.items) setResultItems(prevLocalSub.resultJson.items);
+      if (prevLocalSub.answersJson) setAnswers(prevLocalSub.answersJson as Record<string, StudentAnswerInput>);
+    }
 
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch("/api/exams/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ examCode: exam.examId }),
-        });
-        const data = (await res.json()) as {
-          success: boolean; alreadySubmitted?: boolean; percentage?: number;
-          startedAtIso?: string; serverNowIso?: string; durationMinutes?: number;
-        };
+        const res = await startExamSessionApi(exam.examId);
         if (cancelled) return;
-        if (res.status === 409 && data.alreadySubmitted && data.percentage !== undefined) {
-          setResultPct(data.percentage);
+        if (res.status === 409 && res.alreadySubmitted && res.percentage !== undefined) {
+          setResultPct(res.percentage); setOfficialResultPct(res.percentage);
+          if (res.result?.items) setResultItems(res.result.items);
+          if (res.answersJson) setAnswers(res.answersJson as Record<string, StudentAnswerInput>);
+          if (res.review !== undefined) setReviewList(res.review);
           return;
         }
-        if (res.ok && data.startedAtIso && data.serverNowIso) {
-          setStartedAtIso(data.startedAtIso);
-          const elapsedMs = Math.max(0, Date.parse(data.serverNowIso) - Date.parse(data.startedAtIso));
-          const totalMs = (data.durationMinutes || exam.durationMinutes || 30) * 60_000;
+        if (res.needsModeSelection) { setNeedsModeSelection(true); return; }
+        if (res.ok && res.startedAtIso && res.serverNowIso) {
+          setStartedAtIso(res.startedAtIso);
+          setLockedMode(res.lockedMode ?? "exam");
+          setLockedQuestionIds(res.lockedQuestionIds ?? []);
+          setLockedFeedbackByQuestion(res.lockedFeedbackByQuestion ?? {});
+          if (res.savedDraftAnswers) {
+            const lockedSet = new Set(res.lockedQuestionIds ?? []);
+            const merged: Record<string, StudentAnswerInput> = { ...(restoredLocal?.answers ?? {}) };
+            for (const [k, v] of Object.entries(res.savedDraftAnswers)) {
+              if (v && (lockedSet.has(k) || !merged[k])) merged[k] = v;
+            }
+            setAnswers(merged);
+          }
+          const elapsedMs = Math.max(0, Date.parse(res.serverNowIso) - Date.parse(res.startedAtIso));
+          const totalMs = (res.durationMinutes || exam.durationMinutes || 60) * 60_000;
           const leftMs = Math.max(0, totalMs - elapsedMs);
           deadlineMsRef.current = Date.now() + leftMs;
           setRemainingSeconds(Math.ceil(leftMs / 1000));
         }
-      } catch {
-        // احتفظ بالمؤقت المحلي في حال تعذر الاتصال
-      }
+      } catch { setNeedsModeSelection(true); }
     })();
-
     return () => { cancelled = true; };
   }, [exam, studentCode, isTeacherPreview, draftKey]);
 
-  const updateAnswer = useCallback(
-    (questionId: string, patch: StudentAnswerInput) => {
-      setAnswers((prev) => {
-        const next = { ...prev, [questionId]: { ...prev[questionId], ...patch } };
-        if (draftKey) {
-          setLastDraftSavedAtIso(savePersistentExamDraft(draftKey, next));
-        }
-        return next;
-      });
-    },
-    [draftKey]
-  );
+  const startExamWithMode = useCallback(async (mode: OnlineExamSessionMode) => {
+    if (!exam || !studentCode || startingMode) return;
+    setStartingMode(mode); setErrorMsg(null);
+    try {
+      const res = await startExamSessionApi(exam.examId, mode);
+      if (res.status === 409 && res.alreadySubmitted && res.percentage !== undefined) {
+        setNeedsModeSelection(false); setResultPct(res.percentage); setOfficialResultPct(res.percentage);
+        if (res.result?.items) setResultItems(res.result.items);
+        if (res.review !== undefined) setReviewList(res.review);
+        return;
+      }
+      if (!res.ok || !res.startedAtIso || !res.serverNowIso) {
+        setErrorMsg(res.error || "تعذر بدء جلسة الاختبار."); return;
+      }
+      setNeedsModeSelection(false); setLockedMode(res.lockedMode ?? mode);
+      setStartedAtIso(res.startedAtIso); setLockedQuestionIds(res.lockedQuestionIds ?? []);
+      setLockedFeedbackByQuestion(res.lockedFeedbackByQuestion ?? {});
+      const elapsedMs = Math.max(0, Date.parse(res.serverNowIso) - Date.parse(res.startedAtIso));
+      const leftMs = Math.max(0, (res.durationMinutes || exam.durationMinutes || 60) * 60_000 - elapsedMs);
+      deadlineMsRef.current = Date.now() + leftMs;
+      setRemainingSeconds(Math.ceil(leftMs / 1000));
+    } catch { setErrorMsg("تعذر الاتصال بالخادم لبدء الاختبار."); }
+    finally { setStartingMode(null); }
+  }, [exam, studentCode, startingMode]);
+
+  const updateAnswer = useCallback((questionId: string, patch: StudentAnswerInput) => {
+    if (lockedMode === "training" && lockedQuestionIds.includes(questionId)) return;
+    setAnswers((prev) => {
+      const next = { ...prev, [questionId]: { ...prev[questionId], ...patch } };
+      if (draftKey && !isEphemeralPracticeMode) setLastDraftSavedAtIso(savePersistentExamDraft(draftKey, next));
+      return next;
+    });
+  }, [draftKey, lockedMode, lockedQuestionIds, isEphemeralPracticeMode]);
 
   const toggleFlag = useCallback((questionId: string) => {
     setFlaggedIds((prev) => ({ ...prev, [questionId]: !prev[questionId] }));
   }, []);
 
+  const confirmTrainingQuestion = useCallback(async (questionId: string): Promise<boolean> => {
+    if (!exam || lockedMode !== "training" || lockedQuestionIds.includes(questionId) || checkingQuestionId) return false;
+    setCheckingQuestionId(questionId); setErrorMsg(null);
+    try {
+      const res = await checkTrainingQuestionApi({ examCode: exam.examId, questionId, answer: answersRef.current[questionId] ?? {} });
+      if ((res.ok || res.alreadyLocked) && res.feedback) {
+        setLockedQuestionIds((prev) => (prev.includes(questionId) ? prev : [...prev, questionId]));
+        setLockedFeedbackByQuestion((prev) => ({ ...prev, [questionId]: res.feedback! }));
+        return true;
+      }
+      setErrorMsg(res.error || "تعذر تأكيد إجابة السؤال."); return false;
+    } catch { setErrorMsg("تعذر الاتصال بالخادم للتحقق من السؤال."); return false; }
+    finally { setCheckingQuestionId(null); }
+  }, [exam, lockedMode, lockedQuestionIds, checkingQuestionId]);
+
   const submitExam = useCallback(async () => {
-    if (!exam || submitting || resultPct !== null) return;
-    if (!isTeacherPreview && !studentCode) return;
-
-    setSubmitting(true);
-    setErrorMsg(null);
-
-    if (isTeacherPreview) {
-      try {
-        const res = await fetch("/api/exams/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ examCode: exam.examId, isTeacherSimulation: true, answers }),
-        });
-        const data = (await res.json()) as {
-          success: boolean; percentage?: number; items?: readonly OnlineQuestionResult[];
-          review?: readonly ExamQuestionReviewInfo[] | null;
-        };
-        if (res.ok && data.success) {
-          setResultPct(data.percentage ?? 0);
-          setResultItems(data.items ?? []);
-          setReviewList(data.review ?? null);
-          setSubmitting(false);
-          return;
-        }
-      } catch {
-        // المتابعة بالتصحيح المحلي من مفتاح المعلم المحفوظ
-      }
-
-      const localKey = loadLocalExamAnswerKeySSOT(exam.examId);
-      if (localKey && localKey.length > 0) {
-        const localRes = gradeOnlineExam(localKey, answers);
-        setResultPct(localRes.percentage);
-        setResultItems(localRes.items);
-        setReviewList(
-          localKey.map((k) => ({
-            questionId: k.questionId,
-            correctMcqChoiceIndex: k.correctMcqChoiceIndex,
-            finalAnswerArabic: k.finalAnswerArabic,
-            modelSolutionStepsArabic: k.modelSolutionStepsArabic,
-          }))
-        );
-      } else {
-        setErrorMsg("تعذر العثور على مفتاح إجابة هذا الاختبار للتصحيح التجريبي.");
-      }
+    if (!exam || submitting || resultPct !== null || (!isTeacherPreview && !studentCode)) return;
+    setSubmitting(true); setErrorMsg(null);
+    const out = await executeExamSubmitAction({
+      exam, studentCode, studentNameAr, isTeacherPreview, isEphemeralPracticeMode,
+      answers: answersRef.current, startedAtIso, draftKey,
+    });
+    if (!out.ok) {
+      setErrorMsg(out.error || "تعذر تسليم الاختبار.");
       setSubmitting(false);
       return;
     }
+    if (out.autoSubmittedFromDraft) setAutoSubmittedFromDraftNotice(true);
+    if (out.answersUsed) setAnswers(out.answersUsed as Record<string, StudentAnswerInput>);
+    setResultPct(out.percentage ?? 0);
+    if (out.isOfficialSaved) setOfficialResultPct(out.percentage ?? 0);
+    setResultItems(out.items ?? []);
+    if (out.review !== undefined) setReviewList(out.review);
+    if (out.isOfficialSaved) onExamSubmitted?.();
+    setSubmitting(false);
+  }, [exam, studentCode, studentNameAr, isTeacherPreview, isEphemeralPracticeMode, submitting, resultPct, startedAtIso, draftKey, onExamSubmitted]);
 
-    try {
-      const res = await fetch("/api/exams/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ examCode: exam.examId, studentNameAr, answers }),
-      });
-      const data = (await res.json()) as {
-        success: boolean; percentage?: number; totalEarnedMarks?: number; totalAllocatedMarks?: number;
-        items?: readonly OnlineQuestionResult[]; review?: readonly ExamQuestionReviewInfo[] | null; error?: string;
-      };
-      if (!res.ok && res.status !== 409) {
-        setErrorMsg(data.error || "تعذر تسليم الاختبار.");
-        setSubmitting(false);
-        return;
-      }
-      const pct = data.percentage ?? 0;
-      const items = data.items ?? [];
-      setResultPct(pct);
-      setResultItems(items);
-      setReviewList(data.review ?? null);
-      recordStudentOnlineExamSubmissionSSOT({
-        exam, studentCode: studentCode!, studentNameAr, percentageScore: pct,
-        startedAtIso: startedAtIso || new Date().toISOString(),
-        answersJson: answers,
-        resultJson: {
-          items, totalEarnedMarks: data.totalEarnedMarks ?? 0, totalAllocatedMarks: data.totalAllocatedMarks ?? 0, percentage: pct,
-        },
-      });
-      if (draftKey) clearPersistentExamDraft(draftKey);
-      onExamSubmitted?.();
-    } catch {
-      setErrorMsg("تعذر الاتصال بالخادم لتسليم الاختبار.");
-    } finally {
-      setSubmitting(false);
+  const startEphemeralPracticeRetry = useCallback(() => {
+    setErrorMsg(null); setResultPct(null); setResultItems([]); setReviewList(null); setFlaggedIds({});
+    setAnswers({}); setLockedQuestionIds([]); setLockedFeedbackByQuestion({});
+    setNeedsModeSelection(false); setLockedMode("exam"); setIsEphemeralPracticeMode(true);
+  }, []);
+
+  const exitEphemeralPracticeRetry = useCallback(async () => {
+    if (!exam || !studentCode) return;
+    setIsEphemeralPracticeMode(false); setErrorMsg(null);
+    const prev = findStudentSubmissionForExamSSOT(exam.examId, studentCode);
+    if (prev) {
+      setResultPct(prev.percentageScore); setOfficialResultPct(prev.percentageScore);
+      if (prev.resultJson?.items) setResultItems(prev.resultJson.items);
+      if (prev.answersJson) setAnswers(prev.answersJson as Record<string, StudentAnswerInput>);
     }
-  }, [exam, studentCode, studentNameAr, isTeacherPreview, submitting, resultPct, answers, startedAtIso, draftKey, onExamSubmitted]);
+    try {
+      const res = await startExamSessionApi(exam.examId);
+      if (res.review !== undefined) setReviewList(res.review);
+    } catch { /* ignore */ }
+  }, [exam, studentCode]);
 
   useEffect(() => {
-    if (!exam || resultPct !== null) return;
+    if (!exam || isTeacherPreview || isEphemeralPracticeMode || !studentCode || resultPct !== null || !lockedMode) return;
+    const syncDraft = (keepalive = false) => {
+      void saveExamDraftApi(exam.examId, answersRef.current, keepalive).then((r) => {
+        if (r.savedAtIso && !keepalive) setLastDraftSavedAtIso(r.savedAtIso);
+      });
+    };
+    const interval = window.setInterval(() => syncDraft(false), 30_000);
+    const onHide = () => { if (document.visibilityState === "hidden") syncDraft(true); };
+    document.addEventListener("visibilitychange", onHide);
+    return () => { window.clearInterval(interval); document.removeEventListener("visibilitychange", onHide); };
+  }, [exam, studentCode, isTeacherPreview, isEphemeralPracticeMode, resultPct, lockedMode]);
+
+  useEffect(() => {
+    if (!exam || resultPct !== null || needsModeSelection || isEphemeralPracticeMode) return;
     const timer = window.setInterval(() => {
       if (!deadlineMsRef.current) return;
       const leftSec = Math.max(0, Math.ceil((deadlineMsRef.current - Date.now()) / 1000));
       setRemainingSeconds(leftSec);
-      if (leftSec <= 0) {
-        window.clearInterval(timer);
-        void submitExam();
-      }
+      if (leftSec <= 0) { window.clearInterval(timer); void submitExam(); }
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [exam, resultPct, submitExam]);
+  }, [exam, resultPct, needsModeSelection, isEphemeralPracticeMode, submitExam]);
 
   return {
-    answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, resultItems, reviewList,
-    lastDraftSavedAtIso, updateAnswer, toggleFlag, submitExam, resetSimulation,
+    answers, flaggedIds, remainingSeconds, submitting, errorMsg, resultPct, officialResultPct,
+    resultItems, reviewList, lastDraftSavedAtIso, needsModeSelection, startingMode, lockedMode,
+    lockedQuestionIds, lockedFeedbackByQuestion, checkingQuestionId, isEphemeralPracticeMode,
+    autoSubmittedFromDraftNotice, startExamWithMode, confirmTrainingQuestion, updateAnswer,
+    toggleFlag, submitExam, resetSimulation, startEphemeralPracticeRetry, exitEphemeralPracticeRetry,
   };
 }

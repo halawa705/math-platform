@@ -7,6 +7,7 @@
  */
 
 import { formatNumeralsByModeSSOT } from "@/core/ssot/numeral-and-unit-ssot";
+import ExamExpiryCountdownPill from "@/features/electronic-exams-hub/exam-expiry-countdown-pill";
 
 export const MODULE_ID_EXAM_TOP_PROGRESS_BAR =
   "exam_top_progress_bar" as const;
@@ -18,6 +19,9 @@ export interface ExamTopProgressBarProps {
   readonly answeredCount: number;
   readonly remainingSeconds: number;
   readonly isSubmitted: boolean;
+  readonly durationMinutes?: number;
+  readonly expiresAtIso?: string;
+  readonly isEphemeralPractice?: boolean;
 }
 
 export default function ExamTopProgressBar({
@@ -27,6 +31,9 @@ export default function ExamTopProgressBar({
   answeredCount,
   remainingSeconds,
   isSubmitted,
+  durationMinutes,
+  expiresAtIso,
+  isEphemeralPractice = false,
 }: ExamTopProgressBarProps) {
   const mins = Math.floor(remainingSeconds / 60);
   const secs = remainingSeconds % 60;
@@ -49,14 +56,15 @@ export default function ExamTopProgressBar({
           </p>
         </div>
 
-        {!isSubmitted && (
+        {!isSubmitted && !isEphemeralPractice && (
           <div
-            className={`px-3 py-1.5 rounded-2xl border text-xs font-black flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-2xl border text-xs font-black flex items-center gap-1.5 animate-pulse ${
               isUrgent
-                ? "bg-rose-600 border-rose-500 text-white animate-pulse"
-                : "bg-indigo-950 border-indigo-800 text-white"
+                ? "bg-rose-600 border-rose-500 text-white"
+                : "bg-indigo-950 border-indigo-700 text-white"
             }`}
           >
+            <span className={`w-2 h-2 rounded-full ${isUrgent ? "bg-white" : "bg-teal-400"}`} />
             <span>⏱️</span>
             <span className="font-mono tracking-wider">
               {formatNumeralsByModeSSOT(formattedTime, "eastern")}
@@ -64,6 +72,13 @@ export default function ExamTopProgressBar({
           </div>
         )}
       </div>
+
+      {durationMinutes && expiresAtIso && (
+        <ExamExpiryCountdownPill
+          durationMinutes={durationMinutes}
+          expiresAtIso={expiresAtIso}
+        />
+      )}
 
       <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
         <div

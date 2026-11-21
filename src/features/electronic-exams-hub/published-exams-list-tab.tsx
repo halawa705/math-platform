@@ -15,12 +15,12 @@ import {
   archiveOnlineExamSSOT,
   buildStudentExamShareUrlSSOT,
   deleteOnlineExamSSOT,
-  formatExamExpiryRemainingAr,
   loadAllPublishedExamsSSOT,
   refreshPublishedExamsFromSupabaseSSOT,
   updateOnlineExamSettingsSSOT,
   type PublishedOnlineExam,
 } from "./published-online-exams-store";
+import ExamExpiryCountdownPill from "./exam-expiry-countdown-pill";
 import {
   EXAM_SUBMISSIONS_UPDATED_EVENT,
   loadAllExamSubmissionsSSOT,
@@ -136,7 +136,6 @@ export default function PublishedExamsListTab() {
               : null;
           const pending = examSubs.filter((s) => !s.isReviewedByTeacher).length;
           const isActive = exam.status === "active";
-          const expiryInfo = formatExamExpiryRemainingAr(exam.expiresAtIso);
 
           return (
             <article
@@ -147,7 +146,7 @@ export default function PublishedExamsListTab() {
                 <div className="min-w-0">
                   <h3 className="text-sm font-black truncate">{exam.titleAr}</h3>
                   <p className="text-[11px] font-bold text-slate-500">
-                    {exam.gradeNameArabic} • {exam.questions.length} أسئلة • زمن الحل: {exam.durationMinutes} دقيقة
+                    {exam.gradeNameArabic} • {exam.questions.length} أسئلة
                   </p>
                 </div>
                 <span
@@ -161,11 +160,11 @@ export default function PublishedExamsListTab() {
                 </span>
               </div>
 
-              <p className="text-[11px] font-bold text-slate-500">
-                {isActive
-                  ? `⏳ ${expiryInfo.labelAr}`
-                  : "🗄️ أُرشف الاختبار (تُحفظ جميع تسليمات ودرجات الطلاب ويمكنك إعادة فتحه في أي وقت)"}
-              </p>
+              <ExamExpiryCountdownPill
+                durationMinutes={exam.durationMinutes || 60}
+                expiresAtIso={exam.expiresAtIso}
+                isArchived={!isActive}
+              />
 
               <div className="flex items-center justify-between text-xs font-black pt-2 border-t border-slate-100 dark:border-slate-800">
                 <span>التسليمات: {examSubs.length}</span>

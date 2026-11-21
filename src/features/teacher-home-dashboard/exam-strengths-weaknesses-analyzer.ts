@@ -1,12 +1,20 @@
 /**
  * @file exam-strengths-weaknesses-analyzer.ts
- * @description محرك تحليل نقاط القوة والضعف في الاختبارات الإلكترونية (بدون الحاجة لبنك أسئلة معقد):
- * - يحلل آخر اختبار للصف + جميع اختبارات الصف التراكمية من واقع تسليمات الطلاب (`resultJson` و `answersJson`).
- * - يكتشف نقاط القوة (نسبة إتقان >= 80%) ونقاط الضعف الحرجة (نسبة خطأ >= 40%) وأكثر البدائل الخاطئة تكراراً.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 170 سطراً).
+ * @description محرك تحليل نقاط القوة والضعف الاحترافي في الاختبارات الإلكترونية للمعلم والطالب.
+ * يدمج التحليل الذري للأسئلة مع مصفوفة الفروع والسيكومتريك وتوزيع المستويات والخطة العلاجية.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 215 سطراً).
  */
 
 import { loadAllPublishedExamsSSOT } from "@/features/electronic-exams-hub/published-online-exams-store";
+import {
+  computeProfessionalExamDiagnostics,
+  type ProfessionalDiagnosticMetrics,
+} from "@/core/exam-grading/exam-diagnostic-metrics-calculator";
+import {
+  computeStudentPersonalDiagnostics,
+  type StudentPersonalDiagnosticSummary,
+} from "@/core/exam-grading/student-personal-diagnostics-calculator";
+import { loadRegisteredStudentsSSOT } from "@/core/ssot/teacher-identity-ssot";
 import { loadAllExamSubmissionsSSOT } from "./grade-honor-roll-ssot";
 
 export const MODULE_ID_EXAM_STRENGTHS_WEAKNESSES_ANALYZER =
@@ -34,6 +42,7 @@ export interface SingleExamDiagnosticReport {
   readonly questionStats: readonly QuestionDiagnosticStat[];
   readonly strengthQuestions: readonly QuestionDiagnosticStat[];
   readonly weaknessQuestions: readonly QuestionDiagnosticStat[];
+  readonly professional: ProfessionalDiagnosticMetrics;
 }
 
 export interface CumulativeGradeDiagnosticReport {
@@ -49,11 +58,10 @@ export interface CumulativeGradeDiagnosticReport {
   }[];
   readonly topStrengthsAcrossExams: readonly QuestionDiagnosticStat[];
   readonly topWeaknessesAcrossExams: readonly QuestionDiagnosticStat[];
+  readonly professional: ProfessionalDiagnosticMetrics;
 }
 
-function buildQuestionStatsForExam(
-  examId: string
-): readonly QuestionDiagnosticStat[] {
+function buildQuestionStatsForExam(examId: string): readonly QuestionDiagnosticStat[] {
   const exam = loadAllPublishedExamsSSOT().find((e) => e.examId === examId);
   if (!exam) return [];
   const subs = loadAllExamSubmissionsSSOT().filter(
@@ -67,14 +75,11 @@ function buildQuestionStatsForExam(
     const wrongChoiceCounts = new Map<number, number>();
 
     for (const sub of subs) {
-      const item = sub.resultJson?.items.find(
-        (r) => r.questionId === q.questionId
-      );
+      const item = sub.resultJson?.items.find((r) => r.questionId === q.questionId);
       if (!item) continue;
       total += 1;
-      if (item.isCorrect) {
-        correct += 1;
-      } else {
+      if (item.isCorrect) correct += 1;
+      else {
         const picked = sub.answersJson?.[q.questionId]?.choiceIndex;
         if (typeof picked === "number") {
           wrongChoiceCounts.set(picked, (wrongChoiceCounts.get(picked) || 0) + 1);
@@ -95,12 +100,10 @@ function buildQuestionStatsForExam(
     });
 
     const cleanPrompt = q.promptArabic.replace(/\$[^$]*\$/g, " [معادلة] ").trim();
-
     return {
       questionId: q.questionId,
       displayOrderNumber: q.displayOrderNumber,
-      promptSnippetAr:
-        cleanPrompt.length > 55 ? `${cleanPrompt.slice(0, 55)}…` : cleanPrompt,
+      promptSnippetAr: cleanPrompt.length > 55 ? `${cleanPrompt.slice(0, 55)}…` : cleanPrompt,
       lessonTitleAr: q.lessonTitleArabic || exam.titleAr.replace(/^اختبار\s*—\s*/, ""),
       totalAttempts: total,
       correctCount: correct,
@@ -109,6 +112,14 @@ function buildQuestionStatsForExam(
       topWrongChoiceLabelAr,
     };
   });
+}
+
+function getSiblingCodeSet(): Set<string> {
+  const set = new Set<string>();
+  for (const s of loadRegisteredStudentsSSOT()) {
+    if (s.isSibling) set.add(s.studentCode.toUpperCase());
+  }
+  return set;
 }
 
 export function analyzeGradeLatestAndCumulativeDiagnostics(gradeId: string): {
@@ -120,6 +131,7 @@ export function analyzeGradeLatestAndCumulativeDiagnostics(gradeId: string): {
     .sort((a, b) => b.publishedAtIso.localeCompare(a.publishedAtIso));
 
   const allSubs = loadAllExamSubmissionsSSOT().filter((s) => s.gradeId === gradeId);
+  const siblingCodes = getSiblingCodeSet();
 
   const latestExam = gradeExams[0] || null;
   let latestExamReport: SingleExamDiagnosticReport | null = null;
@@ -130,9 +142,12 @@ export function analyzeGradeLatestAndCumulativeDiagnostics(gradeId: string): {
       lSubs.length > 0
         ? Math.round(lSubs.reduce((a, s) => a + s.percentageScore, 0) / lSubs.length)
         : 0;
-    const qStats = buildQuestionStatsForExam(latestExam.examId).filter(
-      (q) => q.totalAttempts > 0
-    );
+    const qStats = buildQuestionStatsForExam(latestExam.examId).filter((q) => q.totalAttempts > 0);
+    const professional = computeProfessionalExamDiagnostics({
+      exams: [latestExam],
+      submissions: lSubs,
+      siblingCodes,
+    });
     latestExamReport = {
       examId: latestExam.examId,
       examTitleAr: latestExam.titleAr,
@@ -140,9 +155,8 @@ export function analyzeGradeLatestAndCumulativeDiagnostics(gradeId: string): {
       averageScorePct: lAvg,
       questionStats: qStats,
       strengthQuestions: qStats.filter((q) => q.masteryPct >= 80),
-      weaknessQuestions: qStats
-        .filter((q) => q.errorPct >= 40)
-        .sort((a, b) => b.errorPct - a.errorPct),
+      weaknessQuestions: qStats.filter((q) => q.errorPct >= 40).sort((a, b) => b.errorPct - a.errorPct),
+      professional,
     };
   }
 
@@ -173,6 +187,12 @@ export function analyzeGradeLatestAndCumulativeDiagnostics(gradeId: string): {
       ? Math.round(allSubs.reduce((a, s) => a + s.percentageScore, 0) / allSubs.length)
       : 0;
 
+  const cumulativeProfessional = computeProfessionalExamDiagnostics({
+    exams: gradeExams,
+    submissions: allSubs,
+    siblingCodes,
+  });
+
   return {
     latestExamReport,
     cumulativeReport: {
@@ -189,6 +209,16 @@ export function analyzeGradeLatestAndCumulativeDiagnostics(gradeId: string): {
         .filter((q) => q.errorPct >= 40)
         .sort((a, b) => b.errorPct - a.errorPct)
         .slice(0, 5),
+      professional: cumulativeProfessional,
     },
   };
+}
+
+export function analyzeStudentPersonalDiagnosticsSSOT(
+  studentCode: string,
+  gradeId: string
+): StudentPersonalDiagnosticSummary {
+  const exams = loadAllPublishedExamsSSOT().filter((e) => !gradeId || e.gradeId === gradeId);
+  const submissions = loadAllExamSubmissionsSSOT();
+  return computeStudentPersonalDiagnostics({ studentCode, exams, submissions });
 }

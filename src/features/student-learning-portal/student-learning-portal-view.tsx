@@ -14,11 +14,13 @@ import { EGYPTIAN_MATH_GRADES_SSOT } from "@/core/ssot/curriculum-hierarchy-ssot
 import {
   DEFAULT_OWNER_TEACHER_IDENTITY_SSOT,
   STUDENTS_REGISTRY_UPDATED_EVENT,
+  clearRememberedSessionSSOT,
   loadEnabledGradesSSOT,
   loadRememberedSessionSSOT,
   loadTeacherIdentitySSOT,
   refreshRegisteredStudentsFromSupabaseSSOT,
   refreshTeacherIdentityFromSupabaseSSOT,
+  saveRememberedSessionSSOT,
 } from "@/core/ssot/teacher-identity-ssot";
 import {
   PUBLISHED_EXAMS_UPDATED_EVENT,
@@ -33,11 +35,14 @@ import {
   type GradeAnalyticsMetric,
   type StudentExamHistoryItem,
 } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import { analyzeStudentPersonalDiagnosticsSSOT } from "@/features/teacher-home-dashboard/exam-strengths-weaknesses-analyzer";
+import type { StudentPersonalDiagnosticSummary } from "@/core/exam-grading/student-personal-diagnostics-calculator";
 import HonorRollPodium from "@/features/teacher-home-dashboard/honor-roll-podium";
 import StudentAssignedExamsTab from "./student-assigned-exams-tab";
 import StudentAssignedVideosTab from "./student-assigned-videos-tab";
 import StudentAssignedBookletsTab from "./student-assigned-booklets-tab";
 import StudentAssignedHomeworkTab from "./student-assigned-homework-tab";
+import StudentPersonalDiagnosticsCard from "./student-personal-diagnostics-card";
 
 export const MODULE_ID_STUDENT_LEARNING_PORTAL_VIEW = "student_learning_portal_view" as const;
 
@@ -61,6 +66,7 @@ export default function StudentLearningPortalView() {
   const [enabledGrades, setEnabledGrades] = useState(() => loadEnabledGradesSSOT());
   const [metric, setMetric] = useState<GradeAnalyticsMetric | null>(null);
   const [history, setHistory] = useState<readonly StudentExamHistoryItem[]>([]);
+  const [personalDiagnostics, setPersonalDiagnostics] = useState<StudentPersonalDiagnosticSummary | null>(null);
   const [footerText, setFooterText] = useState<string>(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT.footerText);
 
   useEffect(() => {
@@ -72,28 +78,51 @@ export default function StudentLearningPortalView() {
     const urlGradeId = params?.get("gradeId") || "";
     const urlExamId = params?.get("examId") || "";
 
+    const applyTabFromUrl = () => {
+      if (urlTab && STUDENT_PORTAL_TABS.some((t) => t.id === urlTab)) setActiveTabId(urlTab);
+      else if (urlExamId) setActiveTabId("live_exam");
+      if (urlExamId) setTargetExamId(urlExamId);
+    };
+
     const session = loadRememberedSessionSSOT();
     if (!session) {
-      if (typeof window !== "undefined" && (urlTab || urlExamId)) {
-        try {
-          window.sessionStorage.setItem(
-            "math_platform_pending_redirect",
-            window.location.pathname + window.location.search
-          );
-        } catch {
-          // ignore
-        }
-      }
-      router.replace("/");
+      fetch("/api/auth/student-session-check")
+        .then((res) => res.json())
+        .then((data: {
+          isAuthenticated?: boolean;
+          student?: { studentCode: string; fullNameAr: string; gradeId: string; isSibling?: boolean };
+        }) => {
+          if (data?.isAuthenticated && data.student) {
+            saveRememberedSessionSSOT({
+              role: "student",
+              studentCode: data.student.studentCode,
+              studentNameAr: data.student.fullNameAr,
+              gradeId: data.student.gradeId,
+              isSibling: Boolean(data.student.isSibling),
+              savedAtIso: new Date().toISOString(),
+            });
+            applyTabFromUrl();
+            setStudentCode(data.student.studentCode);
+            setStudentName(data.student.fullNameAr);
+            setStudentGradeId(data.student.gradeId || urlGradeId || grades[0]?.id || "");
+            setReady(true);
+            return;
+          }
+          if (typeof window !== "undefined" && (urlTab || urlExamId)) {
+            try {
+              window.sessionStorage.setItem(
+                "math_platform_pending_redirect",
+                window.location.pathname + window.location.search
+              );
+            } catch { /* ignore */ }
+          }
+          router.replace("/");
+        })
+        .catch(() => router.replace("/"));
       return;
     }
-    if (urlTab && STUDENT_PORTAL_TABS.some((t) => t.id === urlTab)) {
-      setActiveTabId(urlTab);
-    } else if (urlExamId) {
-      setActiveTabId("live_exam");
-    }
-    if (urlExamId) setTargetExamId(urlExamId);
 
+    applyTabFromUrl();
     if (session.role === "teacher") {
       setIsTeacherPreview(true);
       setStudentGradeId(urlGradeId || grades[0]?.id || "prep-3");
@@ -119,6 +148,9 @@ export default function StudentLearningPortalView() {
     const refresh = () => {
       setMetric(getGradeAnalyticsAndHonorRollSSOT(studentGradeId, gradeName));
       setHistory(studentCode ? loadStudentExamHistorySSOT(studentCode) : []);
+      setPersonalDiagnostics(
+        studentCode ? analyzeStudentPersonalDiagnosticsSSOT(studentCode, studentGradeId) : null
+      );
     };
     const pullCloud = () => {
       void refreshTeacherIdentityFromSupabaseSSOT();
@@ -154,7 +186,7 @@ export default function StudentLearningPortalView() {
             <h1 className="text-lg sm:text-xl font-black">{isTeacherPreview ? "معاينة شاشة الطالب" : `أهلاً ${studentName}`}</h1>
             <p className="text-xs font-bold text-teal-700 dark:text-teal-400">{gradeName}</p>
           </div>
-          {isTeacherPreview && (
+          {isTeacherPreview ? (
             <select
               value={studentGradeId}
               onChange={(e) => setStudentGradeId(e.target.value)}
@@ -164,6 +196,17 @@ export default function StudentLearningPortalView() {
                 <option key={g.id} value={g.id}>{g.nameArabic}</option>
               ))}
             </select>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                clearRememberedSessionSSOT();
+                void fetch("/api/auth/student-logout", { method: "POST" }).finally(() => router.replace("/"));
+              }}
+              className="min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-[11px] font-black text-slate-600 dark:text-slate-300 cursor-pointer"
+            >
+              🚪 تبديل الحساب
+            </button>
           )}
         </div>
 
@@ -207,6 +250,10 @@ export default function StudentLearningPortalView() {
                 </div>
               )}
             </section>
+
+            {personalDiagnostics && (
+              <StudentPersonalDiagnosticsCard summary={personalDiagnostics} />
+            )}
           </div>
         )}
 

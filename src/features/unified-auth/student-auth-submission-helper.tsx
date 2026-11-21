@@ -80,6 +80,7 @@ export async function attemptStudentOrTeacherLogin(params: {
           studentCode: data.student.studentCode,
           studentNameAr: data.student.fullNameAr,
           gradeId: data.student.gradeId,
+          isSibling: Boolean(data.student.isSibling),
           savedAtIso: new Date().toISOString(),
         },
         params.rememberMe
@@ -114,6 +115,7 @@ export async function attemptStudentOrTeacherLogin(params: {
       studentCode: matched.studentCode,
       studentNameAr: matched.fullNameAr,
       gradeId: matched.gradeId,
+      isSibling: Boolean(matched.isSibling),
       savedAtIso: new Date().toISOString(),
     },
     params.rememberMe
@@ -127,9 +129,10 @@ export async function attemptNewStudentRegistration(params: {
   readonly passwordPin: string;
   readonly gradeId: string;
   readonly rememberMe: boolean;
+  readonly isSiblingAccount?: boolean;
 }): Promise<
   | { readonly ok: true; readonly student: RegisteredStudentRecordSSOT }
-  | { readonly ok: false; readonly message: string }
+  | { readonly ok: false; readonly message: string; readonly needsSiblingFlag?: boolean }
 > {
   if (!params.fullNameAr.trim() || params.fullNameAr.trim().length < 5) {
     return { ok: false, message: "يرجى كتابة اسم الطالب الثلاثي بوضوح" };
@@ -150,10 +153,12 @@ export async function attemptNewStudentRegistration(params: {
         studentPhone: params.studentPhone.trim(),
         passwordPin: params.passwordPin.trim(),
         gradeId: params.gradeId,
+        isSiblingAccount: Boolean(params.isSiblingAccount),
       }),
     });
     const data = (await regRes.json()) as {
       success: boolean;
+      code?: string;
       student?: RegisteredStudentRecordSSOT;
       error?: string;
     };
@@ -164,15 +169,35 @@ export async function attemptNewStudentRegistration(params: {
           studentCode: data.student.studentCode,
           studentNameAr: data.student.fullNameAr,
           gradeId: data.student.gradeId,
+          isSibling: Boolean(data.student.isSibling),
           savedAtIso: new Date().toISOString(),
         },
         params.rememberMe
       );
       return { ok: true, student: data.student };
     }
-    if (data.error) return { ok: false, message: data.error };
+    if (data.error) {
+      return {
+        ok: false,
+        message: data.error,
+        needsSiblingFlag: data.code === "DUPLICATE_PHONE_NEEDS_SIBLING_FLAG",
+      };
+    }
   } catch {
-    // احتياطي محلي
+    // احتياطي محلي عند عدم توفر الخادم
+  }
+
+  const normalizedPhone = params.studentPhone.trim();
+  const samePhoneExisting = loadRegisteredStudentsSSOT().filter(
+    (s) => s.studentPhone === normalizedPhone
+  );
+  if (samePhoneExisting.length > 0 && !params.isSiblingAccount) {
+    return {
+      ok: false,
+      needsSiblingFlag: true,
+      message:
+        "رقم الهاتف مسجل لطالب آخر. إذا كنتما إخوة فعّل خيار «تسجيل أخ / أخت على نفس رقم ولي الأمر» واكتب اسمك الثلاثي المختلف.",
+    };
   }
 
   const created = registerNewStudentSSOT({
@@ -187,6 +212,7 @@ export async function attemptNewStudentRegistration(params: {
       studentCode: created.studentCode,
       studentNameAr: created.fullNameAr,
       gradeId: created.gradeId,
+      isSibling: samePhoneExisting.length > 0,
       savedAtIso: new Date().toISOString(),
     },
     params.rememberMe

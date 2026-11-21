@@ -6,9 +6,10 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 140 سطراً).
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { PublishedOnlineExam } from "./published-online-exams-store";
 import type { OnlineExamSubmissionRecord } from "@/features/teacher-home-dashboard/grade-honor-roll-ssot";
+import { loadRegisteredStudentsSSOT } from "@/core/ssot/teacher-identity-ssot";
 import TeacherManualEssayGradingBox from "./teacher-manual-essay-grading-box";
 
 export const MODULE_ID_EXAM_SUBMISSIONS_DETAIL_DRAWER =
@@ -26,6 +27,23 @@ export default function ExamSubmissionsDetailDrawer({
   submissions,
 }: ExamSubmissionsDetailDrawerProps) {
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
+  const siblingCodeSet = useMemo(() => {
+    const students = loadRegisteredStudentsSSOT();
+    const set = new Set<string>();
+    const phoneCounts = new Map<string, number>();
+    for (const st of students) {
+      if (st.isSibling) set.add(st.studentCode.toUpperCase());
+      if (st.studentPhone) {
+        phoneCounts.set(st.studentPhone, (phoneCounts.get(st.studentPhone) || 0) + 1);
+      }
+    }
+    for (const st of students) {
+      if (st.studentPhone && (phoneCounts.get(st.studentPhone) || 0) > 1) {
+        set.add(st.studentCode.toUpperCase());
+      }
+    }
+    return set;
+  }, [submissions.length]);
 
   if (submissions.length === 0) {
     return (
@@ -39,11 +57,12 @@ export default function ExamSubmissionsDetailDrawer({
     <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
       {submissions.map((sub) => {
         const isOpen = selectedSubId === sub.submissionId;
-        const durationMs = (exam.durationMinutes || 30) * 60_000;
+        const durationMs = (exam.durationMinutes || 60) * 60_000;
         const isLate =
           Boolean(sub.startedAtIso) &&
           Date.parse(sub.submittedAtIso) - Date.parse(sub.startedAtIso!) >
             durationMs;
+        const isSibling = siblingCodeSet.has(sub.studentCode.toUpperCase());
 
         return (
           <div
@@ -59,11 +78,16 @@ export default function ExamSubmissionsDetailDrawer({
               }
               className="w-full flex items-center justify-between gap-2 text-xs font-black cursor-pointer text-right"
             >
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                 <span className="truncate">{sub.studentNameAr}</span>
                 <span className="text-[10px] font-mono text-slate-400">
                   ({sub.studentCode})
                 </span>
+                {isSibling && (
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-[10px]">
+                    👨‍👧‍👦 إخوة
+                  </span>
+                )}
                 {isLate && (
                   <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px]">
                     متأخر

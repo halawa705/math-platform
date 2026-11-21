@@ -134,12 +134,18 @@ export async function syncStudentRecordToSupabaseCloud(student: RegisteredStuden
 export async function pullStudentsRegistryFromSupabaseCloud(): Promise<readonly RegisteredStudentRecordSSOT[] | null> {
   if (typeof window === "undefined") return null;
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/students?select=id,student_code,alt_numeric_code,full_name,grade_id,grade_name_ar,created_at&order=created_at.asc`,
-      { method: "GET", headers: buildSupabaseHeaders() }
-    );
-    if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{
+    const [studentsRes, siblingRes] = await Promise.all([
+      fetch(
+        `${SUPABASE_URL}/rest/v1/students?select=id,student_code,alt_numeric_code,full_name,grade_id,grade_name_ar,created_at&order=created_at.asc`,
+        { method: "GET", headers: buildSupabaseHeaders() }
+      ),
+      fetch(
+        `${SUPABASE_URL}/rest/v1/platform_ssot_state?id=eq.student_sibling_tags_v1&select=identity_json`,
+        { method: "GET", headers: buildSupabaseHeaders() }
+      ),
+    ]);
+    if (!studentsRes.ok) return null;
+    const rows = (await studentsRes.json()) as Array<{
       id: string;
       student_code: string;
       alt_numeric_code?: string | null;
@@ -149,6 +155,15 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<readonly 
       created_at: string;
     }>;
     if (!Array.isArray(rows)) return null;
+
+    let siblingCodes: Record<string, boolean> = {};
+    if (siblingRes.ok) {
+      const sibRows = (await siblingRes.json()) as Array<{
+        identity_json?: { siblingCodes?: Record<string, boolean> };
+      }>;
+      siblingCodes = sibRows[0]?.identity_json?.siblingCodes ?? {};
+    }
+
     return rows
       .filter((r) => r.full_name && !r.full_name.includes("تجريبي"))
       .map((r) => ({
@@ -160,6 +175,7 @@ export async function pullStudentsRegistryFromSupabaseCloud(): Promise<readonly 
         passwordPin: "",
         gradeId: r.grade_id,
         gradeNameAr: r.grade_name_ar || "",
+        isSibling: Boolean(siblingCodes[r.student_code.toUpperCase()]),
         createdAtIso: r.created_at || new Date().toISOString(),
       }));
   } catch {

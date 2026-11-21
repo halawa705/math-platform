@@ -61,7 +61,7 @@ export async function pullPublishedExamsFromSupabaseCloud(): Promise<
         gradeId: r.grade_id,
         gradeNameArabic: r.grade_name_ar || "",
         titleAr: r.title_ar,
-        durationMinutes: r.duration_minutes || 30,
+        durationMinutes: r.duration_minutes || 60,
         availabilityDays,
         publishedAtIso,
         expiresAtIso,

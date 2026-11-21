@@ -43,9 +43,30 @@ export default function UnifiedPortalLoginView() {
           }
         })
         .catch(() => {});
-    } else if (remembered?.role === "student") {
-      router.replace("/student");
+      return;
     }
+
+    fetch("/api/auth/student-session-check")
+      .then((res) => res.json())
+      .then((data: {
+        isAuthenticated?: boolean;
+        student?: { studentCode: string; fullNameAr: string; gradeId: string; isSibling?: boolean };
+      }) => {
+        if (data?.isAuthenticated && data.student) {
+          saveRememberedSessionSSOT({
+            role: "student",
+            studentCode: data.student.studentCode,
+            studentNameAr: data.student.fullNameAr,
+            gradeId: data.student.gradeId,
+            isSibling: Boolean(data.student.isSibling),
+            savedAtIso: new Date().toISOString(),
+          });
+          router.replace("/student");
+        } else if (remembered?.role === "student") {
+          clearRememberedSessionSSOT();
+        }
+      })
+      .catch(() => {});
   }, [router]);
 
   return (

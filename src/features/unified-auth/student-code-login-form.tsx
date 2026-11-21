@@ -18,6 +18,7 @@ import {
   attemptNewStudentRegistration,
   attemptStudentOrTeacherLogin,
 } from "./student-auth-submission-helper";
+import StudentSiblingConsentToggle from "./student-sibling-consent-toggle";
 
 interface StudentCodeLoginFormProps {
   readonly onStudentSubmit: (student: RegisteredStudentRecordSSOT) => void;
@@ -40,6 +41,8 @@ export default function StudentCodeLoginForm({
   const [regPhone, setRegPhone] = useState("");
   const [regPin, setRegPin] = useState("");
   const [regGradeId, setRegGradeId] = useState("prep-3");
+  const [isSiblingAccount, setIsSiblingAccount] = useState(false);
+  const [highlightSiblingToggle, setHighlightSiblingToggle] = useState(false);
   const [newlyCreatedStudent, setNewlyCreatedStudent] = useState<RegisteredStudentRecordSSOT | null>(null);
 
   useEffect(() => {
@@ -73,11 +76,18 @@ export default function StudentCodeLoginForm({
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setHighlightSiblingToggle(false);
     const out = await attemptNewStudentRegistration({
-      fullNameAr, studentPhone: regPhone, passwordPin: regPin, gradeId: regGradeId, rememberMe,
+      fullNameAr,
+      studentPhone: regPhone,
+      passwordPin: regPin,
+      gradeId: regGradeId,
+      rememberMe,
+      isSiblingAccount,
     });
     if (!out.ok) {
       setErrorMsg(out.message);
+      if (out.needsSiblingFlag) setHighlightSiblingToggle(true);
       return;
     }
     setNewlyCreatedStudent(out.student);
@@ -90,6 +100,11 @@ export default function StudentCodeLoginForm({
         <h3 className="text-base font-black text-emerald-900 dark:text-emerald-200">
           تم إنشاء حسابك بنجاح يا {newlyCreatedStudent.fullNameAr}!
         </h3>
+        {newlyCreatedStudent.isSibling && (
+          <span className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 text-[11px] font-black">
+            👨‍👧‍👦 تم وسم الحساب تلقائياً بشارة «إخوة»
+          </span>
+        )}
         <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 space-y-1.5 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-slate-500 font-bold">الرقم السريع للدخول:</span>
@@ -178,6 +193,14 @@ export default function StudentCodeLoginForm({
               {enabledGrades.map((g) => (<option key={g.id} value={g.id}>{g.nameArabic}</option>))}
             </select>
           </div>
+          <StudentSiblingConsentToggle
+            checked={isSiblingAccount}
+            highlighted={highlightSiblingToggle}
+            onChange={(val) => {
+              setIsSiblingAccount(val);
+              if (val) setHighlightSiblingToggle(false);
+            }}
+          />
           <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer select-none">
             <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded accent-indigo-700 dark:accent-teal-500" />
             <span>تذكرني على هذا الجهاز دائماً</span>

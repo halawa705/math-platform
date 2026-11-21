@@ -1,8 +1,9 @@
 /**
  * @file route.ts
- * @description نقطة تسليم وتصحيح الاختبار الإلكتروني على الخادم (`/api/exams/submit`):
- * تتحقق من جلسة الطالب ومؤقت الخادم، وتصحح الإجابات عبر مفتاح الخادم السري، وتحفظ النتيجة التفصيلية لتحليلات المعلم.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 170 سطراً).
+ * @description نقطة تسليم وتصحيح المحاولة الرسمية الأولى للاختبار الإلكتروني على الخادم (`/api/exams/submit`):
+ * - تضمن اعتماد المحاولة الأولى فقط رسمياً في `exam_submissions`.
+ * - تحمي الطالب عند انقطاع الإنترنت أو الكهرباء باعتماد وتصحيح آخر مسودة محفوظة على الخادم تلقائياً بدلاً من ضياع درجته.
+ * - تحفظ تناسق الأسئلة المقفولة في وضع التدريب.
  */
 
 import { NextResponse } from "next/server";
@@ -20,6 +21,10 @@ import {
   sbSelect,
 } from "@/core/auth/exam-server-supabase-helper";
 import {
+  loadExamAttemptMetaServer,
+  mergeDraftPreservingLockedQuestions,
+} from "@/core/auth/exam-attempt-state-server-store";
+import {
   gradeOnlineExam,
   type StudentAnswerInput,
 } from "@/core/exam-grading/online-exam-grader";
@@ -35,10 +40,7 @@ export async function POST(req: Request) {
     };
     const examCode = (body.examCode || "").trim();
     if (!examCode) {
-      return NextResponse.json(
-        { success: false, error: "رمز الاختبار مفقود." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "رمز الاختبار مفقود." }, { status: 400 });
     }
 
     if (body.isTeacherSimulation) {
@@ -51,9 +53,7 @@ export async function POST(req: Request) {
           { status: 401 }
         );
       }
-      const keyRows = await sbSelect<{
-        answer_key: readonly OnlineAnswerKeyItem[];
-      }>(
+      const keyRows = await sbSelect<{ answer_key: readonly OnlineAnswerKeyItem[] }>(
         `exam_answer_keys?exam_code=eq.${encodeURIComponent(examCode)}&select=answer_key`
       );
       const keyRow = keyRows?.[0];
@@ -84,10 +84,7 @@ export async function POST(req: Request) {
       readCookieFromRequest(req, STUDENT_AUTH_COOKIE_NAME)
     );
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: "يرجى تسجيل دخول الطالب أولاً." },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "يرجى تسجيل دخول الطالب أولاً." }, { status: 401 });
     }
 
     const exams = await sbSelect<{
@@ -116,10 +113,7 @@ export async function POST(req: Request) {
     }
 
     const submissionCode = `${examCode}__${session.studentCode}`;
-    const existing = await sbSelect<{
-      percentage: number;
-      result_json?: unknown;
-    }>(
+    const existing = await sbSelect<{ percentage: number; result_json?: unknown }>(
       `exam_submissions?submission_code=eq.${encodeURIComponent(submissionCode)}&select=percentage,result_json`
     );
 
@@ -127,8 +121,9 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "سلّمت هذا الاختبار من قبل",
+          error: "تم احتساب محاولتك الرسمية الأولى مسبقاً؛ يمكنك التدرب الإضافي دون تغيير الدرجة.",
           percentage: existing[0].percentage,
+          result: existing[0].result_json,
         },
         { status: 409 }
       );
@@ -137,23 +132,24 @@ export async function POST(req: Request) {
     const attempts = await sbSelect<{ started_at: string }>(
       `exam_attempts?exam_code=eq.${encodeURIComponent(examCode)}&student_code=eq.${encodeURIComponent(session.studentCode)}&select=started_at`
     );
-    const attempt = attempts?.[0];
-    if (!attempt) {
-      return NextResponse.json(
-        { success: false, error: "ابدأ الاختبار أولاً" },
-        { status: 400 }
-      );
+    const meta = await loadExamAttemptMetaServer(examCode, session.studentCode);
+    const startedAtIso = attempts?.[0]?.started_at || meta?.startedAtIso;
+    if (!startedAtIso) {
+      return NextResponse.json({ success: false, error: "ابدأ الاختبار أولاً." }, { status: 400 });
     }
 
     const nowMs = Date.now();
-    const startedMs = Date.parse(attempt.started_at);
-    const durationMin = exam.duration_minutes || 30;
-    if (nowMs > startedMs + durationMin * 60_000 + 90_000) {
-      return NextResponse.json(
-        { success: false, error: "انتهى وقت الاختبار" },
-        { status: 403 }
-      );
-    }
+    const startedMs = Date.parse(startedAtIso);
+    const durationMin = exam.duration_minutes || 60;
+    const isExpiredOrOutage = nowMs > startedMs + durationMin * 60_000 + 90_000;
+
+    const answersToGrade = isExpiredOrOutage
+      ? meta?.draftAnswers ?? {}
+      : mergeDraftPreservingLockedQuestions({
+          existingDraft: meta?.draftAnswers ?? {},
+          incomingDraft: body.answers ?? {},
+          lockedQuestionIds: meta?.lockedQuestionIds ?? [],
+        });
 
     const keyRows = await sbSelect<{
       answer_key: readonly OnlineAnswerKeyItem[];
@@ -169,13 +165,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = gradeOnlineExam(keyRow.answer_key, body.answers ?? {});
-
+    const result = gradeOnlineExam(keyRow.answer_key, answersToGrade);
     const studentRows = await sbSelect<{ full_name: string }>(
       `students?student_code=eq.${encodeURIComponent(session.studentCode)}&select=full_name&limit=1`
     );
     const studentName =
-      studentRows?.[0]?.full_name || body.studentNameAr || session.studentCode;
+      studentRows?.[0]?.full_name || body.studentNameAr || session.fullNameAr || session.studentCode;
     const nowIso = new Date(nowMs).toISOString();
 
     const baseRow = {
@@ -194,33 +189,32 @@ export async function POST(req: Request) {
 
     const insertedFull = await sbInsert(
       "exam_submissions",
-      {
-        ...baseRow,
-        started_at: attempt.started_at,
-        answers_json: body.answers ?? {},
-        result_json: result,
-      },
+      { ...baseRow, started_at: startedAtIso, answers_json: answersToGrade, result_json: result },
       "submission_code"
     );
     if (!insertedFull) {
       await sbInsert("exam_submissions", baseRow, "submission_code");
     }
 
-    const review = keyRow.reveal_answers
-      ? keyRow.answer_key.map((k) => ({
-          questionId: k.questionId,
-          correctMcqChoiceIndex: k.correctMcqChoiceIndex,
-          finalAnswerArabic: k.finalAnswerArabic,
-          modelSolutionStepsArabic: k.modelSolutionStepsArabic,
-        }))
-      : null;
+    const review =
+      keyRow.reveal_answers !== false
+        ? keyRow.answer_key.map((k) => ({
+            questionId: k.questionId,
+            correctMcqChoiceIndex: k.correctMcqChoiceIndex,
+            finalAnswerArabic: k.finalAnswerArabic,
+            modelSolutionStepsArabic: k.modelSolutionStepsArabic,
+          }))
+        : null;
 
     return NextResponse.json({
       success: true,
+      autoSubmittedFromDraft: isExpiredOrOutage,
+      examMode: meta?.examMode ?? "exam",
       percentage: result.percentage,
       totalEarnedMarks: result.totalEarnedMarks,
       totalAllocatedMarks: result.totalAllocatedMarks,
       items: result.items,
+      answersUsed: answersToGrade,
       review,
     });
   } catch {

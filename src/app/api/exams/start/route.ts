@@ -1,8 +1,9 @@
 /**
  * @file route.ts
- * @description نقطة بدء محاولة الاختبار الإلكتروني للطالب (`/api/exams/start`):
- * تسجل وقت البدء الفعلي بالخادم (`exam_attempts`) بدون إعادة ضبطه عند تحديث الصفحة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 120 سطراً).
+ * @description نقطة بدء أو استئناف محاولة الاختبار الإلكتروني للطالب (`/api/exams/start`):
+ * - تُظهر شاشة اختيار الوضع (`اختبار` أو `تدريب`) قبل بدء المؤقت لأول مرة، وتقفله على الخادم لهذا الاختبار.
+ * - تسترجع المسودة المحفوظة والأسئلة المقفولة (في وضع التدريب) عند تحديث الصفحة أو انقطاع الإنترنت.
+ * - تعيد المراجعة الكاملة والحلول النموذجية مع إتاحة التدريب المؤقت عند وجود تسليم رسمي أول.
  */
 
 import { NextResponse } from "next/server";
@@ -15,6 +16,12 @@ import {
   sbInsertIgnore,
   sbSelect,
 } from "@/core/auth/exam-server-supabase-helper";
+import {
+  loadExamAttemptMetaServer,
+  saveExamAttemptMetaServer,
+  type OnlineExamSessionMode,
+} from "@/core/auth/exam-attempt-state-server-store";
+import type { OnlineAnswerKeyItem } from "@/core/exam-grading/online-exam-public-key-splitter";
 
 export async function POST(req: Request) {
   try {
@@ -28,7 +35,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = (await req.json()) as { examCode?: string };
+    const body = (await req.json()) as {
+      examCode?: string;
+      mode?: OnlineExamSessionMode;
+    };
     const examCode = (body.examCode || "").trim();
     if (!examCode) {
       return NextResponse.json(
@@ -62,25 +72,73 @@ export async function POST(req: Request) {
       );
     }
 
+    const durationMinutes = exam.duration_minutes || 60;
     const submissionCode = `${examCode}__${session.studentCode}`;
     const existingSub = await sbSelect<{
       percentage: number;
       result_json?: unknown;
+      answers_json?: unknown;
     }>(
-      `exam_submissions?submission_code=eq.${encodeURIComponent(submissionCode)}&select=percentage,result_json`
+      `exam_submissions?submission_code=eq.${encodeURIComponent(submissionCode)}&select=percentage,result_json,answers_json`
     );
 
     if (existingSub && existingSub.length > 0) {
+      const keyRows = await sbSelect<{
+        answer_key: readonly OnlineAnswerKeyItem[];
+        reveal_answers?: boolean;
+      }>(
+        `exam_answer_keys?exam_code=eq.${encodeURIComponent(examCode)}&select=answer_key,reveal_answers`
+      );
+      const keyRow = keyRows?.[0];
+      const review =
+        keyRow && keyRow.reveal_answers !== false && Array.isArray(keyRow.answer_key)
+          ? keyRow.answer_key.map((k) => ({
+              questionId: k.questionId,
+              correctMcqChoiceIndex: k.correctMcqChoiceIndex,
+              finalAnswerArabic: k.finalAnswerArabic,
+              modelSolutionStepsArabic: k.modelSolutionStepsArabic,
+            }))
+          : null;
+
       return NextResponse.json(
         {
           success: false,
           alreadySubmitted: true,
-          error: "لقد قمت بتسليم هذا الاختبار مسبقاً.",
+          canPracticeRetry: true,
+          error: "لقد قمت بتسليم المحاولة الرسمية لهذا الاختبار مسبقاً.",
           percentage: existingSub[0].percentage,
           result: existingSub[0].result_json,
+          answersJson: existingSub[0].answers_json,
+          review,
         },
         { status: 409 }
       );
+    }
+
+    const existingMeta = await loadExamAttemptMetaServer(examCode, session.studentCode);
+    if (existingMeta) {
+      return NextResponse.json({
+        success: true,
+        startedAtIso: existingMeta.startedAtIso,
+        serverNowIso: new Date().toISOString(),
+        durationMinutes,
+        lockedMode: existingMeta.examMode,
+        savedDraftAnswers: existingMeta.draftAnswers,
+        lockedQuestionIds: existingMeta.lockedQuestionIds,
+        lockedFeedbackByQuestion: existingMeta.lockedFeedbackByQuestion,
+      });
+    }
+
+    const chosenMode: OnlineExamSessionMode | null =
+      body.mode === "exam" || body.mode === "training" ? body.mode : null;
+
+    if (!chosenMode) {
+      return NextResponse.json({
+        success: true,
+        needsModeSelection: true,
+        durationMinutes,
+        serverNowIso: new Date().toISOString(),
+      });
     }
 
     const nowIso = new Date().toISOString();
@@ -99,12 +157,26 @@ export async function POST(req: Request) {
     );
 
     const startedAtIso = attempts?.[0]?.started_at || nowIso;
+    await saveExamAttemptMetaServer({
+      examCode,
+      studentCode: session.studentCode,
+      examMode: chosenMode,
+      startedAtIso,
+      draftAnswers: {},
+      lockedQuestionIds: [],
+      lockedFeedbackByQuestion: {},
+      updatedAtIso: nowIso,
+    });
 
     return NextResponse.json({
       success: true,
       startedAtIso,
       serverNowIso: new Date().toISOString(),
-      durationMinutes: exam.duration_minutes || 30,
+      durationMinutes,
+      lockedMode: chosenMode,
+      savedDraftAnswers: {},
+      lockedQuestionIds: [],
+      lockedFeedbackByQuestion: {},
     });
   } catch {
     return NextResponse.json(

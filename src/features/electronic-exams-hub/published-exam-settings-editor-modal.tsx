@@ -34,7 +34,7 @@ export default function PublishedExamSettingsEditorModal({
   onSaved,
 }: PublishedExamSettingsEditorModalProps) {
   const [titleAr, setTitleAr] = useState(exam.titleAr);
-  const [durationMinutes, setDurationMinutes] = useState(exam.durationMinutes || 30);
+  const [durationMinutes, setDurationMinutes] = useState(exam.durationMinutes || 60);
   const [availabilityDays, setAvailabilityDays] = useState(exam.availabilityDays || 7);
   const [status, setStatus] = useState<"active" | "archived">(exam.status);
   const [questions, setQuestions] = useState<readonly PublishedExamQuestionItem[]>(exam.questions);
@@ -105,7 +105,7 @@ export default function PublishedExamSettingsEditorModal({
               <span className="font-black text-slate-700 dark:text-slate-300 block">⏱️ زمن إجابة الطالب (دقيقة):</span>
               <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={() => setDurationMinutes((m) => Math.max(5, m - 5))} className="min-w-[42px] min-h-[40px] rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-black cursor-pointer">-5</button>
-                <input type="number" min={5} max={180} value={durationMinutes} onChange={(e) => setDurationMinutes(Math.max(5, Math.min(180, Number(e.target.value) || 30)))} className="w-20 min-h-[40px] text-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-black text-sm" />
+                <input type="number" min={5} max={180} value={durationMinutes} onChange={(e) => setDurationMinutes(Math.max(5, Math.min(180, Number(e.target.value) || 60)))} className="w-20 min-h-[40px] text-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-black text-sm" />
                 <button type="button" onClick={() => setDurationMinutes((m) => Math.min(180, m + 5))} className="min-w-[42px] min-h-[40px] rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-black cursor-pointer">+5</button>
               </div>
             </div>

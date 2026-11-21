@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     const gradeId = (body.gradeId || "prep-3").trim();
     const gradeNameArabic = (body.gradeNameArabic || "").trim();
     const titleAr = (body.titleAr || "اختبار إلكتروني").trim();
-    const durationMinutes = Math.max(5, Math.min(180, Number(body.durationMinutes) || 30));
+    const durationMinutes = Math.max(5, Math.min(180, Number(body.durationMinutes) || 60));
     const availabilityDays = Math.max(1, Math.min(365, Number(body.availabilityDays) || 7));
     const revealAnswers = body.revealAnswers !== false;
 

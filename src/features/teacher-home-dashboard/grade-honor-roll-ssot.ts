@@ -97,6 +97,7 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
   readonly startedAtIso?: string;
   readonly answersJson?: Readonly<Record<string, StudentAnswerInput | undefined>>;
   readonly resultJson?: OnlineExamGradeResult;
+  readonly skipCloudSync?: boolean;
 }): OnlineExamSubmissionRecord {
   const record: OnlineExamSubmissionRecord = {
     submissionId: `${input.exam.examId}__${input.studentCode}`,
@@ -121,7 +122,9 @@ export function recordStudentOnlineExamSubmissionSSOT(input: {
   );
   persistSubmissions([record, ...others]);
   notifyRealtimeTableUpdated("exam_submissions");
-  void syncExamSubmissionToSupabaseCloud(record);
+  if (!input.skipCloudSync) {
+    void syncExamSubmissionToSupabaseCloud(record);
+  }
   return record;
 }
 

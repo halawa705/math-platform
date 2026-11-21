@@ -9,6 +9,8 @@
 
 import { useState, useMemo } from "react";
 import { analyzeGradeLatestAndCumulativeDiagnostics } from "./exam-strengths-weaknesses-analyzer";
+import GradeDiagnosticBranchesAndTiersCard from "./grade-diagnostic-branches-and-tiers-card";
+import GradeDiagnosticPsychometricAndRemediationCard from "./grade-diagnostic-psychometric-and-remediation-card";
 
 export const MODULE_ID_GRADE_DEEP_DIAGNOSTIC_ANALYTICS_PANEL = "grade_deep_diagnostic_analytics_panel" as const;
 
@@ -32,6 +34,8 @@ export default function GradeDeepDiagnosticAnalyticsPanel({
 
   const strengths = scope === "latest" ? latestExamReport?.strengthQuestions ?? [] : cumulativeReport.topStrengthsAcrossExams;
   const weaknesses = scope === "latest" ? latestExamReport?.weaknessQuestions ?? [] : cumulativeReport.topWeaknessesAcrossExams;
+  const activeProfessional =
+    scope === "latest" ? latestExamReport?.professional ?? null : cumulativeReport.professional;
 
   return (
     <section className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 space-y-5">
@@ -173,6 +177,19 @@ export default function GradeDeepDiagnosticAnalyticsPanel({
             )}
           </div>
         </div>
+      )}
+
+      {activeProfessional && (
+        <>
+          <GradeDiagnosticBranchesAndTiersCard
+            branchStats={activeProfessional.branchStats}
+            studentTiers={activeProfessional.studentTiers}
+          />
+          <GradeDiagnosticPsychometricAndRemediationCard
+            psychometricQuestions={activeProfessional.psychometricQuestions}
+            remediationPlan={activeProfessional.remediationPlan}
+          />
+        </>
       )}
     </section>
   );

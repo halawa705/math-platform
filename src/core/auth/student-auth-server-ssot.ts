@@ -16,7 +16,14 @@ export const MODULE_ID_STUDENT_AUTH_SERVER_SSOT =
   "student_auth_server_ssot" as const;
 
 export const STUDENT_AUTH_COOKIE_NAME = "math_platform_student_session" as const;
-export const STUDENT_AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 يوماً بالثواني
+export const STUDENT_AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 90; // 90 يوماً بالثواني
+
+export interface VerifiedStudentSessionClaims {
+  readonly studentCode: string;
+  readonly gradeId: string;
+  readonly fullNameAr?: string;
+  readonly isSibling?: boolean;
+}
 
 const DEFAULT_STUDENT_JWT_SECRET =
   "math_student_secure_hmac_secret_key_2026_halawa_unbreakable";
@@ -35,12 +42,15 @@ function getStudentSecretKey(): string {
  */
 export async function createStudentSessionToken(
   studentCode: string,
-  gradeId: string
+  gradeId: string,
+  options?: { readonly fullNameAr?: string; readonly isSibling?: boolean }
 ): Promise<string> {
   const payload = {
     sub: studentCode,
     gradeId,
     role: "student",
+    ...(options?.fullNameAr ? { fullNameAr: options.fullNameAr } : {}),
+    ...(options?.isSibling ? { isSibling: true } : {}),
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + STUDENT_AUTH_COOKIE_MAX_AGE,
   };
@@ -65,7 +75,7 @@ export async function createStudentSessionToken(
  */
 export async function verifyStudentSessionToken(
   token?: string | null
-): Promise<{ studentCode: string; gradeId: string } | null> {
+): Promise<VerifiedStudentSessionClaims | null> {
   if (!token || typeof token !== "string") return null;
   const parts = token.split(".");
   if (parts.length !== 2) return null;
@@ -92,6 +102,8 @@ export async function verifyStudentSessionToken(
       sub?: string;
       gradeId?: string;
       role?: string;
+      fullNameAr?: string;
+      isSibling?: boolean;
       exp?: number;
     };
 
@@ -104,6 +116,8 @@ export async function verifyStudentSessionToken(
     return {
       studentCode: payloadJson.sub,
       gradeId: payloadJson.gradeId,
+      ...(payloadJson.fullNameAr ? { fullNameAr: payloadJson.fullNameAr } : {}),
+      ...(payloadJson.isSibling ? { isSibling: true } : {}),
     };
   } catch {
     return null;

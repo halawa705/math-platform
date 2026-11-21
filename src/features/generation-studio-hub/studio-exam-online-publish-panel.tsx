@@ -49,7 +49,7 @@ export default function StudioExamOnlinePublishPanel({
   onPublish,
 }: StudioExamOnlinePublishPanelProps) {
   const [customTitleAr, setCustomTitleAr] = useState(defaultTitleAr);
-  const [durationMinutes, setDurationMinutes] = useState(30);
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [preset, setPreset] = useState<"3" | "7" | "14" | "custom">("7");
   const [customDays, setCustomDays] = useState(5);
   const [revealAnswers, setRevealAnswers] = useState(true);

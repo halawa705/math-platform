@@ -25,6 +25,7 @@ export interface RegisteredStudentRecordSSOT {
   readonly passwordPin: string;
   readonly gradeId: string;
   readonly gradeNameAr: string;
+  readonly isSibling?: boolean;
   readonly createdAtIso: string;
 }
 
@@ -33,6 +34,7 @@ export interface RememberedUserSessionSSOT {
   readonly studentCode?: string;
   readonly studentNameAr?: string;
   readonly gradeId?: string;
+  readonly isSibling?: boolean;
   readonly savedAtIso: string;
 }
 
