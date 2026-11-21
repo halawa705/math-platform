@@ -20,6 +20,11 @@ import { renderMathDotArraySVG } from "./math-dot-array-svg-builder";
 import { renderMathPlaceValueTableSVG } from "./math-place-value-table-builder";
 import { renderMathDecimalGridSVG } from "./math-decimal-grid-svg-builder";
 import { renderMathMidpointRoundingSVG } from "./math-midpoint-rounding-svg-builder";
+import { tryBuildMathFractionModelFromDescription } from "./math-fraction-models-svg-builder";
+import { tryBuildMathGridAreaFromDescription } from "./math-grid-area-perimeter-svg-builder";
+import { parseMathBarModelFacts } from "./math-bar-model-fact-parser";
+import { buildMathBarModelSvgMarkup } from "./math-bar-model-svg-builder";
+import { parseMathAnalogClockTime, buildMathAnalogClockSvgMarkup } from "./math-analog-clock-reading-svg-builder";
 
 export const MODULE_ID_MATH_ELEMENTARY_VISUALS_DISPATCHER =
   "math_elementary_visuals_dispatcher" as const;
@@ -53,8 +58,8 @@ export function detectAndBuildMathElementaryVisualFigure(
   const norm = toWesternNumeralsSSOT((description || "").trim());
   if (!norm) return undefined;
 
-  // استبعاد صريح لأي خريطة جغرافية/اجتماعية
-  if (/خريطة|قارة|دولة|نهر|محيط|تضاريس/i.test(norm)) {
+  // استبعاد صريح لأي خريطة جغرافية/اجتماعية مع عدم حجب كلمة «محيط» الهندسية
+  if (/خريطة|قارة|دولة|نهر|المحيط\s*(?:الأطلسي|الهادئ|الهندي|المتجمد)|تضاريس/i.test(norm)) {
     return undefined;
   }
 
@@ -84,7 +89,17 @@ export function detectAndBuildMathElementaryVisualFigure(
     }
   }
 
-  // 3. الساعة التناظرية / الرقمية (تشمل أوصاف العقارب أو الساعة اللفظية)
+  // 3. الساعة التناظرية لقراءة الوقت أو الساعة بوصف العقارب
+  const strictAnalog = parseMathAnalogClockTime(norm);
+  if (strictAnalog) {
+    return buildFigureWrapper(
+      figureId,
+      "primary_analog_clock",
+      "الساعة التناظرية",
+      notationLanguage,
+      buildMathAnalogClockSvgMarkup(strictAnalog)
+    );
+  }
   if (/(?:ساعة\s*(?:حائط|عقارب|دائرية|رقمية)|عقرب\s*الساعات|عقرب\s*الدقائق|تشير\s*الساعة)/i.test(norm)) {
     const parsed = parseMathClockDescriptor(norm);
     return buildFigureWrapper(
@@ -94,6 +109,28 @@ export function detectAndBuildMathElementaryVisualFigure(
       notationLanguage,
       renderMathClockSVG({ hours: parsed.hours, minutes: parsed.minutes, clockType: parsed.clockType, numeralMode })
     );
+  }
+
+  // 3-ب. نماذج الكسور والشبكة التربيعية للمساحة والمحيط
+  const fracModel = tryBuildMathFractionModelFromDescription(norm, figureId, notationLanguage);
+  if (fracModel) return fracModel;
+  const gridArea = tryBuildMathGridAreaFromDescription(norm, figureId, notationLanguage);
+  if (gridArea) return gridArea;
+
+  // 3-ج. النموذج الشريطي بحقائق الكل والجزأين الصريحة
+  const barFacts = parseMathBarModelFacts(description);
+  if (barFacts) {
+    return {
+      figureId,
+      familyId: "primary_visual_models_family",
+      branchId: "primary_bar_model",
+      titleArabic: "النموذج الشريطي",
+      notationLanguage,
+      vertices: [{ id: `${figureId}_v0`, label: "0", position: { x: 0, y: 0 } }],
+      segments: [],
+      angles: [],
+      rawSvgMarkup: buildMathBarModelSvgMarkup(barFacts, numeralMode),
+    };
   }
 
   // 4. استراتيجية نقطة المنتصف للتقريب

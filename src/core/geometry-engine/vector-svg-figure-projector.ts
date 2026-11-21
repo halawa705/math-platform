@@ -17,6 +17,10 @@ import { projectGeometrySurfaceShadingSVGMarkup } from "./vector-svg-surface-sha
 import { projectCirclesArcsAndRegionsSVGMarkup } from "./vector-svg-circles-and-arcs-projector";
 import { projectExplicitConstraintsOverlaySVGMarkup } from "./vector-svg-explicit-constraints-overlay";
 import {
+  projectCoordinateGridAndCurvesSVGMarkup,
+  resolveCoordinateGridBounds,
+} from "./vector-svg-coordinate-grid-projector";
+import {
   GIVEN_LABEL_BACKGROUND_FILL,
   GIVEN_LABEL_HALO_STROKE,
   GIVEN_LABEL_HALO_WIDTH,
@@ -69,6 +73,11 @@ export function projectGeometryFigureToSVGMarkup(
   for (const c of figure.circles ?? []) {
     const cv = figure.vertices.find((v) => v.id === c.centerVertexId);
     if (cv && c.radius > 0) xs.push(cv.position.x - c.radius, cv.position.x + c.radius), ys.push(cv.position.y - c.radius, cv.position.y + c.radius);
+  }
+  if (figure.coordinateGrid?.enabled) {
+    const bounds = resolveCoordinateGridBounds(figure);
+    xs.push(bounds.xMin, bounds.xMax);
+    ys.push(bounds.yMin, bounds.yMax);
   }
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
@@ -256,6 +265,7 @@ export function projectGeometryFigureToSVGMarkup(
   const bgRectSvg = backgroundColor && backgroundColor !== "transparent"
     ? `<rect x="${vb.minX}" y="${vb.minY}" width="${vb.width}" height="${vb.height}" rx="8" fill="${backgroundColor}" />`
     : "";
+  const coordGridSvg = projectCoordinateGridAndCurvesSVGMarkup({ figure, toScreen, strokeColor, accentColor, numeralMode, notation });
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" dir="ltr" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%;direction:ltr" class="w-full h-auto select-none">${bgRectSvg}${circleRimSvg}${surfaceTintsSvg}${explicitOverlaySvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" dir="ltr" viewBox="${vb.minX} ${vb.minY} ${vb.width} ${vb.height}" preserveAspectRatio="xMidYMid meet" style="max-height:100%;direction:ltr" class="w-full h-auto select-none">${bgRectSvg}${coordGridSvg}${circleRimSvg}${surfaceTintsSvg}${explicitOverlaySvg}${segmentLinesSvg}${anglesSvg}${verticesSvg}${lengthLabelsSvg}${interiorBadgesSvg}</svg>`;
 }

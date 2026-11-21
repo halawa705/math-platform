@@ -21,9 +21,11 @@ import {
   parseBarChartSpecFromText,
   parseBoxPlotSpecFromText,
   parseDotPlotSpecFromText,
+  parseDoubleBarChartSpecFromText,
   parseHistogramSpecFromText,
-} from "../geometry-engine/curriculum-catalogs/primary-stage/grade-6/primary-grade6-statistics-fact-parser";
+} from "./statistics-natural-arabic-fact-parser";
 import { buildGrade6BarChartSvgMarkup } from "./primary-grade6-bar-chart-svg-builder";
+import { buildDoubleBarChartSvgMarkup } from "./double-bar-chart-svg-builder";
 import { buildGrade6BoxPlotSvgMarkup } from "./primary-grade6-box-plot-svg-builder";
 import { buildGrade6DotPlotSvgMarkup } from "./primary-grade6-dot-plot-svg-builder";
 import { buildGrade6HistogramSvgMarkup } from "./primary-grade6-histogram-svg-builder";
@@ -36,11 +38,26 @@ export function matchAndRenderStatisticsFigure(
   numeralMode: NumeralDisplayMode = "western",
   notationLanguage: MathNotationLanguage = "arabic"
 ): CanonicalGeometryFigureIR | null {
-  if (!/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*بيانية|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|صاعد|نازل|شجر(?:ة)?\s*(?:ال)?احتمال|فضاء\s*العينة)/i.test(description)) {
+  if (!/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*(?:بيانية|مزدوجة)|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|بالخطوط|صاعد|نازل|شجر(?:ة)?\s*(?:ال)?احتمال|فضاء\s*العينة)/i.test(description)) {
     return null;
   }
 
   const parsed = parseStatisticsTagDescription(description);
+
+  const doubleBarSpec = parseDoubleBarChartSpecFromText(description);
+  if (doubleBarSpec) {
+    return {
+      figureId,
+      familyId: "statistics_family",
+      branchId: "stats_bar_chart",
+      titleArabic: doubleBarSpec.titleArabic,
+      notationLanguage,
+      vertices: [],
+      segments: [],
+      angles: [],
+      rawSvgMarkup: buildDoubleBarChartSvgMarkup(doubleBarSpec, { numeralMode }),
+    };
+  }
 
   // 1. تجربة مصيّرات الصف السادس التخصصية أولاً إن انطبقت بدقة
   const barSpec = parseBarChartSpecFromText(description);
@@ -118,9 +135,16 @@ export function matchAndRenderStatisticsFigure(
   if (parsed.chartType === "pie_chart") {
     svgMarkup = buildPieChartSvgMarkup(parsed, numeralMode);
     branchId = "stats_pie_circular_sectors";
-  } else if (parsed.chartType === "frequency_polygon" || parsed.chartType === "frequency_curve") {
+  } else if (
+    parsed.chartType === "frequency_polygon" ||
+    parsed.chartType === "frequency_curve" ||
+    parsed.chartType === "line_graph"
+  ) {
     svgMarkup = buildFrequencyPolygonOrCurveSvgMarkup(parsed, numeralMode);
     branchId = "stats_frequency_polygon_and_curve";
+  } else if (parsed.chartType === "ascending_ogive" || parsed.chartType === "descending_ogive") {
+    svgMarkup = buildFrequencyPolygonOrCurveSvgMarkup(parsed, numeralMode);
+    branchId = "stats_ascending_descending_ogive";
   } else if (parsed.chartType === "probability_tree") {
     svgMarkup = buildProbabilityTreeSvgMarkup(parsed);
     branchId = "stats_scatter_regression_line";

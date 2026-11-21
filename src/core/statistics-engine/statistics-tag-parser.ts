@@ -25,6 +25,8 @@ export type ParsedStatisticsChartType =
   | "probability_tree"
   | "histogram"
   | "bar_chart"
+  | "double_bar_chart"
+  | "line_graph"
   | "box_plot"
   | "dot_plot";
 
@@ -54,16 +56,18 @@ function detectChartType(text: string): ParsedStatisticsChartType {
   if (/نازل|هابط/i.test(text)) return "descending_ogive";
   if (/مضلع\s*تكراري/i.test(text)) return "frequency_polygon";
   if (/منحنى\s*تكراري/i.test(text)) return "frequency_curve";
+  if (/تمثيل\s*بياني\s*بالخطوط|بالخطوط\s*المنكسرة/i.test(text)) return "line_graph";
   if (/شجر(?:ة)?\s*(?:ال)?احتمال/i.test(text)) return "probability_tree";
   if (/مدرج/i.test(text)) return "histogram";
   if (/صندوق/i.test(text)) return "box_plot";
   if (/نقاط/i.test(text)) return "dot_plot";
+  if (/أعمدة\s*مزدوجة|مزدوج/i.test(text)) return "double_bar_chart";
   if (/أعمدة|اعمدة/i.test(text)) return "bar_chart";
   return "frequency_table";
 }
 
 const STATS_EXPLICIT_REGEX =
-  /(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*بيانية|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|منحنى\s*صاعد|منحنى\s*نازل|شجر(?:ة)?\s*(?:ال)?احتمال|فضاء\s*العينة)/i;
+  /(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*(?:بيانية|مزدوجة)|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|منحنى\s*صاعد|منحنى\s*نازل|بالخطوط\s*المنكسرة|شجر(?:ة)?\s*(?:ال)?احتمال|فضاء\s*العينة)/i;
 
 export function parseStatisticsTagDescription(rawText: string): ParsedStatisticsSpec | null {
   if (!STATS_EXPLICIT_REGEX.test(rawText)) {

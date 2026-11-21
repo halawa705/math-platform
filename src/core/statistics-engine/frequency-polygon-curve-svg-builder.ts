@@ -22,7 +22,17 @@ export function buildFrequencyPolygonOrCurveSvgMarkup(
   const padTop = 32;
   const padBottom = 32;
 
-  const cats = spec.categories;
+  const cats = spec.categories.map((c, idx) => {
+    if (spec.chartType === "ascending_ogive") {
+      const cum = spec.categories.slice(0, idx + 1).reduce((s, x) => s + x.value, 0);
+      return { ...c, value: cum, rawValue: c.value };
+    }
+    if (spec.chartType === "descending_ogive") {
+      const cum = spec.categories.slice(idx).reduce((s, x) => s + x.value, 0);
+      return { ...c, value: cum, rawValue: c.value };
+    }
+    return { ...c, rawValue: c.value };
+  });
   const maxFreq = Math.max(...cats.map((c) => c.value), 5);
   const yMax = Math.ceil(maxFreq * 1.15);
 
@@ -33,7 +43,7 @@ export function buildFrequencyPolygonOrCurveSvgMarkup(
   const sy = (freq: number) => height - padBottom - (freq / yMax) * spanH;
 
   const gridSvg: string[] = [];
-  const points: { x: number; y: number }[] = [];
+  const points: { x: number; y: number; rawValue: number }[] = [];
 
   // عنوان الرسم
   gridSvg.push(
@@ -47,7 +57,7 @@ export function buildFrequencyPolygonOrCurveSvgMarkup(
     const py = sy(val);
     gridSvg.push(
       `<line x1="${padLeft}" y1="${py.toFixed(1)}" x2="${(width - padRight).toFixed(1)}" y2="${py.toFixed(1)}" stroke="#E2E8F0" stroke-width="0.8" />
-      <text x="${(padLeft - 5).toFixed(1)}" y="${(py + 3).toFixed(1)}" text-anchor="end" font-size="7" font-weight="700" fill="#64748B">${formatNumeralsByModeSSOT(val, numeralMode)}</text>`
+      <text data-furniture="1" x="${(padLeft - 5).toFixed(1)}" y="${(py + 3).toFixed(1)}" text-anchor="end" font-size="7" font-weight="700" fill="#64748B">${formatNumeralsByModeSSOT(val, numeralMode)}</text>`
     );
   }
 
@@ -61,7 +71,7 @@ export function buildFrequencyPolygonOrCurveSvgMarkup(
   cats.forEach((cat, idx) => {
     const px = sx(idx);
     const py = sy(cat.value);
-    points.push({ x: px, y: py });
+    points.push({ x: px, y: py, rawValue: cat.rawValue });
 
     gridSvg.push(
       `<line x1="${px.toFixed(1)}" y1="${height - padBottom}" x2="${px.toFixed(1)}" y2="${height - padBottom + 4}" stroke="#0F172A" stroke-width="1.0" />
@@ -69,8 +79,8 @@ export function buildFrequencyPolygonOrCurveSvgMarkup(
     );
   });
 
-  // رسم المضلع أو المنحنى
-  const isPolygon = spec.chartType === "frequency_polygon";
+  // رسم المضلع أو الخط المنكسر أو المنحنى المتجمع / التكراري
+  const isPolygon = spec.chartType === "frequency_polygon" || spec.chartType === "line_graph";
   const strokeColor = "#2563EB";
 
   let pathD = "";
@@ -97,7 +107,7 @@ export function buildFrequencyPolygonOrCurveSvgMarkup(
   // نقاط المراكز
   const pointsSvg = points
     .map(
-      (p) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.2" />`
+      (p) => `<circle data-given-values="${p.rawValue}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.2" />`
     )
     .join("");
 

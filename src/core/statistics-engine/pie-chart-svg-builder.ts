@@ -62,7 +62,7 @@ export function buildPieChartSvgMarkup(
     // قوس القطاع الدائري
     const pathD = `M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`;
     slicesSvg.push(
-      `<path d="${pathD}" fill="${color}" stroke="#FFFFFF" stroke-width="1.2" opacity="0.9" />`
+      `<path data-given-values="${cat.value}" d="${pathD}" fill="${color}" stroke="#FFFFFF" stroke-width="1.2" opacity="0.9" />`
     );
 
     // ملصق النسبة داخل أو بجوار القطاع إن كان كبيراً بما فيه الكفاية

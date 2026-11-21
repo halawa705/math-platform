@@ -76,6 +76,24 @@ export interface StatisticalBarChartSpec {
   readonly yMax?: number;
 }
 
+export interface StatisticalDoubleBarItem {
+  readonly categoryLabel: string;
+  readonly series1Value: number;
+  readonly series2Value: number;
+}
+
+export interface StatisticalDoubleBarChartSpec {
+  readonly titleArabic: string;
+  readonly xLabelArabic: string;
+  readonly yLabelArabic: string;
+  readonly series1Label: string;
+  readonly series2Label: string;
+  readonly bars: readonly StatisticalDoubleBarItem[];
+  readonly yStep?: number;
+  readonly yMax?: number;
+  readonly omitDataGivenValues?: boolean;
+}
+
 export interface CanonicalStatisticsDatasetIR {
   readonly datasetId: string;
   readonly branchId: StatisticsChartBranchId;

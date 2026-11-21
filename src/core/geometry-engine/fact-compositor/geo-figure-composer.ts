@@ -18,10 +18,6 @@ import { tryComposeParallelTransversalsFigure } from "./geo-parallel-transversal
 import { buildPerimeterAndAreaBadges, deduplicatePlacedPolygons, registerIntersectingRaySegments, resolveParallelConstraintFact, tryPlaceSegmentRatioVertex } from "./geo-composite-constraint-helpers";
 import { assembleCanonicalFigureSegments, resolveAngleFactHelper, resolveExtendWithEqualHelper, resolvePerpFactHelper, type AssembledExtraSeg } from "./geo-figure-segments-assembler";
 import { angleBisectorFoot, lineIntersection, vAdd, vDist, vLerp, vScale, vSub, type Vec2 } from "./geo-vector-math";
-import { buildParametricSimilarityFigure } from "../similarity-family/similarity-parametric-builder-orchestrator";
-import { isSimilarityGeometryContext } from "../similarity-family/similarity-context-detector";
-import { matchTrigonometryParametricFigure } from "../trigonometry-family/trigonometry-parametric-orchestrator";
-import { matchParallelTransversalParametricFigure } from "../parallel-transversal-family/parallel-transversal-parametric-orchestrator";
 import { isFigureFaithfulToPrompt } from "../verification/geometry-figure-fidelity-gate";
 import { findMissingDeclaredConstructionVertices } from "../verification/geometry-figure-completeness-checker";
 import { extractGeometryProblemSpecDual } from "../description-intake/geometry-problem-spec-extractor";
@@ -32,7 +28,10 @@ import { autoConnectReferencedSubPolygons } from "./geo-subpolygon-autoconnect-h
 import { resolveEqualSegmentRatioOnHost } from "./geo-quad-angle-and-shared-placer";
 import { resolveCollinearFactInComposer } from "./geo-collinear-constraint-resolver";
 import { buildExplicitConstraintsFromGeoFacts } from "../constraint-refiner/geo-explicit-constraints-bridge";
-import { tryBuildParametricCoordinateAnalysisFigure } from "../analytic-function-family/coordinate-plane-projections-and-midpoint-builder";
+import {
+  tryDispatchFallbackDomainFigure,
+  tryDispatchPreDeclarationDomainFigure,
+} from "./geo-parametric-domains-dispatcher";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
@@ -47,22 +46,8 @@ export function composeFigureFromGeometryDescription(
   const consistency = verifyProblemSpecMathematicalConsistency(specDual.spec);
   if (!consistency.passed) return { figure: null, warnings: [...consistency.violations] };
 
-  const isQuadOrMidpointContext = /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف|متوسط|تلاقي)/.test(description);
-  if (!isQuadOrMidpointContext && isSimilarityGeometryContext(description)) {
-    const parametricFig = buildParametricSimilarityFigure(description, figureId, notation);
-    if (parametricFig) return { figure: parametricFig, warnings: [] };
-  }
-  const hasTrigKeywords = /(?<![a-z])\\?(?:sin|cos|tan|cot)(?![a-z])|(?<![أ-ي])(?:جا|جتا|ظا)(?![أ-ي])|θ|\\theta|زاوية\s*(?:ميل|ارتفاع|انخفاض)|النسب\s*المثلثية|نسبة\s*مثلثية|مربعات\s*متطابقة/i.test(description);
-  const trigCatalogFig = (hasTrigKeywords || (!isQuadOrMidpointContext && /(?:طائرة\s*ورقية|سلم\s+طوله)/.test(description) && !/مثلث\s*[A-Z]{3}/i.test(description))) ? matchTrigonometryParametricFigure(description, figureId, notation) : undefined;
-  if (trigCatalogFig) return { figure: trigCatalogFig, warnings: [] };
-  if (!/°|درجة|زاوي/.test(description)) {
-    const earlyParallelTransFig = tryComposeParallelTransversalsFigure(description, figureId, notation);
-    if (earlyParallelTransFig) return { figure: earlyParallelTransFig, warnings: [] };
-  }
-  const hasNamedIntersections = /في\s*(?:النقطتين\s*)?(?:[A-Z]|[أ-ي]ـ?)\s*و\s*(?:[A-Z]|[أ-ي]ـ?)\b/.test(description);
-  const parallelCatalogFig = !hasNamedIntersections && !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
-    ? matchParallelTransversalParametricFigure(description, figureId, notation) : undefined;
-  if (parallelCatalogFig) return { figure: parallelCatalogFig, warnings: [] };
+  const preDomainFig = tryDispatchPreDeclarationDomainFigure({ description, figureId, notation });
+  if (preDomainFig) return { figure: preDomainFig, warnings: [] };
 
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
   if (embeddedTagMatch && embeddedTagMatch[1].trim() !== description.trim()) {
@@ -92,8 +77,8 @@ export function composeFigureFromGeometryDescription(
       const angleFanFig = composeAngleFanFigureFromDescription(description, figureId, notation, linearKindMap);
       if (angleFanFig) return { figure: angleFanFig, warnings: [] };
     }
-    const coordAnalysisFig = tryBuildParametricCoordinateAnalysisFigure({ figureId, description, notationLanguage: notation });
-    if (coordAnalysisFig) return { figure: coordAnalysisFig, warnings: [] };
+    const domainFallbackFig = tryDispatchFallbackDomainFigure({ description, figureId, notation });
+    if (domainFallbackFig) return { figure: domainFallbackFig, warnings: [] };
     const standaloneLinearFig = tryComposeStandaloneLinearFigure({
       facts, lengths, linearKindMap, description, figureId, notation,
     });

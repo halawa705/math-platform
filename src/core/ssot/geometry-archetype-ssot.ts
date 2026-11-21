@@ -8,6 +8,12 @@
 
 import type { ArabicMathUnit, MathNotationLanguage } from "./numeral-and-unit-ssot";
 import type { CanonicalExplicitGeometryConstraints } from "../geometry-engine/constraint-refiner/explicit-geometry-constraints-types";
+import type {
+  CanonicalCoordinateCurveNode,
+  CanonicalCoordinateGridSpec,
+} from "../geometry-engine/analytic-function-family/coordinate-grid-and-curve-types";
+
+export type { CanonicalCoordinateCurveNode, CanonicalCoordinateGridSpec };
 
 export type GeometryFamilyId =
   | "triangle_family"
@@ -78,64 +84,25 @@ export interface Point2DCoordinate {
   readonly y: number;
 }
 
-/**
- * تصنيف نوع الملصق البصري في النموذج الوسيط IR v2:
- * - `given`: معطى صريح في المسألة
- * - `unknown`: مطلوب مجهول يُرسم كعلامة استفهام «؟» أو متغير السؤال
- * - `name`: اسم رأس أو عنصر تعريفي
- */
+/** تصنيف الملصق البصري في IR v2: `given` معطى، `unknown` مجهول «؟»، `name` اسم عنصر. */
 export type FigureLabelSemanticKind = "given" | "unknown" | "name";
 
-/**
- * نوع المطلوب الهندسي في المسألة (`asked`) وفق مخطط المرحلة 2 و3:
- * - `length`: طول قطعة مستقيمة أو نصف قطر أو محيط
- * - `angle`: قياس زاوية
- * - `area`: مساحة منطقة أو مضلع
- * - `ratio`: نسبة بين قطعتين أو مساحتين
- * - `coordinates`: إحداثيات نقطة
- * - `proof`: برهان أو إثبات (لا يوضع له «؟» على الشكل)
- */
-export type GeometryAskedKind =
-  | "length"
-  | "angle"
-  | "area"
-  | "ratio"
-  | "coordinates"
-  | "proof";
+/** نوع المطلوب الهندسي في المسألة (`asked`) وفق مخطط المرحلة 2 و3. */
+export type GeometryAskedKind = "length" | "angle" | "area" | "ratio" | "coordinates" | "proof";
 
 export interface GeometryAskedTargetSpec {
   readonly kind: GeometryAskedKind;
-  /** الرؤوس أو القطعة أو الزاوية المطلوبة بعد التطبيع اللاتيني (مثل "AB" أو "ABC" أو "B"). */
   readonly targetKey?: string;
-  /** قائمة الأهداف المتعددة عند طلب زاويتين معاً في نفس المسألة (مثل ["AEB", "AEC"]). */
   readonly targetKeys?: readonly string[];
-  /** المتغير الجبري الصريح إن كان السؤال يطلب قيمة متغير موجود على الرسم (مثل "x" أو "س"). */
   readonly variableSymbol?: string;
-  /** النص الأصلي لجملة المطلوب في المسألة. */
   readonly rawAskedClause?: string;
 }
 
-/**
- * القرار الثلاثي لبوابة الصدق والتحقق في المرحلة 2:
- * - `green`: اجتاز جميع الفحوص ويُعتمد تلقائياً
- * - `yellow`: نقص أو التباس قابل للإصلاح بتحرير قائمة الحقائق
- * - `red`: مرفوض (لا شكل) مع السبب الصريح
- */
+/** القرار الثلاثي لبوابة الصدق والتحقق: `green` معتمد، `yellow` ناقص، `red` مرفوض. */
 export type FigureTriStateDecision = "green" | "yellow" | "red";
 
-/**
- * الكائنات الهندسية في مواصفة المسألة المهيكلة (`Problem Spec` — المرحلة 3.1).
- */
-export type ProblemSpecObjectKind =
-  | "point"
-  | "segment"
-  | "ray"
-  | "line"
-  | "triangle"
-  | "quadrilateral"
-  | "polygon"
-  | "circle"
-  | "arc";
+/** الكائنات الهندسية في مواصفة المسألة المهيكلة (`Problem Spec` — المرحلة 3.1). */
+export type ProblemSpecObjectKind = "point" | "segment" | "ray" | "line" | "triangle" | "quadrilateral" | "polygon" | "circle" | "arc";
 
 export interface ProblemSpecObjectNode {
   readonly kind: ProblemSpecObjectKind;
@@ -221,14 +188,6 @@ export interface CanonicalShadedRegionNode {
   readonly patternStyle?: "solid_tint" | "diagonal_hatch";
   readonly regionLabel?: string;
   readonly labelKind?: FigureLabelSemanticKind;
-}
-
-export interface CanonicalCoordinateGridSpec {
-  readonly enabled: boolean;
-  readonly step?: number;
-  readonly showAxesArrows?: boolean;
-  readonly showTickNumbers?: boolean;
-  readonly originVertexId?: string;
 }
 
 export interface CanonicalVertexNode {

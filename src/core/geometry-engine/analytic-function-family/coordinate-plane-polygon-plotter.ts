@@ -1,7 +1,8 @@
 /**
  * @file coordinate-plane-polygon-plotter.ts
- * @description راسم عام للنقاط والقطع المستقيمة والمضلعات على المستوى الإحداثي الديكارتي (Phase 4 — الإحداثيات).
- * يلتزم بحدود الأسطر (< 200 سطر) وTypeScript الصارم وفق دستور المنصة (AGENTS.md).
+ * @description راسم عام للنقاط والقطع المستقيمة والمضلعات على المستوى الإحداثي الديكارتي (الإحداثيات الكاملة والربع الأول)
+ * بإحداثيات رياضية حقيقية (بدون انعكاس محور الصادات) مع مساقط منقطة على المحورين.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 175 سطراً).
  */
 
 import type {
@@ -14,6 +15,9 @@ import {
   toWesternNumeralsSSOT,
   type MathNotationLanguage,
 } from "../../ssot/numeral-and-unit-ssot";
+
+export const MODULE_ID_COORDINATE_PLANE_POLYGON_PLOTTER =
+  "coordinate_plane_polygon_plotter" as const;
 
 export interface CoordinatePlanePolygonOptions {
   readonly figureId: string;
@@ -28,7 +32,7 @@ export interface ParsedCoordinatePoint {
 }
 
 /**
- * استخراج أزواج الإحداثيات المعلومة من النص (مثل A(2, 3) أو أ(1، 4))
+ * استخراج أزواج الإحداثيات المعلومة من النص (مثل A(2, 3) أو أ(1، 4) أو جـ(3، 4))
  */
 export function extractCoordinatePointsFromText(rawText: string): ParsedCoordinatePoint[] {
   const text = toWesternNumeralsSSOT(rawText || "");
@@ -36,9 +40,10 @@ export function extractCoordinatePointsFromText(rawText: string): ParsedCoordina
 
   const points: ParsedCoordinatePoint[] = [];
   const seen = new Set<string>();
-  const re = /([A-Za-zأ-ي]+ـ*['′]?)\s*\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/g;
+  const re = /([A-Za-zأ-ي]ـ?(?:[A-Za-z0-9]?['′])?)\s*\(\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*\)/g;
   for (const m of text.matchAll(re)) {
-    const name = m[1].trim();
+    const rawName = m[1].trim();
+    const name = rawName === "ج" ? "جـ" : rawName === "ه" ? "هـ" : rawName;
     const x = Number.parseFloat(m[2]);
     const y = Number.parseFloat(m[3]);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
@@ -52,65 +57,86 @@ export function extractCoordinatePointsFromText(rawText: string): ParsedCoordina
 }
 
 /**
- * بناء شكل هندسي للمستوى الإحداثي يوقع النقاط ويربط بينها بقطع مستقيمة أو مضلع
+ * بناء شكل هندسي للمستوى الإحداثي يوقع النقاط بإحداثياتها الرياضية الحقيقية ويربط بينها
  */
 export function buildCoordinatePlanePolygonFigure(
   opts: CoordinatePlanePolygonOptions
 ): CanonicalGeometryFigureIR | undefined {
   const notation = opts.notationLanguage || "arabic";
-  const points = extractCoordinatePointsFromText(opts.description || "");
+  const desc = opts.description || "";
+  const points = extractCoordinatePointsFromText(desc);
   if (points.length === 0) return undefined;
 
-  // حساب نطاق الإحداثيات لتحويلها إلى نظام [1..9] على اللوحة مع بقاء نقطة الأصل قريبة من المركز
-  const maxAbsX = Math.max(5, ...points.map((p) => Math.abs(p.x) + 1));
-  const maxAbsY = Math.max(5, ...points.map((p) => Math.abs(p.y) + 1));
-  const scaleX = 4.0 / maxAbsX;
-  const scaleY = 4.0 / maxAbsY;
-  const scale = Math.min(scaleX, scaleY);
+  const allNonNegative = points.every((p) => p.x >= 0 && p.y >= 0);
+  const explicitFirstQuad = /الربع\s*الأول/.test(desc);
+  const explicitFourQuad = /الأرباع|ربع\s*(?:ثان|ثالث|رابع)|سالب/i.test(desc);
+  const hasArabicPointNames = points.every((p) => /[أ-ي]/.test(p.name));
+  const quadrantMode: "first_quadrant" | "four_quadrant" =
+    !allNonNegative || explicitFourQuad
+      ? "four_quadrant"
+      : explicitFirstQuad || hasArabicPointNames
+        ? "first_quadrant"
+        : "four_quadrant";
 
-  const originX = 5;
-  const originY = 5;
+  const maxX = Math.max(...points.map((p) => p.x), quadrantMode === "first_quadrant" ? 5 : 4);
+  const maxY = Math.max(...points.map((p) => p.y), quadrantMode === "first_quadrant" ? 5 : 4);
+  const minX = quadrantMode === "first_quadrant" ? 0 : Math.min(-4, ...points.map((p) => p.x));
+  const minY = quadrantMode === "first_quadrant" ? 0 : Math.min(-4, ...points.map((p) => p.y));
 
-  const vXPos: CanonicalVertexNode = {
-    id: `${opts.figureId}_x_pos`,
-    label: notation === "arabic" ? "س" : "X",
-    position: { x: 9.4, y: originY },
-  };
-  const vXNeg: CanonicalVertexNode = {
-    id: `${opts.figureId}_x_neg`,
-    label: notation === "arabic" ? "س'" : "X'",
-    position: { x: 0.6, y: originY },
-  };
-  const vYPos: CanonicalVertexNode = {
-    id: `${opts.figureId}_y_pos`,
-    label: notation === "arabic" ? "ص" : "Y",
-    position: { x: originX, y: 0.6 },
-  };
-  const vYNeg: CanonicalVertexNode = {
-    id: `${opts.figureId}_y_neg`,
-    label: notation === "arabic" ? "ص'" : "Y'",
-    position: { x: originX, y: 9.4 },
-  };
-  const vO: CanonicalVertexNode = {
-    id: `${opts.figureId}_origin`,
-    label: localizeGeometricVertexLabelSSOT("و", notation),
-    position: { x: originX, y: originY },
-  };
+  const xRange: readonly [number, number] = [
+    quadrantMode === "first_quadrant" ? 0 : Math.floor(minX - 1),
+    Math.ceil(maxX + 1.5),
+  ];
+  const yRange: readonly [number, number] = [
+    quadrantMode === "first_quadrant" ? 0 : Math.floor(minY - 1),
+    Math.ceil(maxY + 1.5),
+  ];
 
   const plottedVertices: CanonicalVertexNode[] = points.map((pt, idx) => ({
     id: `${opts.figureId}_pt_${idx}`,
-    label: `${pt.name}(${pt.x}, ${pt.y})`,
-    position: {
-      x: Number((originX + pt.x * scale).toFixed(2)),
-      // ملاحظة: في بعض أفرع المستوى الإحداثي تُرسم الصادات للأعلى (y أصغر في SVG)
-      y: Number((originY - pt.y * scale).toFixed(2)),
-    },
+    label: `${localizeGeometricVertexLabelSSOT(pt.name, notation)}(${pt.x}, ${pt.y})`,
+    position: { x: pt.x, y: pt.y },
   }));
 
-  const segments: CanonicalSegmentNode[] = [
-    { id: `${opts.figureId}_axis_x`, fromVertexId: vXNeg.id, toVertexId: vXPos.id, strokeStyle: "solid" },
-    { id: `${opts.figureId}_axis_y`, fromVertexId: vYNeg.id, toVertexId: vYPos.id, strokeStyle: "solid" },
-  ];
+  const feet: CanonicalVertexNode[] = [];
+  const segments: CanonicalSegmentNode[] = [];
+
+  // مساقط منقطة على المحورين عند عدد نقاط <= 4 لتوضيح قراءة الإحداثيين
+  if (points.length <= 4) {
+    plottedVertices.forEach((pv, i) => {
+      const p = points[i];
+      if (Math.abs(p.y) > 1e-6) {
+        const fx: CanonicalVertexNode = {
+          id: `${opts.figureId}_fx_${i}`,
+          label: "",
+          hideVertexDot: true,
+          position: { x: p.x, y: 0 },
+        };
+        feet.push(fx);
+        segments.push({
+          id: `${opts.figureId}_dx_${i}`,
+          fromVertexId: pv.id,
+          toVertexId: fx.id,
+          strokeStyle: "dashed",
+        });
+      }
+      if (Math.abs(p.x) > 1e-6) {
+        const fy: CanonicalVertexNode = {
+          id: `${opts.figureId}_fy_${i}`,
+          label: "",
+          hideVertexDot: true,
+          position: { x: 0, y: p.y },
+        };
+        feet.push(fy);
+        segments.push({
+          id: `${opts.figureId}_dy_${i}`,
+          fromVertexId: pv.id,
+          toVertexId: fy.id,
+          strokeStyle: "dashed",
+        });
+      }
+    });
+  }
 
   if (plottedVertices.length === 2) {
     segments.push({
@@ -140,8 +166,17 @@ export function buildCoordinatePlanePolygonFigure(
     branchId: "triangle_base_general",
     titleArabic: `التمثيل البياني في المستوى الإحداثي للنقاط ${points.map((p) => `${p.name}(${p.x}, ${p.y})`).join("، ")}`,
     notationLanguage: notation,
-    coordinateGrid: { enabled: true },
-    vertices: [vXPos, vXNeg, vYPos, vYNeg, vO, ...plottedVertices],
+    coordinateGrid: {
+      enabled: true,
+      quadrantMode,
+      xRange,
+      yRange,
+      step: 1,
+      showGridLines: true,
+      showAxesArrows: true,
+      showTickNumbers: true,
+    },
+    vertices: [...plottedVertices, ...feet],
     segments,
     angles: [],
     polygons,
