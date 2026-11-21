@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
+import { enhanceQuestionFigureSvgForPrint } from "@/core/pdf-layout-engine/svg-monochrome-and-primary-print-enhancer";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import { CURRICULUM_QUICK_SAMPLES } from "./studio-geometry-lab-quick-samples-data";
@@ -19,6 +20,7 @@ import StudioGeometryUnderstoodFactsEditor from "./studio-geometry-understood-fa
 import StudioGeometryRedAdviceCard from "./studio-geometry-red-advice-card";
 import StudioGeometryGoldenCaseExporter from "./studio-geometry-golden-case-exporter";
 import StudioGeometryQualityDashboardCard from "./studio-geometry-quality-dashboard-card";
+import StudioGeometryLabPrintPreviewToggles from "./studio-geometry-lab-print-preview-toggles";
 
 export const MODULE_ID_STUDIO_VISUAL_GEOMETRY_LAB_TAB =
   "studio_visual_geometry_lab_tab" as const;
@@ -31,20 +33,29 @@ export interface StudioVisualGeometryLabTabProps {
 export default function StudioVisualGeometryLabTab({ gradeId, branchId }: StudioVisualGeometryLabTabProps) {
   const [desc, setDesc] = useState<string>(CURRICULUM_QUICK_SAMPLES[0].sampleText);
   const [notation, setNotation] = useState<MathNotationLanguage>("english");
+  const [monochromePrintSafe, setMonochromePrintSafe] = useState(false);
+  const [primaryStrokeBoost, setPrimaryStrokeBoost] = useState(() => gradeId.startsWith("prim_"));
   const [copied, setCopied] = useState(false);
 
   const diag = matchGeometryWithDiagnostics(desc, "lab_geom_live", notation);
   const matchedFigure = diag.figure;
-  const svgMarkup = matchedFigure
+  const rawSvg = matchedFigure
     ? projectGeometryFigureToSVGMarkup(matchedFigure, {
         widthPx: 380,
         heightPx: 220,
-        strokeColorHex: "#1E1B4B",
-        accentColorHex: "#0D9488",
+        strokeColorHex: monochromePrintSafe ? "#0F172A" : "#1E1B4B",
+        accentColorHex: monochromePrintSafe ? "#334155" : "#0D9488",
         numeralMode: notation === "arabic" ? "eastern" : "western",
         notationLanguage: notation,
       })
     : "";
+  const svgMarkup =
+    rawSvg && (monochromePrintSafe || primaryStrokeBoost)
+      ? enhanceQuestionFigureSvgForPrint(rawSvg, {
+          monochromePrintSafe,
+          strokeWidthMultiplier: primaryStrokeBoost ? 1.35 : 1,
+        })
+      : rawSvg;
 
   const readyTag = `[رسم هندسي: ${desc.trim()}]`;
 
@@ -70,6 +81,13 @@ export default function StudioVisualGeometryLabTab({ gradeId, branchId }: Studio
       <div
         className="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-xs [&_svg]:max-w-full [&_svg]:h-auto min-h-[220px]"
         dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      />
+
+      <StudioGeometryLabPrintPreviewToggles
+        monochromePrintSafe={monochromePrintSafe}
+        primaryStrokeBoost={primaryStrokeBoost}
+        onToggleMonochrome={() => setMonochromePrintSafe((v) => !v)}
+        onTogglePrimaryStroke={() => setPrimaryStrokeBoost((v) => !v)}
       />
 
       {/* محرر الحقائق التفاعلي للأصفر (المهمة 7.1) */}

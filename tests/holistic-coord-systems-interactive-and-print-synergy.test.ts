@@ -16,6 +16,7 @@ import { enhanceQuestionFigureSvgForPrint } from "@/core/pdf-layout-engine/svg-m
 import { buildPrimaryStageFigurePromptGuidance } from "@/core/prompts/geometry-prompt-guidance-primary";
 import { buildCartesianFunctionsPromptGuidance } from "@/core/prompts/geometry-prompt-guidance-functions";
 import { buildStatisticsFigurePromptGuidance } from "@/core/prompts/geometry-prompt-guidance-statistics";
+import StudioGeometryLabPrintPreviewToggles from "@/features/generation-studio-hub/studio-geometry-lab-print-preview-toggles";
 
 describe("Holistic Enhancements — Systems, Inequalities, Interactive Grid & PDF Synergy", () => {
   it("plots system of 2 intersecting linear equations without leaking ungiven intersection coords", () => {
@@ -124,5 +125,20 @@ describe("Holistic Enhancements — Systems, Inequalities, Interactive Grid & PD
     expect(gFuncAr).toContain("لنظام معادلتين");
     expect(gFuncAr).toContain("للمتباينات");
     expect(gStats).toContain("أعمدة مزدوجة");
+  });
+
+  it("renders Geometry Lab monochrome B&W & Primary stroke boost preview toggles with 44px touch height", () => {
+    const html = renderToStaticMarkup(
+      createElement(StudioGeometryLabPrintPreviewToggles, {
+        monochromePrintSafe: true,
+        primaryStrokeBoost: false,
+        onToggleMonochrome: () => {},
+        onTogglePrimaryStroke: () => {},
+      })
+    );
+    expect(html).toContain("معاينة ليزرية");
+    expect(html).toContain("سُمك خطوط الابتدائي");
+    expect(html).toContain("min-h-[44px]");
+    expect(html).toContain('aria-pressed="true"');
   });
 });
