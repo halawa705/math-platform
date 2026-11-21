@@ -31,11 +31,7 @@ export function StudentAnswerSpaceDocker({
   if (answerSpaceStyle === "hidden" || isMcq || !lineCount || lineCount <= 0) return null;
 
   const labelColor = isBookletDrill ? "#4338CA" : isBookletHomework ? "#9D174D" : primaryHex;
-  const labelText = isBookletDrill
-    ? "إجابة تدريب حاول بنفسك:"
-    : isBookletHomework
-      ? "إجابة الواجب المنزلي:"
-      : "مساحة الحل:";
+  const labelText = "الإجابة:";
 
   const gapClass = lineCount <= 4 ? "gap-1.5" : lineCount <= 7 ? "gap-1" : "gap-0.5";
   const itemHeightClass = lineCount <= 4 ? "h-3" : lineCount <= 7 ? "h-2.5" : "h-2";

@@ -30,6 +30,8 @@ import { extractLinearEntityKinds, type LinearEntityKind, type LinearEntityKindM
 import { tryComposeStandaloneLinearFigure } from "./geo-standalone-linear-placer";
 import { autoConnectReferencedSubPolygons } from "./geo-subpolygon-autoconnect-helper";
 import { resolveEqualSegmentRatioOnHost } from "./geo-quad-angle-and-shared-placer";
+import { resolveCollinearFactInComposer } from "./geo-collinear-constraint-resolver";
+import { buildExplicitConstraintsFromGeoFacts } from "../constraint-refiner/geo-explicit-constraints-bridge";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
@@ -58,8 +60,7 @@ export function composeFigureFromGeometryDescription(
   }
   const hasNamedIntersections = /في\s*(?:النقطتين\s*)?(?:[A-Z]|[أ-ي]ـ?)\s*و\s*(?:[A-Z]|[أ-ي]ـ?)\b/.test(description);
   const parallelCatalogFig = !hasNamedIntersections && !/مثلث|شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|نمد|امتداد|∩/i.test(description)
-    ? matchPrepGrade1ParallelismFigure(description, figureId, notation)
-    : undefined;
+    ? matchPrepGrade1ParallelismFigure(description, figureId, notation) : undefined;
   if (parallelCatalogFig) return { figure: parallelCatalogFig, warnings: [] };
 
   const embeddedTagMatch = description.match(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]]+)\]/i);
@@ -149,7 +150,7 @@ export function composeFigureFromGeometryDescription(
   };
 
   const deferredParallels: Extract<GeoFact, { k: "parallel" }>[] = [];
-  const runParallel = (pf: Extract<GeoFact, { k: "parallel" }>) => resolveParallelConstraintFact({
+  const runParallel = (pf: Extract<GeoFact, { k: "parallel" }>, targetWarnings: string[] = warnings) => resolveParallelConstraintFact({
     parallelFact: pf, facts, polygons, points, host, addExtra,
     addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
     nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
@@ -158,107 +159,101 @@ export function composeFigureFromGeometryDescription(
       addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
       nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
     }),
-    warnings,
+    warnings: targetWarnings,
   });
 
-  const queue = sortComposerFactsTopologically(facts);
-  const deferredFacts: GeoFact[] = [];
-  for (let pass = 0; pass < 2; pass++) {
-    for (const f of pass === 0 ? queue : deferredFacts.splice(0)) {
-    if (f.k === "segmentRatio") {
-      tryPlaceSegmentRatioVertex({ fact: f, points, host });
-      continue;
+  const sorted = sortComposerFactsTopologically(facts);
+  const postFacts = sorted.filter((f) => f.k === "draw" || f.k === "equal" || f.k === "angle");
+  let pending: Array<{ fact: GeoFact; warn?: string }> = sorted
+    .filter((f) => f.k !== "draw" && f.k !== "equal" && f.k !== "angle")
+    .map((fact) => ({ fact }));
+
+  for (let pass = 0; pass < 6 && pending.length > 0; pass++) {
+    const prevPts = points.size;
+    const prevLen = pending.length;
+    const nextPending: Array<{ fact: GeoFact; warn?: string }> = [];
+    for (const { fact: f } of pending) {
+      if (f.k === "segmentRatio") {
+        if (!tryPlaceSegmentRatioVertex({ fact: f, points, host }) && !points.has(f.part[0]) && !points.has(f.part[1])) nextPending.push({ fact: f });
+      } else if (f.k === "pointOn" || f.k === "midpoint") {
+        const [a, b] = f.seg;
+        if (f.k === "midpoint" && P(f.p) && Boolean(P(a)) !== Boolean(P(b))) {
+          const missing = P(a) ? b : a;
+          const known = P(a) ? a : b;
+          const hasDeferredPointOn = facts.some((pf) => (pf.k === "pointOn" && pf.p === missing) || (pf.k === "intersect" && pf.p === missing));
+          if (!hasDeferredPointOn) {
+            points.set(missing, vAdd(P(f.p)!, vSub(P(f.p)!, P(known)!)));
+            ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); addExtra(a, b);
+            continue;
+          }
+        }
+        if (f.k === "pointOn" && facts.some((ef) => ef.k === "extend" && ef.to === f.p)) continue;
+        if (f.k === "pointOn" && P(a) && P(b) && !P(f.p)) {
+          const extAng = facts.find((af): af is Extract<GeoFact, { k: "angle" }> => af.k === "angle" && (af.vertex === a || af.vertex === b) && Boolean(af.arms?.includes(f.p)));
+          if (extAng) {
+            const through = extAng.vertex; const A = P(through === a ? b : a)!; const B = P(through)!;
+            const len = lengths.get(pairKey(through, f.p))?.numeric ?? vDist(A, B) * 0.4;
+            points.set(f.p, vAdd(B, vScale(vSub(B, A), len / (vDist(A, B) || 1)))); addExtra(through, f.p, true);
+            continue;
+          }
+        }
+        if (f.k === "pointOn" && tryPlacePointOnWithCollinearExtension({ p: f.p, seg: f.seg, points, lengths, addExtra })) { host.set(f.p, f.seg); continue; }
+        const isDeferredHostLine = f.k === "pointOn" && facts.some((pf) => pf.k === "parallel" && (pairKey(pf.a[0], pf.a[1]) === pairKey(a, b) || pairKey(pf.b[0], pf.b[1]) === pairKey(a, b)));
+        if (!P(a) || !P(b)) { if (!isDeferredHostLine) nextPending.push({ fact: f, warn: `نقطتا ${a}${b} غير معرّفتين` }); continue; }
+        points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
+        if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
+      } else if (f.k === "parallel") {
+        const awaitsIntersect = [f.a[0], f.a[1], f.b[0], f.b[1]].some((pt) => !P(pt) && facts.some((inf) => inf.k === "intersect" && inf.p === pt));
+        if (awaitsIntersect) { deferredParallels.push(f); continue; }
+        const parWarns: string[] = [];
+        runParallel(f, parWarns);
+        if (parWarns.length > 0) nextPending.push({ fact: f, warn: parWarns[0] });
+      } else if (f.k === "perp") {
+        const ka = pairKey(f.a[0], f.a[1]); const kb = pairKey(f.b[0], f.b[1]);
+        if (perpMedians && ((ka === perpMedians.seg1Key && kb === perpMedians.seg2Key) || (kb === perpMedians.seg1Key && ka === perpMedians.seg2Key))) continue;
+        if (!resolvePerpFactHelper({ fact: f, points, host, lengths, addExtra, addAngle })) nextPending.push({ fact: f, warn: "تعامد بنقاط غير معرّفة" });
+      } else if (f.k === "bisector") {
+        const opp = trianglesSides(f.vertex); const d = f.seg[0] === f.vertex ? f.seg[1] : f.seg[0];
+        if (!opp || !P(f.vertex)) { nextPending.push({ fact: f }); continue; }
+        points.set(d, angleBisectorFoot(P(f.vertex)!, P(opp[0])!, P(opp[1])!)); host.set(d, opp); addExtra(f.vertex, d, false, f.lineKind);
+        addAngle(f.vertex, opp[0], d, { arcCount: 1 }); addAngle(f.vertex, d, opp[1], { arcCount: 1 });
+      } else if (f.k === "median") {
+        applyMedianFactOnTriangle({ seg: f.seg, trianglesSides, points, host, ticks, nextTick: () => ++tickGroup, addExtra });
+      } else if (f.k === "intersect") {
+        if (!P(f.a[0]) || !P(f.a[1]) || !P(f.b[0]) || !P(f.b[1])) { nextPending.push({ fact: f, warn: "تقاطع بنقاط غير معرّفة" }); continue; }
+        if (!P(f.p)) {
+          const r = lineIntersection(P(f.a[0])!, P(f.a[1])!, P(f.b[0])!, P(f.b[1])!);
+          if (!r) { warnings.push("مستقيمان متوازيان لا يتقاطعان"); continue; }
+          points.set(f.p, r);
+        }
+        for (const s of [f.a, f.b]) registerIntersectingRaySegments({ s, p: f.p, points, host, isPolygonSide, addExtra });
+      } else if (f.k === "diagonalsMeet") {
+        const q = polygons.find((x) => x.labels.length === 4); if (!q) continue; const [a, b, c, d] = q.labels;
+        const r = lineIntersection(P(a)!, P(c)!, P(b)!, P(d)!); if (r) { points.set(f.p, r); addExtra(a, c); addExtra(b, d); }
+      } else if (f.k === "extend") {
+        if (!P(f.from) || !P(f.through)) { nextPending.push({ fact: f }); continue; }
+        resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
+      } else if (f.k === "collinear") {
+        if (!resolveCollinearFactInComposer({ fact: f, points, host, lengths, isPolygonSide, addExtra })) {
+          nextPending.push({ fact: f, warn: "نقاط الاستقامة غير معرّفة" });
+        }
+      }
     }
-    if (f.k === "pointOn" || f.k === "midpoint") {
-      const [a, b] = f.seg;
-      if (f.k === "midpoint" && P(f.p) && Boolean(P(a)) !== Boolean(P(b))) {
-        const missing = P(a) ? b : a;
-        const known = P(a) ? a : b;
-        const hasDeferredPointOn = facts.some((pf) => (pf.k === "pointOn" && pf.p === missing) || (pf.k === "intersect" && pf.p === missing));
-        if (!hasDeferredPointOn) {
-          points.set(missing, vAdd(P(f.p)!, vSub(P(f.p)!, P(known)!)));
-          ticks.set(pairKey(a, f.p), ++tickGroup);
-          ticks.set(pairKey(f.p, b), tickGroup);
-          addExtra(a, b);
-          continue;
-        }
-      }
-      if (f.k === "pointOn" && facts.some((ef) => ef.k === "extend" && ef.to === f.p)) {
-        continue;
-      }
-      if (f.k === "pointOn" && P(a) && P(b) && !P(f.p)) {
-        const extAng = facts.find(
-          (af): af is Extract<GeoFact, { k: "angle" }> =>
-            af.k === "angle" && (af.vertex === a || af.vertex === b) && Boolean(af.arms?.includes(f.p))
-        );
-        if (extAng) {
-          const through = extAng.vertex;
-          const from = through === a ? b : a;
-          const A = P(from)!; const B = P(through)!;
-          const len = lengths.get(pairKey(through, f.p))?.numeric ?? vDist(A, B) * 0.4;
-          points.set(f.p, vAdd(B, vScale(vSub(B, A), len / (vDist(A, B) || 1))));
-          addExtra(through, f.p, true);
-          continue;
-        }
-      }
-      if (f.k === "pointOn" && tryPlacePointOnWithCollinearExtension({ p: f.p, seg: f.seg, points, lengths, addExtra })) {
-        host.set(f.p, f.seg);
-        continue;
-      }
-      const isDeferredHostLine = f.k === "pointOn" && facts.some((pf) => pf.k === "parallel" && (pairKey(pf.a[0], pf.a[1]) === pairKey(a, b) || pairKey(pf.b[0], pf.b[1]) === pairKey(a, b)));
-      if (!P(a) || !P(b)) { if (!isDeferredHostLine) { if (pass === 0) deferredFacts.push(f); else warnings.push(`نقطتا ${a}${b} غير معرّفتين`); } continue; }
-      points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
-      if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
-    } else if (f.k === "parallel") {
-      const awaitsIntersect = [f.a[0], f.a[1], f.b[0], f.b[1]].some(
-        (pt) => !P(pt) && facts.some((inf) => inf.k === "intersect" && inf.p === pt)
-      );
-      if (awaitsIntersect) { deferredParallels.push(f); continue; }
-      runParallel(f);
-    } else if (f.k === "perp") {
-      const ka = pairKey(f.a[0], f.a[1]); const kb = pairKey(f.b[0], f.b[1]);
-      if (perpMedians && ((ka === perpMedians.seg1Key && kb === perpMedians.seg2Key) || (kb === perpMedians.seg1Key && ka === perpMedians.seg2Key))) continue;
-      if (!resolvePerpFactHelper({ fact: f, points, host, lengths, addExtra, addAngle })) {
-        if (pass === 0) deferredFacts.push(f); else warnings.push("تعامد بنقاط غير معرّفة");
-      }
-    } else if (f.k === "bisector") {
-      const opp = trianglesSides(f.vertex); const d = f.seg[0] === f.vertex ? f.seg[1] : f.seg[0]; if (!opp || !P(f.vertex)) continue;
-      points.set(d, angleBisectorFoot(P(f.vertex)!, P(opp[0])!, P(opp[1])!)); host.set(d, opp); addExtra(f.vertex, d, false, f.lineKind);
-      addAngle(f.vertex, opp[0], d, { arcCount: 1 }); addAngle(f.vertex, d, opp[1], { arcCount: 1 });
-    } else if (f.k === "median") {
-      applyMedianFactOnTriangle({ seg: f.seg, trianglesSides, points, host, ticks, nextTick: () => ++tickGroup, addExtra });
-    } else if (f.k === "intersect") {
-      if (!P(f.a[0]) || !P(f.a[1]) || !P(f.b[0]) || !P(f.b[1])) { if (pass === 0) deferredFacts.push(f); else warnings.push("تقاطع بنقاط غير معرّفة"); continue; }
-      if (!P(f.p)) {
-        const r = lineIntersection(P(f.a[0])!, P(f.a[1])!, P(f.b[0])!, P(f.b[1])!); if (!r) { warnings.push("مستقيمان متوازيان لا يتقاطعان"); continue; }
-        points.set(f.p, r);
-      }
-      for (const s of [f.a, f.b]) {
-        registerIntersectingRaySegments({ s, p: f.p, points, host, isPolygonSide, addExtra });
-      }
-    } else if (f.k === "diagonalsMeet") {
-      const q = polygons.find((x) => x.labels.length === 4); if (!q) continue; const [a, b, c, d] = q.labels;
-      const r = lineIntersection(P(a)!, P(c)!, P(b)!, P(d)!); if (r) { points.set(f.p, r); addExtra(a, c); addExtra(b, d); }
-    } else if (f.k === "extend") {
-      resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
-    } else if (f.k === "draw") { if (pass === 0) deferredFacts.push(f); else addExtra(f.seg[0], f.seg[1], false, f.lineKind); }
+    pending = nextPending;
+    if (points.size === prevPts && pending.length === prevLen) break;
+  }
+  for (const item of pending) if (item.warn) warnings.push(item.warn);
+  for (const f of postFacts) {
+    if (f.k === "draw") addExtra(f.seg[0], f.seg[1], false, f.lineKind);
     else if (f.k === "equal") {
       const lenA = P(f.a[0]) && P(f.a[1]) ? vDist(P(f.a[0])!, P(f.a[1])!) : null;
       const lenB = P(f.b[0]) && P(f.b[1]) ? vDist(P(f.b[0])!, P(f.b[1])!) : null;
       const dmPt = facts.find((x): x is Extract<GeoFact, { k: "diagonalsMeet" }> => x.k === "diagonalsMeet")?.p;
       const isDegenerateDiagEq = Boolean(dmPt && (f.a.includes(dmPt) || f.b.includes(dmPt)) && lenA && lenB && Math.abs(lenA - lenB) / Math.max(lenA, lenB) > 0.2);
       if (!isDegenerateDiagEq && (isPolygonSide(f.a[0], f.a[1]) || isPolygonSide(f.b[0], f.b[1]) || host.has(f.a[0]) || host.has(f.a[1]))) {
-        ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup);
-        ticks.set(pairKey(f.b[0], f.b[1]), tickGroup);
-      } else {
-        addExtra(f.a[0], f.a[1], true);
-        addExtra(f.b[0], f.b[1], true);
-      }
-    }
-    else if (f.k === "angle") {
-      resolveAngleFactHelper({ fact: f, polyOf, extras, host, points, addAngle });
-    }
-    }
+        ticks.set(pairKey(f.a[0], f.a[1]), ++tickGroup); ticks.set(pairKey(f.b[0], f.b[1]), tickGroup);
+      } else { addExtra(f.a[0], f.a[1], true); addExtra(f.b[0], f.b[1], true); }
+    } else if (f.k === "angle") resolveAngleFactHelper({ fact: f, polyOf, extras, host, points, addAngle });
   }
 
   for (const pf of deferredParallels) runParallel(pf);
@@ -287,6 +282,7 @@ export function composeFigureFromGeometryDescription(
   const mergedBadges = [...areaSquares.interiorBadges, ...buildPerimeterAndAreaBadges({ facts, polygons, points, figureId })];
   const baseTitle = description.slice(0, 60);
   const titleArabic = centroidOriented.notToScale ? `${baseTitle} — غير مرسوم بمقياس رسم` : baseTitle;
+  const explicitConstraints = buildExplicitConstraintsFromGeoFacts(facts, figureId, points);
   return {
     warnings,
     figure: {
@@ -294,6 +290,7 @@ export function composeFigureFromGeometryDescription(
       titleArabic, notationLanguage: notation, vertices, segments: allSegments, angles, polygons: polygons.map((p) => p.labels.map(keyId)),
       ...(mergedBadges.length > 0 ? { interiorBadges: mergedBadges } : {}),
       ...(areaSquares.shadedRegions.length > 0 ? { shadedRegions: areaSquares.shadedRegions } : {}),
+      ...(explicitConstraints ? { explicitConstraints } : {}),
     },
   };
 }

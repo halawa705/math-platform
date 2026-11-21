@@ -20,6 +20,10 @@ import {
   tryPlaceSharedEdgeTriangle,
 } from "./geo-quad-angle-and-shared-placer";
 import { placeTriangleFromKnowns, type TriVertexKey } from "./geo-triangle-placer";
+import {
+  placeRegularOrGeneralPolygon,
+  tryPlaceSharedVertexCompositePolygon,
+} from "./geo-shared-vertex-and-vertical-angle-placer";
 import type { Vec2 } from "./geo-vector-math";
 
 export const MODULE_ID_GEO_SHAPE_PLACERS = "geo_shape_placers" as const;
@@ -74,8 +78,27 @@ export function placeDeclaredShapes(
   }
 
   // دعم تشابه وتطابق المضلعات والمثلثات المعلنة عبر حقيقة التشابه أو التطابق
-  const effectiveFacts: GeoFact[] = [...facts];
-  const hasShape = facts.some((f) => f.k === "triangle" || f.k === "quad");
+  const effectiveFacts: GeoFact[] = [];
+  const mergedTriBySet = new Map<string, Extract<GeoFact, { k: "triangle" }>>();
+  for (const f of facts) {
+    if (f.k !== "triangle") { effectiveFacts.push(f); continue; }
+    const key = [...f.labels].sort().join("|");
+    const prev = mergedTriBySet.get(key);
+    if (!prev) {
+      mergedTriBySet.set(key, f);
+    } else {
+      mergedTriBySet.set(key, {
+        k: "triangle",
+        labels: f.right || f.isoApex || f.equilateral ? f.labels : prev.labels,
+        right: prev.right ?? f.right,
+        isoApex: prev.isoApex ?? f.isoApex,
+        equilateral: prev.equilateral ?? f.equilateral,
+      });
+    }
+  }
+  effectiveFacts.push(...mergedTriBySet.values());
+
+  const hasShape = effectiveFacts.some((f) => f.k === "triangle" || f.k === "quad" || f.k === "polygon");
   if (!hasShape) {
     for (const f of facts) {
       if ((f.k === "similarity" || f.k === "congruence") && f.tri1.length === 4 && f.tri2.length === 4) {
@@ -88,24 +111,27 @@ export function placeDeclaredShapes(
     }
   }
 
-  // ترتيب المضلعات طوبولوجياً: الرباعيات الأساسية أولاً، ثم الرباعيات المشتركة مع نقطة تقاطع أقطار، ثم المثلثات الفرعية
+  // ترتيب المضلعات طوبولوجياً: الرباعيات الأساسية أولاً، ثم الرباعيات والمضلعات المشتركة، ثم المثلثات الفرعية
   const diagMeetPts = new Set(facts.filter((x): x is Extract<GeoFact, { k: "diagonalsMeet" }> => x.k === "diagonalsMeet").map((x) => x.p));
   const polyPriority = (f: GeoFact): number => {
     if (f.k === "quad") return f.labels.some((l) => diagMeetPts.has(l)) ? 1 : 0;
+    if (f.k === "polygon") return 1;
     if (f.k === "triangle") return 2;
     return 3;
   };
   effectiveFacts.sort((a, b) => polyPriority(a) - polyPriority(b));
 
   for (const f of effectiveFacts) {
-    if (f.k !== "triangle" && f.k !== "quad") continue;
+    if (f.k !== "triangle" && f.k !== "quad" && f.k !== "polygon") continue;
     const labels = f.labels;
     if (f.k === "triangle" && labels.every((l) => points.has(l))) continue;
     if (f.k === "triangle" && points.size >= 4 && labels.filter((l) => points.has(l)).length === 2 && facts.some((pf) => (pf.k === "pointOn" || pf.k === "diagonalsMeet") && labels.includes(pf.p))) {
       continue;
     }
     let local: Vec2[];
-    if (f.k === "triangle") {
+    if (f.k === "polygon") {
+      local = placeRegularOrGeneralPolygon(labels, num);
+    } else if (f.k === "triangle") {
       const [a, b, c] = labels;
       const keyOf = (l: string): TriVertexKey | undefined => (l === a ? "A" : l === b ? "B" : l === c ? "C" : undefined);
       const abVal = num(a, b);
@@ -165,11 +191,21 @@ export function placeDeclaredShapes(
     if (f.k === "triangle" && tryPlaceSharedEdgeTriangle(f, facts, num, angleOf, points, polygons)) {
       continue;
     }
+    if (
+      labels.filter((l) => points.has(l)).length === 1 &&
+      tryPlaceSharedVertexCompositePolygon({ fact: f, localCoords: local, facts, num, angleOf, points, polygons })
+    ) {
+      continue;
+    }
     const minX = Math.min(...local.map((p) => p.x));
     const maxX = Math.max(...local.map((p) => p.x));
     labels.forEach((l, i) => { if (!points.has(l)) points.set(l, { x: local[i].x - minX + cursorX, y: local[i].y }); });
     cursorX += maxX - minX + (maxX - minX) * 0.45;
-    polygons.push({ labels, kind: f.k === "quad" ? f.kind : "triangle", rightAt: f.k === "triangle" ? f.right : undefined });
+    polygons.push({
+      labels,
+      kind: f.k === "quad" ? f.kind : f.k === "polygon" ? "polygon" : "triangle",
+      rightAt: f.k === "triangle" ? f.right : undefined,
+    });
   }
   return polygons;
 }

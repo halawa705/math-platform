@@ -13,6 +13,7 @@ export type QuadKind = "rectangle" | "square" | "rhombus" | "parallelogram" | "t
 export type GeoFact =
   | { readonly k: "triangle"; readonly labels: readonly string[]; readonly right?: string; readonly isoApex?: string; readonly equilateral?: boolean }
   | { readonly k: "quad"; readonly kind: QuadKind; readonly labels: readonly string[]; readonly isoLegs?: boolean; readonly rightAt?: string }
+  | { readonly k: "polygon"; readonly labels: readonly string[]; readonly regular?: boolean }
   | { readonly k: "circle"; readonly center: string; readonly radius?: number; readonly unit?: ArabicMathUnit }
   | { readonly k: "radius"; readonly r: number; readonly unit?: ArabicMathUnit }
   | { readonly k: "onCircle"; readonly labels: readonly string[] }

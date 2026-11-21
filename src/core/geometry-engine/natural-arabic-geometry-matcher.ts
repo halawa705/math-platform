@@ -56,7 +56,8 @@ export const MODULE_ID_NATURAL_ARABIC_GEOMETRY_MATCHER = "natural_arabic_geometr
 export function matchOptionalGeometryFigureFromArabicDescription(
   arabicDescription: string,
   figureId = "matched_geom_fig",
-  notationLanguage: MathNotationLanguage = "english"
+  notationLanguage: MathNotationLanguage = "english",
+  options?: { readonly excludeLegacyPrepCatalogs?: boolean }
 ): CanonicalGeometryFigureIR | undefined {
   const desc = (arabicDescription || "").trim();
   if (!desc) return undefined;
@@ -77,7 +78,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     }
   }
 
-  const stageRes = matchFromCatalogRegistry(desc, figureId, notationLanguage, isSimilarity);
+  const stageRes = matchFromCatalogRegistry(desc, figureId, notationLanguage, isSimilarity, options);
   if (stageRes.ambiguity) {
     return undefined;
   }
@@ -92,7 +93,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
 
   if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage, description: desc });
   if (/خط\s*الأعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage, description: desc });
-  if (/(?:مستوى\s*إحداثي|شبكة\s*تربيعية|محوري\s*الإحداثيات)/i.test(desc) && /(?:ارسم|مث[ّل]?\s*بياني|عي[ّن]?\s*النقاط|مضلع|قطعة)/i.test(desc)) {
+  if (/(?:(?:ال)?مستوى\s*(?:ال)?إحداثي|شبكة\s*تربيعية|محوري\s*الإحداثيات)/i.test(desc) && /(?:ارسم|مث[ّل]?\s*بياني|عي[ّن]?\s*النقاط|مضلع|قطعة)/i.test(desc)) {
     const coordPoly = buildCoordinatePlanePolygonFigure({ figureId, notationLanguage, description: desc });
     if (coordPoly) return coordPoly;
   }

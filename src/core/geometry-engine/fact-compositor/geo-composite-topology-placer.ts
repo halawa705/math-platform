@@ -44,7 +44,7 @@ export function tryPlaceIntersectingBowTieTriangles(
     seenTri.add(key);
     return true;
   });
-  if (tris.length === 1) {
+  if (tris.length === 1 && !facts.some((f) => f.k === "quad" || f.k === "polygon")) {
     const tOnly = tris[0];
     const interSingle = facts.find(
       (f): f is Extract<GeoFact, { k: "intersect" }> => f.k === "intersect" && tOnly.labels.includes(f.p)

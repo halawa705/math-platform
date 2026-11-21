@@ -31,14 +31,15 @@ export function toDisplayLabel(key: string, notation: "english" | "arabic"): str
 }
 
 /** يحلل «أ ب جـ» أو «ABC» أو «أب» إلى مفاتيح. يعيد null إن لم يكن النص قائمة أسماء نقاط صالحة. */
-export function parseLabelList(text: string): string[] | null {
+export function parseLabelList(text: string, maxTokenLen = 4): string[] | null {
   if (!text) return null;
   const tokens = text.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return null;
   const keys: string[] = [];
+  const latinRx = new RegExp(`^[A-Z]{1,${maxTokenLen}}$`);
   for (const tk of tokens) {
     const bare = tk.replace(/ـ/g, "");
-    if (/^[A-Z]{1,4}$/.test(bare)) { for (const c of bare) keys.push(c); continue; }
+    if (latinRx.test(bare)) { for (const c of bare) keys.push(c); continue; }
     if (/^[a-z]$/.test(bare)) { keys.push(bare.toUpperCase()); continue; }
     if (STOP_WORDS.has(bare)) return null;
     const chars = [...bare].map((c) => c.replace(/[إآا]/g, "أ"));

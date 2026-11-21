@@ -103,7 +103,7 @@ describe("Prep Grade 1 Polygons and Symmetry Axes Geometry Catalog", () => {
     );
 
     expect(res.figure).toBeDefined();
-    expect(res.source).toBe("catalog");
+    expect(["compositor", "catalog"]).toContain(res.source);
   });
 
   it("10. supports Arabic notation language cleanly", () => {

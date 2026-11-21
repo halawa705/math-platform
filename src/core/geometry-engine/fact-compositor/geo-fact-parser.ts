@@ -15,7 +15,7 @@ const UNIT_RX = "(?:(سم²|م²|سم\\^2|م\\^2|سم|متر|أمتار|مترا
 const L = "(?:[A-Za-z]|[أ-ي]ـ?)";
 const SEGRX = `(${L}\\s*${L})(?![A-Za-zء-ي])`;
 const ONE = `(${L})(?![A-Za-zء-ي])`;
-const LIST = `((?:${L}\\s+)+${L}|[A-Z]{2,5})(?![A-Za-zء-ي])`;
+const LIST = `((?:${L}\\s+)+${L}|[A-Z]{2,8})(?![A-Za-zء-ي])`;
 const LIST1 = `((?:${L}\\s+)*${L}|[A-Z]{1,5})(?![A-Za-zء-ي])`;
 const LIN_PREFIX = `(?:(ال?شعاع|الخط\\s*المستقيم|ال?مستقيم|ال?قطعة(?:\\s*ال?مستقيمة)?)\\s+)?`;
 const re = (src: string) => new RegExp(`^${src}$`, "u");
@@ -103,6 +103,21 @@ export function parseGeoFactString(s: string): GeoFact | null {
           rightAt: rightVertex ? one(rightVertex) : undefined,
         };
       }
+    }
+  }
+  // مضلعات خماسية / سداسية / سباعية / ثمانية (بما فيها المنتظمة)
+  if ((m = s.match(new RegExp(`^(?:ال)?(خماسي|سداسي|سباعي|ثماني)(?:\\s+(?:ال)?منتظم)?\\s+${LIST}(?:\\s+(?:ال)?منتظم)?$`, "u")))) {
+    const labels = parseLabelList(m[2], 8);
+    const expectedLen = m[1] === "خماسي" ? 5 : m[1] === "سداسي" ? 6 : m[1] === "سباعي" ? 7 : 8;
+    if (labels && labels.length === expectedLen) {
+      return { k: "polygon", labels, regular: /منتظم/.test(s) || undefined };
+    }
+  }
+  if ((m = s.match(new RegExp(`^${LIST}\\s+(?:ال)?(خماسي|سداسي|سباعي|ثماني)(?:\\s+(?:ال)?منتظم)?$`, "u")))) {
+    const labels = parseLabelList(m[1], 8);
+    const expectedLen = m[2] === "خماسي" ? 5 : m[2] === "سداسي" ? 6 : m[2] === "سباعي" ? 7 : 8;
+    if (labels && labels.length === expectedLen) {
+      return { k: "polygon", labels, regular: /منتظم/.test(s) || undefined };
     }
   }
   // مساحة المربع المنشأ على ضلع

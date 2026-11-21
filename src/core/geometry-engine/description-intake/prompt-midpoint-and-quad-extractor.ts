@@ -5,6 +5,7 @@
  */
 
 import { extractPromptMediansAndRaysFacts } from "./prompt-medians-and-rays-extractor";
+import { extractPromptCollinearAndCompositeFacts } from "./prompt-collinear-and-composite-extractor";
 
 export const MODULE_ID_PROMPT_MIDPOINT_AND_QUAD_EXTRACTOR =
   "prompt_midpoint_and_quad_extractor" as const;
@@ -217,6 +218,9 @@ export function extractPromptQuadMidpointAndMeasureFacts(
 
   for (const mf of extractPromptMediansAndRaysFacts(normClean, normAssert)) {
     if (!facts.includes(mf)) facts.push(mf);
+  }
+  for (const cf of extractPromptCollinearAndCompositeFacts(normClean, normAssert)) {
+    if (!facts.includes(cf)) facts.push(cf);
   }
 
   // 6. مستقيم أو شعاع يقطع ضلعاً في نقطة، أو توازي يقطع ضلعاً في نقطة (داخل مضلع معلن فقط، لتجنب قواطع التوازي الصرفة)

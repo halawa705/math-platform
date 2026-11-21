@@ -29,8 +29,8 @@ const LEADING_CONNECTORS = /^(?:فيه|فيها|حيث|بحيث|إذا\s*كان|
 
 export function splitDescriptionIntoFactStrings(description: string): string[] {
   const normalized = restructureGeometryClauses(normalizeGeometryText(convertGeometryLatexToPlainText(description)))
-    // حماية فواصل قوائم النقط مثل «أ، ب، جـ» قبل الفصل على الفاصلة العربية
-    .replace(/([A-Za-zأ-ي]ـ?)\s*[،,]\s*(?=[A-Za-zأ-ي]ـ?(?:\s*[،,]\s*[A-Za-zأ-ي]ـ?)*(?:\s+على\s+استقامة|\s+تقع|\s+تنتمي))/gu, "$1 ");
+    // حماية فواصل قوائم النقط مثل «أ، ب، جـ» أو «ب، جـ و هـ» قبل الفصل على الفاصلة العربية
+    .replace(/([A-Za-zأ-ي]ـ?)\s*[،,]\s*(?=[A-Za-zأ-ي]ـ?(?:(?:\s*[،,]\s*|\s+و\s+)[A-Za-zأ-ي]ـ?)*(?:\s+على\s+استقامة|\s+تقع|\s+تنتمي))/gu, "$1 ");
   const raw = normalized
     .split(/[;؛\n]|،(?![^()]*\))|(?<=\D)\.(?=\s)|(?<=\s)و(?=\s+(?:[A-Z]{2}|[أ-ي]ـ?\s*[أ-ي]ـ?|ق\s*\(|m\s*\(|∠)\s*=)/gu)
     .map((s) => { let t = s.trim(); for (let i = 0; i < 2; i++) t = t.replace(LEADING_CONNECTORS, "").trim(); return t; })
@@ -38,8 +38,8 @@ export function splitDescriptionIntoFactStrings(description: string): string[] {
   return orderFactsByDependency(raw.flatMap(splitDualTrianglePair).flatMap(splitSimilarityPair).flatMap(expandEqualityChain));
 }
 
-const DECLARATION_FACT = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|شكل\s*رباعي|رباعي|دائرة)/;
-const BASE_POINT_FACT = /(?:∈|منتصف|\sعلى\s|^(?:نمد|مد|امدد)\s)/;
+const DECLARATION_FACT = /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف|شكل\s*رباعي|رباعي|خماسي|سداسي|سباعي|ثماني|دائرة)/;
+const BASE_POINT_FACT = /(?:∈|منتصف|\sعلى\s|على\s+استقامة\s+واحدة|^(?:نمد|مد|امدد)\s)/;
 const DERIVED_LINE_FACT = /(?:متوسط|ينصف|منصف|⊥|\/\/)/;
 const INTERSECTION_FACT = /(?:∩|×|يتقاطعان|يتقاطع|تقاطع)/;
 

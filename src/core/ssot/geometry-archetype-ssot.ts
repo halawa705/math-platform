@@ -7,6 +7,7 @@
  */
 
 import type { ArabicMathUnit, MathNotationLanguage } from "./numeral-and-unit-ssot";
+import type { CanonicalExplicitGeometryConstraints } from "../geometry-engine/constraint-refiner/explicit-geometry-constraints-types";
 
 export type GeometryFamilyId =
   | "triangle_family"
@@ -301,6 +302,8 @@ export interface CanonicalGeometryFigureIR {
   readonly interiorBadges?: readonly CanonicalInteriorBadgeNode[];
   /** توصيف المطلوب المستخرج من السؤال لربطه بعلامة «؟» على الشكل (IR v2). */
   readonly askedSpec?: GeometryAskedTargetSpec;
+  /** قيود الاستقامة والتوازي والتعامد الصريحة لحفظها أثناء التحسين العددي. */
+  readonly explicitConstraints?: CanonicalExplicitGeometryConstraints;
   /** رسم متجهي SVG نقي مولد مسبقاً (خاص بالأشكال الإحصائية أو المركبة الفائقة الدقة). */
   readonly rawSvgMarkup?: string;
 }

@@ -1,6 +1,6 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية والرسوم (لوحة القياس v2 - المرحلة 0)
 
-> تاريخ التوليد: 2026-11-18T07:58:36.367Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-21T11:28:13.614Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر ونظافة وليست حكماً نهائياً**. الدقة الحقيقية تُحسب فقط من خانة `humanVerdict` بعد المراجعة البشرية الصريحة.
@@ -9,8 +9,8 @@
 
 - إجمالي الحالات في المجموعة الذهبية: **437** حالة (تغطي ابتدائي 3–6 وإعدادي 1–3)
 - أنتج النظام شكلاً في: **379** (86.7%)
-- شكل بلا أي علامة خطر آلية: **208** (47.6%)
-- شكل بعلامات خطر آلية: **171** (39.1%)
+- شكل بلا أي علامة خطر آلية: **212** (48.5%)
+- شكل بعلامات خطر آلية: **167** (38.2%)
 - 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها (هلوسة زائدة): **0**
 - شكل مفقود لمسألة تستحق شكلاً: **0**
 - رفض صحيح لمسائل نظرية (لا شكل): **58**
@@ -21,18 +21,18 @@
 
 | العلامة الآلية | العدد |
 |---|---|
-| `from_fixed_catalog` | 171 |
+| `from_fixed_catalog` | 167 |
 
 ### لوحة التغطية والدقة حسب الصف الدراسي
 
 | المفتاح | الإجمالي | شكل بلا علامات | شكل بعلامات خطر | شكل على حالة بلا شكل | شكل مفقود | رفض صحيح | معتمد بشرياً | دقة مثبتة |
 |---|---|---|---|---|---|---|---|---|
-| prep-1 | 120 | 49 | 65 | 0 | 0 | 6 | 0/0 | — |
-| prep-2 | 89 | 25 | 64 | 0 | 0 | 0 | 0/0 | — |
+| prep-1 | 120 | 50 | 64 | 0 | 0 | 6 | 0/0 | — |
+| prep-2 | 89 | 27 | 62 | 0 | 0 | 0 | 0/0 | — |
 | prep-3 | 33 | 13 | 18 | 0 | 0 | 2 | 0/0 | — |
 | primary-3 | 30 | 17 | 5 | 0 | 0 | 8 | 0/0 | — |
 | primary-4 | 49 | 21 | 0 | 0 | 0 | 28 | 0/0 | — |
-| primary-5 | 30 | 3 | 17 | 0 | 0 | 10 | 0/0 | — |
+| primary-5 | 30 | 4 | 16 | 0 | 0 | 10 | 0/0 | — |
 | primary-6 | 31 | 25 | 2 | 0 | 0 | 4 | 0/0 | — |
 | unassigned | 55 | 55 | 0 | 0 | 0 | 0 | 0/0 | — |
 
@@ -42,7 +42,7 @@
 |---|---|---|---|---|---|---|---|---|
 | analytic_geometry | 3 | 0 | 3 | 0 | 0 | 0 | 0/0 | — |
 | numbers | 67 | 26 | 3 | 0 | 0 | 38 | 0/0 | — |
-| plane_geometry | 324 | 149 | 161 | 0 | 0 | 14 | 0/0 | — |
+| plane_geometry | 324 | 153 | 157 | 0 | 0 | 14 | 0/0 | — |
 | primary_visual_models | 4 | 4 | 0 | 0 | 0 | 0 | 0/0 | — |
 | solid_geometry | 5 | 0 | 3 | 0 | 0 | 2 | 0/0 | — |
 | statistics_probability | 34 | 29 | 1 | 0 | 0 | 4 | 0/0 | — |
@@ -85,7 +85,6 @@
 | prep-1-prep-grade1-polygons-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-polygons-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-polygons-catalog-7 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| prep-1-prep-grade1-polygons-catalog-8 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-1 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-2 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-1-prep-grade1-quadrilaterals-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
@@ -151,6 +150,7 @@
 | prep-2-prep-grade2-polygon-angles-catalog-3 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-polygon-angles-catalog-4 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-polygon-angles-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
+| prep-2-prep-grade2-polygon-angles-catalog-6 | figure_flagged | from_fixed_catalog | catalog | — | — |
 
 ## 4. حالات عدم تطابق المواصفة المرجعية (`expectedFigureSpec`)
 

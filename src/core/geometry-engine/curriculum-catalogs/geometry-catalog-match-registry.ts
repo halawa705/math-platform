@@ -103,7 +103,8 @@ export function matchFromCatalogRegistry(
   desc: string,
   figureId: string,
   notation: MathNotationLanguage = "english",
-  isSimilarityContext = false
+  isSimilarityContext = false,
+  options?: { readonly excludeLegacyPrepCatalogs?: boolean }
 ): CatalogRegistryMatchResult {
   const candidates: Array<{ id: string; figure: CanonicalGeometryFigureIR }> = [];
 
@@ -121,6 +122,14 @@ export function matchFromCatalogRegistry(
     );
 
   for (const entry of GEOMETRY_CATALOG_MATCHERS) {
+    // عزل كتالوجات الإعدادي الثابتة عن المسار الحي (باستثناء محرك حساب المثلثات البارامتري)
+    if (
+      options?.excludeLegacyPrepCatalogs &&
+      entry.stage === "preparatory" &&
+      entry.id !== "prep-3-trigonometry"
+    ) {
+      continue;
+    }
     // حماية: استبعاد كتالوجات الابتدائي إذا كانت المسألة تتضمن نظريات ومفاهيم إعدادية صريحة
     if (entry.stage === "primary" && isPrepContext) {
       continue;

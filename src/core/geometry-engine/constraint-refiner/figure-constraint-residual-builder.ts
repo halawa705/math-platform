@@ -36,6 +36,13 @@ export function buildFigureResidualFunction(fig: CanonicalGeometryFigureIR): { f
     fig.segments.filter((s) => s[key] === n).map(segIdx).filter((s): s is readonly [number, number] => s[0] !== undefined && s[1] !== undefined);
   const tickGroups = ([1, 2, 3] as const).map((n) => group("tickMarks", n)).filter((g) => g.length > 1);
   const arrowGroups = ([1, 2] as const).map((n) => group("parallelArrows", n)).filter((g) => g.length > 1);
+  const map4 = (pairs?: readonly (readonly [string, string, string, string])[]) =>
+    (pairs ?? []).map((p) => p.map((id) => idx.get(id))).filter((p): p is [number, number, number, number] => p.every((i) => i !== undefined));
+  const expCollinear = (fig.explicitConstraints?.collinearTriples ?? [])
+    .map((t) => t.map((id) => idx.get(id)))
+    .filter((t): t is [number, number, number] => t.every((i) => i !== undefined));
+  const expParallel = map4(fig.explicitConstraints?.parallelPairs);
+  const expPerp = map4(fig.explicitConstraints?.perpendicularPairs);
   const sine = (x: readonly number[], a: number, b: number, c: number, d: number) => {
     const u = { x: pt(x, b).x - pt(x, a).x, y: pt(x, b).y - pt(x, a).y }; const w = { x: pt(x, d).x - pt(x, c).x, y: pt(x, d).y - pt(x, c).y };
     return (u.x * w.y - u.y * w.x) / ((Math.hypot(u.x, u.y) * Math.hypot(w.x, w.y)) || 1);
@@ -69,6 +76,13 @@ export function buildFigureResidualFunction(fig: CanonicalGeometryFigureIR): { f
     }
     for (const [a, b, c, d] of inv.parallel) r.push(5 * sine(x, a, b, c, d));
     for (const [a, b, c, d] of inv.perpendicular) r.push(5 * cosine(x, a, b, c, d));
+    for (const [e1, m, e2] of expCollinear) {
+      r.push(35 * sine(x, m, e1, m, e2));
+      const c = cosine(x, m, e1, m, e2);
+      if (c > -0.95) r.push(35 * (c + 1));
+    }
+    for (const [a, b, c, d] of expParallel) r.push(25 * sine(x, a, b, c, d));
+    for (const [a, b, c, d] of expPerp) r.push(25 * cosine(x, a, b, c, d));
     for (let k = 0; k < x.length; k++) r.push((0.02 * (x[k] - x0[k])) / diag);
     return r;
   };

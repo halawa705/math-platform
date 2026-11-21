@@ -111,12 +111,19 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
     return true;
   };
 
+  const explicitTriples = (fig.explicitConstraints?.collinearTriples ?? [])
+    .map((t) => t.map((id) => idxMap.get(id)))
+    .filter((t): t is [number, number, number] => t.every((i) => i !== undefined));
+
   const keepsExtensionsStraight = (cand: CanonicalGeometryFigureIR, requireSolid: boolean): boolean =>
     straightExtensions
       .filter((ext) => requireSolid || ext.isDashed)
       .every(({ vertices: [end1, mid, end2] }) =>
         measureAngleDegrees(cand.vertices[mid].position, cand.vertices[end1].position, cand.vertices[end2].position) >= 178.5
-      );
+      ) &&
+    explicitTriples.every(([end1, mid, end2]) =>
+      measureAngleDegrees(cand.vertices[mid].position, cand.vertices[end1].position, cand.vertices[end2].position) >= 178.5
+    );
 
   const seeds = buildMultiStartSeeds(x0);
   const minimized = seeds.map((seed) => minimizeResiduals(fn, seed));
