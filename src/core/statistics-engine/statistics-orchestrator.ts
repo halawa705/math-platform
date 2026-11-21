@@ -38,7 +38,7 @@ export function matchAndRenderStatisticsFigure(
   numeralMode: NumeralDisplayMode = "western",
   notationLanguage: MathNotationLanguage = "arabic"
 ): CanonicalGeometryFigureIR | null {
-  if (!/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*(?:بيانية|مزدوجة)|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|بالخطوط|صاعد|نازل|شجر(?:ة)?\s*(?:ال)?احتمال|فضاء\s*العينة)/i.test(description)) {
+  if (!/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|(?:تمثيل|رسم)\s*بياني\s*بالأعمدة|بالأعمدة|(?:ال)?أعمدة\s*(?:ال)?(?:بيانية|مزدوجة|منفصلة)|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|بالخطوط|صاعد|نازل|شجر(?:ة)?\s*(?:ال)?احتمال|فضاء\s*العينة)/i.test(description)) {
     return null;
   }
 
@@ -62,6 +62,7 @@ export function matchAndRenderStatisticsFigure(
   // 1. تجربة مصيّرات الصف السادس التخصصية أولاً إن انطبقت بدقة
   const barSpec = parseBarChartSpecFromText(description);
   if (barSpec && (!parsed || parsed.chartType === "bar_chart")) {
+    const isConceptualBar = !/\d/.test(description.replace(/[3456]ب/g, ""));
     return {
       figureId,
       familyId: "statistics_family",
@@ -71,7 +72,7 @@ export function matchAndRenderStatisticsFigure(
       vertices: [],
       segments: [],
       angles: [],
-      rawSvgMarkup: buildGrade6BarChartSvgMarkup(barSpec, { numeralMode }),
+      rawSvgMarkup: buildGrade6BarChartSvgMarkup(barSpec, { numeralMode, omitDataGivenValues: isConceptualBar }),
     };
   }
 

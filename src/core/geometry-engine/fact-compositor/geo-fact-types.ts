@@ -15,10 +15,10 @@ export type GeoFact =
   | { readonly k: "quad"; readonly kind: QuadKind; readonly labels: readonly string[]; readonly isoLegs?: boolean; readonly rightAt?: string }
   | { readonly k: "polygon"; readonly labels: readonly string[]; readonly regular?: boolean }
   | { readonly k: "circle"; readonly center: string; readonly radius?: number; readonly unit?: ArabicMathUnit }
-  | { readonly k: "radius"; readonly r: number; readonly unit?: ArabicMathUnit }
+  | { readonly k: "radius"; readonly r: number; readonly unit?: ArabicMathUnit; readonly seg?: Seg }
   | { readonly k: "onCircle"; readonly labels: readonly string[] }
   | { readonly k: "chord"; readonly seg: Seg }
-  | { readonly k: "diameter"; readonly seg: Seg }
+  | { readonly k: "diameter"; readonly seg: Seg; readonly length?: number; readonly unit?: ArabicMathUnit }
   | { readonly k: "tangent"; readonly seg: Seg; readonly at: string; readonly lineKind?: LinearEntityKind }
   | { readonly k: "length"; readonly seg: Seg; readonly text: string; readonly numeric?: number; readonly symbolic?: boolean; readonly unit?: ArabicMathUnit }
   | { readonly k: "areaOnSide"; readonly seg: Seg; readonly area: number; readonly text: string; readonly unit?: ArabicMathUnit }

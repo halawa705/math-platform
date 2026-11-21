@@ -24,7 +24,7 @@ import { verifyProblemSpecMathematicalConsistency } from "./verification/geometr
 import { composeFigureFromGeometryDescription } from "./fact-compositor/geo-figure-composer";
 import { refineFigureToMatchGivens } from "./constraint-refiner/geometry-figure-constraint-refiner";
 import { verifyGeometryFigure } from "./verification/geometry-figure-verification-orchestrator";
-import { matchFromCatalogRegistry } from "./curriculum-catalogs/geometry-catalog-match-registry";
+import { tryDispatchPrimaryParametricFigure } from "./fact-compositor/geo-parametric-domains-dispatcher";
 import { buildTriangleMidsegmentFigure } from "./triangle-family/triangle-midsegment-branch";
 import { buildTriangleThalesParallelFigure } from "./triangle-family/triangle-thales-parallel-branch";
 import { buildTriangleEuclidAltitudeFigure } from "./triangle-family/triangle-euclid-altitude-branch";
@@ -66,7 +66,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (isPurelyTheoreticalNoDiagramProblem(desc)) return undefined;
 
   const cleanDesc = convertGeometryLatexToPlainText(desc);
-  if (/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|أعمدة\s*بيانية|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|شجر(?:ة)?\s*(?:ال)?احتمال)/i.test(cleanDesc)) {
+  if (/(?:\[\s*رسم\s*(?:إحصائي|احصائي|بياني)|مدرج|صندوق|تمثيل\s*بالنقاط|بالأعمدة|(?:ال)?أعمدة\s*(?:ال)?(?:بيانية|مزدوجة|منفصلة)|قطاع(?:ات)?\s*دائري|جدول\s*(?:توزيع\s*)?تكراري|مضلع\s*تكراري|منحنى\s*تكراري|شجر(?:ة)?\s*(?:ال)?احتمال)/i.test(cleanDesc)) {
     const statsFig = matchAndRenderStatisticsFigure(cleanDesc, figureId, "western", notationLanguage);
     if (statsFig) return statsFig;
   }
@@ -78,14 +78,6 @@ export function matchOptionalGeometryFigureFromArabicDescription(
     if (parametricSim && isFigureFaithfulToPrompt(parametricSim, desc)) {
       return parametricSim;
     }
-  }
-
-  const stageRes = matchFromCatalogRegistry(desc, figureId, notationLanguage, isSimilarity);
-  if (stageRes.ambiguity) {
-    return undefined;
-  }
-  if (stageRes.figure) {
-    return stageRes.figure;
   }
 
   const trigFig = matchTrigonometryParametricFigure(desc, figureId, notationLanguage);
@@ -100,6 +92,15 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   const elementaryVisual = detectAndBuildMathElementaryVisualFigure(desc, figureId, notationLanguage);
   if (elementaryVisual) {
     return elementaryVisual;
+  }
+
+  const primaryParametric = tryDispatchPrimaryParametricFigure({
+    description: desc,
+    figureId,
+    notation: notationLanguage,
+  });
+  if (primaryParametric) {
+    return primaryParametric;
   }
 
   if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage, description: desc });

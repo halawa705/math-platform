@@ -12,10 +12,7 @@ import {
 import {
   isSimilarityGeometryContext,
 } from "../src/core/geometry-engine/similarity-family/similarity-context-detector";
-import {
-  matchFromCatalogRegistry,
-  GEOMETRY_CATALOG_MATCHERS,
-} from "../src/core/geometry-engine/curriculum-catalogs/geometry-catalog-match-registry";
+import { matchGeometryWithDiagnostics } from "../src/core/geometry-engine/natural-arabic-geometry-matcher";
 import {
   isEuclideanFigureKind,
   isCartesianFigureKind,
@@ -110,35 +107,28 @@ describe("Phase 2 Task 2.2: Unified Similarity Context Detector", () => {
   });
 });
 
-describe("Phase 2 Task 2.3: Geometry Catalog Match Registry", () => {
-  it("registry contains only primary-stage curriculum catalogs after prep-stage legacy eradication", () => {
-    expect(GEOMETRY_CATALOG_MATCHERS.length).toBe(5);
-    const stages = new Set(GEOMETRY_CATALOG_MATCHERS.map((c) => c.stage));
-    expect(stages.has("primary")).toBe(true);
-    expect(stages.size).toBe(1);
-  });
-
-  it("blocks primary-stage catalogs when the description is an explicit prep-stage context", () => {
+describe("Phase 2 Task 2.3: Zero Legacy Fixed Catalogs — Parametric Compositor Routing", () => {
+  it("routes prep parallelogram figures directly through parametric compositor without legacy catalogs", () => {
     const desc = "في الشكل المقابل أ ب جـ د متوازي أضلاع قطراه يتقاطعان في م";
-    const res = matchFromCatalogRegistry(desc, "test_cat");
+    const res = matchGeometryWithDiagnostics(desc, "test_cat", "arabic");
 
-    expect(res.ambiguity).toBe(false);
-    expect(res.figure).toBeUndefined();
-    expect(res.candidateCatalogIds).toHaveLength(0);
+    expect(res.source).toBe("compositor");
+    expect(res.figure).toBeDefined();
+    expect(res.decision).toBe("green");
   });
 
-  it("returns no ambiguity and empty result for unrecognized non-geometry text", () => {
-    const res = matchFromCatalogRegistry("احسب ناتج جمع 15 + 27", "test_cat");
+  it("returns no figure for unrecognized pure arithmetic non-geometry text", () => {
+    const res = matchGeometryWithDiagnostics("احسب ناتج جمع 15 + 27", "test_cat");
     expect(res.figure).toBeUndefined();
-    expect(res.ambiguity).toBe(false);
-    expect(res.candidateCatalogIds).toHaveLength(0);
+    expect(res.source).toBe("none");
   });
 
-  it("keeps similarity contexts strictly isolated from primary-stage catalogs", () => {
-    const simDesc = "مثلثان متشابهان ABC ~ DEF فيهما زاوية B = 60°";
-    const res = matchFromCatalogRegistry(simDesc, "test_cat", "english", true);
+  it("keeps similarity contexts routed parametrically with zero catalog fallback", () => {
+    const simDesc =
+      "في الشكل المقابل مثلثان متشابهان ABC ~ DEF فيها AB = 6 سم و BC = 8 سم و AC = 10 سم و DE = 3 سم";
+    const res = matchGeometryWithDiagnostics(simDesc, "test_cat", "english");
 
-    expect(res.figure).toBeUndefined();
-    expect(res.candidateCatalogIds).toHaveLength(0);
+    expect(res.source).not.toBe("catalog");
+    expect(res.figure).toBeDefined();
   });
 });

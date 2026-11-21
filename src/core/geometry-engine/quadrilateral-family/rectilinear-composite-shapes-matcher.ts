@@ -24,7 +24,7 @@ export function matchRectilinearCompositeFigure(
   opts: RectilinearCompositeOptions
 ): CanonicalGeometryFigureIR | undefined {
   const d = description.trim();
-  if (/مدرج|تكرار|إحصاء|احصاء|بيانات|مخطط|مستوى\s*إحداثي|[A-Z]{2,4}|دائرة|قوس\s*[A-Zأ-ي]|زاويتان\s*متجاورتان|\/\/|⊥/i.test(d)) {
+  if (/مدرج|تكرار|إحصاء|احصاء|بيانات|مخطط|مستوى\s*إحداثي|[A-Z]{2,4}|دائرة|قوس\s*(?!مجوف)[A-Zأ-ي]|زاويتان\s*متجاورتان|\/\/|⊥/i.test(d)) {
     return undefined;
   }
   const western = toWesternNumeralsSSOT(d);

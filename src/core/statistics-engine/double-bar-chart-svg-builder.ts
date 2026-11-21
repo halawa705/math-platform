@@ -46,7 +46,7 @@ export function buildDoubleBarChartSvgMarkup(
   for (let yVal = 0; yVal <= yMax; yVal += yStep) {
     const yPx = baseY - (yVal / yMax) * plotH;
     gridSvg.push(
-      `<line x1="${padLeft}" y1="${yPx.toFixed(1)}" x2="${(width - padRight).toFixed(1)}" y2="${yPx.toFixed(1)}" stroke="#E2E8F0" stroke-width="0.8" />`,
+      `<line data-furniture="1" x1="${padLeft}" y1="${yPx.toFixed(1)}" x2="${(width - padRight).toFixed(1)}" y2="${yPx.toFixed(1)}" stroke="#E2E8F0" stroke-width="0.8" stroke-dasharray="3,2" />`,
       `<text data-furniture="1" x="${(padLeft - 6).toFixed(1)}" y="${(yPx + 3).toFixed(1)}" text-anchor="end" font-size="8" font-weight="700" font-family="system-ui, sans-serif" fill="#64748B">${formatNumeralsByModeSSOT(yVal, numMode)}</text>`
     );
   }
@@ -72,11 +72,21 @@ export function buildDoubleBarChartSvgMarkup(
       barsSvg.push(
         `<rect${attr1} x="${x1.toFixed(1)}" y="${(baseY - h1).toFixed(1)}" width="${barW.toFixed(1)}" height="${h1.toFixed(1)}" fill="#2563EB" stroke="${stroke}" stroke-width="1" rx="1.5" opacity="0.9" />`
       );
+      if (!spec.omitDataGivenValues) {
+        barsSvg.push(
+          `<text x="${(x1 + barW / 2).toFixed(1)}" y="${(baseY - h1 - 3).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#1E40AF">${formatNumeralsByModeSSOT(b.series1Value, numMode)}</text>`
+        );
+      }
     }
     if (b.series2Value > 0) {
       barsSvg.push(
         `<rect${attr2} x="${x2.toFixed(1)}" y="${(baseY - h2).toFixed(1)}" width="${barW.toFixed(1)}" height="${h2.toFixed(1)}" fill="#10B981" stroke="${stroke}" stroke-width="1" rx="1.5" opacity="0.9" />`
       );
+      if (!spec.omitDataGivenValues) {
+        barsSvg.push(
+          `<text x="${(x2 + barW / 2).toFixed(1)}" y="${(baseY - h2 - 3).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#047857">${formatNumeralsByModeSSOT(b.series2Value, numMode)}</text>`
+        );
+      }
     }
     xLabelsSvg.push(
       `<text x="${(x1 + pairW / 2).toFixed(1)}" y="${(baseY + 14).toFixed(1)}" text-anchor="middle" font-size="7.5" font-weight="700" font-family="system-ui, sans-serif" fill="${stroke}">${b.categoryLabel}</text>`

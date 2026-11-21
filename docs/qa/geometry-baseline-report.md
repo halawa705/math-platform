@@ -1,6 +1,6 @@
 # تقرير خط الأساس لدقة الأشكال الهندسية والرسوم (لوحة القياس v2 - المرحلة 0)
 
-> تاريخ التوليد: 2026-11-21T18:56:05.237Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
+> تاريخ التوليد: 2026-11-21T19:18:46.400Z — يُولَّد آلياً بواسطة `tests/geo-baseline-measurement-runner.test.ts`. لا تعدّله يدوياً.
 
 > [!IMPORTANT]
 > العلامات الآلية **مؤشرات خطر ونظافة وليست حكماً نهائياً**. الدقة الحقيقية تُحسب فقط من خانة `humanVerdict` بعد المراجعة البشرية الصريحة.
@@ -9,8 +9,8 @@
 
 - إجمالي الحالات في المجموعة الذهبية: **305** حالة (تغطي ابتدائي 3–6 وإعدادي 1–3)
 - أنتج النظام شكلاً في: **247** (81.0%)
-- شكل بلا أي علامة خطر آلية: **236** (77.4%)
-- شكل بعلامات خطر آلية: **11** (3.6%)
+- شكل بلا أي علامة خطر آلية: **238** (78.0%)
+- شكل بعلامات خطر آلية: **9** (3.0%)
 - 🔴 شكل رُسم لمسألة لا يجب أن يُرسم لها (هلوسة زائدة): **0**
 - شكل مفقود لمسألة تستحق شكلاً: **0**
 - رفض صحيح لمسائل نظرية (لا شكل): **58**
@@ -21,7 +21,7 @@
 
 | العلامة الآلية | العدد |
 |---|---|
-| `from_fixed_catalog` | 11 |
+| `from_fixed_catalog` | 9 |
 | `missing_given_on_figure` | 4 |
 
 ### لوحة التغطية والدقة حسب الصف الدراسي
@@ -34,7 +34,7 @@
 | primary-3 | 30 | 22 | 0 | 0 | 0 | 8 | 0/0 | — |
 | primary-4 | 49 | 21 | 0 | 0 | 0 | 28 | 0/0 | — |
 | primary-5 | 30 | 20 | 0 | 0 | 0 | 10 | 0/0 | — |
-| primary-6 | 31 | 25 | 2 | 0 | 0 | 4 | 0/0 | — |
+| primary-6 | 31 | 27 | 0 | 0 | 0 | 4 | 0/0 | — |
 | unassigned | 55 | 55 | 0 | 0 | 0 | 0 | 0/0 | — |
 
 ### لوحة التغطية حسب الفرع الرياضي
@@ -43,7 +43,7 @@
 |---|---|---|---|---|---|---|---|---|
 | analytic_geometry | 5 | 5 | 0 | 0 | 0 | 0 | 0/0 | — |
 | numbers | 67 | 29 | 0 | 0 | 0 | 38 | 0/0 | — |
-| plane_geometry | 189 | 164 | 11 | 0 | 0 | 14 | 0/0 | — |
+| plane_geometry | 189 | 166 | 9 | 0 | 0 | 14 | 0/0 | — |
 | primary_visual_models | 4 | 4 | 0 | 0 | 0 | 0 | 0/0 | — |
 | solid_geometry | 5 | 3 | 0 | 0 | 0 | 2 | 0/0 | — |
 | statistics_probability | 34 | 30 | 0 | 0 | 0 | 4 | 0/0 | — |
@@ -62,8 +62,6 @@
 | prep-2-prep-grade2-pythagoras-converse-catalog-5 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-2-prep-grade2-triangle-medians-catalog-9 | figure_flagged | from_fixed_catalog | catalog | — | — |
 | prep-3-sim-notebooklm-06 | figure_flagged | from_fixed_catalog | catalog | — | — |
-| p6-geom-30-circle-radius | figure_flagged | from_fixed_catalog | catalog | — | — |
-| p6-geom-31-circle-diameter | figure_flagged | from_fixed_catalog | catalog | — | — |
 
 ## 4. حالات عدم تطابق المواصفة المرجعية (`expectedFigureSpec`)
 

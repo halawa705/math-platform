@@ -43,6 +43,10 @@ export function parseGeoFactString(s: string): GeoFact | null {
     const r = m[2] ? Number(m[2]) : undefined;
     return { k: "circle", center: one(m[1]), radius: r && Number.isFinite(r) ? r : undefined, unit: normalizeArabicGeometryUnitSSOT(m[3]) };
   }
+  if ((m = s.match(new RegExp(`^(?:طول\\s*)?نصف\\s*(?:ال)?قطر\\s*${SEGRX}\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}$`, "u")))) {
+    const a = seg(m[1]);
+    if (a) return { k: "radius", r: Number(m[2]), unit: normalizeArabicGeometryUnitSSOT(m[3]), seg: a };
+  }
   if ((m = s.match(new RegExp(`^(?:نق|نصف\\s*القطر|طول\\s*نصف\\s*القطر|نصف\\s*قطرها)\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}$`, "u")))) {
     return { k: "radius", r: Number(m[1]), unit: normalizeArabicGeometryUnitSSOT(m[2]) };
   }
@@ -51,6 +55,10 @@ export function parseGeoFactString(s: string): GeoFact | null {
     if (labels && labels.length >= 1) return { k: "onCircle", labels };
   }
   if ((m = s.match(re(`${SEGRX}\\s*وتر(?:\\s*في\\s*الدائرة)?`)))) { const a = seg(m[1]); if (a) return { k: "chord", seg: a }; }
+  if ((m = s.match(new RegExp(`^(?:طول\\s*)?(?:ال)?قطر\\s*${SEGRX}\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_RX}$`, "u")))) {
+    const a = seg(m[1]);
+    if (a) return { k: "diameter", seg: a, length: Number(m[2]), unit: normalizeArabicGeometryUnitSSOT(m[3]) };
+  }
   if ((m = s.match(re(`${SEGRX}\\s*قطر(?:\\s*في\\s*الدائرة)?`)))) { const a = seg(m[1]); if (a) return { k: "diameter", seg: a }; }
   if ((m = s.match(re(`${LIN_PREFIX}${SEGRX}\\s*مماس(?:\\s*للدائرة)?\\s*(?:عند|في)\\s*${ONE}`)))) { const a = seg(m[2]); if (a) return { k: "tangent", seg: a, at: one(m[3]), lineKind: inferLineKind(m[1]) }; }
   // تشابه وتطابق مثلثين (قبل فحص المثلث الفردي)

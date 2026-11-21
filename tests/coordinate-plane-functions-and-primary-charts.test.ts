@@ -114,4 +114,48 @@ describe("Coordinate Plane, Functions & Enhanced Statistics / Primary Compositor
       expect(res.decision, `Case "${id}" warnings: ${res.warnings.join("; ")}`).toBe("green");
     }
   });
+
+  it("composes Grade 6 named radius and diameter circles directly via compositor (0 catalog)", () => {
+    const rFig = matchGeometryWithDiagnostics(
+      { problemPrompt: "دائرة م نصف قطرها 7 سم أوجد مساحتها", geometryTag: "دائرة مركزها م ; نصف القطر م أ = 7 سم" },
+      "p6_r7",
+      "arabic"
+    );
+    expect(rFig.source).toBe("compositor");
+    expect(rFig.decision).toBe("green");
+    expect(rFig.figure?.familyId).toBe("circle_family");
+
+    const dFig = matchGeometryWithDiagnostics(
+      { problemPrompt: "دائرة قطرها 14 سم احسب محيطها ومساحة سطحها", geometryTag: "دائرة مركزها م ; القطر أ ب = 14 سم" },
+      "p6_d14",
+      "arabic"
+    );
+    expect(dFig.source).toBe("compositor");
+    expect(dFig.decision).toBe("green");
+    expect(dFig.figure?.familyId).toBe("circle_family");
+  });
+
+  it("supports fractional coordinate grids, minor sub-gridlines, negative axes labels, and split reflection polygons", () => {
+    const fracFig = buildCoordinatePlanePolygonFigure({
+      figureId: "frac_coord",
+      notationLanguage: "arabic",
+      description: "مستوى إحداثي بالأنصاف والكسور ; أ(1.5, 0.5) ; ب(-0.5, 2)",
+    });
+    expect(fracFig?.coordinateGrid?.step).toBe(0.5);
+    expect(fracFig?.coordinateGrid?.minorSubdivisions).toBe(2);
+    expect(fracFig?.coordinateGrid?.tickFormat).toBe("fraction");
+    const fracSvg = projectGeometryFigureToSVGMarkup(fracFig!, { notationLanguage: "arabic" });
+    expect(fracSvg).toContain("½");
+    expect(fracSvg).toContain("سَ");
+    expect(fracSvg).toContain("صَ");
+
+    const reflFig = buildCoordinatePlanePolygonFigure({
+      figureId: "refl_tri",
+      notationLanguage: "english",
+      description: "مستوى إحداثي: A(1, 1) ; B(3, 1) ; C(2, 3) وصورته بالانعكاس A'(1, -1) ; B'(3, -1) ; C'(2, -3)",
+    });
+    expect(reflFig?.polygons?.length).toBe(2);
+    expect(reflFig?.segments.some((s) => s.strokeStyle === "dashed" && s.id.includes("_img_"))).toBe(true);
+    expect(reflFig?.shadedRegions?.length).toBe(2);
+  });
 });

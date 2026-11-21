@@ -27,10 +27,10 @@
 2. **Single-Owner Teacher & Students Architecture:**
    - There is NO multi-teacher tenancy and NO complex `Super Admin` panel. There is **exactly one owner-teacher** and **students** who watch video lectures, study booklets, solve homework drills, and take live electronic exams.
    - **Unified Login with Stealth Teacher Access:**
-     * There is **only ONE login page** across the entire application (`src/app/login/page.tsx`).
-     * The publicly visible interface is the simple Student Login form (Student Code or Phone Number).
-     * The Owner-Teacher authenticates from the **exact same page** via a **hidden stealth trigger (`Stealth Trigger`)** completely invisible to students (e.g., 5 rapid taps on the summation symbol logo $\sum$ or typing a secret teacher prefix into the code field), which reveals the Owner-Teacher's secret password input.
-     * **STRICTLY FORBIDDEN:** Creating separate login pages for students and the teacher.
+     - There is **only ONE login page** across the entire application (`src/app/login/page.tsx`).
+     - The publicly visible interface is the simple Student Login form (Student Code or Phone Number).
+     - The Owner-Teacher authenticates from the **exact same page** via a **hidden stealth trigger (`Stealth Trigger`)** completely invisible to students (e.g., 5 rapid taps on the summation symbol logo $\sum$ or typing a secret teacher prefix into the code field), which reveals the Owner-Teacher's secret password input.
+     - **STRICTLY FORBIDDEN:** Creating separate login pages for students and the teacher.
 
 3. **The 5 Platform Pillars:**
    - The project tree is engineered to accommodate present and future capabilities without structural refactoring:
@@ -51,13 +51,13 @@
 1. **Strict Atomic Separation (`One Micro-Feature = One File`):**
    - **STRICTLY FORBIDDEN:** Combining two micro-features or two UI controls inside a single file, even if each feature is only 20 lines of code!
    - **Mandatory Applied Example (PDF Preview & Print Controls):**
-     * Switching between Western (`0-9`) and Eastern (`٠-٩`) numerals $\rightarrow$ dedicated atomic file: `pdf-numeral-system-switch.tsx`.
-     * Changing font family (`Cairo`, `Almarai`, etc.) $\rightarrow$ dedicated atomic file: `pdf-font-family-selector.tsx`.
-     * Changing answer visibility mode (Questions Only / Questions with Answers / Answer Key Only) $\rightarrow$ dedicated atomic file: `pdf-answer-visibility-mode.tsx`.
-     * Controlling exact point font size (`12pt`, `13pt`, `14pt`, `15pt`) $\rightarrow$ dedicated atomic file: `pdf-exact-fontsize-control.tsx`.
-     * Controlling page density and column layout $\rightarrow$ dedicated atomic files: `pdf-density-budget-selector.tsx` and `pdf-columns-layout-toggle.tsx`.
-     * Editing page header and teacher branding $\rightarrow$ dedicated atomic file: `pdf-header-branding-editor.tsx`.
-     * All atomic control files are orchestrated via a single coordinator (`pdf-preview-orchestrator.tsx`) bound to the Single Source of Truth (`pdf-print-settings-ssot.ts`).
+     - Switching between Western (`0-9`) and Eastern (`٠-٩`) numerals $\rightarrow$ dedicated atomic file: `pdf-numeral-system-switch.tsx`.
+     - Changing font family (`Cairo`, `Almarai`, etc.) $\rightarrow$ dedicated atomic file: `pdf-font-family-selector.tsx`.
+     - Changing answer visibility mode (Questions Only / Questions with Answers / Answer Key Only) $\rightarrow$ dedicated atomic file: `pdf-answer-visibility-mode.tsx`.
+     - Controlling exact point font size (`12pt`, `13pt`, `14pt`, `15pt`) $\rightarrow$ dedicated atomic file: `pdf-exact-fontsize-control.tsx`.
+     - Controlling page density and column layout $\rightarrow$ dedicated atomic files: `pdf-density-budget-selector.tsx` and `pdf-columns-layout-toggle.tsx`.
+     - Editing page header and teacher branding $\rightarrow$ dedicated atomic file: `pdf-header-branding-editor.tsx`.
+     - All atomic control files are orchestrated via a single coordinator (`pdf-preview-orchestrator.tsx`) bound to the Single Source of Truth (`pdf-print-settings-ssot.ts`).
    - With this architecture, whenever the Owner requests modifying, removing, or adding a micro-feature, the AI agent opens a single small file (30–80 lines) and updates it in seconds with **zero side effects** and **minimal token consumption**.
 
 2. **Global Unique Filename Invariant:**
@@ -76,18 +76,20 @@
 > You are **STRICTLY FORBIDDEN** from jumping straight into writing or editing application code. Every task MUST pass sequentially through the following four mandatory phases:
 
 ### Phase 1: Deep Codebase Study & Comprehensive Engineering Plan First (`Study & Plan Before Any Code`)
+
 1. **Search & Inspect First (`Search-Read-Verify`):**
    - Search the project tree first to locate all existing atomic files and SSOT modules related to the request.
    - Read the actual target files thoroughly to understand their exact data contracts, props, callers, and rendering flow.
 2. **Produce a Complete Architectural Plan Before Coding:**
    - Before writing or modifying any application code, you MUST present a complete, concrete engineering plan resulting from your real study of the codebase.
    - The plan MUST explicitly list:
-     * Every file to be created or modified and its exact responsibility.
-     * Every legacy/old file, function, branch, or style block that will be superseded by the new design and is scheduled for deletion after human review.
-     * How existing architecture and unrelated features are preserved intact.
+     - Every file to be created or modified and its exact responsibility.
+     - Every legacy/old file, function, branch, or style block that will be superseded by the new design and is scheduled for deletion after human review.
+     - How existing architecture and unrelated features are preserved intact.
    - **STOP and wait for user approval of the plan** (unless the user has already approved the plan in the current turn).
 
 ### Phase 2: Atomic Implementation & Strict Type Verification (`Build & Verify`)
+
 1. **Inspect Before Edit:**
    - If the dedicated file exists as a stub, implement inside it directly without creating duplicate files.
    - If creating a new micro-feature, isolate it in a new atomic file with a globally unique name (`<= 300 lines`).
@@ -95,6 +97,7 @@
    - Run `npx tsc --noEmit` and relevant `vitest` suites to verify zero compilation or regression errors. Never claim a build or test passed without actually executing the command.
 
 ### Phase 3: Mandatory Continuous Reminder of Pending Legacy Code Deletion (`Persistent Deletion Reminder Gate`)
+
 1. **Do NOT Leave Old Code Forgotten:**
    - When a new design or system is built and presented for **Human Review**, you MUST explicitly and prominently remind the user in **every single response** that:
      > ⚠️ **REMINDER — PENDING LEGACY CLEANUP STEP:** The old/superseded code and files (`[list exact file/function names]`) are still pending final deletion and will be completely eradicated immediately upon your human review confirmation.
@@ -102,6 +105,7 @@
    - You MUST keep repeating this reminder across turns until the human review is confirmed and the legacy deletion step is executed.
 
 ### Phase 4: Total Legacy Eradication After Human Confirmation (`Zero Orphan / Dead Code Law`)
+
 1. **Complete Removal Upon Confirmation:**
    - Once the user confirms after human review that the new system/design is approved, you MUST immediately delete 100% of the replaced legacy code, unused branches, dead functions, and orphaned files.
    - **STRICTLY FORBIDDEN:** Leaving a single unused line of code, commented-out legacy block, unused prop, or orphaned file anywhere in the repository.
@@ -117,7 +121,7 @@
 Defining any shared state or reference data in more than one place is **STRICTLY FORBIDDEN**. All components and engines MUST derive their truth exclusively from **`src/core/ssot/`**:
 
 | SSOT File | Exclusive Platform Responsibility | Dependents |
-|---|---|---|
+| --- | --- | --- |
 | `curriculum-hierarchy-ssot.ts` | NotebookLM curriculum-splitting prompt + parser building the hierarchy (`Grades` $\rightarrow$ `11 Branches` $\rightarrow$ `Units` $\rightarrow$ `Lessons`). | All pages, prompt builders, question banks, booklets, videos, and homework. |
 | `theme-mode-ssot.ts` | Unified color mode state (Light `Ivory` / Dark `Obsidian`) and toggle control. | All pages, tabs, and modals. |
 | `math-branches-ssot.ts` | Definitions of the 11 Mathematics branches, icons, colors, and semantic properties. | Context ribbon, curriculum explorer, filters, and prompt builders. |
@@ -199,7 +203,22 @@ Defining any shared state or reference data in more than one place is **STRICTLY
 2. **Concise Signal Only:**
    - Keep every reply brief and high-signal, presenting real evidence cleanly.
 
+---
 
+## 9. Mandatory Proactive Architectural & Holistic Platform Assessment
+
+1. **Mandatory Proactive Evaluation:**
+
+* Upon completing any non-trivial feature, enhancement, or fix, the agent **MUST** evaluate and report on the totality of the change across the platform (not restricted to the IR or Renderer alone) using these three criteria:
+- **(a) Architectural Optimality:** Whether a superior architectural pattern or implementation strategy could have been utilized.
+- **(b) Regression Risk:** Whether the modifications introduce potential regressions, side effects, or breaking changes in adjacent components or downstream dependencies.
+- **(c) Holistic Complementary & Platform-Wide Enhancements:**
+  1. **New Complementary Feature(s):** Propose concrete new capabilities or features that complete, strengthen, or broaden the scope of the newly implemented/modified feature.
+  2. **Existing Feature Synergy Upgrades:** Propose targeted improvements to existing platform features/modules so they harmonize with and benefit from the new addition, ensuring continuous holistic advancement of the entire platform.
+
+1. **Execution Completeness Criterion:**
+
+* Omitting this proactive assessment upon the completion of any architectural change, feature addition, or bug-fix task constitutes an **incomplete execution** and violates the operational protocol.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

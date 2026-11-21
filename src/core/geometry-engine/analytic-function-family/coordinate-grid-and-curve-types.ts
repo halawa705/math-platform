@@ -25,6 +25,8 @@ export interface CanonicalCoordinateGridSpec {
   readonly xRange?: readonly [number, number];
   readonly yRange?: readonly [number, number];
   readonly step?: number;
+  readonly minorSubdivisions?: number;
+  readonly tickFormat?: "decimal" | "fraction";
   readonly showGridLines?: boolean;
   readonly showAxesArrows?: boolean;
   readonly showTickNumbers?: boolean;

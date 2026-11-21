@@ -99,6 +99,38 @@ function buildParallelogramAltitudeAreaFigure(opts: {
   };
 }
 
+function buildClassifiedTriangleFigure(opts: {
+  figureId: string;
+  notation: MathNotationLanguage;
+  kind: "equilateral" | "isosceles";
+  sideVal?: number;
+  unit: string;
+  namedVerts: boolean;
+}): CanonicalGeometryFigureIR {
+  const { figureId, notation, kind, unit, namedVerts } = opts;
+  const lbl = (ar: string) => (namedVerts ? localizeGeometricVertexLabelSSOT(ar, notation) : "");
+  const hTop = kind === "equilateral" ? 6.2 : 6.8;
+  const vA: CanonicalVertexNode = { id: `${figureId}_pA`, label: lbl("أ"), position: { x: 5, y: hTop } };
+  const vB: CanonicalVertexNode = { id: `${figureId}_pB`, label: lbl("ب"), position: { x: 2, y: 1.5 } };
+  const vC: CanonicalVertexNode = { id: `${figureId}_pC`, label: lbl("جـ"), position: { x: 8, y: 1.5 } };
+  const sideLabel = opts.sideVal !== undefined ? { value: opts.sideVal, unit, labelKind: "given" as const } : undefined;
+  return {
+    figureId,
+    familyId: "triangle_family",
+    branchId: "triangle_base_general",
+    titleArabic: kind === "equilateral" ? "مثلث متساوي الأضلاع" : "مثلث متساوي الساقين",
+    notationLanguage: notation,
+    vertices: [vA, vB, vC],
+    segments: [
+      { id: `${figureId}_sAB`, fromVertexId: vA.id, toVertexId: vB.id, tickMarks: 1 },
+      { id: `${figureId}_sCA`, fromVertexId: vC.id, toVertexId: vA.id, tickMarks: 1 },
+      { id: `${figureId}_sBC`, fromVertexId: vB.id, toVertexId: vC.id, ...(kind === "equilateral" ? { tickMarks: 1 } : {}), ...(sideLabel ? { lengthLabel: sideLabel } : {}) },
+    ],
+    angles: [],
+    polygons: [[vA.id, vB.id, vC.id]],
+  };
+}
+
 function buildStandaloneAngleFigure(
   kind: "right" | "acute" | "obtuse" | "straight",
   figureId: string,
@@ -163,6 +195,19 @@ export function matchPrimaryAltitudeAreaAndStandaloneFigure(
   }
   if (/مثلث/i.test(d) && (heightVal !== undefined || areaVal !== undefined || /القاعدة.*ارتفاع|قاعدته/i.test(d)) && !/قائم\s*(?:الزاوية\s*)?في/.test(d)) {
     return buildTriangleAltitudeAreaFigure({ figureId, notation: notationLanguage, baseVal, heightVal, areaVal, unit, namedVerts: namedTri });
+  }
+  if (/مثلث\s*متساوي\s*(?:ال)?(أضلاع|ساقين)/i.test(d) && !/قائم|°|درجة|زاوي|تشابه|تطابق|~/.test(d)) {
+    const kind = /أضلاع/.test(d) ? "equilateral" : "isosceles";
+    const sideM = d.match(new RegExp(`طول\\s*ضلع[هـا]?\\s*${num}`, "i"));
+    const namedClass = /متساوي\s*(?:ال)?(?:أضلاع|ساقين)\s*[أ-ي]/i.test(d) || namedTri;
+    return buildClassifiedTriangleFigure({
+      figureId,
+      notation: notationLanguage,
+      kind,
+      sideVal: sideM ? Number(sideM[1]) : undefined,
+      unit: sideM?.[2] || unit,
+      namedVerts: namedClass,
+    });
   }
 
   const degMatch = d.match(/(\d+(?:\.\d+)?)\s*(?:°|درجة)/);

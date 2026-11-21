@@ -92,11 +92,26 @@ export function buildCoordinatePlanePolygonFigure(
     Math.ceil(maxY + 1.5),
   ];
 
-  const plottedVertices: CanonicalVertexNode[] = points.map((pt, idx) => ({
-    id: `${opts.figureId}_pt_${idx}`,
-    label: `${localizeGeometricVertexLabelSSOT(pt.name, notation)}(${pt.x}, ${pt.y})`,
-    position: { x: pt.x, y: pt.y },
-  }));
+  const plottedVertices: CanonicalVertexNode[] = points.map((pt, idx) => {
+    const usesArabicName = /^[\u0621-\u064A]/.test(pt.name);
+    const displayName = usesArabicName ? localizeGeometricVertexLabelSSOT(pt.name, notation) : pt.name;
+    return {
+      id: `${opts.figureId}_pt_${idx}`,
+      label: `${displayName}(${pt.x}, ${pt.y})`,
+      position: { x: pt.x, y: pt.y },
+    };
+  });
+
+  const wantsFractionTicks = /كسور|أنصاف|أرباع/.test(desc);
+  const hasQuarterFrac =
+    points.some((p) => Math.abs(p.x * 4 - Math.round(p.x * 4)) < 1e-6 && Math.abs(p.x * 2 - Math.round(p.x * 2)) > 1e-4) ||
+    points.some((p) => Math.abs(p.y * 4 - Math.round(p.y * 4)) < 1e-6 && Math.abs(p.y * 2 - Math.round(p.y * 2)) > 1e-4);
+  const hasHalfFrac =
+    !hasQuarterFrac &&
+    (points.some((p) => Math.abs(p.x * 2 - Math.round(p.x * 2)) < 1e-6 && Math.abs(p.x - Math.round(p.x)) > 1e-4) ||
+      points.some((p) => Math.abs(p.y * 2 - Math.round(p.y * 2)) < 1e-6 && Math.abs(p.y - Math.round(p.y)) > 1e-4));
+  const gridStep = hasQuarterFrac ? 0.25 : hasHalfFrac ? 0.5 : 1;
+  const minorSubdivisions = hasQuarterFrac ? 4 : hasHalfFrac ? 2 : undefined;
 
   const feet: CanonicalVertexNode[] = [];
   const segments: CanonicalSegmentNode[] = [];
@@ -138,27 +153,42 @@ export function buildCoordinatePlanePolygonFigure(
     });
   }
 
-  if (plottedVertices.length === 2) {
-    segments.push({
-      id: `${opts.figureId}_seg_0_1`,
-      fromVertexId: plottedVertices[0].id,
-      toVertexId: plottedVertices[1].id,
-      strokeStyle: "solid",
-    });
-  } else if (plottedVertices.length >= 3) {
-    for (let i = 0; i < plottedVertices.length; i += 1) {
-      const next = (i + 1) % plottedVertices.length;
-      segments.push({
-        id: `${opts.figureId}_edge_${i}`,
-        fromVertexId: plottedVertices[i].id,
-        toVertexId: plottedVertices[next].id,
-        strokeStyle: "solid",
-      });
+  const baseGroup = plottedVertices.filter((_, idx) => !/['′]$/.test(points[idx].name));
+  const imageGroup = plottedVertices.filter((_, idx) => /['′]$/.test(points[idx].name));
+  const splitTransformGroups = baseGroup.length >= 2 && imageGroup.length >= 2;
+  const connectGroup = (group: CanonicalVertexNode[], prefix: string, strokeStyle: "solid" | "dashed") => {
+    if (group.length === 2) {
+      segments.push({ id: `${opts.figureId}_${prefix}_0_1`, fromVertexId: group[0].id, toVertexId: group[1].id, strokeStyle });
+    } else if (group.length >= 3) {
+      for (let i = 0; i < group.length; i += 1) {
+        const next = (i + 1) % group.length;
+        segments.push({ id: `${opts.figureId}_${prefix}_${i}`, fromVertexId: group[i].id, toVertexId: group[next].id, strokeStyle });
+      }
     }
+  };
+
+  if (splitTransformGroups) {
+    connectGroup(baseGroup, "base", "solid");
+    connectGroup(imageGroup, "img", "dashed");
+  } else {
+    connectGroup(plottedVertices, "edge", "solid");
   }
 
-  const polygons: readonly (readonly string[])[] =
-    plottedVertices.length >= 3 ? [plottedVertices.map((v) => v.id)] : [];
+  const polygons: readonly (readonly string[])[] = splitTransformGroups
+    ? [
+        ...(baseGroup.length >= 3 ? [baseGroup.map((v) => v.id)] : []),
+        ...(imageGroup.length >= 3 ? [imageGroup.map((v) => v.id)] : []),
+      ]
+    : plottedVertices.length >= 3
+      ? [plottedVertices.map((v) => v.id)]
+      : [];
+
+  const shadedRegions = splitTransformGroups
+    ? [
+        ...(baseGroup.length >= 3 ? [{ id: `${opts.figureId}_shade_base`, vertexIds: baseGroup.map((v) => v.id), fillColorHex: "#2563EB", fillOpacity: 0.1 }] : []),
+        ...(imageGroup.length >= 3 ? [{ id: `${opts.figureId}_shade_img`, vertexIds: imageGroup.map((v) => v.id), fillColorHex: "#0D9488", fillOpacity: 0.12 }] : []),
+      ]
+    : undefined;
 
   return {
     figureId: opts.figureId,
@@ -171,7 +201,9 @@ export function buildCoordinatePlanePolygonFigure(
       quadrantMode,
       xRange,
       yRange,
-      step: 1,
+      step: gridStep,
+      ...(minorSubdivisions ? { minorSubdivisions } : {}),
+      tickFormat: wantsFractionTicks ? "fraction" : "decimal",
       showGridLines: true,
       showAxesArrows: true,
       showTickNumbers: true,
@@ -180,5 +212,6 @@ export function buildCoordinatePlanePolygonFigure(
     segments,
     angles: [],
     polygons,
+    ...(shadedRegions && shadedRegions.length > 0 ? { shadedRegions } : {}),
   };
 }

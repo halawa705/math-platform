@@ -172,6 +172,24 @@ export function tryDispatchPreDeclarationDomainFigure(opts: {
   return undefined;
 }
 
+export function tryDispatchPrimaryParametricFigure(opts: {
+  readonly description: string;
+  readonly figureId: string;
+  readonly notation: MathNotationLanguage;
+}): CanonicalGeometryFigureIR | undefined {
+  const { description, figureId, notation } = opts;
+  const rectilinear = matchRectilinearCompositeFigure(description, { figureId, notationLanguage: notation });
+  if (rectilinear) return rectilinear;
+  const unknownDim = matchRectangleSquareUnknownDimensionFigure(description, { figureId, notationLanguage: notation });
+  if (unknownDim) return unknownDim;
+  if (hasPrepNamedOrProofContext(description)) return undefined;
+  return (
+    matchParametricPerimeterAreaFigure(description, { figureId, notationLanguage: notation }) ??
+    matchPrimaryAltitudeAreaAndStandaloneFigure(description, figureId, notation) ??
+    tryBuildSimpleArabicCircleFigure(description, figureId, notation)
+  );
+}
+
 export function tryDispatchFallbackDomainFigure(opts: {
   readonly description: string;
   readonly figureId: string;

@@ -24,6 +24,26 @@ export interface CoordinateGridProjectorOptions {
   readonly notation: MathNotationLanguage;
 }
 
+function formatCoordinateTickLabel(
+  val: number,
+  tickFormat: "decimal" | "fraction" | undefined,
+  numeralMode: NumeralDisplayMode
+): string {
+  const cleanVal = Number(val.toFixed(2));
+  if (tickFormat === "fraction") {
+    const sign = cleanVal < 0 ? "-" : "";
+    const abs = Math.abs(cleanVal);
+    const whole = Math.floor(abs + 1e-6);
+    const rem = Number((abs - whole).toFixed(2));
+    const fracSym = Math.abs(rem - 0.5) < 0.02 ? "½" : Math.abs(rem - 0.25) < 0.02 ? "¼" : Math.abs(rem - 0.75) < 0.02 ? "¾" : "";
+    if (fracSym) {
+      const wholeStr = whole > 0 ? formatNumeralsByModeSSOT(whole, numeralMode) : "";
+      return `${sign}${wholeStr}${fracSym}`;
+    }
+  }
+  return formatNumeralsByModeSSOT(cleanVal, numeralMode);
+}
+
 function chooseCleanStep(span: number, explicitStep?: number): number {
   if (explicitStep && explicitStep > 0) return explicitStep;
   if (span <= 14) return 1;
@@ -88,6 +108,25 @@ export function projectCoordinateGridAndCurvesSVGMarkup(
   const parts: string[] = [];
 
   if (showGrid) {
+    if (grid.minorSubdivisions && grid.minorSubdivisions > 1) {
+      const minorX = stepX / grid.minorSubdivisions;
+      for (let x = Math.ceil(xMin / minorX) * minorX; x <= xMax + 1e-6; x += minorX) {
+        const rx = Number(x.toFixed(3));
+        if (Math.abs(rx / stepX - Math.round(rx / stepX)) < 1e-3) continue;
+        const p1 = toScreen(rx, yMin);
+        const p2 = toScreen(rx, yMax);
+        parts.push(`<line data-coord-grid="1" x1="${p1.sx}" y1="${p1.sy}" x2="${p2.sx}" y2="${p2.sy}" stroke="#F1F5F9" stroke-width="0.45" />`);
+      }
+      const minorY = stepY / grid.minorSubdivisions;
+      for (let y = Math.ceil(yMin / minorY) * minorY; y <= yMax + 1e-6; y += minorY) {
+        const ry = Number(y.toFixed(3));
+        if (Math.abs(ry / stepY - Math.round(ry / stepY)) < 1e-3) continue;
+        const p1 = toScreen(xMin, ry);
+        const p2 = toScreen(xMax, ry);
+        parts.push(`<line data-coord-grid="1" x1="${p1.sx}" y1="${p1.sy}" x2="${p2.sx}" y2="${p2.sy}" stroke="#F1F5F9" stroke-width="0.45" />`);
+      }
+    }
+
     const startX = Math.ceil(xMin / stepX) * stepX;
     for (let x = startX; x <= xMax + 1e-6; x += stepX) {
       const rx = Math.round(x * 100) / 100;
@@ -95,7 +134,7 @@ export function projectCoordinateGridAndCurvesSVGMarkup(
       const p2 = toScreen(rx, yMax);
       parts.push(`<line data-coord-grid="1" x1="${p1.sx}" y1="${p1.sy}" x2="${p2.sx}" y2="${p2.sy}" stroke="#E2E8F0" stroke-width="0.7" />`);
       if (showTicks && Math.abs(rx) > 1e-6) {
-        const tickLbl = formatNumeralsByModeSSOT(rx, numeralMode);
+        const tickLbl = formatCoordinateTickLabel(rx, grid.tickFormat, numeralMode);
         parts.push(
           `<line data-coord-grid="1" x1="${p1.sx}" y1="${(originScreen.sy - 2.5).toFixed(1)}" x2="${p1.sx}" y2="${(originScreen.sy + 2.5).toFixed(1)}" stroke="${axisStroke}" stroke-width="0.9" />` +
           `<text data-furniture="1" x="${p1.sx}" y="${(originScreen.sy + 10.5).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#64748B">${tickLbl}</text>`
@@ -110,7 +149,7 @@ export function projectCoordinateGridAndCurvesSVGMarkup(
       const p2 = toScreen(xMax, ry);
       parts.push(`<line data-coord-grid="1" x1="${p1.sx}" y1="${p1.sy}" x2="${p2.sx}" y2="${p2.sy}" stroke="#E2E8F0" stroke-width="0.7" />`);
       if (showTicks && Math.abs(ry) > 1e-6) {
-        const tickLbl = formatNumeralsByModeSSOT(ry, numeralMode);
+        const tickLbl = formatCoordinateTickLabel(ry, grid.tickFormat, numeralMode);
         parts.push(
           `<line data-coord-grid="1" x1="${(originScreen.sx - 2.5).toFixed(1)}" y1="${p1.sy}" x2="${(originScreen.sx + 2.5).toFixed(1)}" y2="${p1.sy}" stroke="${axisStroke}" stroke-width="0.9" />` +
           `<text data-furniture="1" x="${(originScreen.sx - 5.5).toFixed(1)}" y="${(p1.sy + 2.5).toFixed(1)}" text-anchor="end" font-size="7" font-weight="700" fill="#64748B">${tickLbl}</text>`
@@ -144,6 +183,14 @@ export function projectCoordinateGridAndCurvesSVGMarkup(
     `<text data-furniture="1" x="${(xEndScreen.sx - 2).toFixed(1)}" y="${(xEndScreen.sy - 6).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="800" fill="#0F172A">${xPosLbl}</text>`,
     `<text data-furniture="1" x="${(yEndScreen.sx + 7).toFixed(1)}" y="${(yEndScreen.sy + 6).toFixed(1)}" text-anchor="start" font-size="8.5" font-weight="800" fill="#0F172A">${yPosLbl}</text>`
   );
+  if (!isFirstQuadrant) {
+    const xNegLbl = notation === "arabic" ? "سَ" : "X'";
+    const yNegLbl = notation === "arabic" ? "صَ" : "Y'";
+    parts.push(
+      `<text data-furniture="1" x="${(xStartScreen.sx + 4).toFixed(1)}" y="${(xStartScreen.sy - 6).toFixed(1)}" text-anchor="start" font-size="8" font-weight="700" fill="#64748B">${xNegLbl}</text>`,
+      `<text data-furniture="1" x="${(yStartScreen.sx + 7).toFixed(1)}" y="${(yStartScreen.sy - 4).toFixed(1)}" text-anchor="start" font-size="8" font-weight="700" fill="#64748B">${yNegLbl}</text>`
+    );
+  }
   if (showTicks) {
     const oLbl = formatNumeralsByModeSSOT(0, numeralMode);
     parts.push(

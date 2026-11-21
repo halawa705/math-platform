@@ -10,10 +10,17 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { matchPrimaryGrade3GeometryFigure } from "@/core/geometry-engine/curriculum-catalogs/primary-stage/grade-3/primary-grade3-geometry-catalog";
-import { buildGrade3FractionFigure, buildGrade3FractionStripSvgMarkup, buildGrade3FractionCircleSvgMarkup } from "@/core/geometry-engine/curriculum-catalogs/primary-stage/grade-3/primary-grade3-fraction-models-builder";
-import { buildGrade3GridAreaFigure, buildGrade3GridAreaSvgMarkup } from "@/core/geometry-engine/curriculum-catalogs/primary-stage/grade-3/primary-grade3-grid-area-builder";
-import { matchOptionalGeometryFigureFromArabicDescription } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
+import {
+  buildMathFractionModelFigure,
+  buildMathFractionStripSvgMarkup,
+  buildMathFractionCircleSvgMarkup,
+} from "@/core/geometry-engine/elementary-visuals/math-fraction-models-svg-builder";
+import {
+  buildMathGridAreaFigure,
+  buildMathGridAreaSvgMarkup,
+} from "@/core/geometry-engine/elementary-visuals/math-grid-area-perimeter-svg-builder";
+import { detectAndBuildMathElementaryVisualFigure } from "@/core/geometry-engine/elementary-visuals/math-elementary-visuals-dispatcher";
+import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { applyPrimaryStagePrintPolicy, getPrimaryStagePrintPreset } from "@/core/pdf-layout-engine/primary-stage-print-policy-ssot";
 import { DEFAULT_PDF_PRINT_SETTINGS_SSOT } from "@/core/ssot/pdf-print-settings-ssot";
 
@@ -38,18 +45,18 @@ describe("Primary Grade 3 & Primary Print Policy (Phase 5)", () => {
 
   describe("Task 5.2: Grade 3 Fractions Models", () => {
     it("builds fraction strip for 3/4", () => {
-      const svg = buildGrade3FractionStripSvgMarkup({
+      const svg = buildMathFractionStripSvgMarkup({
         numerator: 3,
         denominator: 4,
         shape: "strip",
       });
       expect(svg).toContain("<svg");
-      expect(svg).toContain("#3B82F6"); // shaded color
+      expect(svg).toContain("#3B82F6");
       expect(svg).toContain("3 / 4");
     });
 
     it("builds fraction circle for 2/5", () => {
-      const svg = buildGrade3FractionCircleSvgMarkup({
+      const svg = buildMathFractionCircleSvgMarkup({
         numerator: 2,
         denominator: 5,
         shape: "circle",
@@ -59,9 +66,9 @@ describe("Primary Grade 3 & Primary Print Policy (Phase 5)", () => {
       expect(svg).toContain("2 / 5");
     });
 
-    it("matches fraction description through Grade 3 catalog", () => {
+    it("matches fraction description through core elementary visuals engine", () => {
       const desc = "نموذج شريحة كسر 3 / 8 مع تظليل 3 أجزاء من 8";
-      const fig = matchPrimaryGrade3GeometryFigure(desc, "fig_p3_frac");
+      const fig = detectAndBuildMathElementaryVisualFigure(desc, "fig_p3_frac");
       expect(fig).toBeDefined();
       expect(fig?.familyId).toBe("primary_visual_models_family");
       expect(fig?.rawSvgMarkup).toContain("<svg");
@@ -69,15 +76,20 @@ describe("Primary Grade 3 & Primary Print Policy (Phase 5)", () => {
 
     it("matches circular fraction description", () => {
       const desc = "دائرة كسور مقسمة إلى 6 أجزاء مظلل منها 4";
-      const fig = matchPrimaryGrade3GeometryFigure(desc, "fig_p3_circle");
+      const fig = detectAndBuildMathElementaryVisualFigure(desc, "fig_p3_circle");
       expect(fig).toBeDefined();
       expect(fig?.rawSvgMarkup).toContain("<path");
+    });
+
+    it("builds explicit fraction figure wrapper cleanly", () => {
+      const fig = buildMathFractionModelFigure({ numerator: 1, denominator: 4, shape: "strip" }, "f1");
+      expect(fig.rawSvgMarkup).toContain("1 / 4");
     });
   });
 
   describe("Task 5.2: Grid Perimeter & Area", () => {
     it("renders square grid with shaded rectangle 4x3", () => {
-      const svg = buildGrade3GridAreaSvgMarkup({
+      const svg = buildMathGridAreaSvgMarkup({
         gridCols: 6,
         gridRows: 5,
         shapeWidth: 4,
@@ -89,31 +101,33 @@ describe("Primary Grade 3 & Primary Print Policy (Phase 5)", () => {
       expect(svg).toContain("الشبكة التربيعية");
     });
 
-    it("matches grid perimeter & area description", () => {
+    it("matches grid perimeter & area description via core engine", () => {
       const desc = "احسب محيط ومساحة الشكل على الشبكة التربيعية بأبعاد 5 في 3";
-      const fig = matchPrimaryGrade3GeometryFigure(desc, "fig_p3_grid");
+      const fig = detectAndBuildMathElementaryVisualFigure(desc, "fig_p3_grid");
       expect(fig).toBeDefined();
       expect(fig?.rawSvgMarkup).toContain("5 وحدات");
       expect(fig?.rawSvgMarkup).toContain("3 وحدات");
+      const direct = buildMathGridAreaFigure({ gridCols: 7, gridRows: 5, shapeWidth: 5, shapeHeight: 3 }, "g");
+      expect(direct.familyId).toBe("quadrilateral_family");
     });
   });
 
   describe("Task 5.2: Analog Clock Reading", () => {
     it("matches analog clock at 4:30", () => {
       const desc = "ساعة عقارب تشير إلى الساعة 4:30";
-      const fig = matchPrimaryGrade3GeometryFigure(desc, "fig_p3_clock");
+      const fig = detectAndBuildMathElementaryVisualFigure(desc, "fig_p3_clock");
       expect(fig).toBeDefined();
       expect(fig?.branchId).toBe("primary_analog_clock");
       expect(fig?.rawSvgMarkup).toContain("<svg");
     });
   });
 
-  describe("Central Registry Integration", () => {
-    it("routes Grade 3 problems through matchOptionalGeometryFigureFromArabicDescription", () => {
+  describe("Core Compositor Integration", () => {
+    it("routes Grade 3 problems cleanly through compositor without catalogs", () => {
       const desc = "نموذج كسر 5/6 مستطيل مقسم إلى 6 أجزاء";
-      const fig = matchOptionalGeometryFigureFromArabicDescription(desc, "test_p3_reg");
-      expect(fig).toBeDefined();
-      expect(fig?.familyId).toBe("primary_visual_models_family");
+      const res = matchGeometryWithDiagnostics(desc, "test_p3_reg", "arabic");
+      expect(res.source).toBe("compositor");
+      expect(res.figure?.familyId).toBe("primary_visual_models_family");
     });
   });
 });

@@ -11,7 +11,6 @@ import { StudentAnswerSpaceDocker } from "@/core/pdf-layout-engine/student-answe
 import { matchGeometryWithDiagnostics } from "@/core/geometry-engine/natural-arabic-geometry-matcher";
 import { measureAngleDegrees } from "@/core/geometry-engine/verification/figure-vector-measure-helpers";
 import { buildPrepStageFigurePromptGuidance } from "@/core/prompts/geometry-prompt-guidance-prep";
-import { GEOMETRY_CATALOG_MATCHERS, matchFromCatalogRegistry } from "@/core/geometry-engine/curriculum-catalogs/geometry-catalog-match-registry";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import { matchTrigonometryParametricFigure } from "@/core/geometry-engine/trigonometry-family/trigonometry-parametric-orchestrator";
 import { verifyNoSolutionLeakOnFigure } from "@/core/geometry-engine/verification/geometry-solution-leak-guard";
@@ -143,7 +142,7 @@ describe("Track 2 — Composite Geometry, SVG Overlay & Parametric Coordinates",
     expect(verifyNoSolutionLeakOnFigure(midRes.figure!, midPrompt).passed).toBe(true);
   });
 
-  it("keeps prep prompt guidance compact and confirms registry holds zero hardcoded prep catalogs", () => {
+  it("keeps prep prompt guidance compact and routes prep queries strictly via parametric compositor", () => {
     const ar = buildPrepStageFigurePromptGuidance("arabic");
     const en = buildPrepStageFigurePromptGuidance("english");
     expect(ar.length).toBeLessThan(550);
@@ -152,13 +151,13 @@ describe("Track 2 — Composite Geometry, SVG Overlay & Parametric Coordinates",
     expect(ar).toContain("على استقامة واحدة");
     expect(en).toContain("المطلوب:");
 
-    expect(GEOMETRY_CATALOG_MATCHERS.every((m) => m.stage === "primary")).toBe(true);
-    const prepQueryInRegistry = matchFromCatalogRegistry(
-      "في الشكل المقابل ABCD متوازي أضلاع فيه قياس D = 75° ومثلث خارجي EGB",
+    const prepRes = matchGeometryWithDiagnostics(
+      "في الشكل المقابل ABCD متوازي أضلاع فيه قياس زاوية D = 75°",
       "iso_quad",
       "english"
     );
-    expect(prepQueryInRegistry.figure).toBeUndefined();
+    expect(prepRes.source).toBe("compositor");
+    expect(prepRes.decision).toBe("green");
 
     const trigFig = matchTrigonometryParametricFigure(
       "في المثلث ABC القائم الزاوية في B، إذا كان AB = 3 سم، BC = 4 سم، AC = 5 سم، فإن sin C يساوي",

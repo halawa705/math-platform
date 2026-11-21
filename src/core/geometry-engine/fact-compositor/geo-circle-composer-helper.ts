@@ -23,9 +23,18 @@ export function composeCircleFigureFromFacts(
   if (!circleFact || circleFact.k !== "circle") return null;
 
   const radiusFact = facts.find((f) => f.k === "radius");
+  const diameterWithLen = facts.find(
+    (f): f is Extract<GeoFact, { k: "diameter" }> => f.k === "diameter" && f.length !== undefined
+  );
   const hasExplicitRadius = circleFact.radius !== undefined || (radiusFact !== undefined && radiusFact.k === "radius");
   const radiusUnit = circleFact.unit ?? (radiusFact && radiusFact.k === "radius" ? radiusFact.unit : undefined) ?? "سم";
-  const r = circleFact.radius ?? (radiusFact && radiusFact.k === "radius" ? radiusFact.r : 5);
+  const r =
+    circleFact.radius ??
+    (radiusFact && radiusFact.k === "radius"
+      ? radiusFact.r
+      : diameterWithLen?.length !== undefined
+        ? diameterWithLen.length / 2
+        : 5);
   const centerKey = circleFact.center;
   const points = new Map<string, Vec2>([[centerKey, { x: 0, y: 0 }]]);
   const rimAngles = new Map<string, number>();
@@ -37,6 +46,12 @@ export function composeCircleFigureFromFacts(
     rimAngles.set(k, deg);
     points.set(k, { x: r * Math.cos(rad(deg)), y: r * Math.sin(rad(deg)) });
   };
+
+  if (radiusFact && radiusFact.k === "radius" && radiusFact.seg) {
+    const [s0, s1] = radiusFact.seg;
+    const rimKey = s0 === centerKey ? s1 : s1 === centerKey ? s0 : s1;
+    ensureRimPoint(rimKey, 0);
+  }
 
   for (const f of facts) {
     if (f.k === "onCircle") f.labels.forEach((l) => ensureRimPoint(l));
@@ -68,10 +83,16 @@ export function composeCircleFigureFromFacts(
   const segments: CanonicalSegmentNode[] = [];
   const angles: CanonicalAngleNode[] = [];
   let radiusLabeled = false;
-  const pushSeg = (a: string, b: string, dashed?: boolean, isRadiusSeg?: boolean) => {
+  const pushSeg = (
+    a: string,
+    b: string,
+    dashed?: boolean,
+    isRadiusSeg?: boolean,
+    explicitLen?: { readonly value: number | string; readonly unit?: string }
+  ) => {
     if (segments.some((s) => pairKey(s.fromVertexId, s.toVertexId) === pairKey(keyId(a), keyId(b)))) return;
     const len = lengths.get(pairKey(a, b));
-    const attachRadius = !len && isRadiusSeg && hasExplicitRadius && !radiusLabeled;
+    const attachRadius = !len && !explicitLen && isRadiusSeg && hasExplicitRadius && !radiusLabeled;
     if (attachRadius) radiusLabeled = true;
     segments.push({
       id: `${figureId}_s_${segments.length}`,
@@ -79,15 +100,27 @@ export function composeCircleFigureFromFacts(
       toVertexId: keyId(b),
       ...(len
         ? { lengthLabel: { value: len.numeric ?? len.text, unit: len.unit ?? "سم" } }
-        : attachRadius
-          ? { lengthLabel: { value: r, unit: radiusUnit } }
-          : {}),
+        : explicitLen
+          ? { lengthLabel: { value: explicitLen.value, unit: explicitLen.unit ?? "سم" } }
+          : attachRadius
+            ? { lengthLabel: { value: r, unit: radiusUnit } }
+            : {}),
       ...(dashed ? { strokeStyle: "dashed" as const } : {}),
     });
   };
 
   for (const f of facts) {
-    if (f.k === "chord" || f.k === "diameter" || f.k === "draw") {
+    if (f.k === "diameter") {
+      ensureRimPoint(f.seg[0]);
+      ensureRimPoint(f.seg[1]);
+      pushSeg(
+        f.seg[0],
+        f.seg[1],
+        false,
+        false,
+        f.length !== undefined ? { value: f.length, unit: f.unit } : undefined
+      );
+    } else if (f.k === "chord" || f.k === "draw") {
       ensureRimPoint(f.seg[0]);
       ensureRimPoint(f.seg[1]);
       pushSeg(f.seg[0], f.seg[1]);
@@ -128,6 +161,12 @@ export function composeCircleFigureFromFacts(
         });
       }
     }
+  }
+
+  if (radiusFact && radiusFact.k === "radius" && radiusFact.seg && !radiusLabeled) {
+    const [s0, s1] = radiusFact.seg;
+    const rimKey = s0 === centerKey ? s1 : s1 === centerKey ? s0 : s1;
+    pushSeg(centerKey, rimKey, false, true);
   }
 
   if (hasExplicitRadius && !radiusLabeled) {

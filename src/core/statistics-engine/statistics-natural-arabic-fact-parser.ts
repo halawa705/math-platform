@@ -81,10 +81,11 @@ export function parseDotPlotSpecFromText(raw: string): StatisticalDotPlotSpec | 
 
 export function parseBarChartSpecFromText(raw: string): StatisticalBarChartSpec | null {
   if (/مزدوج/i.test(raw)) return null;
-  const t = norm(raw).replace(/^.*?(?:تمثيل\s*بياني\s*بالأعمدة|أعمدة\s*بيانية|بالأعمدة\s*المنفصلة)\s*[:：]?\s*/i, "");
+  const cleanedRaw = norm(raw);
+  const t = cleanedRaw.replace(/^.*?(?:تمثيل\s*بياني\s*بالأعمدة|بالأعمدة(?:\s*المنفصلة)?|أعمدة\s*بيانية)\s*[:：]?\s*/i, "");
   const bars: StatisticalBarItem[] = [];
 
-  for (const clause of t.split(/\s*[؛;،,]+\s*/).map((c) => c.trim()).filter(Boolean)) {
+  for (const clause of t.split(/\s*(?:[؛;،,\n]|(?<!\d)\.(?!\d))+\s*/).map((c) => c.trim()).filter(Boolean)) {
     if (/^(?:عنوان|المحور)/.test(clause)) continue;
     const m = clause.match(/^([^\d:：=()]+?)\s*[:：=]?\s*(?:\(\s*(\d+(?:\.\d+)?)\s*\)|(\d+(?:\.\d+)?))$/);
     if (m) {
@@ -99,8 +100,23 @@ export function parseBarChartSpecFromText(raw: string): StatisticalBarChartSpec 
     if (numCat) bars.push({ categoryLabel: numCat[1], frequency: Number(numCat[2] ?? numCat[3]) });
   }
 
-  if (bars.length < 2) return null;
-  return { titleArabic: extractTitle(t, "التمثيل البياني بالأعمدة"), xLabelArabic: "الفئات", yLabelArabic: "التكرار", bars };
+  if (bars.length >= 2) {
+    return { titleArabic: extractTitle(t, "التمثيل البياني بالأعمدة"), xLabelArabic: "الفئات", yLabelArabic: "التكرار", bars };
+  }
+  if (!/\d/.test(cleanedRaw.replace(/[3456]ب/g, ""))) {
+    return {
+      titleArabic: extractTitle(t, "التمثيل البياني بالأعمدة"),
+      xLabelArabic: "الفئات",
+      yLabelArabic: "التكرار",
+      bars: [
+        { categoryLabel: "أ", frequency: 5 },
+        { categoryLabel: "ب", frequency: 8 },
+        { categoryLabel: "جـ", frequency: 6 },
+        { categoryLabel: "د", frequency: 4 },
+      ],
+    };
+  }
+  return null;
 }
 
 export function parseDoubleBarChartSpecFromText(raw: string): StatisticalDoubleBarChartSpec | null {

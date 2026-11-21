@@ -8,15 +8,18 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { matchPrimaryGrade4GeometryFigure } from "@/core/geometry-engine/curriculum-catalogs/primary-stage/grade-4/primary-grade4-geometry-catalog";
+import { tryDispatchPreDeclarationDomainFigure } from "@/core/geometry-engine/fact-compositor/geo-parametric-domains-dispatcher";
 import { projectGeometryFigureToSVGMarkup } from "@/core/geometry-engine/vector-svg-figure-projector";
 import { isFigureFaithfulToPrompt } from "@/core/geometry-engine/verification/geometry-figure-fidelity-gate";
+
+const buildPrimaryDomainFigure = (prompt: string, figureId: string) =>
+  tryDispatchPreDeclarationDomainFigure({ description: prompt, figureId, notation: "arabic" });
 
 describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
   describe("1. المساحة والمحيط للمستطيل والمربع (Perimeter & Area)", () => {
     it("يبني مستطيلاً دقيق الأبعاد 12 سم × 4 سم لحساب المساحة والمحيط", () => {
       const prompt = "مستطيل أبعاده 12 سم و 4 سم لحساب المحيط والمساحة";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_rect_1");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_rect_1");
 
       expect(fig).toBeDefined();
       expect(fig?.familyId).toBe("quadrilateral_family");
@@ -32,7 +35,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يدعم الوحدات المختلفة مثل ديسم ومم وم وكيلومتر", () => {
       const prompt = "أوجد محيط المستطيل الذي أبعاده 8 ديسم و 3 ديسم";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_rect_units");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_rect_units");
 
       expect(fig).toBeDefined();
       expect(fig?.segments.some((s) => s.lengthLabel?.unit === "ديسم")).toBe(true);
@@ -42,7 +45,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني مربعاً طول ضلعه 5 مم", () => {
       const prompt = "مربع طول ضلعه 5 مم لحساب المحيط";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_sq_1");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_sq_1");
 
       expect(fig).toBeDefined();
       expect(fig?.segments.some((s) => s.lengthLabel?.value === 5)).toBe(true);
@@ -51,7 +54,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني مربعاً مائلاً (Rotated Diamond) 45 درجة كما في سلاح التلميذ", () => {
       const prompt = "مربع مائل طول ضلعه 8 سم لحساب المحيط";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_sq_rot");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_sq_rot");
 
       expect(fig).toBeDefined();
       expect(fig?.titleArabic).toContain("مائل");
@@ -67,7 +70,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
   describe("2. إيجاد البعد المجهول (Unknown Dimension with Interior Badge)", () => {
     it("يبني مستطيلاً بمحيط معطى 24 سم وطول 8 سم والبعد المجهول x مع شارة داخلية", () => {
       const prompt = "أوجد طول الضلع المجهول x في المستطيل الذي محيطه 24 سم وطوله 8 سم";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_unk_rect_p");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_unk_rect_p");
 
       expect(fig).toBeDefined();
       expect(fig?.interiorBadges).toBeDefined();
@@ -82,7 +85,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني مستطيلاً بمساحة معطاة 30 سم² وعرض 5 سم والبعد المجهول x", () => {
       const prompt = "أوجد طول الضلع المجهول x في المستطيل الذي مساحته 30 سم² وعرضه 5 سم";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_unk_rect_a");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_unk_rect_a");
 
       expect(fig).toBeDefined();
       expect(fig?.interiorBadges?.[0].text).toBe("المساحة = 30 سم²");
@@ -95,7 +98,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني مربعاً بمحيط معطى 28 سم وطول الضلع المجهول y", () => {
       const prompt = "أوجد طول الضلع المجهول y في المربع الذي محيطه 28 سم";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_unk_sq_p");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_unk_sq_p");
 
       expect(fig).toBeDefined();
       expect(fig?.interiorBadges?.[0].text).toBe("المحيط = 28 سم");
@@ -104,7 +107,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني مربعاً بمساحة معطاة 64 م² وطول الضلع المجهول y", () => {
       const prompt = "أوجد طول الضلع المجهول y في المربع الذي مساحته 64 م²";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_unk_sq_a");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_unk_sq_a");
 
       expect(fig).toBeDefined();
       expect(fig?.interiorBadges?.[0].text).toBe("المساحة = 64 م²");
@@ -115,7 +118,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
   describe("3. تركيب الأشكال الهندسية (Composite Figures)", () => {
     it("يبني شكل حرف L بأبعاده 8 سم و 9 سم والمجاهيل a و b", () => {
       const prompt = "شكل مركب حرف L أبعاده 8 سم و 9 سم و 3 سم و 1 سم والضلعان المجهولان a و b";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_comp_l");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_comp_l");
 
       expect(fig).toBeDefined();
       expect(fig?.branchId).toBe("quad_composite_rectilinear_shape");
@@ -131,7 +134,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني شكل حرف T برأس أفقي وساق رأسية", () => {
       const prompt = "شكل مركب حرف T عرضه العلوي 11 سم وارتفاع رأسه 2 سم وساقه 5 سم و 5 سم";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_comp_t");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_comp_t");
 
       expect(fig).toBeDefined();
       expect(fig?.vertices.length).toBe(8);
@@ -140,7 +143,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني شكل قوس مجوف U مقلوب (Inverted U Arch)", () => {
       const prompt = "شكل قوس مجوف U مقلوب عرضه العلوي 10 كم وارتفاعه 8 كم وتجويف وسطي مجهول b وقاعدتان 4 كم ومجهول a";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_comp_arch");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_comp_arch");
 
       expect(fig).toBeDefined();
       expect(fig?.vertices.length).toBe(8);
@@ -153,7 +156,7 @@ describe("Grade 4 Primary - Geometry Figures Catalog & Engine", () => {
 
     it("يبني شكل مستطيلين ملتصقين (الدرج)", () => {
       const prompt = "شكل مركب من مستطيلين ملتصقين أبعادهما 5 سم و 5 سم و 3 سم و 3 سم لحساب المساحة والمحيط";
-      const fig = matchPrimaryGrade4GeometryFigure(prompt, "g4_comp_adjacent");
+      const fig = buildPrimaryDomainFigure(prompt, "g4_comp_adjacent");
 
       expect(fig).toBeDefined();
       expect(fig?.polygons?.length).toBe(2);
