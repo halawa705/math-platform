@@ -173,9 +173,19 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
             ) : (
               <div
                 key={`columns-${index}`}
-                className="grid grid-cols-2 items-start w-full min-w-0"
+                className="relative grid grid-cols-2 items-start w-full min-w-0"
                 style={{ columnGap: `${FLOW_COLUMN_GAP_PX}px` }}
               >
+                {settings.showColumnDivider &&
+                  !isSchoolExam &&
+                  segment.leftItems.length > 0 &&
+                  segment.rightItems.length > 0 && (
+                    <span
+                      aria-hidden="true"
+                      style={{ backgroundColor: `${palette.borderHex}26` }}
+                      className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-px"
+                    />
+                  )}
                 <FlowColumn
                   items={segment.rightItems}
                   gapPx={isSchoolExam ? 2 : page.gapPx}

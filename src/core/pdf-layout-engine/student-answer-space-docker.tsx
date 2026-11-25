@@ -53,8 +53,13 @@ export function StudentAnswerSpaceDocker({
     );
 
   /* التسمية تشغل نفس صف السطر الأول (توفير صف كامل لكل بطاقة دون تقليل أسطر الكتابة). */
+  const isPhotocopy = primaryHex === "#000000";
   return (
-    <div className={`mt-auto px-2 pb-1.5 pt-1 bg-white border-t border-slate-200 flex flex-col ${gapClass}`}>
+    <div
+      className={`mt-auto px-2 pb-1.5 pt-1 ${
+        isPhotocopy ? "bg-white" : "bg-slate-50/70"
+      } border-t border-slate-200 flex flex-col ${gapClass}`}
+    >
       {Array.from({ length: lineCount }, (_, i) => i + 1).map((lineIdx) => (
         <div key={lineIdx} className={`${itemHeightClass} w-full flex items-end gap-2`} style={lineIdx === 1 ? { minHeight: "1.1em" } : undefined}>
           {lineIdx === 1 && (

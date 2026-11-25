@@ -45,6 +45,6 @@ export interface FlowDensityProfile {
 
 export const FLOW_DENSITY_PROFILES: Record<PageDensityBudgetMode, FlowDensityProfile> = {
   ultra_compact: { gapMinPx: 2, gapMaxPx: 10, maxStretchPerItemPx: 165, maxStretchRatio: 0.62 },
-  standard_balanced: { gapMinPx: 3, gapMaxPx: 12, maxStretchPerItemPx: 180, maxStretchRatio: 0.65 },
-  booklet_relaxed: { gapMinPx: 5, gapMaxPx: 16, maxStretchPerItemPx: 210, maxStretchRatio: 0.7 },
+  standard_balanced: { gapMinPx: 3, gapMaxPx: 12, maxStretchPerItemPx: 175, maxStretchRatio: 0.64 },
+  booklet_relaxed: { gapMinPx: 5, gapMaxPx: 15, maxStretchPerItemPx: 195, maxStretchRatio: 0.68 },
 };

@@ -147,33 +147,46 @@ export function resolveQuestionCardColorScheme(params: {
     };
   }
 
-  const cardSurfaceBgHex = "#FFFFFF";
+  const isPhotocopy = themeId === "photocopy_black";
+  const cardSurfaceBgHex = isPhotocopy
+    ? "#FFFFFF"
+    : isBookletSolvedExample
+      ? isOddQuestion
+        ? "#FAFFFD"
+        : "#F8FCFF"
+      : "#FFFFFF";
 
-  const cardBorderColorHex = isBookletSolvedExample
-    ? isOddQuestion
-      ? "#10B981"
-      : "#0E7490"
-    : isBookletDrill
-      ? "#6366F1"
-      : isBookletHomework
-        ? "#9D174D"
-        : palette.borderHex;
+  const cardBorderColorHex = isPhotocopy
+    ? "#334155"
+    : isBookletSolvedExample
+      ? isOddQuestion
+        ? "#10B981"
+        : "#0EA5E9"
+      : isBookletDrill
+        ? "#6366F1"
+        : isBookletHomework
+          ? "#9D174D"
+          : palette.borderHex;
 
-  const badgeBgColorHex = isBookletSolvedExample
-    ? isOddQuestion
-      ? "#059669"
-      : "#0284C7"
-    : palette.primaryHex;
+  const badgeBgColorHex = isPhotocopy
+    ? "#0F172A"
+    : isBookletSolvedExample
+      ? isOddQuestion
+        ? "#059669"
+        : "#0284C7"
+      : palette.primaryHex;
 
-  const badgeGradientCss = isBookletSolvedExample
-    ? isOddQuestion
-      ? "linear-gradient(135deg, #059669 0%, #10B981 100%)"
-      : "linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)"
-    : isBookletDrill
-      ? "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)"
-      : isBookletHomework
-        ? "linear-gradient(135deg, #9D174D 0%, #BE185D 100%)"
-        : palette.headerGradientCss;
+  const badgeGradientCss = isPhotocopy
+    ? "linear-gradient(135deg, #0F172A 0%, #334155 100%)"
+    : isBookletSolvedExample
+      ? isOddQuestion
+        ? "linear-gradient(135deg, #059669 0%, #10B981 100%)"
+        : "linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)"
+      : isBookletDrill
+        ? "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)"
+        : isBookletHomework
+          ? "linear-gradient(135deg, #9D174D 0%, #BE185D 100%)"
+          : palette.headerGradientCss;
 
   const exampleRoleLabel = isOddQuestion ? "تطبيقي" : "متقدم";
 

@@ -90,6 +90,12 @@ export function PedagogicalIdeaAndRuleCapsule({
     : isWorksheetSection
       ? "#4338CA"
       : palette.primaryHex;
+  const isPhotocopy = palette.primaryHex === "#000000";
+  const ideaBadgeBgCss = isHomeworkSection
+    ? "linear-gradient(135deg, #9D174D 0%, #BE185D 100%)"
+    : isWorksheetSection
+      ? "linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)"
+      : palette.headerGradientCss;
 
   return (
     <div
@@ -100,16 +106,18 @@ export function PedagogicalIdeaAndRuleCapsule({
         <div
           style={{
             breakInside: "avoid",
-            backgroundColor: "#FFFFFF",
+            background: isPhotocopy
+              ? "#FFFFFF"
+              : `linear-gradient(90deg, ${palette.badgeBgHex} 0%, #FFFFFF 65%, ${palette.softSurfaceHex} 100%)`,
             borderColor: bannerAccentHex,
             boxShadow: "0 1px 3px rgba(15, 23, 42, 0.05)",
           }}
-          className="rounded-lg border-2 border-r-8 px-2 py-1 bg-white text-slate-900 flex items-center justify-between gap-2"
+          className="rounded-lg border-2 border-r-8 px-2 py-1 text-slate-900 flex items-center justify-between gap-2"
         >
           <div className="flex items-center gap-1.5 min-w-0">
             {isWorksheetSection ? (
               <span
-                style={{ backgroundColor: "#4338CA" }}
+                style={{ background: ideaBadgeBgCss }}
                 className="px-2 py-0.5 rounded-md text-white text-[0.8em] font-black shrink-0 shadow-2xs inline-flex items-center gap-1"
               >
                 <PdfBoltIcon />
@@ -117,14 +125,14 @@ export function PedagogicalIdeaAndRuleCapsule({
               </span>
             ) : isPlainSection ? null : !isHomeworkSection ? (
               <span
-                style={{ backgroundColor: palette.primaryHex }}
+                style={{ background: ideaBadgeBgCss }}
                 className="text-white px-2 py-0.5 rounded-md text-[0.82em] font-black shrink-0 shadow-2xs"
               >
                 الفكرة ({formatNumeralsByModeSSOT(ideaNumberText, numeralMode)})
               </span>
             ) : (
               <span
-                style={{ backgroundColor: "#BE185D" }}
+                style={{ background: ideaBadgeBgCss }}
                 className="text-white px-2 py-0.5 rounded-md text-[0.82em] font-black shrink-0 shadow-2xs inline-flex items-center gap-1"
               >
                 <PdfBookIcon />
@@ -148,7 +156,7 @@ export function PedagogicalIdeaAndRuleCapsule({
           </div>
           <span
             style={{
-              backgroundColor: "#FFFFFF",
+              backgroundColor: isPhotocopy ? "#FFFFFF" : palette.badgeBgHex,
               color: bannerAccentHex,
               borderColor: bannerAccentHex,
             }}
@@ -170,15 +178,15 @@ export function PedagogicalIdeaAndRuleCapsule({
           {item.conceptExplanationAr && (
             <div
               style={{
-                backgroundColor: "#FFFFFF",
+                backgroundColor: isPhotocopy ? "#FFFFFF" : isWorksheetSection ? "#F0FDF4" : "#FFFDF5",
                 borderColor: isWorksheetSection ? "#10B981" : "#F59E0B",
                 boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
               }}
-              className="px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.82em] text-slate-900 leading-[1.85] min-w-0"
+              className="px-2 py-1 rounded-lg border border-r-4 text-[0.82em] text-slate-900 leading-[1.55] min-w-0"
             >
               <span
                 style={{
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: isPhotocopy ? "#FFFFFF" : isWorksheetSection ? "#DCFCE7" : "#FEF3C7",
                   color: isWorksheetSection ? "#047857" : "#B45309",
                   borderColor: isWorksheetSection ? "#6EE7B7" : "#FCD34D",
                 }}
@@ -188,7 +196,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                 <span>{isWorksheetSection ? "الفكرة العامة:" : "المفهوم والشرح:"}</span>
               </span>
               <span
-                className={`text-slate-900 break-words leading-[1.85] ${
+                className={`text-slate-900 break-words leading-[1.55] ${
                   boldProseText ? "font-extrabold" : "font-normal"
                 }`}
               >
@@ -213,11 +221,11 @@ export function PedagogicalIdeaAndRuleCapsule({
                       <div
                         key={cIdx}
                         style={{
-                          backgroundColor: "#FFFFFF",
-                          borderColor: "#6366F1",
+                          backgroundColor: isPhotocopy ? "#FFFFFF" : palette.ruleBgHex,
+                          borderColor: palette.ruleBorderHex,
                           boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
                         }}
-                        className="p-1.5 rounded-lg border border-r-4 bg-white text-[0.80em] font-medium text-slate-900 min-w-0 flex flex-col justify-between leading-[1.85]"
+                        className="p-1.5 rounded-lg border border-r-4 text-[0.80em] font-medium text-slate-900 min-w-0 flex flex-col justify-between leading-[1.55]"
                       >
                         <SafeKaTeXBiDiMathRenderer
                           text={cardContent}
@@ -230,17 +238,17 @@ export function PedagogicalIdeaAndRuleCapsule({
               ) : (
                 <div
                   style={{
-                    backgroundColor: "#FFFFFF",
-                    borderColor: isWorksheetSection ? "#2563EB" : "#6366F1",
+                    backgroundColor: isPhotocopy ? "#FFFFFF" : palette.ruleBgHex,
+                    borderColor: isWorksheetSection ? "#2563EB" : palette.ruleBorderHex,
                     boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
                   }}
-                  className="px-2 py-1 rounded-lg border border-r-4 bg-white text-[0.82em] font-bold text-slate-900 leading-[1.85] min-w-0 overflow-hidden"
+                  className="px-2 py-1 rounded-lg border border-r-4 text-[0.82em] font-bold text-slate-900 leading-[1.55] min-w-0 overflow-hidden"
                 >
                   <span
                     style={{
-                      backgroundColor: "#FFFFFF",
+                      backgroundColor: isPhotocopy ? "#FFFFFF" : palette.badgeBgHex,
                       color: palette.primaryHex,
-                      borderColor: "#A5B4FC",
+                      borderColor: palette.ruleBorderHex,
                     }}
                     className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border font-black text-[0.82em] ml-1.5 align-middle"
                   >
@@ -248,7 +256,7 @@ export function PedagogicalIdeaAndRuleCapsule({
                     <span>{isWorksheetSection ? "مفاتيح الحل:" : "القاعدة والقانون:"}</span>
                   </span>
                   <div
-                    className={`text-slate-900 max-w-full overflow-hidden break-words leading-[1.85] ${
+                    className={`text-slate-900 max-w-full overflow-hidden break-words leading-[1.55] ${
                       boldProseText ? "font-extrabold" : "font-normal"
                     }`}
                   >

@@ -69,9 +69,9 @@ export function QuestionCardBadgeHeader({
 
   if (isBookletSolvedExample) {
     return (
-      <div style={{ breakAfter: "avoid" }} className="mb-1 flex items-center justify-between gap-1.5">
+      <div style={{ breakAfter: "avoid" }} className="mb-1 pb-1 border-b border-slate-100 flex items-center justify-between gap-1.5">
         <span
-          style={{ backgroundColor: badgeBgColorHex }}
+          style={{ background: badgeGradientCss || badgeBgColorHex }}
           className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1 shadow-2xs"
         >
           <PdfPenIcon />
@@ -94,16 +94,16 @@ export function QuestionCardBadgeHeader({
 
   if (isBookletDrill) {
     return (
-      <div style={{ breakAfter: "avoid" }} className="mb-1 flex items-center justify-between gap-1.5">
+      <div style={{ breakAfter: "avoid" }} className="mb-1 pb-1 border-b border-slate-100 flex items-center justify-between gap-1.5">
         <span
-          style={{ backgroundColor: "#4338CA" }}
+          style={{ background: badgeGradientCss || "#4338CA" }}
           className="px-2.5 py-0.5 rounded-md text-white text-[0.82em] font-black inline-flex items-center gap-1 shadow-2xs"
         >
           <PdfTargetIcon />
           <span>حاول بنفسك ({formattedQNum})</span>
         </span>
         <span
-          style={{ color: "#4338CA", borderColor: "#C7D2FE", backgroundColor: "#FFFFFF" }}
+          style={{ color: palette.primaryHex === "#000000" ? "#0F172A" : "#4338CA", borderColor: "#C7D2FE", backgroundColor: "#FFFFFF" }}
           className="px-1.5 py-0.2 rounded bg-white border text-[0.74em] font-black"
         >
           تدريب فهم مباشر
@@ -115,12 +115,15 @@ export function QuestionCardBadgeHeader({
   return (
     <div
       style={{
-        backgroundColor: "#FFFFFF",
+        background:
+          palette.primaryHex === "#000000"
+            ? "#FFFFFF"
+            : `linear-gradient(90deg, ${palette.softSurfaceHex} 0%, ${palette.badgeBgHex}99 100%)`,
         borderColor: cardBorderColorHex,
         boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
         breakAfter: "avoid",
       }}
-      className="px-2 py-0.5 mb-1 rounded-md border-r-4 border bg-white flex flex-wrap items-center justify-between gap-1"
+      className="px-2 py-0.5 mb-1 rounded-md border-r-4 border flex flex-wrap items-center justify-between gap-1"
     >
       <div className="flex items-center gap-1.5 min-w-0">
         <span

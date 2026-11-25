@@ -50,8 +50,19 @@ export function resolvePageBudget(ctx: PageCostContext, isFirstPage: boolean, re
   return { budget: decision.effectiveFirstPageBudgetPx, isHeaderCompact: decision.isHeaderCompact };
 }
 
-export function buildPageSegments(ctx: PageCostContext, pageItems: readonly FlowItem[]): readonly FlowPageSegment[] {
-  return buildSegmentsForSlice(pageItems, ctx.heightOf, ctx.heights, ctx.density.gapMinPx, ctx.stretchRoomOf);
+export function buildPageSegments(
+  ctx: PageCostContext,
+  pageItems: readonly FlowItem[],
+  nextItemAfterPage?: FlowItem
+): readonly FlowPageSegment[] {
+  return buildSegmentsForSlice(
+    pageItems,
+    ctx.heightOf,
+    ctx.heights,
+    ctx.density.gapMinPx,
+    ctx.stretchRoomOf,
+    nextItemAfterPage
+  );
 }
 
 function isWholeWorkedColumn(item: FlowItem | undefined): item is Extract<FlowItem, { kind: "question" }> {
@@ -64,7 +75,7 @@ export function evaluatePageCandidate(
   flags: PageCandidateFlags
 ): PageCandidateEvaluation {
   const gap = ctx.density.gapMinPx;
-  const segments = buildPageSegments(ctx, pageItems);
+  const segments = buildPageSegments(ctx, pageItems, flags.nextItem);
   const used = pageContentHeightPx(segments, ctx.heightOf, gap);
   const { budget } = resolvePageBudget(ctx, flags.isFirstPage, used);
   const elastic = resolveElasticPageFit({ segments, usedHeightPx: used, budgetPx: budget, gapPx: gap });
@@ -86,6 +97,22 @@ export function evaluatePageCandidate(
     cost += W.orphanPenalty;
   }
 
+  // منع سرقة سؤال/تدريب وحيد في عمود مفرد بأسفل الصفحة وترك شقيقه للصفحة التالية
+  if (!flags.isLastPage && segments.length > 0) {
+    const lastSeg = segments[segments.length - 1];
+    if (lastSeg.kind === "columns" && (lastSeg.leftItems.length === 0 || lastSeg.rightItems.length === 0)) {
+      const loneItem = lastSeg.rightItems[0] ?? lastSeg.leftItems[0];
+      if (
+        loneItem?.kind === "question" &&
+        next?.kind === "question" &&
+        next.span === "column" &&
+        !next.isWorkedExample
+      ) {
+        cost += W.orphanColumnStealPenalty;
+      }
+    }
+  }
+
   if (!flags.isLastPage) {
     const waste = pageAreaWastePx({
       segments, usedHeightPx: effectiveUsed, budgetPx: budget, heightOf: ctx.heightOf, gapPx: gap, stretchRoomOf: ctx.stretchRoomOf,
@@ -93,6 +120,12 @@ export function evaluatePageCandidate(
     cost += (W.areaWasteWeight * waste / budget) ** 2;
   }
   cost += (W.columnImbalanceWeight * columnsImbalancePx(segments, ctx.heightOf, gap) / budget) ** 2;
+
+  for (const item of pageItems) {
+    if (item.kind === "question" && item.solutionSlice && !item.solutionSlice.isTail && item.solutionSlice.to === 0) {
+      cost += W.zeroStepHeadCost;
+    }
+  }
 
   for (const steps of flags.cutTailStepCounts ?? []) {
     cost += W.solutionCutCost + (steps === 1 ? W.singleStepTailCost : 0);

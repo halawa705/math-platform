@@ -83,6 +83,7 @@ export function StructuredStepByStepSolutionBox({
     );
   }
   const isOddQuestion = item.questionNumber % 2 === 1;
+  const isPhotocopy = themeId === "photocopy_black";
   const answerTokens = resolveAnswerThemeTokens(themeId, isOddQuestion);
   const useTwoColLayout = steps.length >= 2;
 
@@ -146,11 +147,17 @@ export function StructuredStepByStepSolutionBox({
             <div
               key={idx}
               style={{
-                backgroundColor: isLast ? "#F0FDF4" : "#FFFFFF",
+                backgroundColor: isLast
+                  ? isPhotocopy
+                    ? "#FFFFFF"
+                    : "#ECFDF5"
+                  : isPhotocopy
+                    ? "#FFFFFF"
+                    : "#F8FAFC",
                 borderRightWidth: isLast ? "3.5px" : "1px",
                 borderRightColor: isLast ? answerTokens.accentStepBorderHex : undefined,
               }}
-              className={`px-1.5 py-0.5 rounded-md border min-w-0 flex items-start gap-1.5 text-[0.88em] leading-[1.55] break-inside-avoid shadow-2xs ${
+              className={`px-1.5 py-0.5 rounded-md border min-w-0 flex items-start gap-1.5 text-[0.88em] leading-[1.48] break-inside-avoid shadow-2xs ${
                 canBeHalf ? "col-span-1" : "col-span-2"
               } ${
                 isLast
@@ -171,7 +178,7 @@ export function StructuredStepByStepSolutionBox({
               </span>
 
               {/* نص ومعادلات الخطوة */}
-              <div className="min-w-0 flex-1 break-words font-medium text-slate-900 [&_.katex-display]:my-0.5 [&_.katex-display]:py-0 [&_.katex]:leading-[1.55]">
+              <div className="min-w-0 flex-1 break-words font-medium text-slate-900 [&_.katex-display]:my-0.5 [&_.katex-display]:py-0 [&_.katex]:leading-[1.48]">
                 <SafeKaTeXBiDiMathRenderer
                   text={cleanStepText}
                   numeralMode={numeralMode}

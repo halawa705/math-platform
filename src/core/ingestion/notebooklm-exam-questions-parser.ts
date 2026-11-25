@@ -14,6 +14,7 @@ import {
   extractExamQuestionDiagrams,
   cleanExamStudentPromptArabic,
 } from "./exam-question-diagram-extractor";
+import { splitRawSolutionStepsMathSafe } from "./math-safe-solution-steps-splitter";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER = "notebooklm_exam_questions_parser" as const;
 
@@ -86,8 +87,7 @@ export function stripInlineChoicesFromPromptText(promptText: string): string {
 
 export function mergeLogicalSolutionSteps(rawStepsText: string): string[] {
   if (!rawStepsText) return [];
-  const rawLines = rawStepsText
-    .split(/\||\r?\n+/)
+  const rawLines = splitRawSolutionStepsMathSafe(rawStepsText)
     .map((s) =>
       s
         .replace(/^\s*(?:[-•*]|\d+[.)-]|\(\d+\)|(?:الخطوة|خطوة)\s*(?:\d+|الأولى|الثانية|الثالثة|الرابعة)\s*[:.-]?)\s*/i, "")

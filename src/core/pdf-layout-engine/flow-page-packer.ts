@@ -99,7 +99,12 @@ export function packFlowItemsIntoPages(
       if (end >= count) continue;
       for (const opt of cutsAt(end)) {
         const pageItems = [...base, ...opt.heads];
-        const ev = evaluatePageCandidate(ctx, pageItems, { isFirstPage, isLastPage: false, cutTailStepCounts: opt.tailStepCounts });
+        const ev = evaluatePageCandidate(ctx, pageItems, {
+          isFirstPage,
+          isLastPage: false,
+          nextItem: items[end + opt.consumed],
+          cutTailStepCounts: opt.tailStepCounts,
+        });
         if (ev.oversized) continue;
         const target = end + opt.consumed;
         carryItems.set(opt.carryKey, opt.tails);
@@ -129,7 +134,7 @@ export function packFlowItemsIntoPages(
   }
 
   return pageSlices.map((slice, pageIdx) => {
-    const segments = buildPageSegments(ctx, slice);
+    const segments = buildPageSegments(ctx, slice, pageSlices[pageIdx + 1]?.[0]);
     const used = pageContentHeightPx(segments, heightOf, options.density.gapMinPx);
     const { budget, isHeaderCompact } = resolvePageBudget(ctx, pageIdx === 0, used);
     return distributePageSlack({
