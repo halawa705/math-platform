@@ -144,6 +144,7 @@ export default function StudioExamGeneratorTab({
       unitFocusWeights: focusWeightItems,
       mcqQuestionsCount: effectiveMcq,
       totalMarks: Math.max(1, effectiveMcq + effectiveProof * 3), durationTextArabic: "ساعة ونصف", difficultyProfile: difficulty,
+      notationLanguage,
       customDirectivesArabic: customDirectives,
     };
     setPrompt(
@@ -151,7 +152,7 @@ export default function StudioExamGeneratorTab({
         ? buildOnlineExamNotebookLMPrompt({ ...baseCfg, shortAnswerQuestionsCount: effectiveProof })
         : buildOfficialExamNotebookLMPrompt({ ...baseCfg, essayAndProofQuestionsCount: effectiveProof })
     );
-  }, [gradeId, gradeNameAr, branchId, lessonTitle, targetedScopeText, focusWeightItems, effectiveMcq, effectiveProof, difficulty, isOnlineMode, customDirectives]);
+  }, [gradeId, gradeNameAr, branchId, lessonTitle, targetedScopeText, focusWeightItems, effectiveMcq, effectiveProof, difficulty, isOnlineMode, notationLanguage, customDirectives]);
 
   const handleReplyChange = (raw: string) => {
     setNotice(null);
@@ -209,7 +210,6 @@ export default function StudioExamGeneratorTab({
       const data = (await res.json()) as { success: boolean; examCode?: string; excludedQuestionNumbers?: readonly number[]; };
       if (res.ok && data.success && data.examCode) { examCode = data.examCode; excl = data.excludedQuestionNumbers ?? []; }
     } catch { /* المتابعة بالحفظ المحلي */ }
-
     const created = publishOnlineExamSSOT({
       examId: examCode, gradeId, gradeNameArabic: gradeNameAr, titleAr: finalTitle,
       durationMinutes: p.durationMinutes, availabilityDays: p.availabilityDays, questions: qs,
@@ -221,7 +221,7 @@ export default function StudioExamGeneratorTab({
     setPublishMsg(`✓ تم نشر «${finalTitle}» (${created.questions.length} سؤالاً) لطلاب ${gradeNameAr} لمدة ${p.availabilityDays} يوم.${exclNote}`);
   };
 
-  const summaryAr = `${effectiveMcq} اختر • ${effectiveProof} ${isOnlineMode ? "إجابة قصيرة" : "مقالي"} • ${difficulty === "standard_balanced" ? "متوازن" : "متفوقين"}`;
+  const summaryAr = `${effectiveMcq} اختر • ${effectiveProof} ${isOnlineMode ? "إجابة قصيرة" : "مقالي"} • ${difficulty === "standard_balanced" ? "متوازن" : difficulty === "comprehensive_rigorous" ? "شامل" : "متفوقين"}`;
 
   return (
     <div className="space-y-3">
@@ -232,34 +232,19 @@ export default function StudioExamGeneratorTab({
             <input type="checkbox" checked={isOnlineMode} onChange={(e) => { setIsOnlineMode(e.target.checked); persist({ isOnlineMode: e.target.checked }); }} className="w-4 h-4 accent-indigo-700" />
           </label>
           <div className="grid grid-cols-2 gap-2.5">
-            <StudioNumberStepperField
-              labelAr="أسئلة اختر" value={mcqCount} min={0} max={40} enabled={mcqEnabled}
-              onToggleEnabled={(v) => { setMcqEnabled(v); persist({ mcqEnabled: v }); }}
-              onChange={(v) => { setMcqCount(v); persist({ mcqCount: v }); }}
-            />
-            <StudioNumberStepperField
-              labelAr={isOnlineMode ? "أسئلة إجابة قصيرة" : "مقالي وبرهان"} value={proofCount} min={0} max={25} enabled={proofEnabled}
-              onToggleEnabled={(v) => { setProofEnabled(v); persist({ proofEnabled: v }); }}
-              onChange={(v) => { setProofCount(v); persist({ proofCount: v }); }}
-            />
+            <StudioNumberStepperField labelAr="أسئلة اختر" value={mcqCount} min={0} max={40} enabled={mcqEnabled} onToggleEnabled={(v) => { setMcqEnabled(v); persist({ mcqEnabled: v }); }} onChange={(v) => { setMcqCount(v); persist({ mcqCount: v }); }} />
+            <StudioNumberStepperField labelAr={isOnlineMode ? "أسئلة إجابة قصيرة" : "مقالي وبرهان"} value={proofCount} min={0} max={25} enabled={proofEnabled} onToggleEnabled={(v) => { setProofEnabled(v); persist({ proofEnabled: v }); }} onChange={(v) => { setProofCount(v); persist({ proofCount: v }); }} />
           </div>
-
           {!isOnlineMode && (
-            <StudioEssayAnswerLinesStepper
-              value={essayAnswerLines}
-              onChange={handleEssayLinesChange}
-              compact
-            />
+            <StudioEssayAnswerLinesStepper value={essayAnswerLines} onChange={handleEssayLinesChange} compact />
           )}
-
-          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
-            {([{ id: "standard_balanced", label: "متوازن" }, { id: "olympiad_challenge", label: "متفوقين" }] as const).map((o) => (
-              <button
-                key={o.id} type="button" onClick={() => { setDifficulty(o.id); persist({ difficulty: o.id }); }}
-                className={`min-h-[44px] rounded-xl text-xs font-black cursor-pointer ${difficulty === o.id ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-sm" : "text-slate-600 dark:text-slate-400"}`}
-              >
-                {o.label}
-              </button>
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
+            {([
+              { id: "standard_balanced", label: "متوازن" },
+              { id: "comprehensive_rigorous", label: "شامل دقيق" },
+              { id: "olympiad_challenge", label: "متفوقين" },
+            ] as const).map((o) => (
+              <button key={o.id} type="button" onClick={() => { setDifficulty(o.id); persist({ difficulty: o.id }); }} className={`min-h-[44px] rounded-xl text-xs font-black cursor-pointer ${difficulty === o.id ? "bg-white dark:bg-slate-800 text-indigo-900 dark:text-teal-300 shadow-sm" : "text-slate-600 dark:text-slate-400"}`}>{o.label}</button>
             ))}
           </div>
         </div>
@@ -287,7 +272,7 @@ export default function StudioExamGeneratorTab({
       <StudioExamFlowChoiceBanner questionsCount={parsedQuestions.length} onRenderPdf={handleRender} />
 
       <StudioFigureDiagnosticsBanner rows={diagRows} />
-      <StudioExamQuestionsInspectorCard questions={parsedQuestions} onChangeQuestions={handleUpdateQuestions} />
+      <StudioExamQuestionsInspectorCard questions={parsedQuestions} gradeId={gradeId} onChangeQuestions={handleUpdateQuestions} />
       <div id="online-publish-section">
         <StudioExamOnlinePublishPanel
           gradeNameAr={gradeNameAr} defaultTitleAr={`اختبار — ${unitTitleAr ? `${unitTitleAr} — ` : ""}${lessonTitle}`}

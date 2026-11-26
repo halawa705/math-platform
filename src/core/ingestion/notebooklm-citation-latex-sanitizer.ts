@@ -72,11 +72,11 @@ export function sanitizeNotebookLMCitationsAndLatex(
     .replace(/(?<!\|[ \t]*)\s*---+\s*(?![ \t]*\|)/g, "\n\n")
     .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "")
     .replace(
-      /\[\s*(رسم\s*(?:هندسي|توضيحي|بياني)\s*:[^\]]*)\]/gi,
+      /\[\s*(رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي|نموذج\s*بصري)\s*:[^\]]*)\]/gi,
       (_m, inner: string) => `[${inner.trim()}]`
     )
     .replace(
-      /(?:^|(?<![\[أ-ي]))(رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*[^\]\n]+)\]/gi,
+      /(?:^|(?<![\[أ-ي]))(رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)\s*:\s*[^\]\n]+)\]/gi,
       "[$1]"
     );
 
@@ -87,9 +87,13 @@ export function sanitizeNotebookLMCitationsAndLatex(
       /===\s*\[\s*(?:QUESTION|سؤال|Q)\s*:\s*(\d+)\s*\]([^\n=]*?)===/gi,
       (_m, qNum: string, tail: string) => {
         const kindMatch = tail.match(/النوع\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
+        const lessonMatch = tail.match(/الدرس\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
+        const ideaMatch = tail.match(/الفكرة\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
         const marksMatch = tail.match(/الدرجة\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*\]?/i);
         const extraLines: string[] = [];
         if (kindMatch?.[1]) extraLines.push(`النوع: ${kindMatch[1].trim()}`);
+        if (lessonMatch?.[1]) extraLines.push(`الدرس: ${lessonMatch[1].trim()}`);
+        if (ideaMatch?.[1]) extraLines.push(`الفكرة: ${ideaMatch[1].trim()}`);
         if (marksMatch?.[1]) extraLines.push(`الدرجة: ${marksMatch[1].trim()}`);
         return `=== [سؤال: ${qNum}] ===${extraLines.length ? `\n${extraLines.join("\n")}` : ""}`;
       }
@@ -167,9 +171,10 @@ export function cleanStudentFacingMathPromptSSOT(rawText: string): string {
   if (!rawText) return "";
   const healed = healFourRaysHallucination(rawText);
   const withoutDiagram = healed
-    .replace(/`?\s*\[\s*رسم\s*(?:هندسي|بياني|توضيحي|تخطيطي)[\s\S]*?\]\.?\s*`?/gi, "")
+    .replace(/`?\s*\[\s*(?:رسم\s*(?:هندسي|بياني|إحصائي|احصائي|توضيحي|تخطيطي)|نموذج\s*بصري)[\s\S]*?\]\.?\s*`?/gi, "")
     .replace(/(?:^|\n)\s*`+\s*$/gm, "")
-    .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
+    .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|الإحصائي|الاحصائي|التوضيحي|التخطيطي))?\s*:[^\n]*/gi, "")
+    .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل|الدرس|الفكرة)\s*:[^\n]*/gim, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")
     .replace(/(?:^|\n)\s*(?:لا يوجد رسم|بدون رسم|لا رسم)[^\n]*/gi, "")
     .replace(/(?:^|\n)\s*(?:الإجابة_الصحيحة|الإجابة الصحيحة|إجابة_الصحيحة|إجابة الصحيحة|الإجابة|الحل|خطوات الحل|خطوات_الحل)\s*:[^\n]*/gi, "")

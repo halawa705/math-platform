@@ -107,7 +107,7 @@ export interface StudioExamSettingsState {
   readonly proofCount: number;
   readonly proofEnabled: boolean;
   readonly isOnlineMode: boolean;
-  readonly difficulty: "standard_balanced" | "olympiad_challenge";
+  readonly difficulty: "standard_balanced" | "comprehensive_rigorous" | "olympiad_challenge";
   readonly customDirectives?: string;
   readonly unitFocusWeights?: Record<string, number>;
   readonly includeUnitFocusWeightsInPrompt?: boolean;
@@ -188,6 +188,14 @@ export const saveStudioWorksheetSettingsSSOT = (updates: Partial<StudioWorksheet
 
 export type ExamFormsScopeKind = "end_of_term" | "monthly_exam" | "custom_units_review";
 
+export type ExamFormsDifficultyProfile =
+  | "foundational_gradual"
+  | "standard_balanced"
+  | "comprehensive_rigorous"
+  | "olympiad_challenge";
+
+export type ExamFormsProgressionMode = "uniform_equivalent" | "progressive_escalating";
+
 export interface StudioExamFormsSettingsState {
   readonly formsCount: number;
   readonly scopeKind: ExamFormsScopeKind;
@@ -198,7 +206,10 @@ export interface StudioExamFormsSettingsState {
   readonly mcqEnabled: boolean;
   readonly proofCount: number;
   readonly proofEnabled: boolean;
-  readonly difficulty: "standard_balanced" | "olympiad_challenge";
+  readonly difficulty: ExamFormsDifficultyProfile;
+  readonly progressionMode?: ExamFormsProgressionMode;
+  readonly unitFocusWeights?: Record<string, number>;
+  readonly includeUnitFocusWeightsInPrompt?: boolean;
   readonly customDirectives?: string;
   readonly savedReply?: string;
 }
@@ -209,11 +220,14 @@ export const DEFAULT_STUDIO_EXAM_FORMS_SETTINGS: StudioExamFormsSettingsState = 
   targetedUnitsOrLessons: "",
   selectedUnitIds: [],
   selectedLessonIds: [],
-  mcqCount: 5,
+  mcqCount: 9,
   mcqEnabled: true,
-  proofCount: 3,
+  proofCount: 8,
   proofEnabled: true,
   difficulty: "standard_balanced",
+  progressionMode: "uniform_equivalent",
+  unitFocusWeights: {},
+  includeUnitFocusWeightsInPrompt: false,
   customDirectives: "",
   savedReply: "",
 };

@@ -3,7 +3,7 @@
 /**
  * @file studio-exam-questions-inspector-card.tsx
  * @description بطاقة معاينة وتدقيق وتعديل أسئلة الاختبار المستخرجة في استوديو التوليد قبل الطباعة أو النشر الإلكتروني.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 210 أسطر).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 290 سطراً).
  */
 
 import { useState } from "react";
@@ -13,6 +13,7 @@ import { renderQuestionFigureSvg } from "@/core/pdf-layout-engine/question-figur
 import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioExamQuestionsShuffleBar from "./studio-exam-questions-shuffle-bar";
 import StudioQuestionSolutionLinesController from "./studio-question-solution-lines-controller";
+import StudioQuestionGeometryLiveEditor from "./studio-question-geometry-live-editor";
 import {
   shuffleAllMcqChoicesInQuestions,
   shuffleBothQuestionsAndChoices,
@@ -27,15 +28,16 @@ const CHOICE_LABELS = ["أ", "ب", "جـ", "د"] as const;
 
 export interface StudioExamQuestionsInspectorCardProps {
   readonly questions: readonly QuestionAssessmentIR[];
+  readonly gradeId?: string;
   readonly onChangeQuestions: (next: readonly QuestionAssessmentIR[]) => void;
 }
 
 export default function StudioExamQuestionsInspectorCard({
   questions,
+  gradeId,
   onChangeQuestions,
 }: StudioExamQuestionsInspectorCardProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
-
   if (questions.length === 0) return null;
 
   const mcqCount = questions.filter((q) => q.patternKind === "mcq").length;
@@ -44,25 +46,17 @@ export default function StudioExamQuestionsInspectorCard({
   const summaryAr = `${questions.length} سؤال (${mcqCount} اختر${otherCount > 0 ? ` • ${otherCount} مقالي/قصير` : ""}) • ${totalMarks} درجة`;
 
   const updateQuestion = (questionId: string, patch: Partial<QuestionAssessmentIR>) => {
-    onChangeQuestions(
-      questions.map((q) => (q.questionId === questionId ? { ...q, ...patch } : q))
-    );
+    onChangeQuestions(questions.map((q) => (q.questionId === questionId ? { ...q, ...patch } : q)));
   };
 
   const deleteQuestion = (questionId: string) => {
-    const filtered = questions
-      .filter((q) => q.questionId !== questionId)
-      .map((q, idx) => ({ ...q, displayOrderNumber: idx + 1 }));
-    onChangeQuestions(filtered);
+    onChangeQuestions(
+      questions.filter((q) => q.questionId !== questionId).map((q, idx) => ({ ...q, displayOrderNumber: idx + 1 }))
+    );
   };
 
   return (
-    <StudioCollapsibleSectionCard
-      icon="👁️"
-      titleAr="معاينة وتعديل الأسئلة المستخرجة"
-      summaryAr={summaryAr}
-      defaultOpen
-    >
+    <StudioCollapsibleSectionCard icon="👁️" titleAr="معاينة وتعديل الأسئلة المستخرجة" summaryAr={summaryAr} defaultOpen>
       <div className="space-y-2.5 pt-2 max-h-[560px] overflow-y-auto pr-1">
         <StudioExamQuestionsShuffleBar
           mcqCount={mcqCount}
@@ -76,21 +70,24 @@ export default function StudioExamQuestionsInspectorCard({
           const choices = q.mcqChoicesArabic ?? ["", "", "", ""];
 
           return (
-            <div
-              key={q.questionId}
-              className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2"
-            >
+            <div key={q.questionId} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-black">
-                  <span className="px-2.5 py-0.5 rounded-lg bg-indigo-900 dark:bg-teal-600 text-white">
-                    س{idx + 1}
-                  </span>
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-black">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-indigo-900 dark:bg-teal-600 text-white">س{idx + 1}</span>
                   <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px]">
                     {q.patternKind === "mcq" ? "اختر من متعدد" : "إجابة قصيرة / مقالي"}
                   </span>
-                  <span className="text-[11px] text-teal-700 dark:text-teal-300">
-                    ({q.allocatedMarks} درجة)
-                  </span>
+                  <span className="text-[11px] text-teal-700 dark:text-teal-300">({q.allocatedMarks} درجة)</span>
+                  {q.lessonTitleArabic && (
+                    <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 text-[10px]">
+                      {q.lessonTitleArabic}
+                    </span>
+                  )}
+                  {q.ideaTagArabic && (
+                    <span className="px-2 py-0.5 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px]">
+                      💡 {q.ideaTagArabic}
+                    </span>
+                  )}
                   {q.authenticCitation?.governorateNameArabic && (
                     <span className="px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-[10px]">
                       📍 {q.authenticCitation.governorateNameArabic}
@@ -103,8 +100,7 @@ export default function StudioExamQuestionsInspectorCard({
                     <button
                       type="button"
                       onClick={() => updateQuestion(q.questionId, shuffleSingleQuestionMcqChoices(q))}
-                      className="px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-black text-indigo-900 dark:text-teal-300 hover:bg-indigo-100 cursor-pointer"
-                      title="خلط بدائل هذا السؤال عشوائياً وتحديث الإجابة الصحيحة تلقائياً"
+                      className="px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-black text-indigo-900 dark:text-teal-300 cursor-pointer"
                     >
                       🎲 خلط الخيارات
                     </button>
@@ -121,7 +117,6 @@ export default function StudioExamQuestionsInspectorCard({
                       type="button"
                       onClick={() => deleteQuestion(q.questionId)}
                       className="px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-[11px] font-black cursor-pointer"
-                      title="حذف السؤال"
                     >
                       🗑️
                     </button>
@@ -141,6 +136,12 @@ export default function StudioExamQuestionsInspectorCard({
                     />
                   </label>
 
+                  <StudioQuestionGeometryLiveEditor
+                    question={q}
+                    gradeId={gradeId}
+                    onApplyDiagramPatch={(patch) => updateQuestion(q.questionId, patch)}
+                  />
+
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-500">الدرجة:</span>
                     <input
@@ -148,20 +149,14 @@ export default function StudioExamQuestionsInspectorCard({
                       min={1}
                       max={20}
                       value={q.allocatedMarks}
-                      onChange={(e) =>
-                        updateQuestion(q.questionId, {
-                          allocatedMarks: Math.max(1, Number(e.target.value) || 1),
-                        })
-                      }
+                      onChange={(e) => updateQuestion(q.questionId, { allocatedMarks: Math.max(1, Number(e.target.value) || 1) })}
                       className="w-20 p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-black text-center"
                     />
                   </div>
 
                   {q.patternKind === "mcq" && (
                     <div className="space-y-1.5">
-                      <span className="font-bold text-slate-500 block">
-                        البدائل (اضغط على الحرف لتحديده كإجابة صحيحة ✓):
-                      </span>
+                      <span className="font-bold text-slate-500 block">البدائل (اضغط على الحرف لتحديده كإجابة صحيحة ✓):</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         {([0, 1, 2, 3] as const).map((cIdx) => {
                           const isCorrect = q.correctMcqChoiceIndex === cIdx;
@@ -169,14 +164,8 @@ export default function StudioExamQuestionsInspectorCard({
                             <div key={cIdx} className="flex items-center gap-1.5">
                               <button
                                 type="button"
-                                onClick={() =>
-                                  updateQuestion(q.questionId, { correctMcqChoiceIndex: cIdx })
-                                }
-                                className={`min-w-[34px] h-8 rounded-lg font-black text-xs cursor-pointer ${
-                                  isCorrect
-                                    ? "bg-emerald-600 text-white"
-                                    : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                                }`}
+                                onClick={() => updateQuestion(q.questionId, { correctMcqChoiceIndex: cIdx })}
+                                className={`min-w-[34px] h-8 rounded-lg font-black text-xs cursor-pointer ${isCorrect ? "bg-emerald-600 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"}`}
                               >
                                 {CHOICE_LABELS[cIdx]} {isCorrect ? "✓" : ""}
                               </button>
@@ -184,12 +173,7 @@ export default function StudioExamQuestionsInspectorCard({
                                 type="text"
                                 value={choices[cIdx] || ""}
                                 onChange={(e) => {
-                                  const next: [string, string, string, string] = [
-                                    choices[0] || "",
-                                    choices[1] || "",
-                                    choices[2] || "",
-                                    choices[3] || "",
-                                  ];
+                                  const next: [string, string, string, string] = [choices[0] || "", choices[1] || "", choices[2] || "", choices[3] || ""];
                                   next[cIdx] = e.target.value;
                                   updateQuestion(q.questionId, { mcqChoicesArabic: next });
                                 }}
@@ -209,10 +193,7 @@ export default function StudioExamQuestionsInspectorCard({
                       value={q.modelSolutionStepsArabic.join(" | ")}
                       onChange={(e) =>
                         updateQuestion(q.questionId, {
-                          modelSolutionStepsArabic: e.target.value
-                            .split("|")
-                            .map((s) => s.trim())
-                            .filter(Boolean),
+                          modelSolutionStepsArabic: e.target.value.split("|").map((s) => s.trim()).filter(Boolean),
                           finalCanonicalAnswerArabic: e.target.value.trim(),
                         })
                       }

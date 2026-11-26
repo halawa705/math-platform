@@ -2,23 +2,25 @@
 
 /**
  * @file multi-form-newspaper-packer.tsx
- * @description المحرك السيادي لمعاينة وطباعة حزم النماذج الامتحانية المتعددة (A/B/C) مع ترويسة مستقلة لكل نموذج.
- * يضمن بدء كل نموذج بترويسته الرسمية الكاملة المخصصة برقم النموذج ونمطه، وتقسيم كل نموذج لصفحاته المنفصلة بدقة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 220 سطراً).
+ * @description المحرك السيادي لمعاينة وطباعة حزم النماذج الامتحانية المتعددة (أ/ب/جـ...) بترويسة مستقلة لكل نموذج،
+ * مع محرك مسح الملاءمة التلقائية لكل نموذج (AutoFit Sweep ≤ 2 صفحة A4) وفصل معرفات القياس لكل نموذج بلا تداخل.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 275 سطراً).
  */
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { PRINT_FONT_FAMILIES_SSOT, type PDFPrintSettingsStateSSOT } from "../ssot/pdf-print-settings-ssot";
 import { DEFAULT_OWNER_TEACHER_IDENTITY_SSOT, IDENTITY_UPDATED_EVENT_NAME, loadTeacherIdentitySSOT } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT } from "../ssot/numeral-and-unit-ssot";
-import { resolvePrintThemePalette } from "./a4-vector-html-sheet-renderer";
+import { resolvePrintThemePalette, type PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
+import { getLadderForMode } from "./autofit-ladders";
+import { decideBestAutoFitRung, type AutoFitProbe } from "./autofit-decision";
 import { buildFlowItems } from "./flow-items-builder";
 import { FlowItemRenderer } from "./flow-item-renderer";
 import { FlowMeasurementStagingPlatform } from "./flow-measurement-staging-platform";
 import { resolveFlowPageBudgets } from "./flow-page-budget-resolver";
 import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
 import { packFlowItemsIntoPages } from "./flow-page-packer";
-import type { FlowItem } from "./flow-item-model";
+import type { FlowItem, FlowPage } from "./flow-item-model";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
 import { useFlowStagingLiveMeasurer } from "./use-flow-staging-live-measurer";
@@ -33,6 +35,12 @@ export interface MultiFormNewspaperPackerProps {
   readonly sheetContainerRef: React.RefObject<HTMLDivElement | null>;
   readonly onPagesCountChange?: (n: number) => void;
   readonly children?: React.ReactNode;
+}
+
+interface CachedFormRungResult {
+  readonly effSettings: PDFPrintSettingsStateSSOT;
+  readonly pages: readonly FlowPage[];
+  readonly probe: AutoFitProbe;
 }
 
 export default function MultiFormNewspaperPacker({
@@ -56,12 +64,56 @@ export default function MultiFormNewspaperPacker({
   }, []);
 
   const activeFont = PRINT_FONT_FAMILIES_SSOT[settings.fontFamilyId];
-  const palette = resolvePrintThemePalette(settings.colorThemeId);
-  const isSchoolExam = settings.paperTemplateId === "official_school_exam";
-  const effectiveColumnsCount = isSchoolExam ? 1 : settings.columnsCount;
-  const isSolvedMode = settings.answerVisibilityMode !== "questions_only";
+  const mode = settings.autoFitMode ?? "exam_max_pages";
+  const ladder = useMemo(() => getLadderForMode(mode), [mode]);
+  const targetMaxPages = settings.targetMaxPages ?? 2;
+  const hasManualLines = settings.hasManualEssayLinesLock === true;
+  const inputSignature = `${forms.map((f) => `${f.formId}:${f.questions.map((q) => `${q.id}:${hasManualLines || q.hasCustomAnswerLines ? (q.answerLinesCount ?? "") : ""}`).join(",")}`).join("|")}|${settings.paperTemplateId}|${settings.columnsCount}|${settings.densityMode}|${settings.fontFamilyId}|${settings.answerVisibilityMode}|${settings.answerSpaceStyle}|${hasManualLines ? (settings.essayAnswerLinesCount ?? "") : "auto"}|${settings.numeralMode}|${settings.notationLanguage}|${settings.boldProseText ? 1 : 0}|${settings.boldMathExpressions !== false ? 1 : 0}|${mode}|${targetMaxPages}`;
 
-  // استخراج كائنات التدفق لكل نموذج على حدة
+  const [sweepState, setSweepState] = useState<{
+    readonly sig: string;
+    readonly phase: "idle" | "sweeping" | "done";
+    readonly probeRungIndex: number;
+    readonly cache: Readonly<Record<string, readonly CachedFormRungResult[]>>;
+  }>({ sig: inputSignature, phase: ladder.length > 0 ? "sweeping" : "idle", probeRungIndex: 0, cache: {} });
+
+  useEffect(() => {
+    setSweepState({
+      sig: inputSignature,
+      phase: mode !== "off" && ladder.length > 0 ? "sweeping" : "idle",
+      probeRungIndex: 0,
+      cache: {},
+    });
+  }, [inputSignature, mode, ladder.length]);
+
+  const isSweeping = mode !== "off" && ladder.length > 0 && sweepState.phase === "sweeping";
+  const activeRungIdx = Math.min(sweepState.probeRungIndex, Math.max(0, ladder.length - 1));
+  const activeRung = mode === "off" ? undefined : ladder[activeRungIdx];
+
+  const effSettings = useMemo<PDFPrintSettingsStateSSOT>(
+    () =>
+      activeRung
+        ? {
+            ...settings,
+            exactFontSizePt: activeRung.fontPt as PDFPrintSettingsStateSSOT["exactFontSizePt"],
+            figureScale: activeRung.figureScale,
+            compactHeader: activeRung.compactHeader,
+            hideAccreditation: activeRung.hideAccreditation,
+            essayAnswerLinesCount:
+              hasManualLines && settings.essayAnswerLinesCount !== undefined
+                ? settings.essayAnswerLinesCount
+                : activeRung.answerLines,
+            answerSpaceLines: activeRung.answerLines,
+          }
+        : settings,
+    [settings, activeRung, hasManualLines]
+  );
+
+  const palette = resolvePrintThemePalette(effSettings.colorThemeId);
+  const isSchoolExam = effSettings.paperTemplateId === "official_school_exam";
+  const effectiveColumnsCount = isSchoolExam ? 1 : effSettings.columnsCount;
+  const isSolvedMode = effSettings.answerVisibilityMode !== "questions_only";
+
   const formFlows = useMemo(
     () =>
       forms.map((f) => {
@@ -69,68 +121,119 @@ export default function MultiFormNewspaperPacker({
           questions: f.questions,
           columnsCount: effectiveColumnsCount,
           includeAnswerKey: isSolvedMode,
-          includeAccreditation: !settings.hideAccreditation && !isSchoolExam,
-          paperTemplateId: settings.paperTemplateId,
-          answerVisibilityMode: settings.answerVisibilityMode,
+          includeAccreditation: !effSettings.hideAccreditation && !isSchoolExam,
+          paperTemplateId: effSettings.paperTemplateId,
+          answerVisibilityMode: effSettings.answerVisibilityMode,
         });
+        const namespacedItems: readonly FlowItem[] = items.map((it) => ({
+          ...it,
+          id: `${f.formId}::${it.id}`,
+        }));
         const totalMarks = f.questions.reduce((sum, q) => sum + q.marks, 0);
-        return { form: f, items, totalIdeasCount, totalMarks };
+        return { form: f, items: namespacedItems, totalIdeasCount, totalMarks };
       }),
-    [forms, effectiveColumnsCount, isSolvedMode, settings.hideAccreditation, isSchoolExam, settings.paperTemplateId, settings.answerVisibilityMode]
+    [forms, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
-  // دمج كائنات القياس للمنصة الخفية
-  const allStagingItems = useMemo(
-    () => formFlows.flatMap((ff) => ff.items),
-    [formFlows]
+  const questionsByFormId = useMemo(
+    () => new Map<string, readonly PrintableMathQuestionItem[]>(forms.map((f) => [f.formId, f.questions])),
+    [forms]
   );
 
-  const measured = useFlowStagingLiveMeasurer(
-    stagingRef,
-    `${allStagingItems.length}:${settings.exactFontSizePt}:${settings.essayAnswerLinesCount ?? ""}:${settings.fontFamilyId}`,
-    "multi-forms"
-  );
+  const allStagingItems = useMemo(() => formFlows.flatMap((ff) => ff.items), [formFlows]);
+  const measureStamp = activeRung ? `rung-${activeRungIdx}` : "off";
+  const stagingStamp = `${allStagingItems.length}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}`;
+  const measured = useFlowStagingLiveMeasurer(stagingRef, stagingStamp, measureStamp);
 
   const pageBudgets = useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = useMemo(
     () =>
       isSchoolExam
         ? { gapMinPx: 1, gapMaxPx: 3, maxStretchPerItemPx: 0, maxStretchRatio: 0 }
-        : (FLOW_DENSITY_PROFILES[settings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact),
-    [isSchoolExam, settings.densityMode]
+        : (FLOW_DENSITY_PROFILES[effSettings.densityMode] ?? FLOW_DENSITY_PROFILES.ultra_compact),
+    [isSchoolExam, effSettings.densityMode]
   );
 
-  // تقسيم صفحات كل نموذج على حدة لضمان استقلالية الترويسة والترقيم
-  const formPagesMap = useMemo(
+  const currentPackedForms = useMemo(
     () =>
       formFlows.map((ff) => {
         const pages = packFlowItemsIntoPages(ff.items, measured.heights, {
           budgets: pageBudgets,
           density: densityProfile,
+          skipSolutionSplits: isSweeping,
+          manualCompactHeader: effSettings.compactHeader,
         });
         return { ...ff, pages };
       }),
-    [formFlows, measured.heights, pageBudgets, densityProfile]
-  );
-
-  const totalPagesAllForms = useMemo(
-    () => formPagesMap.reduce((sum, fp) => sum + fp.pages.length, 0),
-    [formPagesMap]
+    [formFlows, measured.heights, pageBudgets, densityProfile, isSweeping, effSettings.compactHeader]
   );
 
   useEffect(() => {
-    onPagesCountChange?.(totalPagesAllForms);
-  }, [totalPagesAllForms, onPagesCountChange]);
+    if (!isSweeping || measured.stamp !== measureStamp || currentPackedForms.length === 0) return;
+    const nextCache: Record<string, readonly CachedFormRungResult[]> = { ...sweepState.cache };
+    let allMeetTarget = true;
 
-  const renderItem = (item: FlowItem, questions: PrintableExamFormGroup["questions"]) => (
-    <FlowItemRenderer
-      key={item.id}
-      item={item}
-      settings={settings}
-      palette={palette}
-      identity={identity}
-      questions={questions}
-    />
+    for (const fp of currentPackedForms) {
+      const last = fp.pages[fp.pages.length - 1];
+      const avgFill =
+        fp.pages.length > 0
+          ? fp.pages.reduce((s, p) => s + (p.budgetHeightPx > 0 ? p.usedHeightPx / p.budgetHeightPx : 0), 0) / fp.pages.length
+          : 0;
+      const overflow = fp.pages.some((p) => p.overflowsBudget);
+      const probe: AutoFitProbe = {
+        rungIndex: activeRungIdx,
+        pages: fp.pages.length,
+        lastPageFill: last && last.budgetHeightPx > 0 ? last.usedHeightPx / last.budgetHeightPx : 0,
+        avgFill,
+        overflow,
+      };
+      if (overflow || fp.pages.length > targetMaxPages) allMeetTarget = false;
+      const prevList = nextCache[fp.form.formId] ?? [];
+      nextCache[fp.form.formId] = [...prevList, { effSettings, pages: fp.pages, probe }];
+    }
+
+    const finished = allMeetTarget || activeRungIdx + 1 >= ladder.length;
+    setSweepState({
+      sig: inputSignature,
+      phase: finished ? "done" : "sweeping",
+      probeRungIndex: finished ? activeRungIdx : activeRungIdx + 1,
+      cache: nextCache,
+    });
+  }, [isSweeping, measured.stamp, measureStamp, currentPackedForms, activeRungIdx, targetMaxPages, ladder.length, effSettings, inputSignature]);
+
+  const resolvedForms = useMemo(() => {
+    if (mode === "off" || ladder.length === 0 || sweepState.phase !== "done") {
+      return currentPackedForms.map((fp) => ({ ...fp, formSettings: effSettings }));
+    }
+    return formFlows.map((ff) => {
+      const results = sweepState.cache[ff.form.formId] ?? [];
+      if (results.length === 0) {
+        const fallback = currentPackedForms.find((c) => c.form.formId === ff.form.formId);
+        return { ...ff, pages: fallback?.pages ?? [], formSettings: effSettings };
+      }
+      const decision = decideBestAutoFitRung(results.map((r) => r.probe), targetMaxPages);
+      const chosen = results.find((r) => r.probe.rungIndex === decision.rungIndex) ?? results[0];
+      return { ...ff, pages: chosen.pages, formSettings: chosen.effSettings };
+    });
+  }, [mode, ladder.length, sweepState.phase, sweepState.cache, currentPackedForms, formFlows, effSettings, targetMaxPages]);
+
+  const stableFormsRef = useRef(resolvedForms);
+  if (!isSweeping || stableFormsRef.current.length === 0) {
+    stableFormsRef.current = resolvedForms;
+  }
+  const viewForms = isSweeping ? stableFormsRef.current : resolvedForms;
+
+  const totalPagesAllForms = useMemo(
+    () => viewForms.reduce((sum, fp) => sum + fp.pages.length, 0),
+    [viewForms]
+  );
+
+  useEffect(() => {
+    if (!isSweeping) onPagesCountChange?.(totalPagesAllForms);
+  }, [totalPagesAllForms, isSweeping, onPagesCountChange]);
+
+  const renderItem = (item: FlowItem, itemSettings: PDFPrintSettingsStateSSOT, questions: PrintableExamFormGroup["questions"]) => (
+    <FlowItemRenderer key={item.id} item={item} settings={itemSettings} palette={palette} identity={identity} questions={questions} />
   );
 
   return (
@@ -140,25 +243,25 @@ export default function MultiFormNewspaperPacker({
     >
       {forms.length > 0 && (
         <div className="print:hidden mb-3 px-4 py-1.5 rounded-2xl bg-slate-900 text-white text-xs font-black flex flex-wrap items-center gap-3 shadow-md">
-          <span>📑 حزمة النماذج الامتحانية المتعددة</span>
-          <span className="text-amber-300">
-            النماذج: {formatNumeralsByModeSSOT(forms.length, settings.numeralMode)}
+          <span>📑 حزمة النماذج الامتحانية</span>
+          <span className="text-amber-300">النماذج: {formatNumeralsByModeSSOT(forms.length, settings.numeralMode)}</span>
+          <span className="text-emerald-300">إجمالي الصفحات: {formatNumeralsByModeSSOT(totalPagesAllForms, settings.numeralMode)} صفحة A4</span>
+          <span className="text-teal-300">
+            ({viewForms.map((vf) => `${vf.form.formLetterAr}: ${formatNumeralsByModeSSOT(vf.pages.length, settings.numeralMode)}ص`).join(" • ")})
           </span>
-          <span className="text-emerald-300">
-            إجمالي الصفحات: {formatNumeralsByModeSSOT(totalPagesAllForms, settings.numeralMode)} صفحة A4
-          </span>
-          <span className="text-indigo-300">
-            {isSchoolExam ? "🏫 قالب الامتحان المدرسي" : "🏛️ القالب السيادي"}
-          </span>
+          {isSweeping && <span className="text-indigo-300">⏳ جارٍ ضبط الصفحتين تلقائياً…</span>}
         </div>
       )}
 
-      {/* منصة القياس الخفية */}
       <FlowMeasurementStagingPlatform
         stagingRef={stagingRef}
         flowItems={allStagingItems}
-        renderFlowItem={(it) => renderItem(it, forms[0]?.questions ?? [])}
-        settings={settings}
+        renderFlowItem={(it) => {
+          const formId = it.id.split("::")[0];
+          const qs = questionsByFormId.get(formId) ?? forms[0]?.questions ?? [];
+          return renderItem(it, effSettings, qs);
+        }}
+        settings={effSettings}
         identity={identity}
         palette={palette}
         activeFont={activeFont}
@@ -167,6 +270,7 @@ export default function MultiFormNewspaperPacker({
         totalIdeasCount={1}
         totalQuestionsCount={allStagingItems.length}
         totalMarks={100}
+        skipSplitVariants={isSweeping}
       />
 
       <div
@@ -174,25 +278,19 @@ export default function MultiFormNewspaperPacker({
           width: "794px",
           transform: `scale(${mobileZoomScale})`,
           transformOrigin: "top center",
-          marginBottom:
-            mobileZoomScale < 1
-              ? `${Math.round((mobileZoomScale - 1) * 1123 * Math.max(1, totalPagesAllForms))}px`
-              : "0px",
+          marginBottom: mobileZoomScale < 1 ? `${Math.round((mobileZoomScale - 1) * 1123 * Math.max(1, totalPagesAllForms))}px` : "0px",
         }}
         className="transition-transform duration-200"
       >
         <div ref={sheetContainerRef} dir="rtl" className="flex flex-col gap-8 print:gap-0">
-          {formPagesMap.map((fp) => {
+          {viewForms.map((fp) => {
             const formSpecificSettings: PDFPrintSettingsStateSSOT = {
-              ...settings,
+              ...fp.formSettings,
               customDocumentTitle: fp.form.fullDocumentTitleAr,
             };
 
             return (
-              <div
-                key={fp.form.formId}
-                className="multi-form-block flex flex-col gap-5 print:gap-0 relative break-after-page"
-              >
+              <div key={fp.form.formId} className="multi-form-block flex flex-col gap-5 print:gap-0 relative break-after-page">
                 {fp.pages.map((page) => (
                   <SovereignDiscretePageView
                     key={`${fp.form.formId}-p-${page.pageNumber}`}
@@ -207,7 +305,7 @@ export default function MultiFormNewspaperPacker({
                     totalIdeasCount={fp.totalIdeasCount}
                     totalQuestionsCount={fp.form.questions.length}
                     totalMarks={fp.totalMarks}
-                    renderFlowItem={(item) => renderItem(item, fp.form.questions)}
+                    renderFlowItem={(item) => renderItem(item, formSpecificSettings, fp.form.questions)}
                   />
                 ))}
               </div>

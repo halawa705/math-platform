@@ -2,8 +2,9 @@
 
 /**
  * @file use-studio-exam-forms-scope-selection.ts
- * @description كوستوم هوك ذري مستقل لإدارة تحديد الوحدات والدروس بالشيك بوكس في استوديو النماذج المتعددة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
+ * @description كوستوم هوك ذري مستقل لإدارة تحديد الوحدات والدروس بالشيك بوكس في استوديو النماذج المتعددة
+ * مع المزامنة الثنائية مع شريط السياق العام.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 170 سطراً).
  */
 
 import { useState, useEffect } from "react";
@@ -24,6 +25,7 @@ export interface UseStudioExamFormsScopeSelectionParams {
   readonly initialUnitIds?: readonly string[];
   readonly initialLessonIds?: readonly string[];
   readonly onScopeDescChanged: (desc: string) => void;
+  readonly onScopeSelectionChanged?: (unitIds: readonly string[], lessonIds: readonly string[]) => void;
 }
 
 export function useStudioExamFormsScopeSelection({
@@ -33,46 +35,51 @@ export function useStudioExamFormsScopeSelection({
   initialUnitIds = [],
   initialLessonIds = [],
   onScopeDescChanged,
+  onScopeSelectionChanged,
 }: UseStudioExamFormsScopeSelectionParams) {
   const [units, setUnits] = useState<readonly CurriculumUnitNode[]>([]);
   const [selectedUnitIds, setSelectedUnitIds] = useState<readonly string[]>(initialUnitIds);
   const [selectedLessonIds, setSelectedLessonIds] = useState<readonly string[]>(initialLessonIds);
 
+  const commitSelection = (nextUnits: readonly string[], nextLessons: readonly string[], sourceUnits = units) => {
+    setSelectedUnitIds(nextUnits);
+    setSelectedLessonIds(nextLessons);
+    const text = formatSelectedCurriculumScopeArabic(sourceUnits, nextUnits, nextLessons);
+    onScopeDescChanged(text);
+    onScopeSelectionChanged?.(nextUnits, nextLessons);
+    saveStudioExamFormsSettingsSSOT({
+      selectedUnitIds: nextUnits,
+      selectedLessonIds: nextLessons,
+      targetedUnitsOrLessons: text,
+    });
+  };
+
   useEffect(() => {
     const loaded = loadActiveCurriculumUnitsSSOT(gradeId);
     setUnits(loaded);
+    if (loaded.length === 0) return;
 
-    if (loaded.length > 0 && selectedUnitIds.length === 0 && selectedLessonIds.length === 0) {
+    if (initialUnitIds.length > 0 || initialLessonIds.length > 0) {
+      setSelectedUnitIds(initialUnitIds);
+      setSelectedLessonIds(initialLessonIds);
+      const text = formatSelectedCurriculumScopeArabic(loaded, initialUnitIds, initialLessonIds);
+      if (text) onScopeDescChanged(text);
+      return;
+    }
+
+    if (selectedUnitIds.length === 0 && selectedLessonIds.length === 0) {
       if (scopeKind === "end_of_term") {
         const uIds = loaded.map((u) => u.id);
         const lIds = loaded.flatMap((u) => u.lessons.map((l) => l.id));
-        setSelectedUnitIds(uIds);
-        setSelectedLessonIds(lIds);
-        const text = formatSelectedCurriculumScopeArabic(loaded, uIds, lIds);
-        onScopeDescChanged(text);
-        saveStudioExamFormsSettingsSSOT({
-          selectedUnitIds: uIds,
-          selectedLessonIds: lIds,
-          targetedUnitsOrLessons: text,
-        });
+        commitSelection(uIds, lIds, loaded);
       } else if (unitTitleAr) {
         const matched = loaded.find((u) => u.titleArabic === unitTitleAr);
         if (matched) {
-          const uIds = [matched.id];
-          const lIds = matched.lessons.map((l) => l.id);
-          setSelectedUnitIds(uIds);
-          setSelectedLessonIds(lIds);
-          const text = formatSelectedCurriculumScopeArabic(loaded, uIds, lIds);
-          onScopeDescChanged(text);
-          saveStudioExamFormsSettingsSSOT({
-            selectedUnitIds: uIds,
-            selectedLessonIds: lIds,
-            targetedUnitsOrLessons: text,
-          });
+          commitSelection([matched.id], matched.lessons.map((l) => l.id), loaded);
         }
       }
     }
-  }, [gradeId, unitTitleAr]);
+  }, [gradeId, unitTitleAr, initialUnitIds.join(","), initialLessonIds.join(",")]);
 
   const handleToggleUnit = (unitId: string) => {
     const targetUnit = units.find((u) => u.id === unitId);
@@ -87,15 +94,7 @@ export function useStudioExamFormsScopeSelection({
       ? selectedLessonIds.filter((id) => !unitLessonIds.includes(id))
       : Array.from(new Set([...selectedLessonIds, ...unitLessonIds]));
 
-    setSelectedUnitIds(nextUnitIds);
-    setSelectedLessonIds(nextLessonIds);
-    const text = formatSelectedCurriculumScopeArabic(units, nextUnitIds, nextLessonIds);
-    onScopeDescChanged(text);
-    saveStudioExamFormsSettingsSSOT({
-      selectedUnitIds: nextUnitIds,
-      selectedLessonIds: nextLessonIds,
-      targetedUnitsOrLessons: text,
-    });
+    commitSelection(nextUnitIds, nextLessonIds);
   };
 
   const handleToggleLesson = (lessonId: string, unitId: string) => {
@@ -117,40 +116,17 @@ export function useStudioExamFormsScopeSelection({
       nextUnitIds = selectedUnitIds.filter((id) => id !== unitId);
     }
 
-    setSelectedUnitIds(nextUnitIds);
-    setSelectedLessonIds(nextLessonIds);
-    const text = formatSelectedCurriculumScopeArabic(units, nextUnitIds, nextLessonIds);
-    onScopeDescChanged(text);
-    saveStudioExamFormsSettingsSSOT({
-      selectedUnitIds: nextUnitIds,
-      selectedLessonIds: nextLessonIds,
-      targetedUnitsOrLessons: text,
-    });
+    commitSelection(nextUnitIds, nextLessonIds);
   };
 
   const handleSelectAll = () => {
     const uIds = units.map((u) => u.id);
     const lIds = units.flatMap((u) => u.lessons.map((l) => l.id));
-    setSelectedUnitIds(uIds);
-    setSelectedLessonIds(lIds);
-    const text = formatSelectedCurriculumScopeArabic(units, uIds, lIds);
-    onScopeDescChanged(text);
-    saveStudioExamFormsSettingsSSOT({
-      selectedUnitIds: uIds,
-      selectedLessonIds: lIds,
-      targetedUnitsOrLessons: text,
-    });
+    commitSelection(uIds, lIds);
   };
 
   const handleDeselectAll = () => {
-    setSelectedUnitIds([]);
-    setSelectedLessonIds([]);
-    onScopeDescChanged("");
-    saveStudioExamFormsSettingsSSOT({
-      selectedUnitIds: [],
-      selectedLessonIds: [],
-      targetedUnitsOrLessons: "",
-    });
+    commitSelection([], []);
   };
 
   return {

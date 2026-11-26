@@ -193,6 +193,10 @@ export default function TeacherGenerationStudioView() {
               branchNameAr={branch.nameArabic}
               selectedUnitIds={selectedUnitIds} selectedLessonIds={selectedLessonIds}
               targetedScopeText={targetedScopeText}
+              notationLanguage={notationLanguage}
+              essayAnswerLinesCount={essayAnswerLinesCount}
+              onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
+              onChangeScopeSelection={handleScopeSelection}
               onApplyFormsTitleToSheet={applyTitle}
               onApplyParsedQuestionsToSheet={setSheetQuestions}
               onApplyExamFormsToSheet={applyForms}
@@ -241,6 +245,7 @@ export default function TeacherGenerationStudioView() {
             key={sheetTitle} customTitle={sheetTitle} customQuestions={sheetQuestions}
             customForms={sheetForms} gradeNameAr={grade.nameArabic} branchNameAr={branch.nameArabic}
             essayAnswerLinesCount={essayAnswerLinesCount}
+            hasManualEssayLinesLock={hasManualLinesLock}
             onAutoFitResolvedLines={handleAutoFitResolvedLines}
             onClosePreview={() => setPane("builder")}
           />

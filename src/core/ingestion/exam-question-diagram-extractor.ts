@@ -1,7 +1,7 @@
 /**
  * @file exam-question-diagram-extractor.ts
  * @description مستخرج ومُنظف الرسوم الهندسية والبيانية والإحصائية ونماذج المساحة لأسئلة الاختبارات الإلكترونية والورقية.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 140 سطراً).
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
  */
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
@@ -27,6 +27,17 @@ export interface ExtractedExamQuestionDiagrams {
   readonly attachedGeometryFigure?: CanonicalGeometryFigureIR;
   readonly graphSpec?: CartesianGraphSpec;
   readonly figureDiagnosticsAr?: readonly string[];
+  readonly rawDrawingTagArabic?: string;
+}
+
+const EMPTY_DRAWING_PLACEHOLDER_REGEX =
+  /^(?:\[?\s*(?:فارغ|لا\s*يوجد(?:\s*رسم)?|بدون\s*رسم|لا\s*رسم|غير\s*مطلوب|none|null|n\/a|-+|—+)\s*\]?)$/i;
+
+export function sanitizeRawDrawingField(raw: string): string {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "";
+  if (EMPTY_DRAWING_PLACEHOLDER_REGEX.test(trimmed)) return "";
+  return trimmed;
 }
 
 export function extractExamQuestionDiagrams(params: {
@@ -56,18 +67,27 @@ export function extractExamQuestionDiagrams(params: {
     numeralMode = "western",
   } = params;
 
-  const fullDrawingContext = `${basePrompt} ${rawDrawing}`.trim();
+  const cleanRawDrawing = sanitizeRawDrawingField(rawDrawing);
+  const fullDrawingContext = `${basePrompt} ${cleanRawDrawing}`.trim();
   const areaModelSvg = detectAndBuildAreaModelSvg(fullDrawingContext, {
     numeralMode,
     notationLanguage,
   });
   if (areaModelSvg) {
-    return { rawSvgMarkup: areaModelSvg };
+    return {
+      rawSvgMarkup: areaModelSvg,
+      rawDrawingTagArabic: cleanRawDrawing || undefined,
+    };
   }
 
   const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
-  const graphSpec = graphMatch?.[1]
-    ? parseCartesianGraphDescription(graphMatch[1]) ?? undefined
+  const rawGraphInput =
+    graphMatch?.[1] ??
+    (/دالة|منحنى|مستوى\s*إحداثي|شبكة\s*تربيعية|محور(?:ي)?\s*الإحداثيات/i.test(cleanRawDrawing)
+      ? cleanRawDrawing
+      : undefined);
+  const graphSpec = rawGraphInput
+    ? parseCartesianGraphDescription(rawGraphInput) ?? undefined
     : undefined;
 
   const tagMatch = !graphSpec
@@ -76,7 +96,7 @@ export function extractExamQuestionDiagrams(params: {
       )
     : null;
 
-  const explicitTagText = rawDrawing || graphMatch?.[1] || tagMatch?.[1] || "";
+  const explicitTagText = cleanRawDrawing || graphMatch?.[1] || sanitizeRawDrawingField(tagMatch?.[1] ?? "");
   const hasExplicitTag = Boolean(explicitTagText.trim());
   const shouldTryGeo =
     !graphSpec &&
@@ -109,7 +129,10 @@ export function extractExamQuestionDiagrams(params: {
   }
 
   if (graphSpec) {
-    return { graphSpec };
+    return {
+      graphSpec,
+      rawDrawingTagArabic: explicitTagText || undefined,
+    };
   }
 
   const geoDiag = combinedGeo
@@ -129,6 +152,7 @@ export function extractExamQuestionDiagrams(params: {
       geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0)
         ? geoDiag.warnings
         : undefined,
+    rawDrawingTagArabic: explicitTagText || undefined,
   };
 }
 
@@ -142,6 +166,7 @@ export function cleanExamStudentPromptArabic(basePrompt: string): string {
       /(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|الإحصائي|الاحصائي|التوضيحي|التخطيطي))?\s*:[^\n]*/gi,
       ""
     )
+    .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل|الدرس|الفكرة)\s*:[^\n]*/gim, "")
     .replace(/(?:^|\n)\s*(?:الرسم|رسم|الشكل)\s*$/gim, "")
     .replace(/(?:^|\n)\s*(?:لا يوجد رسم|بدون رسم|لا رسم)[^\n]*/gi, "")
     .replace(

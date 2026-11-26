@@ -126,7 +126,7 @@ export function resolveCorrectChoiceIndex(
 
 function extractFieldMultiline(block: string, fieldPattern: string): string {
   const regex = new RegExp(
-    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:[ \\t]*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الخيارات|الإجابة_الصحيحة|الإجابة الصحيحة|إجابة_الصحيحة|إجابة الصحيحة|الإجابة|إجابة|الإجابات_المقبولة|الإجابات المقبولة|خطوات_الحل|خطوات الحل|خطوات|البرهان_والخطوات|الحل|البرهان|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج_النهائي|الناتج النهائي|الرسم|رسم|الشكل|شكل|المحافظة|المصدر)\\s*:|$)`,
+    `(?:^|\\n)\\s*(?:${fieldPattern})\\s*:[ \\t]*([\\s\\S]*?)(?=\\n\\s*(?:النمط|النوع|الدرس|الفكرة|الدرجة|النص|السؤال|المعطيات|المطلوب|البدائل|الاختيارات|الخيارات|الإجابة_الصحيحة|الإجابة الصحيحة|إجابة_الصحيحة|إجابة الصحيحة|الإجابة|إجابة|الإجابات_المقبولة|الإجابات المقبولة|خطوات_الحل|خطوات الحل|خطوات|البرهان_والخطوات|الحل|البرهان|الشرح|الإجابة_النهائية|الإجابة النهائية|الناتج_النهائي|الناتج النهائي|الرسم|رسم|الشكل|شكل|المحافظة|المصدر)\\s*:|$)`,
     "i"
   );
   return (block.match(regex)?.[1] ?? "").replace(/\s*---+\s*$/g, "").trim();
@@ -203,6 +203,9 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   return rawBlocks.map((block, idx): QuestionAssessmentIR => {
     const orderNumber = idx + 1;
     const rawKind = extractFieldMultiline(block, "النمط|النوع").toLowerCase();
+    const rawLesson = extractFieldMultiline(block, "الدرس");
+    const rawIdea = extractFieldMultiline(block, "الفكرة");
+    const effectiveLessonTitle = rawLesson || params.lessonTitleArabic;
     const rawMarks = Number(extractFieldMultiline(block, "الدرجة"));
     const explicitPrompt = extractFieldMultiline(block, "النص|السؤال|نص المسألة");
     const rawGiven = extractFieldMultiline(block, "المعطيات");
@@ -216,7 +219,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
 
     const fallbackPrompt = block
       .split(/\n\s*(?:الرسم|رسم|الشكل|شكل|البدائل|الاختيارات|الخيارات|الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية|الناتج[_\s]*النهائي|خطوات[_\s]*الحل|البرهان|الحل|الشرح)\s*:/i)[0]
-      ?.replace(/^(?:النمط|النوع|الدرجة)\s*:.*$/gm, "")
+      ?.replace(/^(?:النمط|النوع|الدرس|الفكرة|الدرجة)\s*:.*$/gm, "")
       .replace(/\|\s*معرف\s*السؤال\s*:\s*[^\n|]+/gi, "")
       .replace(/^\[(?:اختر|أكمل|مقالي)\]\s*/i, "")
       .trim();
@@ -228,7 +231,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       rawDrawing,
       branchId: params.branchId,
       lessonId: params.lessonId,
-      lessonTitleArabic: params.lessonTitleArabic,
+      lessonTitleArabic: effectiveLessonTitle,
       orderNumber,
       gradeId: params.gradeId,
       stage: params.stage,
@@ -258,7 +261,9 @@ export function parseNotebookLMExamQuestionsToIR(params: {
 
     return {
       questionId: `q_${params.lessonId}_${orderNumber}`, displayOrderNumber: orderNumber,
-      branchId: params.branchId, unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: params.lessonTitleArabic,
+      branchId: params.branchId, unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: effectiveLessonTitle,
+      ideaTagArabic: rawIdea || undefined,
+      rawDrawingTagArabic: extractedDiagrams.rawDrawingTagArabic,
       patternKind, cognitiveDepth: patternKind === "proof_reasoning" ? "deductive_proof" : "direct_application",
       allocatedMarks: Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : 2,
       estimatedSolveMinutes: patternKind === "proof_reasoning" ? 5 : 2,

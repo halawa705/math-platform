@@ -3,13 +3,12 @@
 /**
  * @file pdf-preview-orchestrator.tsx
  * @description المنسق المركزي لمعاينة وطباعة الـ A4 PDF بتصميم هادئ:
- * شريط إجراءات واحد (طباعة كبير + حفظ + تخصيص)، ولوحة التخصيص مطوية افتراضياً وتُفتح بنقرة
- * في ٣ مجموعات، ثم ورقة A4 الحية بالتحجيم التلقائي للهاتف.
+ * يربط الاختبارات الفردية وحزم النماذج تلقائياً بقالب الامتحان الرسمي وهدف الصفحتين مع احترام قفل سطور المعلم اليدوي فقط.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 275 سطراً).
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  DEFAULT_PDF_PRINT_SETTINGS_SSOT,
   loadPersistedPDFPrintSettingsSSOT,
   PRINT_FONT_FAMILIES_SSOT,
   savePersistedPDFPrintSettingsSSOT,
@@ -20,6 +19,7 @@ import type { PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vect
 import TwoColumnNewspaperPacker from "@/core/pdf-layout-engine/two-column-newspaper-packer";
 import MultiFormNewspaperPacker from "@/core/pdf-layout-engine/multi-form-newspaper-packer";
 import type { PrintableExamFormGroup } from "@/core/pdf-layout-engine/printable-exam-forms-model";
+import { resolveExamAwarePDFSettings } from "@/core/pdf-layout-engine/pdf-doc-autofit-defaults-resolver";
 import PDFPreviewTopActionBar from "./pdf-preview-top-action-bar";
 import PDFControlsGroupedToolPanel from "./pdf-controls-grouped-tool-panel";
 import { triggerIsolatedA4Print } from "./pdf-isolated-print-trigger";
@@ -34,29 +34,10 @@ export interface PDFPreviewOrchestratorProps {
   readonly gradeNameAr?: string;
   readonly branchNameAr?: string;
   readonly essayAnswerLinesCount?: number;
+  readonly hasManualEssayLinesLock?: boolean;
   readonly onAutoFitResolvedLines?: (lines: number) => void;
   readonly onClosePreview?: () => void;
   readonly children?: React.ReactNode;
-}
-
-function resolveDocAutoFitDefaults(
-  customTitle: string | undefined,
-  customQuestions: readonly PrintableMathQuestionItem[] | undefined
-): {
-  readonly isBookletOrReview: boolean;
-  readonly isExamDoc: boolean;
-} {
-  const isBookletOrReview = Boolean(
-    customTitle?.includes("مذكرة") ||
-      customTitle?.includes("مراجعة") ||
-      customQuestions?.some((q) => q.id.startsWith("booklet-s1-") || q.id.startsWith("rev-"))
-  );
-  const isExamDoc = Boolean(
-    !isBookletOrReview &&
-      (customTitle?.includes("اختبار") ||
-        customQuestions?.some((q) => q.id.startsWith("q-exam-")))
-  );
-  return { isBookletOrReview, isExamDoc };
 }
 
 export default function PDFPreviewOrchestrator({
@@ -66,6 +47,7 @@ export default function PDFPreviewOrchestrator({
   gradeNameAr = "",
   branchNameAr = "",
   essayAnswerLinesCount,
+  hasManualEssayLinesLock = false,
   onAutoFitResolvedLines,
   onClosePreview,
   children,
@@ -73,86 +55,63 @@ export default function PDFPreviewOrchestrator({
   const userChangedAutoFitRef = useRef<boolean>(false);
   const [pagesCount, setPagesCount] = useState<number>(1);
   const [selectedFormId, setSelectedFormId] = useState<string>("all");
-  const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() => {
-    const persisted = loadPersistedPDFPrintSettingsSSOT();
-    const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
-    return {
-      ...persisted,
-      paperTemplateId: isExamDoc
-        ? "official_school_exam"
-        : isBookletOrReview
-          ? "classic_sovereign"
-          : (persisted.paperTemplateId ?? "classic_sovereign"),
-      columnsCount: isBookletOrReview ? 2 : (persisted.columnsCount ?? 2),
-      answerVisibilityMode: isBookletOrReview
-        ? "questions_only"
-        : isExamDoc
-          ? "questions_only"
-          : persisted.answerVisibilityMode,
-      autoFitMode: isExamDoc
-        ? "exam_max_pages"
-        : (persisted.autoFitMode ?? "booklet_fill"),
-      targetMaxPages: isExamDoc ? 2 : isBookletOrReview ? undefined : persisted.targetMaxPages,
-      customDocumentTitle:
-        customTitle || DEFAULT_PDF_PRINT_SETTINGS_SSOT.customDocumentTitle,
-    };
-  });
+  const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() =>
+    resolveExamAwarePDFSettings({
+      persisted: loadPersistedPDFPrintSettingsSSOT(),
+      customTitle,
+      customQuestions,
+      customForms,
+    })
+  );
   const [isToolsOpen, setIsToolsOpen] = useState<boolean>(false);
   const [driveFeedback, setDriveFeedback] = useState<string | null>(null);
   const sheetContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const persisted = loadPersistedPDFPrintSettingsSSOT();
-    const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(customTitle, customQuestions);
-    setSettings((prev) => ({
-      ...prev,
-      ...persisted,
-      paperTemplateId: isExamDoc
-        ? "official_school_exam"
-        : isBookletOrReview
-          ? "classic_sovereign"
-          : (persisted.paperTemplateId ?? "classic_sovereign"),
-      columnsCount: isBookletOrReview ? 2 : (persisted.columnsCount ?? 2),
-      answerVisibilityMode: isBookletOrReview
-        ? "questions_only"
-        : isExamDoc
-          ? "questions_only"
-          : persisted.answerVisibilityMode,
-      autoFitMode: userChangedAutoFitRef.current
-        ? prev.autoFitMode
-        : isExamDoc
-          ? "exam_max_pages"
-          : (persisted.autoFitMode ?? "booklet_fill"),
-      targetMaxPages: userChangedAutoFitRef.current
-        ? prev.targetMaxPages
-        : isExamDoc
-          ? 2
-          : isBookletOrReview
-            ? undefined
-            : persisted.targetMaxPages,
-      customDocumentTitle: customTitle || prev.customDocumentTitle,
-    }));
-  }, [customTitle, customQuestions]);
+    setSettings((prev) =>
+      resolveExamAwarePDFSettings({
+        persisted: loadPersistedPDFPrintSettingsSSOT(),
+        customTitle,
+        customQuestions,
+        customForms,
+        preserveAutoFit: userChangedAutoFitRef.current,
+        prevSettings: prev,
+      })
+    );
+  }, [customTitle, customQuestions, customForms]);
 
   useEffect(() => {
     if (typeof essayAnswerLinesCount === "number") {
       setSettings((prev) => {
-        if (prev.essayAnswerLinesCount === essayAnswerLinesCount) return prev;
-        return { ...prev, essayAnswerLinesCount, hasManualEssayLinesLock: true };
+        const nextLock = hasManualEssayLinesLock ? true : prev.hasManualEssayLinesLock;
+        if (
+          prev.essayAnswerLinesCount === essayAnswerLinesCount &&
+          prev.hasManualEssayLinesLock === nextLock
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          essayAnswerLinesCount,
+          hasManualEssayLinesLock: nextLock,
+        };
       });
     }
-  }, [essayAnswerLinesCount]);
+  }, [essayAnswerLinesCount, hasManualEssayLinesLock]);
 
-  const handleAutoFitResolvedLines = useCallback((resolvedLines: number) => {
-    setSettings((prev) => {
-      if (prev.hasManualEssayLinesLock || prev.essayAnswerLinesCount === resolvedLines) return prev;
-      const updated = { ...prev, essayAnswerLinesCount: resolvedLines };
-      savePersistedPDFPrintSettingsSSOT(updated);
-      saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
-      onAutoFitResolvedLines?.(resolvedLines);
-      return updated;
-    });
-  }, [onAutoFitResolvedLines]);
+  const handleAutoFitResolvedLines = useCallback(
+    (resolvedLines: number) => {
+      setSettings((prev) => {
+        if (prev.hasManualEssayLinesLock || prev.essayAnswerLinesCount === resolvedLines) return prev;
+        const updated = { ...prev, essayAnswerLinesCount: resolvedLines };
+        savePersistedPDFPrintSettingsSSOT(updated);
+        saveStudioGlobalContextSSOT({ essayAnswerLinesCount: resolvedLines });
+        onAutoFitResolvedLines?.(resolvedLines);
+        return updated;
+      });
+    },
+    [onAutoFitResolvedLines]
+  );
 
   const handleUpdateSettings = (next: PDFPrintSettingsStateSSOT) => {
     if (
@@ -162,9 +121,10 @@ export default function PDFPreviewOrchestrator({
     ) {
       userChangedAutoFitRef.current = true;
     }
-    const withLock = next.essayAnswerLinesCount !== settings.essayAnswerLinesCount
-      ? { ...next, hasManualEssayLinesLock: true }
-      : next;
+    const withLock =
+      next.essayAnswerLinesCount !== settings.essayAnswerLinesCount
+        ? { ...next, hasManualEssayLinesLock: true }
+        : next;
     setSettings(withLock);
     savePersistedPDFPrintSettingsSSOT(withLock);
     if (next.essayAnswerLinesCount !== undefined) {
@@ -196,7 +156,7 @@ export default function PDFPreviewOrchestrator({
     const title = settings.customDocumentTitle || customTitle || "مذكرة رياضيات رسمية";
     saveDocumentToOvermathDriveVault({
       titleAr: title,
-      docKind: title.includes("مراجعة") ? "final_review" : title.includes("اختبار") ? "exam" : "booklet",
+      docKind: title.includes("مراجعة") ? "final_review" : title.includes("اختبار") || (customForms && customForms.length > 0) ? "exam" : "booklet",
       branchAr: branchNameAr || "الرياضيات",
       gradeAr: gradeNameAr || "غير محدد",
       pagesCount: Math.max(1, pagesCount),

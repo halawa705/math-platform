@@ -45,12 +45,12 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
       difficultyProfile: "standard_balanced",
     });
 
-    expect(prompt).toContain("(3) نماذج امتحانية ورقية متكافئة");
+    expect(prompt).toContain("(3) نماذج امتحانية ورقية");
     expect(prompt).toContain("النموذج (أ)");
     expect(prompt).toContain("النموذج (ب)");
     expect(prompt).toContain("النموذج (جـ)");
-    expect(prompt).toContain("التكافؤ التام والاختلاف الحقيقي");
-    expect(prompt).toContain("يُمنع منعاً باتاً تكرار أي سؤال بنفس الفكرة");
+    expect(prompt).toContain("سياسة الصعوبة والتكافؤ");
+    expect(prompt).toContain("منع تكرار نفس الفكرة نهائياً عبر جميع النماذج");
     expect(prompt).toContain("المطابقة الصارمة والتامة للمصادر");
     expect(prompt).toContain("=== [FORM: رقم_النموذج]");
   });
@@ -126,7 +126,7 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
     expect(forms[1].questions.length).toBe(2);
   });
 
-  it("supports large form counts (e.g. 15 forms) and adjusts prompt rules for high-yield ideas", () => {
+  it("supports large form counts (e.g. 15 forms) without allowing idea repetition loopholes", () => {
     const prompt = buildExamFormsNotebookLMPrompt({
       gradeNameArabic: "الصف الثالث الإعدادي",
       termNumber: 1,
@@ -141,11 +141,10 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
       difficultyProfile: "standard_balanced",
     });
 
-    expect(prompt).toContain("(15) نماذج امتحانية ورقية متكافئة");
+    expect(prompt).toContain("(15) نماذج امتحانية ورقية");
     expect(prompt).toContain("إجمالي 15 نماذج متتالية");
-    expect(prompt).toContain("استثناء النماذج الضخمة والأفكار الأكثر تكراراً");
-    expect(prompt).toContain("المطلوب 15 نماذج");
-    expect(prompt).toContain("الأفكار الجوهرية الكبرى الأكثر تكراراً وشهرة");
+    expect(prompt).toContain("0% تكرار");
+    expect(prompt).not.toContain("استثناء النماذج الضخمة");
 
     // Test partitioning 30 questions into 15 forms
     const thirtyQuestionsText = Array.from({ length: 30 }, (_, i) => `

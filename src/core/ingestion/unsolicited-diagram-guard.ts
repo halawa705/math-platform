@@ -48,7 +48,7 @@ const EXPLICIT_GEOMETRY_CONCRETE_VERBAL_REGEX =
   /(?:مثلث|△|\\triangle|مربع|مستطيل|معين|شبه\s*منحرف|متوازي\s*أضلاع|دائرة|وتر|مماس|زاوية\s+خارجة|الزوايا\s+الداخلة|نصف\s*قطر|فيثاغورس|توازي|متوازيان|متوازية|متوازيين|متعامد|متقاطع|حظيرة\s+مثلثة|سلم\s+طوله|سلم\s+طوارئ|عمود\s+إنارة|ظل\s+(?:شجرة|برج|عمود)|طائرة\s+ورقية)/i;
 
 const EXPLICIT_GEOMETRY_LESSON_HINT_REGEX =
-  /(?:مثلث|هندسة|توازي|فيثاغورس|تشابه|تطابق|دائرة|زوايا|رباعي|متوازي|مضلع|مساحة|محيط|إحداثي|مثلثات|إقليدس|طاليس|متوسط)/i;
+  /(?:مثلث|هندسة|توازي|فيثاغورس|تشابه|تطابق|دائرة|زوايا|رباعي|متوازي|مضلع|مساحة|محيط|إحداثي|مثلثات|إقليدس|طاليس|متوسط|إحصاء|بيانات|مدرج|صندوق|أعمدة|قطاع|تكرار|دالة|منحنى|انعكاس|انتقال|دوران|تمدد)/i;
 
 /**
  * يكشف ما إذا كان نص السؤال يصف صراحةً مضلعاً هندسياً أو مثلثاً قائماً/متساوي الساقين أو تطبيقاً مثلثياً مرسوماً.
@@ -161,5 +161,10 @@ export function isDiagramJustifiedForQuestion(params: {
     return false;
   }
 
-  return GEOMETRY_BRANCHES.has(branchId);
+  return (
+    GEOMETRY_BRANCHES.has(branchId) ||
+    branchId === "statistics_probability" ||
+    branchId === "functions" ||
+    Boolean(params.lessonTitleArabic && EXPLICIT_GEOMETRY_LESSON_HINT_REGEX.test(params.lessonTitleArabic))
+  );
 }

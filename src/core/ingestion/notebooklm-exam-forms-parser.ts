@@ -1,11 +1,14 @@
 /**
  * @file notebooklm-exam-forms-parser.ts
- * @description محلل ردود النماذج الامتحانية المتعددة من NotebookLM واستخراجها في كتل مستقلة لكل نموذج مع أسئلته.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 190 سطراً).
+ * @description محلل ردود النماذج الامتحانية المتعددة من NotebookLM واستخراجها في كتل مستقلة لكل نموذج مع أسئلته
+ * وتمرير سياق الصف والمرحلة ولغة الرموز ونظام الأرقام بدقة لمحرك الأشكال الهندسية.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 185 سطراً).
  */
 
 import type { QuestionAssessmentIR } from "../ir/question-assessment-ir";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
+import type { MathNotationLanguage, NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
+import type { CurriculumStageKind } from "./unsolicited-diagram-guard";
 import { parseNotebookLMExamQuestionsToIR } from "./notebooklm-exam-questions-parser";
 import { getArabicFormLetter } from "../pdf-layout-engine/printable-exam-forms-model";
 
@@ -52,15 +55,19 @@ export function parseNotebookLMExamForms(params: {
   readonly lessonId: string;
   readonly lessonTitleArabic: string;
   readonly expectedFormsCount?: number;
+  readonly gradeId?: string;
+  readonly stage?: CurriculumStageKind;
+  readonly notationLanguage?: MathNotationLanguage;
+  readonly numeralMode?: NumeralDisplayMode;
 }): readonly ParsedExamFormBlock[] {
   const raw = params.rawText.trim();
   if (!raw) return [];
 
   const expectedCount = Math.max(1, params.expectedFormsCount ?? 3);
 
-  // 1. محاولة تقسيم النص عبر علامات بداية النماذج الصريحة
+  // 1. محاولة تقسيم النص عبر علامات بداية النماذج الصريحة (يدعم نموذجاً واحداً أو أكثر)
   const matches = Array.from(raw.matchAll(FORM_SPLIT_REGEX));
-  if (matches.length >= 2) {
+  if (matches.length >= 1) {
     const forms: ParsedExamFormBlock[] = [];
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
@@ -74,6 +81,10 @@ export function parseNotebookLMExamForms(params: {
         unitId: `${params.unitId}-form-${i + 1}`,
         lessonId: `${params.lessonId}-form-${i + 1}`,
         lessonTitleArabic: params.lessonTitleArabic,
+        gradeId: params.gradeId,
+        stage: params.stage,
+        notationLanguage: params.notationLanguage,
+        numeralMode: params.numeralMode,
       });
 
       forms.push({
@@ -101,11 +112,14 @@ export function parseNotebookLMExamForms(params: {
     unitId: params.unitId,
     lessonId: params.lessonId,
     lessonTitleArabic: params.lessonTitleArabic,
+    gradeId: params.gradeId,
+    stage: params.stage,
+    notationLanguage: params.notationLanguage,
+    numeralMode: params.numeralMode,
   });
 
   if (allQuestions.length === 0) return [];
 
-  // فحص ما إذا كان هناك تقسيم داخلي في النص بذكر رمز النموذج
   const taggedFormsMap = new Map<string, QuestionAssessmentIR[]>();
   const formQuestionRegex = /النموذج\s*:\s*\[?([^\n|\]]+)\]?/i;
 

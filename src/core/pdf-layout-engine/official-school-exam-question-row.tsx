@@ -3,13 +3,9 @@
 /**
  * @file official-school-exam-question-row.tsx
  * @description مصير ذري مستقل للأسئلة المقالية والبرهانية في الامتحان المدرسي الرسمي:
- * يرص السؤال المقالي بنمطه المدرسي التقليدي الفاخر بدون كروت ضخمة متباعدة:
- * - ترقيم بالسوابق النقطية (.١، .٢).
- * - نص السؤال مع كتل الرياضيات والجداول المضمنة والأشكال الهندسية.
- * - شارة الدرجة والمحافظة يسار السطر.
- * - مساحة حل منقطة للأسئلة المقالية تتمدد تلقائياً لملء الصفحة.
- * (ملاحظة: أسئلة الاختيار من متعدد MCQ تُوجَّه حصرياً للملف الذري `compact-textbook-mcq-row.tsx`).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 200 سطر).
+ * يرص السؤال المقالي بنمطه المدرسي التقليدي الفاخر، ويدعم الأشكال الهندسية والبيانية والـ rawSvgMarkup،
+ * ويستثمر المساحة الفارغة أسفل النص بجانب الشكل الهندسي لوضع أسطر الحل الأولى لتسع ورقتي A4 بامتياز.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 235 سطراً).
  */
 
 import React from "react";
@@ -46,14 +42,11 @@ export function OfficialSchoolExamQuestionRow({
   const marksNum = question.marks || 1;
   const marksStr = `[${formatNumeralsByModeSSOT(marksNum, numeralMode)} ${marksNum > 2 ? "درجات" : "درجة"}]`;
 
-  const hasFigure = Boolean(question.geometryFigure || question.graphSpec);
+  const hasFigure = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
   const isMcqQuestion =
     question.kind === "mcq" ||
     (question.mcqChoicesAr !== undefined && question.mcqChoicesAr.length > 0);
 
-  // حتمي صارم: أسئلة الاختيار من متعدد MCQ لا تأخذ أي أسطر إجابة إطلاقاً
-  // بالنسبة للأسئلة المقالية: إعدادات السطور من المعلم أو AutoFit (settings.essayAnswerLinesCount) تحكم وتنعكس فورياً
-  // ما لم يكن للسؤال تخصيص فردي صريح من المعلم (hasCustomAnswerLines)
   const effectiveLinesCount = isMcqQuestion
     ? 0
     : (question.hasCustomAnswerLines && typeof question.answerLinesCount === "number"
@@ -62,20 +55,19 @@ export function OfficialSchoolExamQuestionRow({
 
   const hasDottedDivider = question.hasDottedDivider !== false;
 
-  // تنظيم المساحة التلقائي الذكي حسب عدد السطور المختار
   const lineHeightClass =
     effectiveLinesCount <= 3
-      ? "h-6"
+      ? "h-5"
       : effectiveLinesCount <= 7
-        ? "h-5"
-        : "h-4.5";
+        ? "h-4.5"
+        : "h-4";
 
   const spacingClass =
     effectiveLinesCount <= 4
-      ? "space-y-1.5 pt-2 pb-1"
+      ? "space-y-1 pt-1 pb-0.5"
       : effectiveLinesCount <= 8
-        ? "space-y-1 pt-1.5 pb-0.5"
-        : "space-y-0.5 pt-1 pb-0.5";
+        ? "space-y-0.5 pt-1 pb-0.5"
+        : "space-y-0.5 pt-0.5 pb-0.5";
 
   const lineStyleClass =
     settings.answerSpaceStyle === "lined"
@@ -84,11 +76,11 @@ export function OfficialSchoolExamQuestionRow({
         ? "border-b border-dashed border-slate-300 print:border-slate-400 bg-slate-50/50"
         : "border-b border-dotted border-slate-400 print:border-slate-500";
 
-  const renderEssayAnswerLines = () => {
-    if (isSolvedMode || effectiveLinesCount <= 0 || settings.answerSpaceStyle === "hidden") return null;
+  const renderLinesSlice = (count: number) => {
+    if (isSolvedMode || count <= 0 || settings.answerSpaceStyle === "hidden") return null;
     return (
       <div className={`${spacingClass} w-full`} aria-label="سطور مساحة الحل">
-        {Array.from({ length: effectiveLinesCount }).map((_, lineIdx) => (
+        {Array.from({ length: count }).map((_, lineIdx) => (
           <div
             key={lineIdx}
             className={`w-full ${lineStyleClass} ${lineHeightClass}`}
@@ -112,17 +104,18 @@ export function OfficialSchoolExamQuestionRow({
     );
   };
 
+  const inlineWithFigureLines = hasFigure ? Math.min(3, effectiveLinesCount) : 0;
+  const overflowLinesBelowFigure = hasFigure ? Math.max(0, effectiveLinesCount - 3) : effectiveLinesCount;
+
   return (
     <article
       className={`w-full min-w-0 break-inside-avoid print:break-inside-avoid text-slate-900 ${
-        hasDottedDivider ? "py-1.5 border-b border-dotted border-slate-300" : "py-0.5 border-b-0"
+        hasDottedDivider ? "py-1 border-b border-dotted border-slate-300" : "py-0.5 border-b-0"
       }`}
     >
       {hasFigure ? (
-        /* عند وجود رسم هندسي أو بياني: السؤال جهة اليمين والرسم جهة اليسار بنفس السطور تماماً لحفظ المساحة */
         <div>
-          <div className="flex flex-row items-start justify-between gap-3 w-full">
-            {/* العمود الأيمن: نص السؤال المقالي */}
+          <div className="flex flex-row items-start justify-between gap-2.5 w-full">
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
                 <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
@@ -136,25 +129,26 @@ export function OfficialSchoolExamQuestionRow({
                   />
                 </div>
               </div>
+              {renderLinesSlice(inlineWithFigureLines)}
             </div>
 
-            {/* العمود الأيسر: الرسم المتجهي مدمج على اليسار بنفس السطور */}
-            <div className="shrink-0 max-w-[210px] sm:max-w-[240px] flex flex-col items-center justify-start self-start pt-0.5">
+            <div className="shrink-0 max-w-[195px] flex flex-col items-center justify-start self-start pt-0.5">
               <EmbeddedGeometrySVGDocker
                 geometryFigure={question.geometryFigure}
                 graphSpec={question.graphSpec}
+                rawSvgMarkup={question.rawSvgMarkup}
                 borderHex={palette.borderHex}
                 softSurfaceHex={palette.softSurfaceHex}
                 primaryHex={palette.primaryHex}
                 accentHex={palette.accentHex}
                 numeralMode={numeralMode}
                 notationLanguage={notationLanguage}
-                figureScale={settings.figureScale ?? 0.85}
-                columnsCount={settings.columnsCount}
+                figureScale={settings.figureScale ?? 0.82}
+                columnsCount={1}
                 monochromePrintSafe={settings.colorThemeId === "photocopy_black"}
                 strokeWidthMultiplier={settings.exactFontSizePt >= 15 ? 1.35 : settings.exactFontSizePt >= 14 ? 1.2 : 1}
               />
-              <div className="flex items-center gap-1.5 pt-1 text-xs font-bold text-slate-700">
+              <div className="flex items-center gap-1.5 pt-0.5 text-xs font-bold text-slate-700">
                 {question.citationBadgeAr && (
                   <span className="text-[10px] text-slate-500 font-sans">
                     {formatNumeralsByModeSSOT(question.citationBadgeAr, numeralMode)}
@@ -167,12 +161,10 @@ export function OfficialSchoolExamQuestionRow({
             </div>
           </div>
 
-          {/* مساحة الحل بعرض الصفحة تحت السؤال والرسم */}
-          {renderEssayAnswerLines()}
+          {renderLinesSlice(overflowLinesBelowFigure)}
           {renderEssaySolvedModelAnswer()}
         </div>
       ) : (
-        /* عند عدم وجود رسم: نص السؤال بالعرض الكامل */
         <div>
           <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
             <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
@@ -203,7 +195,7 @@ export function OfficialSchoolExamQuestionRow({
             </div>
           </div>
 
-          {renderEssayAnswerLines()}
+          {renderLinesSlice(effectiveLinesCount)}
           {renderEssaySolvedModelAnswer()}
         </div>
       )}
