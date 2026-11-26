@@ -2,9 +2,9 @@
 
 /**
  * @file studio-exam-forms-generator-tab.tsx
- * @description تبويب توليد النماذج الامتحانية المتعددة مع التوزيع الديموجرافي للدروس، اختيار الصعوبة المتكافئة/المتدرجة،
- * وتدقيق منع تكرار الأفكار، وملاءمة الورقتين وربط محرك الرسوميات والـ SVG الكامل.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 285 سطراً).
+ * @description تبويب توليد النماذج الامتحانية المتعددة بالاعتماد المباشر على النطاق العلوي المحدد،
+ * مع اختيارات نوع النماذج وأعدادها والصعوبة (موحدة أو متدرجة) وربط محرك الصفحتين والرسوم الهندسية.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 245 سطراً).
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -12,11 +12,12 @@ import type { MathBranchId } from "@/core/ssot/math-branches-ssot";
 import type { MathNotationLanguage } from "@/core/ssot/numeral-and-unit-ssot";
 import { loadPersistedPDFPrintSettingsSSOT } from "@/core/ssot/pdf-print-settings-ssot";
 import type { QuestionAssessmentIR } from "@/core/ir/question-assessment-ir";
-import { buildStandardDocumentTitleSSOT } from "@/core/ssot/curriculum-hierarchy-ssot";
+import {
+  buildStandardDocumentTitleSSOT,
+  loadActiveCurriculumUnitsSSOT,
+} from "@/core/ssot/curriculum-hierarchy-ssot";
 import { buildExamFormsNotebookLMPrompt } from "@/core/prompts/exam-forms-notebooklm-prompt-builder";
-import { resolveTargetedLessonsForBlueprint } from "@/core/prompts/exam-forms-demographic-blueprint-builder";
 import { parseNotebookLMExamForms, type ParsedExamFormBlock } from "@/core/ingestion/notebooklm-exam-forms-parser";
-import { auditParsedExamFormsQuality } from "@/core/validation/exam-forms-coverage-and-uniqueness-auditor";
 import { convertQuestionAssessmentIRToPrintableItem, type PrintableMathQuestionItem } from "@/core/pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { copyPromptAndOpenGradeNotebookLmSSOT } from "@/core/ssot/teacher-identity-ssot";
 import {
@@ -32,14 +33,14 @@ import StudioCollapsibleSectionCard from "./studio-collapsible-section-card";
 import StudioExamFormsScopeCard from "./studio-exam-forms-scope-card";
 import StudioNumberStepperField from "./studio-number-stepper-field";
 import StudioEssayAnswerLinesStepper from "./studio-essay-answer-lines-stepper";
+import StudioExamUnitFocusWeightsCard from "./studio-exam-unit-focus-weights-card";
+import { useStudioExamUnitFocusWeights } from "./use-studio-exam-unit-focus-weights";
 import StudioCustomDirectivesCard from "./studio-custom-directives-card";
 import StudioSingleStagePastePanel from "./studio-single-stage-paste-panel";
 import StudioStickyPrimaryActionBar from "./studio-sticky-primary-action-bar";
 import StudioExamQuestionsInspectorCard from "./studio-exam-questions-inspector-card";
 import StudioFigureDiagnosticsBanner, { type FigureDiagnosticRow } from "./studio-figure-diagnostics-banner";
 import StudioExamFormsDifficultyAndProgressionSelector from "./studio-exam-forms-difficulty-and-progression-selector";
-import StudioExamFormsAuditSummaryBanner from "./studio-exam-forms-audit-summary-banner";
-import { useStudioExamFormsScopeSelection } from "./use-studio-exam-forms-scope-selection";
 
 export const MODULE_ID_STUDIO_EXAM_FORMS_GENERATOR_TAB = "studio_exam_forms_generator_tab" as const;
 
@@ -55,8 +56,10 @@ export interface StudioExamFormsGeneratorTabProps {
   readonly targetedScopeText?: string;
   readonly notationLanguage?: MathNotationLanguage;
   readonly essayAnswerLinesCount?: number;
+  readonly hasManualLinesLock?: boolean;
   readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
-  readonly onChangeScopeSelection?: (unitIds: readonly string[], lessonIds: readonly string[]) => void;
+  readonly onResetAutoEssayLines?: () => void;
+  readonly onSelectAllCurriculum?: () => void;
   readonly onApplyFormsTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
   readonly onApplyExamFormsToSheet?: (forms: readonly PrintableExamFormGroup[]) => void;
@@ -74,8 +77,10 @@ export default function StudioExamFormsGeneratorTab({
   targetedScopeText,
   notationLanguage = "english",
   essayAnswerLinesCount,
+  hasManualLinesLock = false,
   onChangeEssayAnswerLinesCount,
-  onChangeScopeSelection,
+  onResetAutoEssayLines,
+  onSelectAllCurriculum,
   onApplyFormsTitleToSheet,
   onApplyParsedQuestionsToSheet,
   onApplyExamFormsToSheet,
@@ -83,7 +88,6 @@ export default function StudioExamFormsGeneratorTab({
   const [initial] = useState(() => loadStudioExamFormsSettingsSSOT());
   const [formsCount, setFormsCount] = useState(initial.formsCount);
   const [scopeKind, setScopeKind] = useState<ExamFormsScopeKind>(initial.scopeKind);
-  const [scopeDesc, setScopeDesc] = useState(targetedScopeText || initial.targetedUnitsOrLessons || unitTitleAr || lessonTitle);
   const [mcqCount, setMcqCount] = useState(initial.mcqCount);
   const [mcqEnabled, setMcqEnabled] = useState(initial.mcqEnabled);
   const [proofCount, setProofCount] = useState(initial.proofCount);
@@ -96,16 +100,6 @@ export default function StudioExamFormsGeneratorTab({
 
   const persist = (p: Partial<ReturnType<typeof loadStudioExamFormsSettingsSSOT>>) => saveStudioExamFormsSettingsSSOT(p);
 
-  const scopeSelection = useStudioExamFormsScopeSelection({
-    gradeId,
-    unitTitleAr,
-    scopeKind,
-    initialUnitIds: selectedUnitIds.length > 0 ? selectedUnitIds : initial.selectedUnitIds,
-    initialLessonIds: selectedLessonIds.length > 0 ? selectedLessonIds : initial.selectedLessonIds,
-    onScopeDescChanged: (d) => setScopeDesc(d),
-    onScopeSelectionChanged: onChangeScopeSelection,
-  });
-
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState(initial.savedReply || "");
   const [parsedForms, setParsedForms] = useState<readonly ParsedExamFormBlock[]>([]);
@@ -117,41 +111,41 @@ export default function StudioExamFormsGeneratorTab({
   const effectiveProof = proofEnabled ? proofCount : 0;
   const totalMarksPerForm = Math.max(1, effectiveMcq + effectiveProof * 3);
 
+  const allCurriculumUnits = useMemo(() => loadActiveCurriculumUnitsSSOT(gradeId), [gradeId]);
+  const {
+    activeSelectedUnits,
+    weights,
+    includeInPrompt,
+    focusWeightItems,
+    handleWeightsChange,
+    handleToggleIncludeInPrompt,
+  } = useStudioExamUnitFocusWeights({
+    allCurriculumUnits,
+    selectedUnitIds,
+    selectedLessonIds,
+    initialWeights: initial.unitFocusWeights,
+    initialIncludeInPrompt: initial.includeUnitFocusWeightsInPrompt ?? false,
+    totalQuestionsCount: effectiveMcq + effectiveProof,
+    onPersist: persist,
+  });
+
+  const activeScopeDesc =
+    scopeKind === "end_of_term"
+      ? (targetedScopeText?.trim() || "كامل وحدات ودروس المنهج المقرر")
+      : (targetedScopeText?.trim() || unitTitleAr || lessonTitle || "الوحدات والدروس المقررة");
+
   useEffect(() => {
-    const finalScope = scopeDesc.trim() || unitTitleAr || lessonTitle || "الوحدات المقررة";
     setPrompt(
       buildExamFormsNotebookLMPrompt({
         gradeId, gradeNameArabic: gradeNameAr, termNumber: 1, branchId, scopeKind,
-        scopeDescriptionArabic: finalScope, units: scopeSelection.units,
-        selectedUnitIds: scopeSelection.selectedUnitIds, selectedLessonIds: scopeSelection.selectedLessonIds,
+        scopeDescriptionArabic: activeScopeDesc, units: allCurriculumUnits,
+        selectedUnitIds, selectedLessonIds, unitFocusWeights: focusWeightItems,
         formsCount, mcqQuestionsCount: effectiveMcq, essayAndProofQuestionsCount: effectiveProof,
         totalMarksPerForm, durationTextArabic: "ساعة ونصف", difficultyProfile: difficulty,
         progressionMode, notationLanguage, customDirectivesArabic: customDirectives,
       })
     );
-  }, [gradeId, gradeNameAr, branchId, scopeKind, scopeDesc, unitTitleAr, lessonTitle, scopeSelection.units, scopeSelection.selectedUnitIds, scopeSelection.selectedLessonIds, formsCount, effectiveMcq, effectiveProof, totalMarksPerForm, difficulty, progressionMode, notationLanguage, customDirectives]);
-
-  const targetedLessonsList = useMemo(
-    () =>
-      resolveTargetedLessonsForBlueprint({
-        units: scopeSelection.units,
-        selectedUnitIds: scopeSelection.selectedUnitIds,
-        selectedLessonIds: scopeSelection.selectedLessonIds,
-        scopeDescriptionArabic: scopeDesc,
-      }).map((l) => l.lessonTitleArabic),
-    [scopeSelection.units, scopeSelection.selectedUnitIds, scopeSelection.selectedLessonIds, scopeDesc]
-  );
-
-  const auditReport = useMemo(() => {
-    if (parsedForms.length === 0) return null;
-    return auditParsedExamFormsQuality({
-      forms: parsedForms,
-      expectedFormsCount: formsCount,
-      expectedMcqPerForm: effectiveMcq,
-      expectedEssayPerForm: effectiveProof,
-      targetedLessonTitles: targetedLessonsList,
-    });
-  }, [parsedForms, formsCount, effectiveMcq, effectiveProof, targetedLessonsList]);
+  }, [gradeId, gradeNameAr, branchId, scopeKind, activeScopeDesc, allCurriculumUnits, selectedUnitIds, selectedLessonIds, focusWeightItems, formsCount, effectiveMcq, effectiveProof, totalMarksPerForm, difficulty, progressionMode, notationLanguage, customDirectives]);
 
   const refreshDiagnostics = (forms: readonly ParsedExamFormBlock[]) => {
     const rows: FigureDiagnosticRow[] = [];
@@ -175,15 +169,9 @@ export default function StudioExamFormsGeneratorTab({
     if (!raw.trim()) { setParsedForms([]); setDiagRows([]); return; }
     const numeralMode = loadPersistedPDFPrintSettingsSSOT().numeralMode ?? "western";
     const forms = parseNotebookLMExamForms({
-      rawText: raw,
-      branchId,
-      unitId: "forms-unit",
-      lessonId: "forms-lesson",
-      lessonTitleArabic: scopeDesc || lessonTitle,
-      expectedFormsCount: formsCount,
-      gradeId,
-      notationLanguage,
-      numeralMode,
+      rawText: raw, branchId, unitId: "forms-unit", lessonId: "forms-lesson",
+      lessonTitleArabic: activeScopeDesc, expectedFormsCount: formsCount,
+      gradeId, notationLanguage, numeralMode,
     });
     setParsedForms(forms);
     refreshDiagnostics(forms);
@@ -207,13 +195,10 @@ export default function StudioExamFormsGeneratorTab({
     }
     setNotice(null);
     const scopeTitle = scopeKind === "end_of_term" ? "اختبار نهاية الترم" : scopeKind === "monthly_exam" ? "اختبار شهر" : "مراجعة تدريبية";
-    const baseStdTitle = buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: scopeDesc || lessonTitle, promptText: prompt, rawReplyText: reply });
+    const baseStdTitle = buildStandardDocumentTitleSSOT({ gradeId, unitTitleInput: unitTitleAr, lessonTitleInput: activeScopeDesc, promptText: prompt, rawReplyText: reply });
     const finalBaseTitle = `${scopeTitle} — ${baseStdTitle}`;
     const printableForms: PrintableExamFormGroup[] = parsedForms.map((f) => ({
-      formId: f.formId,
-      formIndex: f.formIndex,
-      formLetterAr: f.formLetterAr,
-      formTitleAr: f.formTitleAr,
+      formId: f.formId, formIndex: f.formIndex, formLetterAr: f.formLetterAr, formTitleAr: f.formTitleAr,
       fullDocumentTitleAr: `${finalBaseTitle} — ${f.formTitleAr}`,
       questions: f.questions.map((q) => {
         const item = convertQuestionAssessmentIRToPrintableItem(q, branchNameAr);
@@ -233,20 +218,12 @@ export default function StudioExamFormsGeneratorTab({
 
   return (
     <div className="space-y-3">
-      <StudioCollapsibleSectionCard icon="📑" titleAr="نطاق النماذج واختيار الوحدات والدروس" summaryAr={summaryAr} defaultOpen>
+      <StudioCollapsibleSectionCard icon="⚙️" titleAr="إعدادات النماذج وأعداد الأسئلة والصعوبة" summaryAr={summaryAr} defaultOpen>
         <div className="space-y-2.5 pt-2">
           <StudioExamFormsScopeCard
             scopeKind={scopeKind}
-            scopeDescription={scopeDesc}
-            units={scopeSelection.units}
-            selectedUnitIds={scopeSelection.selectedUnitIds}
-            selectedLessonIds={scopeSelection.selectedLessonIds}
-            onSelectScopeKind={(k) => { setScopeKind(k); persist({ scopeKind: k }); if (k === "end_of_term") scopeSelection.handleSelectAll(); }}
-            onChangeScopeDescription={(d) => { setScopeDesc(d); persist({ targetedUnitsOrLessons: d }); }}
-            onToggleUnit={scopeSelection.handleToggleUnit}
-            onToggleLesson={scopeSelection.handleToggleLesson}
-            onSelectAll={scopeSelection.handleSelectAll}
-            onDeselectAll={scopeSelection.handleDeselectAll}
+            activeScopeSummaryAr={activeScopeDesc}
+            onSelectScopeKind={(k) => { setScopeKind(k); persist({ scopeKind: k }); if (k === "end_of_term") onSelectAllCurriculum?.(); }}
           />
           <div className="grid grid-cols-3 gap-2">
             <StudioNumberStepperField labelAr="عدد النماذج" value={formsCount} min={1} max={999} onChange={(v) => { setFormsCount(v); persist({ formsCount: v }); }} />
@@ -255,6 +232,8 @@ export default function StudioExamFormsGeneratorTab({
           </div>
           <StudioEssayAnswerLinesStepper
             value={effectiveEssayLines}
+            isAutoMode={!hasManualLinesLock}
+            onResetAuto={onResetAutoEssayLines}
             onChange={(cnt) => { setLocalLines(cnt); onChangeEssayAnswerLinesCount?.(cnt); saveStudioGlobalContextSSOT({ essayAnswerLinesCount: cnt }); }}
             compact
           />
@@ -268,11 +247,21 @@ export default function StudioExamFormsGeneratorTab({
         </div>
       </StudioCollapsibleSectionCard>
 
+      <StudioExamUnitFocusWeightsCard
+        selectedUnits={activeSelectedUnits}
+        totalQuestionsCount={effectiveMcq + effectiveProof}
+        weights={weights}
+        onChangeWeights={handleWeightsChange}
+        includeInPrompt={includeInPrompt}
+        onToggleIncludeInPrompt={handleToggleIncludeInPrompt}
+        selectedLessonIds={selectedLessonIds}
+      />
+
       <StudioCustomDirectivesCard customDirectives={customDirectives} onChangeDirectives={(v) => { setCustomDirectives(v); persist({ customDirectives: v }); }} />
 
       <StudioSingleStagePastePanel
         stageTitleAr={`نماذج امتحانية (${formsCount} نماذج)`}
-        stageHintAr="انسخ البرومبت وافتحه في NotebookLM، ثم الصق الرد لتدقيق التوزيع ومنع التكرار ومعاينة الورقتين وطباعتها."
+        stageHintAr="انسخ البرومبت وافتحه في NotebookLM، ثم الصق الرد لمعاينة كل نموذج في صفحتين A4 وطباعته."
         promptText={prompt}
         onChangePrompt={setPrompt}
         onCopyPromptAndOpenNotebook={() => { copyPromptAndOpenGradeNotebookLmSSOT(prompt, gradeId); setCopied(true); setTimeout(() => setCopied(false), 3000); }}
@@ -282,7 +271,6 @@ export default function StudioExamFormsGeneratorTab({
         replyPlaceholderAr="الصق رد النماذج المستخرجة من NotebookLM هنا..."
       />
 
-      <StudioExamFormsAuditSummaryBanner report={auditReport} />
       <StudioFigureDiagnosticsBanner rows={diagRows} />
 
       {parsedForms.length > 0 && (

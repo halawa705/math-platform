@@ -17,6 +17,8 @@ export interface StudioEssayAnswerLinesStepperProps {
   readonly onChange: (count: number) => void;
   readonly labelAr?: string;
   readonly compact?: boolean;
+  readonly isAutoMode?: boolean;
+  readonly onResetAuto?: () => void;
 }
 
 export default function StudioEssayAnswerLinesStepper({
@@ -24,6 +26,8 @@ export default function StudioEssayAnswerLinesStepper({
   onChange,
   labelAr = "سطور إجابة المقالي",
   compact = false,
+  isAutoMode = true,
+  onResetAuto,
 }: StudioEssayAnswerLinesStepperProps) {
   const safeCount = Math.max(0, value ?? 3);
 
@@ -86,6 +90,21 @@ export default function StudioEssayAnswerLinesStepper({
             +
           </button>
         </div>
+
+        {onResetAuto && (
+          <button
+            type="button"
+            onClick={onResetAuto}
+            className={`px-2.5 h-8 rounded-lg text-[10px] font-black cursor-pointer border transition-all ${
+              isAutoMode
+                ? "bg-indigo-700 text-white border-indigo-700"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+            }`}
+            title="ترك محرك الصفحتين يضبط السطور تلقائياً"
+          >
+            {isAutoMode ? "✓ تلقائي (صفحتين)" : "إعادة للتلقائي"}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-400 dark:text-slate-500 pt-0.5">

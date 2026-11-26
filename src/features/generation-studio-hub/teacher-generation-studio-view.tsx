@@ -61,12 +61,17 @@ export default function TeacherGenerationStudioView() {
   const [essayAnswerLinesCount, setEssayAnswerLinesCount] = useState<number>(() => {
     return loadStudioGlobalContextSSOT().essayAnswerLinesCount ?? 3;
   });
-  const [hasManualLinesLock, setHasManualLinesLock] = useState<boolean>(() => {
-    return Boolean(loadStudioGlobalContextSSOT().hasManualEssayLinesLock);
-  });
+  const [hasManualLinesLock, setHasManualLinesLock] = useState<boolean>(false);
   const [notationLanguage, setNotationLanguage] = useState<MathNotationLanguage>(() => {
     return loadPersistedPDFPrintSettingsSSOT().notationLanguage ?? "english";
   });
+
+  const resetEssayLinesToAuto = useCallback(() => {
+    setHasManualLinesLock(false);
+    saveStudioGlobalContextSSOT({ hasManualEssayLinesLock: false });
+    const curr = loadPersistedPDFPrintSettingsSSOT();
+    savePersistedPDFPrintSettingsSSOT({ ...curr, hasManualEssayLinesLock: false });
+  }, []);
 
   const updateEssayAnswerLinesCount = useCallback((cnt: number, isManual = true) => {
     setEssayAnswerLinesCount(cnt);
@@ -137,6 +142,11 @@ export default function TeacherGenerationStudioView() {
     setSelectedLessonIds(lessonIds);
     saveStudioGlobalContextSSOT({ selectedUnitIds: unitIds, selectedLessonIds: lessonIds });
   };
+  const selectAllScopeUnitsAndLessons = () => {
+    const allU = gradeUnits.map((u) => u.id);
+    const allL = gradeUnits.flatMap((u) => u.lessons.map((l) => l.id));
+    handleScopeSelection(allU, allL);
+  };
 
   const applyTitle = (t: string) => { setSheetTitle(t); setPane("preview"); saveStudioGlobalContextSSOT({ sheetTitle: t }); };
   const syncQuestions = (qs: readonly PrintableMathQuestionItem[]) => { setSheetQuestions(qs); setSheetForms(undefined); };
@@ -180,7 +190,9 @@ export default function TeacherGenerationStudioView() {
               targetedScopeText={targetedScopeText}
               notationLanguage={notationLanguage}
               essayAnswerLinesCount={essayAnswerLinesCount}
+              hasManualLinesLock={hasManualLinesLock}
               onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
+              onResetAutoEssayLines={resetEssayLinesToAuto}
               onApplyExamTitleToSheet={applyTitle}
               onApplyParsedQuestionsToSheet={applyQuestions}
               onSyncQuestionsToSheet={syncQuestions}
@@ -195,8 +207,10 @@ export default function TeacherGenerationStudioView() {
               targetedScopeText={targetedScopeText}
               notationLanguage={notationLanguage}
               essayAnswerLinesCount={essayAnswerLinesCount}
+              hasManualLinesLock={hasManualLinesLock}
               onChangeEssayAnswerLinesCount={updateEssayAnswerLinesCount}
-              onChangeScopeSelection={handleScopeSelection}
+              onResetAutoEssayLines={resetEssayLinesToAuto}
+              onSelectAllCurriculum={selectAllScopeUnitsAndLessons}
               onApplyFormsTitleToSheet={applyTitle}
               onApplyParsedQuestionsToSheet={setSheetQuestions}
               onApplyExamFormsToSheet={applyForms}

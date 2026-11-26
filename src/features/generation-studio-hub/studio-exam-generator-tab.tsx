@@ -56,7 +56,9 @@ export interface StudioExamGeneratorTabProps {
   readonly targetedScopeText?: string;
   readonly notationLanguage?: MathNotationLanguage;
   readonly essayAnswerLinesCount?: number;
+  readonly hasManualLinesLock?: boolean;
   readonly onChangeEssayAnswerLinesCount?: (cnt: number) => void;
+  readonly onResetAutoEssayLines?: () => void;
   readonly onApplyExamTitleToSheet: (newTitle: string) => void;
   readonly onApplyParsedQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
   readonly onSyncQuestionsToSheet?: (questions: readonly PrintableMathQuestionItem[]) => void;
@@ -66,7 +68,7 @@ export default function StudioExamGeneratorTab({
   gradeId = "prep-3", gradeNameAr = "الصف الثالث الإعدادي", branchId = "plane_geometry",
   unitTitleAr = "", lessonTitle, branchNameAr,
   selectedUnitIds = [], selectedLessonIds = [], targetedScopeText, notationLanguage = "english",
-  essayAnswerLinesCount, onChangeEssayAnswerLinesCount,
+  essayAnswerLinesCount, hasManualLinesLock = false, onChangeEssayAnswerLinesCount, onResetAutoEssayLines,
   onApplyExamTitleToSheet, onApplyParsedQuestionsToSheet, onSyncQuestionsToSheet,
 }: StudioExamGeneratorTabProps) {
   const [initial] = useState(() => loadStudioExamSettingsSSOT());
@@ -236,7 +238,13 @@ export default function StudioExamGeneratorTab({
             <StudioNumberStepperField labelAr={isOnlineMode ? "أسئلة إجابة قصيرة" : "مقالي وبرهان"} value={proofCount} min={0} max={25} enabled={proofEnabled} onToggleEnabled={(v) => { setProofEnabled(v); persist({ proofEnabled: v }); }} onChange={(v) => { setProofCount(v); persist({ proofCount: v }); }} />
           </div>
           {!isOnlineMode && (
-            <StudioEssayAnswerLinesStepper value={essayAnswerLines} onChange={handleEssayLinesChange} compact />
+            <StudioEssayAnswerLinesStepper
+              value={essayAnswerLines}
+              isAutoMode={!hasManualLinesLock}
+              onResetAuto={onResetAutoEssayLines}
+              onChange={handleEssayLinesChange}
+              compact
+            />
           )}
           <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900">
             {([

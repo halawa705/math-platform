@@ -1,12 +1,9 @@
 /**
  * @file smart-geometry-prompt-director.ts
  * @description المنسق الموحد للتوجيهات الذكية للرسوم والنماذج لـ NotebookLM (المرحلة 1.3):
- * يوجه البرومبت بحسب نوع المادة والصف:
- * - المرحلة الابتدائية (نماذج بصرية ومساحات).
- * - المرحلة الإعدادية (هندسة مستوية وتشابه وإقليدس ودوائر).
- * - الإحصاء والبيانات (مدرجات، قطاعات، صندوق).
- * - الدوال والرسوم الكارتيزية (خطية، تربيعية، شبكة إحداثية).
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 100 سطر).
+ * يوجه البرومبت بحسب نوع المادة والصف مع دعم الاختبارات والنماذج الشاملة متعددة الفروع
+ * (هندسة + إحصاء + دوال) دون أن يلغي أحدها الآخر.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 105 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -28,6 +25,15 @@ export interface GeometryPromptDetectionParams {
   readonly stage?: "primary" | "preparatory" | "secondary";
 }
 
+const GEOMETRY_CONTEXT_CUES_REGEX =
+  /هندسة|تشابه|مضلع|مثلث|مثلثية|نسب\s*مثلثية|حساب\s*المثلثات|جا|جتا|ظا|وتر|قائم|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|طائرة\s*ورقية|سلم|برج|عمود|ظل|دالتون|أوتار|مماس|قاطع|إقليدس|فيثاغورس|طاليس|منصف|إحداثي|حجوم|مساحات|زوايا|زاوية|تقاطع|إحصاء|مدرج|صندوق|أعمدة|قطاع|دالة|منحنى|شبكة\s*تربيعية|شريطي|ساعة|نهاية\s*الترم|كامل\s*(?:وحدات|المنهج)/i;
+
+const EXPLICIT_GEOMETRY_SHAPE_CUES_REGEX =
+  /هندسة|تشابه|مضلع|مثلث|مثلثية|حساب\s*المثلثات|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|زوايا|زاوية|توازي|فيثاغورس|إقليدس|طاليس|حجوم|مساحات|نهاية\s*الترم|كامل\s*(?:وحدات|المنهج)/i;
+
+const STATS_CUES_REGEX = /إحصاء|بيانات|مدرج|صندوق|أعمدة|قطاع|تكرار/i;
+const FUNCTIONS_CUES_REGEX = /دالة|تربيعية|خطية|مقياس|منحنى|رسم\s*بياني/i;
+
 export function isGeometryContext(params: GeometryPromptDetectionParams): boolean {
   if (
     params.branchId === "plane_geometry" ||
@@ -43,9 +49,7 @@ export function isGeometryContext(params: GeometryPromptDetectionParams): boolea
   }
   const combined = `${params.unitTitleArabic || ""} ${params.lessonTitleArabic || ""}`.trim();
   if (!combined) return false;
-  return /هندسة|تشابه|مضلع|مثلث|مثلثية|نسب\s*مثلثية|حساب\s*المثلثات|جا|جتا|ظا|وتر|قائم|دائرة|شبه\s*منحرف|متوازي|معين|مستطيل|مربع|طائرة\s*ورقية|سلم|برج|عمود|ظل|دالتون|أوتار|مماس|قاطع|إقليدس|فيثاغورس|طاليس|منصف|إحداثي|حجوم|مساحات|زوايا|زاوية|تقاطع|إحصاء|مدرج|صندوق|أعمدة|قطاع|دالة|منحنى|شبكة\s*تربيعية|شريطي|ساعة/i.test(
-    combined
-  );
+  return GEOMETRY_CONTEXT_CUES_REGEX.test(combined);
 }
 
 export function buildSmartGeometryPromptGuidance(
@@ -56,26 +60,42 @@ export function buildSmartGeometryPromptGuidance(
   const combined = `${params.unitTitleArabic || ""} ${params.lessonTitleArabic || ""}`.trim();
   const notation: MathNotationLanguage = params.notationLanguage || "english";
 
-  // 1. فرع أو دروس الإحصاء
-  if (params.branchId === "statistics_probability" || /إحصاء|بيانات|مدرج|صندوق|أعمدة|قطاع|تكرار/i.test(combined)) {
+  const isGeoBranch =
+    params.branchId === "plane_geometry" ||
+    params.branchId === "solid_geometry" ||
+    params.branchId === "analytic_geometry" ||
+    params.branchId === "trigonometry" ||
+    params.branchId === "statics" ||
+    params.branchId === "dynamics";
+
+  const hasGeoCue = isGeoBranch || EXPLICIT_GEOMETRY_SHAPE_CUES_REGEX.test(combined);
+  const hasStatsCue = params.branchId === "statistics_probability" || STATS_CUES_REGEX.test(combined);
+  const hasFunctionsCue = params.branchId === "functions" || FUNCTIONS_CUES_REGEX.test(combined);
+
+  // 1. دروس/فرع الإحصاء البحت بدون هندسة أو شمول نهاية الترم
+  if (hasStatsCue && !hasGeoCue) {
     return buildStatisticsFigurePromptGuidance();
   }
 
-  // 2. فرع أو دروس الدوال والرسوم الكارتيزية
-  if (params.branchId === "functions" || /دالة|تربيعية|خطية|مقياس|منحنى|رسم\s*بياني/i.test(combined)) {
+  // 2. دروس/فرع الدوال البحت بدون هندسة أو شمول نهاية الترم
+  if (hasFunctionsCue && !hasGeoCue) {
     return buildCartesianFunctionsPromptGuidance(notation);
   }
 
-  // 3. المرحلة الابتدائية (الصفوف 3–6)
+  // 3. المرحلة الابتدائية أو الإعدادية للهندسة (مع إرفاق توجيه مختصر للإحصاء/الدوال في الاختبارات الشاملة)
   const isPrimary =
     params.stage === "primary" ||
     (params.gradeId ? params.gradeId.startsWith("prim") : false) ||
     /ابتدائي|شريط|ساعة|وحدات\s*مربعة/i.test(combined);
 
-  if (isPrimary) {
-    return buildPrimaryStageFigurePromptGuidance(notation);
+  const primaryOrPrepGeo = isPrimary
+    ? buildPrimaryStageFigurePromptGuidance(notation)
+    : buildPrepStageFigurePromptGuidance(notation);
+
+  const isComprehensiveExam = /نهاية\s*الترم|كامل\s*(?:وحدات|المنهج)/i.test(combined);
+  if (hasStatsCue || hasFunctionsCue || isComprehensiveExam) {
+    return `${primaryOrPrepGeo}\n📊📈 وفي مسائل الإحصاء/الدوال اكتب \`[رسم إحصائي: نوع=... ; ...]\` أو \`[رسم بياني: ...]\` بنفس الصيغة بلا كود.`;
   }
 
-  // 4. المرحلة الإعدادية والهندسة العامة
-  return buildPrepStageFigurePromptGuidance(notation);
+  return primaryOrPrepGeo;
 }

@@ -204,7 +204,6 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const orderNumber = idx + 1;
     const rawKind = extractFieldMultiline(block, "النمط|النوع").toLowerCase();
     const rawLesson = extractFieldMultiline(block, "الدرس");
-    const rawIdea = extractFieldMultiline(block, "الفكرة");
     const effectiveLessonTitle = rawLesson || params.lessonTitleArabic;
     const rawMarks = Number(extractFieldMultiline(block, "الدرجة"));
     const explicitPrompt = extractFieldMultiline(block, "النص|السؤال|نص المسألة");
@@ -262,7 +261,6 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     return {
       questionId: `q_${params.lessonId}_${orderNumber}`, displayOrderNumber: orderNumber,
       branchId: params.branchId, unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: effectiveLessonTitle,
-      ideaTagArabic: rawIdea || undefined,
       rawDrawingTagArabic: extractedDiagrams.rawDrawingTagArabic,
       patternKind, cognitiveDepth: patternKind === "proof_reasoning" ? "deductive_proof" : "direct_application",
       allocatedMarks: Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : 2,

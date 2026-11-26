@@ -88,12 +88,10 @@ export function sanitizeNotebookLMCitationsAndLatex(
       (_m, qNum: string, tail: string) => {
         const kindMatch = tail.match(/النوع\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
         const lessonMatch = tail.match(/الدرس\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
-        const ideaMatch = tail.match(/الفكرة\s*:\s*\[?\s*([^\]|\n]+?)\s*\]?(?=\s*\||$)/i);
         const marksMatch = tail.match(/الدرجة\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*\]?/i);
         const extraLines: string[] = [];
         if (kindMatch?.[1]) extraLines.push(`النوع: ${kindMatch[1].trim()}`);
         if (lessonMatch?.[1]) extraLines.push(`الدرس: ${lessonMatch[1].trim()}`);
-        if (ideaMatch?.[1]) extraLines.push(`الفكرة: ${ideaMatch[1].trim()}`);
         if (marksMatch?.[1]) extraLines.push(`الدرجة: ${marksMatch[1].trim()}`);
         return `=== [سؤال: ${qNum}] ===${extraLines.length ? `\n${extraLines.join("\n")}` : ""}`;
       }

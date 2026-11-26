@@ -83,11 +83,6 @@ export default function StudioExamQuestionsInspectorCard({
                       {q.lessonTitleArabic}
                     </span>
                   )}
-                  {q.ideaTagArabic && (
-                    <span className="px-2 py-0.5 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px]">
-                      💡 {q.ideaTagArabic}
-                    </span>
-                  )}
                   {q.authenticCitation?.governorateNameArabic && (
                     <span className="px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-[10px]">
                       📍 {q.authenticCitation.governorateNameArabic}

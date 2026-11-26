@@ -63,8 +63,6 @@ export interface QuestionAssessmentIR {
   readonly unitId: string;
   readonly lessonId: string;
   readonly lessonTitleArabic: string;
-  /** عنوان الفكرة الرياضية المستقلة التي يقيسها السؤال (لمنع التكرار بين النماذج). */
-  readonly ideaTagArabic?: string;
   /** وسم الرسم العربي الطبيعي الخام لإعادة التعديل الفوري في المعاينة. */
   readonly rawDrawingTagArabic?: string;
   readonly patternKind: MathQuestionPatternKind;

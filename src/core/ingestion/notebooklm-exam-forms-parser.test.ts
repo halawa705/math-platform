@@ -50,7 +50,7 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
     expect(prompt).toContain("النموذج (ب)");
     expect(prompt).toContain("النموذج (جـ)");
     expect(prompt).toContain("سياسة الصعوبة والتكافؤ");
-    expect(prompt).toContain("منع تكرار نفس الفكرة نهائياً عبر جميع النماذج");
+    expect(prompt).toContain("منع تكرار الفكرة عبر جميع النماذج");
     expect(prompt).toContain("المطابقة الصارمة والتامة للمصادر");
     expect(prompt).toContain("=== [FORM: رقم_النموذج]");
   });
