@@ -35,18 +35,22 @@ function resolveSlotAnswerLines(
   if (typeof question.answerLinesCount === "number" && question.answerLinesCount > 0) {
     return question.answerLinesCount;
   }
-  if (hasFigure) return slotsCount === 1 ? 5 : 6;
-  return slotsCount === 3 ? 3 : 4;
+  if (hasFigure) return 4;
+  return slotsCount === 3 ? 2 : 3;
 }
 
 export function ModernEditorialPairedSolutionStrip({
   slots,
   settings,
   palette,
+  extraStretchPx = 0,
+  isContinuationTail = false,
 }: {
   readonly slots: readonly EditorialSolutionSlot[];
   readonly settings: PDFPrintSettingsStateSSOT;
   readonly palette: PrintThemePaletteTokens;
+  readonly extraStretchPx?: number;
+  readonly isContinuationTail?: boolean;
 }) {
   const anySolved = slots.some((s) => s.isSolved);
   if (!anySolved && settings.answerSpaceStyle === "hidden") return null;
@@ -57,7 +61,7 @@ export function ModernEditorialPairedSolutionStrip({
     gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))`,
   };
 
-  const maxLinesCount = anySolved
+  const baseLinesCount = anySolved
     ? 0
     : Math.max(
         1,
@@ -70,6 +74,8 @@ export function ModernEditorialPairedSolutionStrip({
           )
         )
       );
+  const bonusLines = !anySolved && extraStretchPx >= 18 ? Math.min(10, Math.floor(extraStretchPx / 19)) : 0;
+  const maxLinesCount = baseLinesCount + bonusLines;
 
   const lineBorderClass =
     settings.answerSpaceStyle === "lined"
@@ -91,7 +97,7 @@ export function ModernEditorialPairedSolutionStrip({
             className="inline-flex items-center gap-1 text-[0.86em] font-black"
           >
             <span aria-hidden="true">✍</span>
-            <span>الحـــــــل</span>
+            <span>{isContinuationTail ? "تابع الحـــــــل" : "الحـــــــل"}</span>
           </div>
           <svg width="78" height="6" viewBox="0 0 78 6" aria-hidden="true" className="-mt-0.5">
             <path
@@ -148,7 +154,7 @@ export function ModernEditorialPairedSolutionStrip({
               ) : (
                 <div className="space-y-0.5 w-full">
                   {Array.from({ length: maxLinesCount }).map((_, lIdx) => (
-                    <div key={lIdx} className={`w-full h-[20px] ${lineBorderClass}`} />
+                    <div key={lIdx} className={`w-full h-[18px] ${lineBorderClass}`} />
                   ))}
                 </div>
               )}

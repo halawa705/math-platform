@@ -47,22 +47,27 @@ export interface SovereignDiscretePageViewProps {
   readonly totalIdeasCount: number;
   readonly totalQuestionsCount: number;
   readonly totalMarks: number;
-  readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
+  readonly renderFlowItem: (item: FlowItem, extraStretchPx?: number) => React.ReactNode;
 }
 
 /** غلاف الكائن في الصفحة: يمنحه الارتفاع المستهدف (عند التمديد) ويملأ المحتوى هذا الارتفاع بدل ترك فراغ تحت البطاقة. */
-function FlowItemSlot({ item, targetHeightPx, renderFlowItem, isSchoolExam = false }: {
+function FlowItemSlot({ item, baseHeightPx, targetHeightPx, renderFlowItem, isSchoolExam = false }: {
   readonly item: FlowItem;
+  readonly baseHeightPx?: number;
   readonly targetHeightPx: number | undefined;
-  readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
+  readonly renderFlowItem: (item: FlowItem, extraStretchPx?: number) => React.ReactNode;
   readonly isSchoolExam?: boolean;
 }) {
+  const extraStretchPx =
+    !isSchoolExam && targetHeightPx && baseHeightPx !== undefined
+      ? Math.max(0, targetHeightPx - baseHeightPx)
+      : 0;
   return (
     <div
       className="w-full min-w-0 flex flex-col"
       style={!isSchoolExam && targetHeightPx ? { minHeight: `${targetHeightPx}px` } : undefined}
     >
-      <div className="flex-1 min-w-0 flex flex-col">{renderFlowItem(item)}</div>
+      <div className="flex-1 min-w-0 flex flex-col">{renderFlowItem(item, extraStretchPx)}</div>
     </div>
   );
 }
@@ -71,7 +76,7 @@ function FlowColumn({ items, gapPx, targets, renderFlowItem, isSchoolExam = fals
   readonly items: readonly FlowItem[];
   readonly gapPx: number;
   readonly targets: Readonly<Record<string, number>>;
-  readonly renderFlowItem: (item: FlowItem) => React.ReactNode;
+  readonly renderFlowItem: (item: FlowItem, extraStretchPx?: number) => React.ReactNode;
   readonly isSchoolExam?: boolean;
 }) {
   return (
@@ -191,6 +196,7 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
               <FlowItemSlot
                 key={segment.item.id}
                 item={segment.item}
+                baseHeightPx={segment.heightPx}
                 targetHeightPx={page.targetHeightPxById[segment.item.id]}
                 renderFlowItem={renderFlowItem}
                 isSchoolExam={isSchoolExam}

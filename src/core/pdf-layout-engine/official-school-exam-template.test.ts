@@ -5,6 +5,8 @@ import {
   type PrintColorThemeId,
 } from "../ssot/pdf-print-settings-ssot";
 import { buildFlowItems } from "./flow-items-builder";
+import { isStretchableFlowItem } from "./flow-item-model";
+import { buildEditorialGroupSplitVariants } from "./editorial-group-solution-splitter";
 import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
 import { packFlowItemsIntoPages } from "./flow-page-packer";
 import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
@@ -268,10 +270,17 @@ describe("Official School Exam Template & Flow Items Builder", () => {
     const workedGroup = items.find((it) => it.kind === "editorial_question_group");
     expect(workedGroup).toBeDefined();
     if (workedGroup && workedGroup.kind === "editorial_question_group") {
+      expect(isStretchableFlowItem(workedGroup)).toBe(true);
       expect(workedGroup.slots.length).toBe(2);
       expect(workedGroup.slots[0].isSolved).toBe(true);
       expect(workedGroup.slots[1].isSolved).toBe(true);
+      const splits = buildEditorialGroupSplitVariants(workedGroup);
+      expect(splits.length).toBe(1);
+      expect(splits[0].tail.kind === "editorial_question_group" && splits[0].tail.isContinuationTail).toBe(true);
     }
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkScalePct).toBe(100);
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkPlacement).toBe("auto");
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkCalligraphyFont).toBe("aref_ruqaa");
     expect(items.some((it) => it.kind === "question" && it.question.kind === "mcq")).toBe(true);
   });
 });

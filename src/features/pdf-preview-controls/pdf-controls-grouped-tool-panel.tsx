@@ -48,7 +48,7 @@ function ToolRow({ labelAr, children }: { readonly labelAr: string; readonly chi
   return (
     <div className="space-y-1.5">
       <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400">{labelAr}</div>
-      <div className="overflow-x-auto no-scrollbar whitespace-nowrap pb-0.5">{children}</div>
+      <div className="w-full overflow-x-auto pb-0.5">{children}</div>
     </div>
   );
 }

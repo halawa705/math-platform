@@ -163,8 +163,16 @@ export default function TwoColumnNewspaperPacker({
     <FlowItemRenderer key={item.id} item={item} settings={effSettings} palette={palette} identity={identity} questions={questions} />
   );
   const renderViewItem = React.useCallback(
-    (item: FlowItem) => (
-      <FlowItemRenderer key={item.id} item={item} settings={viewSettings} palette={palette} identity={identity} questions={questions} />
+    (item: FlowItem, extraStretchPx?: number) => (
+      <FlowItemRenderer
+        key={item.id}
+        item={item}
+        settings={viewSettings}
+        palette={palette}
+        identity={identity}
+        questions={questions}
+        extraStretchPx={extraStretchPx}
+      />
     ),
     [viewSettings, palette, identity, questions]
   );

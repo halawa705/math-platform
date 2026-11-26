@@ -31,6 +31,8 @@ export interface ModernEditorialPairedGroupRowProps {
   readonly slots: readonly EditorialQuestionSlot[];
   readonly settings: PDFPrintSettingsStateSSOT;
   readonly palette: PrintThemePaletteTokens;
+  readonly isContinuationTail?: boolean;
+  readonly extraStretchPx?: number;
 }
 
 function stripLeadingFigurePrefix(promptAr: string): string {
@@ -41,6 +43,8 @@ export function ModernEditorialPairedGroupRow({
   slots,
   settings,
   palette,
+  isContinuationTail = false,
+  extraStretchPx = 0,
 }: ModernEditorialPairedGroupRowProps) {
   if (slots.length === 0) return null;
   const numeralMode = settings.numeralMode;
@@ -60,7 +64,8 @@ export function ModernEditorialPairedGroupRow({
       }}
       className="w-full min-w-0 break-inside-avoid print:break-inside-avoid text-slate-950"
     >
-      {/* ١. شبكة الأسئلة / الأمثلة المتجاورة */}
+      {/* ١. شبكة الأسئلة / الأمثلة المتجاورة (تُخفى في ذيل الحل المرحَّل للصفحة التالية) */}
+      {!isContinuationTail && (
       <div style={gridColsStyle} className="w-full items-stretch">
         {slots.map((slot, idx) => {
           const { question, displayNumber } = slot;
@@ -74,7 +79,7 @@ export function ModernEditorialPairedGroupRow({
               style={{
                 borderRight: idx > 0 ? `1.2px solid ${palette.borderHex}88` : undefined,
               }}
-              className="min-w-0 px-2 py-1.5 flex flex-col justify-between gap-1"
+              className="min-w-0 px-2 py-1 flex flex-col justify-between gap-0.5"
             >
               {hasFigure && slots.length === 1 ? (
                 <div className="flex flex-row items-start justify-between gap-3 w-full">
@@ -183,7 +188,7 @@ export function ModernEditorialPairedGroupRow({
                       accentHex={palette.accentHex}
                       numeralMode={numeralMode}
                       notationLanguage={notationLanguage}
-                      figureScale={(settings.figureScale ?? 0.85) * 0.88}
+                      figureScale={(settings.figureScale ?? 0.82) * 0.82}
                       columnsCount={2}
                       monochromePrintSafe={isPhotocopy}
                     />
@@ -238,12 +243,15 @@ export function ModernEditorialPairedGroupRow({
           );
         })}
       </div>
+      )}
 
       {/* ٢. شريط «✍ الحـــــل» ومساحة الكتابة / الحلول المقسومة عمودياً */}
       <ModernEditorialPairedSolutionStrip
         slots={slots}
         settings={settings}
         palette={palette}
+        extraStretchPx={extraStretchPx}
+        isContinuationTail={isContinuationTail}
       />
     </article>
   );

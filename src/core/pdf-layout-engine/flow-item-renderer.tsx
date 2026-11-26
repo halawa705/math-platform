@@ -35,9 +35,17 @@ export interface FlowItemRendererProps {
   readonly palette: PrintThemePaletteTokens;
   readonly identity: OwnerTeacherIdentity;
   readonly questions: readonly PrintableMathQuestionItem[];
+  readonly extraStretchPx?: number;
 }
 
-export function FlowItemRenderer({ item, settings, palette, identity, questions }: FlowItemRendererProps) {
+export function FlowItemRenderer({
+  item,
+  settings,
+  palette,
+  identity,
+  questions,
+  extraStretchPx = 0,
+}: FlowItemRendererProps) {
   const isSchoolExam = settings.paperTemplateId === "official_school_exam";
   const isModernEditorial = settings.paperTemplateId === "modern_editorial_handout";
   const isSolvedMode = settings.answerVisibilityMode !== "questions_only";
@@ -59,6 +67,8 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
           slots={item.slots}
           settings={settings}
           palette={palette}
+          isContinuationTail={item.isContinuationTail}
+          extraStretchPx={extraStretchPx}
         />
       );
     case "exam_section_banner":

@@ -27,7 +27,7 @@ export default function RootPlatformLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Cairo:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Readex+Pro:wght@400;600;700&family=Tajawal:wght@400;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,700&family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Readex+Pro:wght@400;600;700&family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;700;800&display=swap"
           rel="stylesheet"
         />
       </head>

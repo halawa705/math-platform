@@ -7,7 +7,7 @@
  */
 
 import { FLOW_LAYOUT_COST_WEIGHTS as W } from "../ssot/flow-layout-cost-weights-ssot";
-import { distributePageSlack } from "./flow-page-slack-distributor";
+import { distributePageSlack, itemStretchCapPx } from "./flow-page-slack-distributor";
 import { fallbackFlowItemHeightPx, isStretchableFlowItem, type FlowItem, type FlowPage } from "./flow-item-model";
 import type { FlowDensityProfile } from "./flow-page-geometry-constants";
 import type { FlowPageBudgetsPx } from "./flow-page-budget-resolver";
@@ -65,7 +65,7 @@ export function packFlowItemsIntoPages(
     heights,
     heightOf,
     stretchRoomOf: (item) =>
-      isStretchableFlowItem(item) ? Math.min(options.density.maxStretchPerItemPx, heightOf(item) * options.density.maxStretchRatio) : 0,
+      isStretchableFlowItem(item) ? itemStretchCapPx(item, heightOf, options.density) : 0,
     budgets: options.budgets,
     density: options.density,
     manualCompactHeader: options.manualCompactHeader,

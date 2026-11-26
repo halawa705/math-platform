@@ -24,6 +24,9 @@ export interface InlineSolutionCutOption {
 export type InlineSolutionCutLookup = (index: number) => readonly InlineSolutionCutOption[];
 
 function withSpan(item: FlowItem, span: "full" | "column", heights: ReadonlyMap<string, number>): FlowItem | undefined {
+  if (item.kind === "editorial_question_group") {
+    return heights.has(item.id) ? item : undefined;
+  }
   if (item.kind !== "question") return undefined;
   const id = span === "column" ? `${item.id}::col` : item.id;
   if (!heights.has(id)) return undefined;
@@ -44,6 +47,9 @@ function isWorkedPair(a: FlowItem | undefined, b: FlowItem | undefined): boolean
 }
 
 function stepsOf(v: SolutionSplitVariant): number {
+  if (v.tail.kind === "editorial_question_group") {
+    return Math.max(0, ...v.tail.slots.map((s) => s.question.solutionStepsAr?.length ?? 0));
+  }
   return v.tail.kind === "question" && v.tail.solutionSlice ? v.tail.solutionSlice.to - v.tail.solutionSlice.from : 0;
 }
 

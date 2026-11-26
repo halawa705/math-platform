@@ -49,6 +49,8 @@ export type PrintColorThemeId =
   | "photocopy_black";
 
 export type WatermarkRenderMode = "decorative_svg" | "custom_image";
+export type WatermarkPlacementMode = "auto" | "front" | "behind";
+export type WatermarkCalligraphyFontId = "aref_ruqaa" | "amiri" | "reem_kufi";
 
 export interface PrintFontFamilySpecification {
   readonly id: PrintFontFamilyId;
@@ -121,6 +123,10 @@ export interface PDFPrintSettingsStateSSOT {
   readonly watermarkEnabled?: boolean;
   readonly watermarkText?: string;
   readonly watermarkOpacityPct?: number;
+  readonly watermarkScalePct?: number;
+  readonly watermarkPlacement?: WatermarkPlacementMode;
+  readonly watermarkCalligraphyFont?: WatermarkCalligraphyFontId;
+  readonly watermarkShowFrameOrnament?: boolean;
   readonly watermarkMode?: WatermarkRenderMode;
   readonly watermarkImageDataUrl?: string;
   readonly watermarkRotationDeg?: number;
@@ -147,6 +153,10 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
   watermarkEnabled: true,
   watermarkText: "أ/ إسلام محمد",
   watermarkOpacityPct: 16,
+  watermarkScalePct: 100,
+  watermarkPlacement: "auto",
+  watermarkCalligraphyFont: "aref_ruqaa",
+  watermarkShowFrameOrnament: true,
   watermarkMode: "decorative_svg",
   watermarkRotationDeg: 0,
   customDocumentTitle: "مستند رياضيات",
@@ -172,75 +182,50 @@ const VALID_COLOR_THEMES: readonly PrintColorThemeId[] = [
   "photocopy_black",
 ];
 
-/**
- * يسترجع إعدادات تخصيص ورقة الـ PDF المحفوظة للمعلم، أو يرجع الإعدادات الافتراضية المعتمدة.
- */
+const VALID_PLACEMENTS: readonly WatermarkPlacementMode[] = ["auto", "front", "behind"];
+const VALID_CALLIGRAPHY_FONTS: readonly WatermarkCalligraphyFontId[] = ["aref_ruqaa", "amiri", "reem_kufi"];
+
+const clampInt = (v: unknown, min: number, max: number, fb: number): number =>
+  typeof v === "number" && !Number.isNaN(v) ? Math.max(min, Math.min(max, Math.round(v))) : fb;
+
+const oneOf = <T extends string>(v: unknown, valid: readonly T[], fb: T): T =>
+  typeof v === "string" && (valid as readonly string[]).includes(v) ? (v as T) : fb;
+
+/** يسترجع إعدادات تخصيص ورقة الـ PDF المحفوظة للمعلم، أو يرجع الإعدادات الافتراضية المعتمدة. */
 export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
   if (typeof window === "undefined") return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
   try {
     const raw = window.localStorage.getItem(PDF_PRINT_SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
-    const parsed = JSON.parse(raw) as Partial<PDFPrintSettingsStateSSOT>;
-    const rawOpacity =
-      typeof parsed.watermarkOpacityPct === "number" && !Number.isNaN(parsed.watermarkOpacityPct)
-        ? Math.max(0, Math.min(100, Math.round(parsed.watermarkOpacityPct)))
-        : (DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkOpacityPct ?? 16);
-
+    const p = JSON.parse(raw) as Partial<PDFPrintSettingsStateSSOT>;
+    const d = DEFAULT_PDF_PRINT_SETTINGS_SSOT;
     return {
-      ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
-      ...parsed,
-      paperTemplateId:
-        parsed.paperTemplateId && VALID_PAPER_TEMPLATES.includes(parsed.paperTemplateId)
-          ? parsed.paperTemplateId
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.paperTemplateId,
-      numeralMode:
-        parsed.numeralMode === "eastern" || parsed.numeralMode === "western"
-          ? parsed.numeralMode
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.numeralMode,
-      notationLanguage:
-        parsed.notationLanguage === "arabic" ||
-        parsed.notationLanguage === "english"
-          ? parsed.notationLanguage
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.notationLanguage,
-      fontFamilyId:
-        parsed.fontFamilyId && parsed.fontFamilyId in PRINT_FONT_FAMILIES_SSOT
-          ? parsed.fontFamilyId
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.fontFamilyId,
+      ...d,
+      ...p,
+      paperTemplateId: oneOf(p.paperTemplateId, VALID_PAPER_TEMPLATES, d.paperTemplateId!),
+      numeralMode: oneOf(p.numeralMode, ["eastern", "western"], d.numeralMode),
+      notationLanguage: oneOf(p.notationLanguage, ["arabic", "english"], d.notationLanguage),
+      fontFamilyId: p.fontFamilyId && p.fontFamilyId in PRINT_FONT_FAMILIES_SSOT ? p.fontFamilyId : d.fontFamilyId,
       exactFontSizePt:
-        typeof parsed.exactFontSizePt === "number" &&
-        parsed.exactFontSizePt >= 12 &&
-        parsed.exactFontSizePt <= 16
-          ? (parsed.exactFontSizePt as ExactPrintFontSizePt)
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.exactFontSizePt,
-      colorThemeId:
-        parsed.colorThemeId && VALID_COLOR_THEMES.includes(parsed.colorThemeId)
-          ? parsed.colorThemeId
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.colorThemeId,
-      boldProseText:
-        typeof parsed.boldProseText === "boolean"
-          ? parsed.boldProseText
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.boldProseText,
-      boldMathExpressions:
-        typeof parsed.boldMathExpressions === "boolean"
-          ? parsed.boldMathExpressions
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.boldMathExpressions,
-      watermarkEnabled:
-        typeof parsed.watermarkEnabled === "boolean"
-          ? parsed.watermarkEnabled
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkEnabled,
-      watermarkText:
-        typeof parsed.watermarkText === "string"
-          ? parsed.watermarkText
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkText,
-      watermarkOpacityPct: rawOpacity,
-      watermarkMode:
-        parsed.watermarkMode === "custom_image" || parsed.watermarkMode === "decorative_svg"
-          ? parsed.watermarkMode
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkMode,
-      watermarkRotationDeg:
-        typeof parsed.watermarkRotationDeg === "number"
-          ? parsed.watermarkRotationDeg
-          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkRotationDeg,
+        typeof p.exactFontSizePt === "number" && p.exactFontSizePt >= 12 && p.exactFontSizePt <= 16
+          ? (p.exactFontSizePt as ExactPrintFontSizePt)
+          : d.exactFontSizePt,
+      colorThemeId: oneOf(p.colorThemeId, VALID_COLOR_THEMES, d.colorThemeId),
+      boldProseText: typeof p.boldProseText === "boolean" ? p.boldProseText : d.boldProseText,
+      boldMathExpressions: typeof p.boldMathExpressions === "boolean" ? p.boldMathExpressions : d.boldMathExpressions,
+      watermarkEnabled: typeof p.watermarkEnabled === "boolean" ? p.watermarkEnabled : d.watermarkEnabled,
+      watermarkText: typeof p.watermarkText === "string" ? p.watermarkText : d.watermarkText,
+      watermarkOpacityPct: clampInt(p.watermarkOpacityPct, 0, 100, d.watermarkOpacityPct ?? 16),
+      watermarkScalePct: clampInt(p.watermarkScalePct, 40, 180, d.watermarkScalePct ?? 100),
+      watermarkPlacement: oneOf(p.watermarkPlacement, VALID_PLACEMENTS, d.watermarkPlacement ?? "auto"),
+      watermarkCalligraphyFont: oneOf(p.watermarkCalligraphyFont, VALID_CALLIGRAPHY_FONTS, d.watermarkCalligraphyFont ?? "aref_ruqaa"),
+      watermarkShowFrameOrnament: typeof p.watermarkShowFrameOrnament === "boolean" ? p.watermarkShowFrameOrnament : d.watermarkShowFrameOrnament,
+      watermarkMode: oneOf<WatermarkRenderMode>(
+        p.watermarkMode,
+        ["custom_image", "decorative_svg"] as const,
+        d.watermarkMode ?? "decorative_svg"
+      ),
+      watermarkRotationDeg: clampInt(p.watermarkRotationDeg, -60, 60, d.watermarkRotationDeg ?? 0),
     };
   } catch {
     return DEFAULT_PDF_PRINT_SETTINGS_SSOT;

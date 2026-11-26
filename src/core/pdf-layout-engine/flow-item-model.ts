@@ -81,6 +81,7 @@ export type FlowItem =
       readonly id: string;
       readonly kind: "editorial_question_group";
       readonly span: "full";
+      readonly isContinuationTail?: boolean;
       readonly slots: readonly {
         readonly question: PrintableMathQuestionItem;
         readonly displayNumber: number;
@@ -118,8 +119,9 @@ export function fullWidthHeightKey(itemId: string): string {
   return `${itemId}::full`;
 }
 
-/** البطاقات التي يجوز تمديدها لملء الفراغ: الأسئلة البطاقية فقط (أسطر اختر المدمجة والكبسولات والفواصل والجداول تبقى بارتفاعها الرشيق). */
+/** البطاقات التي يجوز تمديدها لملء الفراغ: الأسئلة البطاقية وصفوف القالب الحديث (أسطر اختر المدمجة والكبسولات والفواصل تبقى بارتفاعها الرشيق). */
 export function isStretchableFlowItem(item: FlowItem): boolean {
+  if (item.kind === "editorial_question_group") return true;
   if (item.kind !== "question") return false;
   if (isCompactTextbookMcqQuestion(item.question, item.isAnswerCard)) return false;
   return true;

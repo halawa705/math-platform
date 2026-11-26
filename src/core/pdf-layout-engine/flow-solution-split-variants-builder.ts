@@ -6,6 +6,7 @@
  */
 
 import type { FlowItem } from "./flow-item-model";
+import { buildEditorialGroupSplitVariants } from "./editorial-group-solution-splitter";
 
 export const MODULE_ID_FLOW_SOLUTION_SPLIT_VARIANTS_BUILDER = "flow_solution_split_variants_builder" as const;
 
@@ -39,6 +40,11 @@ export function buildSolutionSplitVariants(
 ): ReadonlyMap<string, readonly SolutionSplitVariant[]> {
   const result = new Map<string, readonly SolutionSplitVariant[]>();
   for (const item of items) {
+    if (item.kind === "editorial_question_group") {
+      const edVariants = buildEditorialGroupSplitVariants(item);
+      if (edVariants.length > 0) result.set(item.id, edVariants);
+      continue;
+    }
     if (!isSplittableSolvedExample(item)) continue;
     const total = item.question.solutionStepsAr!.length;
     const variants: SolutionSplitVariant[] = [];

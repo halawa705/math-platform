@@ -33,23 +33,23 @@ export default function PDFColorThemeSelector({
   onChangeThemeId,
 }: PDFColorThemeSelectorProps) {
   return (
-    <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 p-0.5 text-xs font-bold gap-0.5">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 p-1 text-xs font-bold">
       {PRINT_THEMES.map((theme) => (
         <button
           key={theme.id}
           type="button"
           onClick={() => onChangeThemeId(theme.id)}
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+          className={`flex items-center justify-start gap-1.5 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer text-right min-h-[36px] ${
             currentThemeId === theme.id
               ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
           }`}
         >
           <span
             className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/40"
             style={{ backgroundColor: theme.swatchHex }}
           />
-          {theme.label}
+          <span className="truncate">{theme.label}</span>
         </button>
       ))}
     </div>

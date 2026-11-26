@@ -25,6 +25,13 @@ interface DistributeParams {
   readonly isHeaderCompact?: boolean;
 }
 
+export function itemStretchCapPx(item: FlowItem, heightOf: (i: FlowItem) => number, density: FlowDensityProfile): number {
+  if (item.kind === "editorial_question_group" && item.slots.every((s) => !s.isSolved)) {
+    return Math.min(260, heightOf(item) * 0.9);
+  }
+  return Math.min(density.maxStretchPerItemPx, heightOf(item) * density.maxStretchRatio);
+}
+
 /** يضيف `deltaPx` إلى عمود بتقاسمه بين بطاقاته القابلة للتمديد (ملء بالماء مع سقف لكل بطاقة). يعيد ما أُضيف فعلاً. */
 function stretchColumn(
   items: readonly FlowItem[],
@@ -35,7 +42,7 @@ function stretchColumn(
 ): number {
   const open = items.filter(isStretchableFlowItem).map((item) => ({
     id: item.id,
-    room: Math.max(0, Math.min(density.maxStretchPerItemPx, heightOf(item) * density.maxStretchRatio) - (extra.get(item.id) ?? 0)),
+    room: Math.max(0, itemStretchCapPx(item, heightOf, density) - (extra.get(item.id) ?? 0)),
   }));
   let remaining = deltaPx;
   let added = 0;
@@ -56,7 +63,7 @@ function stretchColumn(
 
 function columnRoomPx(items: readonly FlowItem[], heightOf: (i: FlowItem) => number, d: FlowDensityProfile, extra: Map<string, number>): number {
   return items.filter(isStretchableFlowItem).reduce(
-    (sum, item) => sum + Math.max(0, Math.min(d.maxStretchPerItemPx, heightOf(item) * d.maxStretchRatio) - (extra.get(item.id) ?? 0)),
+    (sum, item) => sum + Math.max(0, itemStretchCapPx(item, heightOf, d) - (extra.get(item.id) ?? 0)),
     0
   );
 }

@@ -158,7 +158,7 @@ export function ModernEditorialMcqRow({
       style={{
         backgroundColor: "transparent",
         borderBottom: `1px solid ${palette.borderHex}66`,
-        padding: "3px 4px 3.5px 4px",
+        padding: "2px 4px 2.5px 4px",
         breakInside: "avoid",
       }}
       className="w-full min-w-0 break-inside-avoid print:break-inside-avoid text-slate-950"
@@ -186,7 +186,7 @@ export function ModernEditorialMcqRow({
           </div>
 
           {choices.length > 0 && (
-            <div dir="rtl" className={`grid ${gridColsClass} items-center w-full pt-1 pr-6`}>
+            <div dir="rtl" className={`grid ${gridColsClass} items-center w-full pt-0.5 pr-6`}>
               {choices.slice(0, 4).map((choiceText, optIdx) => {
                 const isCorrect = isSolvedMode && question.correctMcqIndex === optIdx;
                 const isSynthesized = Boolean(question.synthesizedMcqIndices?.includes(optIdx));

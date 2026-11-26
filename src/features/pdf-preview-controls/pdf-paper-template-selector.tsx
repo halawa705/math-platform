@@ -35,7 +35,7 @@ export default function PDFPaperTemplateSelector({
 }: PDFPaperTemplateSelectorProps) {
   return (
     <div
-      className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 p-0.5 text-xs font-bold"
+      className="flex flex-wrap items-center gap-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 p-0.5 text-xs font-bold"
       title="اختيار نمط وقالب ورقة الطباعة A4"
     >
       {TEMPLATE_OPTIONS.map((opt) => {

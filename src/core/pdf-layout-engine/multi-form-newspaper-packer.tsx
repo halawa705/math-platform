@@ -181,8 +181,21 @@ export default function MultiFormNewspaperPacker({
   const totalPagesAllForms = useMemo(() => viewForms.reduce((sum, fp) => sum + fp.pages.length, 0), [viewForms]);
   useEffect(() => { if (!isSweeping) onPagesCountChange?.(totalPagesAllForms); }, [totalPagesAllForms, isSweeping, onPagesCountChange]);
 
-  const renderItem = (item: FlowItem, itemSettings: PDFPrintSettingsStateSSOT, questions: PrintableExamFormGroup["questions"]) => (
-    <FlowItemRenderer key={item.id} item={item} settings={itemSettings} palette={palette} identity={identity} questions={questions} />
+  const renderItem = (
+    item: FlowItem,
+    itemSettings: PDFPrintSettingsStateSSOT,
+    questions: PrintableExamFormGroup["questions"],
+    extraStretchPx?: number
+  ) => (
+    <FlowItemRenderer
+      key={item.id}
+      item={item}
+      settings={itemSettings}
+      palette={palette}
+      identity={identity}
+      questions={questions}
+      extraStretchPx={extraStretchPx}
+    />
   );
 
   return (
@@ -222,7 +235,9 @@ export default function MultiFormNewspaperPacker({
                     page={page} totalPagesCount={fp.pages.length} settings={formSpecificSettings} identity={identity} palette={palette}
                     activeFont={activeFont} subtitleAr={subtitleAr} isSolvedMode={isSolvedMode} totalIdeasCount={fp.totalIdeasCount}
                     totalQuestionsCount={fp.form.questions.length} totalMarks={fp.totalMarks}
-                    renderFlowItem={(item) => renderItem(item, formSpecificSettings, fp.form.questions)}
+                    renderFlowItem={(item, extraStretchPx) =>
+                      renderItem(item, formSpecificSettings, fp.form.questions, extraStretchPx)
+                    }
                   />
                 ))}
               </div>
