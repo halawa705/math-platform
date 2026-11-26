@@ -202,6 +202,14 @@ export function checkFigureFidelityToPrompt(
     );
   }
 
+  // فحص تطابق عدد أضلاع المضلع فوق الرباعي لمنع رسم مثلث (3 أضلاع) أو رباعي لمسألة سداسي/سباعي/12 ضلعاً
+  const mentionsAboveQuad = /(?:خماسي|سداسي|سباعي|ثماني|تساعي|عشاري|اثناعشري|اثنا\s*عشري|(?:ذو|ذي|عدد\s+أضلاعه)\s*(?:[5-9]|[1-9]\d+)\s*(?:ضلع|أضلاع|زاوية))/i.test(rawPromptOrDescription);
+  const hasNamedTriWithoutPoly = /(?:المثلث|مثلث|Δ)\s*[A-Z]{3}\b/.test(rawPromptOrDescription) && !mentionsAboveQuad;
+  const maxPolySides = Math.max(0, ...(figure.polygons ?? []).map((p) => p.length));
+  if (mentionsAboveQuad && !hasNamedTriWithoutPoly && maxPolySides < 5) {
+    reasons.push("عدم تطابق عدد أضلاع المضلع: المسألة تصف مضلعاً فوق الرباعي بينما الشكل المرسوم أقل من 5 أضلاع.");
+  }
+
   const passed = reasons.length === 0;
   return {
     passed,

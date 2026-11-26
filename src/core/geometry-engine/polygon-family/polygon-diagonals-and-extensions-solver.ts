@@ -29,6 +29,10 @@ export function isSubTriangleFromDiagonalsOrExtensions(
   if (labels.length !== 3 || polygons.length === 0) return false;
   const basePolyVerts = new Set(polygons.flatMap((p) => p.labels));
   const placedCount = labels.filter((l) => points.has(l)).length;
+  const hasDiagMeetPt =
+    polygons.some((p) => p.labels.length >= 5) &&
+    labels.some((l) => facts.some((f) => f.k === "diagonalsMeet" && f.p === l));
+  if (hasDiagMeetPt) return true;
   if (placedCount >= 2 && labels.some((l) => facts.some((f) => (f.k === "diagonalsMeet" || f.k === "intersect" || f.k === "extend") && (f.k === "extend" ? f.to === l : f.p === l)))) {
     return true;
   }
@@ -96,7 +100,7 @@ export function solvePolygonDiagonalsAndExtensions(params: {
     addExtra(nearA, inf.p, true);
     addExtra(nearB, inf.p, true);
 
-    // وضع علامات الأشعة الوسيطة (مثل X على امتداد AB المار بـ Z، و Y على امتداد DC المار بـ Z)
+    // وضع علامات الأشعة الوسيطة فقط عند الحاجة مع تجنب تكرار قطعة متراكبة فوق الامتداد
     for (const ef of extFacts) {
       if (ef.to === inf.p || points.has(ef.to)) continue;
       const matchesA = pairKey(ef.from, ef.through) === pairKey(inf.a[0], inf.a[1]);
@@ -107,7 +111,7 @@ export function solvePolygonDiagonalsAndExtensions(params: {
       const pFar = points.get(ef.from === nearEnd ? ef.through : ef.from)!;
       const dir = vNorm(vSub(pHit, pFar));
       const dHit = vDist(pNear, pHit);
-      const ptPos = dHit > 0.4 ? vAdd(pHit, vScale(dir, Math.max(0.7, dHit * 0.28))) : vLerp(pNear, pHit, 0.65);
+      const ptPos = dHit > 0.4 ? vAdd(pHit, vScale(dir, Math.max(0.9, dHit * 0.28))) : vLerp(pNear, pHit, 0.65);
       points.set(ef.to, ptPos);
       addExtra(inf.p, ef.to, true);
     }

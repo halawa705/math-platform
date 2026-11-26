@@ -8,6 +8,7 @@
 
 import { convertGeometryLatexToPlainText } from "./geometry-latex-to-plain-normalizer";
 import { parseLabelList } from "../fact-compositor/geo-label-utils";
+import { synthesizeVerbalPolygonFacts } from "../polygon-family/verbal-polygon-facts-synthesizer";
 
 export const MODULE_ID_VERBAL_GEOMETRY_FIGURE_SYNTHESIZER =
   "verbal_geometry_figure_synthesizer" as const;
@@ -65,7 +66,7 @@ export function synthesizeVerbalGeometryFacts(
   if (!promptText || !promptText.trim()) return [];
   if (
     existingFacts.some((f) =>
-      /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي|شبه|رباعي|دائرة)/.test(f.trim())
+      /^(?:ال)?(?:مثلث|مستطيل|مربع|معين|متوازي|شبه|رباعي|خماسي|سداسي|سباعي|ثماني|تساعي|عشاري|دائرة)/.test(f.trim())
     )
   ) {
     return [];
@@ -186,6 +187,9 @@ export function synthesizeVerbalGeometryFacts(
     }
     return out;
   }
+
+  const verbalPoly = synthesizeVerbalPolygonFacts(plain, body, existingFacts);
+  if (verbalPoly.length > 0) return verbalPoly;
 
   // 2. أشكال رباعية ودوائر لفظية بلا تسمية رؤوس
   const namedQuad = plain.match(/(مستطيل|مربع|معين|متوازي\s*أضلاع|شبه\s*منحرف)\s*([A-Z]{4})/);

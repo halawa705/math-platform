@@ -21,6 +21,7 @@ import {
   extractOrderedSimilarityTriangles,
   unpackSequentialSideLengths,
 } from "./similarity-congruence-fact-extractor";
+import { extractPolygonDiagonalAndExtensionFactsFromPrompt } from "../polygon-family/verbal-polygon-facts-synthesizer";
 
 export {
   type ExtractedSimilarityCorrespondence,
@@ -101,7 +102,8 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
     /(?:ق\s*\(\s*∠?\s*([A-Za-z]{1,3}|[أ-ي]ـ?(?:\s*[أ-ي]ـ?){0,2})\s*\)|m\s*\(\s*∠?\s*([A-Za-z]{1,3})\s*\)|∠\s*([A-Za-z]{1,3}|[أ-ي]ـ?))\s*=\s*(\([^()]{1,28}\)|[0-9]+(?:\.[0-9]+)?|[0-9.xسصy+\-\s]*[0-9xسصy][0-9.xسصy+\-\s]*?)(?!\s*:)(?:°|\^\\circ|درجة)?(?=[\s،,;؛|.)و]|$|\n)/gi
   );
   for (const am of angleMatches) {
-    if (/[+\-−×÷*:/]\s*$/.test(assertionsClean.slice(Math.max(0, (am.index ?? 0) - 8), am.index ?? 0))) continue;
+    const preAm = assertionsClean.slice(Math.max(0, (am.index ?? 0) - 8), am.index ?? 0);
+    if (/[+\-−×÷*/]\s*$/.test(preAm) || /(?:\)|[A-Za-z])\s*:\s*$/.test(preAm)) continue;
     const angRaw = (am[1] || am[2] || am[3] || "").replace(/\s+/g, "");
     const degVal = am[4].trim();
     const angExactRx = new RegExp(`∠\\s*${angRaw}(?![A-Za-zأ-يـ])`);
@@ -234,6 +236,9 @@ export function extractGeometryFactsFromPrompt(promptText: string): string[] {
       const perpFact = `${apex} ${foot} ⊥ ${basePts[0]} ${basePts[1]}`;
       if (!facts.includes(perpFact)) facts.push(perpFact);
     }
+  }
+  for (const pf of extractPolygonDiagonalAndExtensionFactsFromPrompt(clean)) {
+    if (!facts.includes(pf)) facts.push(pf);
   }
   return facts;
 }

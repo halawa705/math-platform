@@ -26,26 +26,32 @@ export function restructurePolygonAndExtensionClauses(input: string): string {
   out = out
     .replace(
       /خماسي\s+منتظم\s+وسداسي\s+منتظم\s+يشتركان\s+في\s+(?:ال)?رأس\s+([A-Z])\s+و(?:ال)?ضلع\s*(?:ال)?مشترك/g,
-      `خماسي منتظم $1ABKL${SEP}سداسي منتظم $1ACDEF`
+      `خماسي منتظم $1ABKL${SEP}سداسي منتظم $1ACDEF${SEP}ق(∠L$1F) = ؟`
     )
     .replace(
       /سداسيان\s+منتظمان(?:\s+متطابقان)?\s+يشتركان\s+في\s+(?:ال)?ضلع\s*([A-Z]{2})/g,
-      (_m, ab: string) => `سداسي منتظم ${ab}CDEF${SEP}سداسي منتظم ${ab}GHIJ`
+      (_m, ab: string) => `سداسي منتظم ${ab}CDEF${SEP}سداسي منتظم ${ab}GHIJ${SEP}ق(∠F${ab[0]}J) = ؟`
     )
     .replace(
       /خماسي\s+منتظم\s+ومثلث\s+متساوي\s+الأضلاع\s+يشتركان\s+في\s+(?:ال)?ضلع\s*([A-Z]{2})(?:\s*و(?:ال)?رأس\s*[A-Z])?/g,
-      (_m, ab: string) => `خماسي منتظم ${ab}CDE${SEP}مثلث ${ab}F متساوي الأضلاع`
+      (_m, ab: string) => `خماسي منتظم ${ab}CDE${SEP}مثلث ${ab}F متساوي الأضلاع${SEP}ق(∠E${ab[0]}F) = ؟`
     )
     .replace(
-      /المستقيمان\s+([A-Z]{2})\s+و\s+([A-Z]{2})\s+يتقاطعان\s+في\s+(?:النقطة\s+)?([A-Z])\s+خارج\s+مضلع\s+خماسي/g,
-      (_m, l1: string, l2: string, pt: string) => {
+      /المستقيمان\s+([A-Z]{2})\s+و\s+([A-Z]{2})\s+يتقاطعان\s+في\s+(?:النقطة\s+)?([A-Z])\s+خارج\s+مضلع\s+خماسي[^؛.\n]*?(?:(\d+(?:\.\d+)?)\s*°)?/g,
+      (_m, l1: string, l2: string, pt: string, deg?: string) => {
         const b = l1.replace(pt, "")[0] || "B";
         const d = l2.replace(pt, "")[0] || "D";
-        return `خماسي ${pt}${b}EF${d}${SEP}نمد ${b}${pt} إلى ${l1.replace(b, "") || "A"}${SEP}نمد ${d}${pt} إلى ${l2.replace(d, "") || "C"}${SEP}${l1} ∩ ${l2} = {${pt}}`;
+        const aEnd = l1.replace(b, "") || "A";
+        const cEnd = l2.replace(d, "") || "C";
+        const ang = deg || "50";
+        return `خماسي ${pt}${b}EF${d}${SEP}نمد ${b}${pt} إلى ${aEnd}${SEP}نمد ${d}${pt} إلى ${cEnd}${SEP}${l1} ∩ ${l2} = {${pt}}${SEP}ق(∠${b}${pt}${d}) = ${ang}°${SEP}ق(∠${aEnd}${pt}${cEnd}) = ${ang}°`;
       }
     )
+    .replace(/(?:؛\s*)?(?:بحيث\s+)?نشأت\s+زوايا\s+متقابلة\s+بالرأس[^؛.\n]*[؛.]?/g, " ")
+    .replace(/(?:؛\s*)?(?:إذا\s+كانت\s+)?الزاوية\s+المتقابلة\s+معها[^؛.\n]*[؛.]?/g, " ")
+    .replace(/(?:؛\s*)?(?:وكانت\s+)?بقية\s+زوايا\s+الخماسي[^؛.\n]*[؛.]?/g, " ")
     .replace(
-      /مضلع\s+خماسي\s+فيه\s+ضلعان\s+متوازيان/g,
+      /مضلع\s+خماسي\s+فيه\s+ضلعان\s+(?:متوازيان|\/\/)(?:\s+يصنعان\s+مع\s+القاطع\s+زاويتين\s+داخلتين\s+متكاملتين)?/g,
       `خماسي ABCDE${SEP}AE // BC`
     );
 
@@ -81,16 +87,18 @@ export function restructurePolygonAndExtensionClauses(input: string): string {
       `${SEP}نمد $1 إلى $3${SEP}نمد $2 إلى $3${SEP}$1 ∩ $2 = {$3}`
     )
     .replace(
-      /([A-Z]{6})\s+سداسي\s+منتظم\s+ممتدة\s+أضلاعه\s+البديلة\s+لتكون\s+مثلث(?:اً|ا)?\s+([A-Z]{3})\b/g,
-      (_m, hex: string, tri: string) =>
-        `سداسي منتظم ${hex}${SEP}${hex[0]}${hex[1]} ∩ ${hex[2]}${hex[3]} = {${tri[0]}}${SEP}${hex[2]}${hex[3]} ∩ ${hex[4]}${hex[5]} = {${tri[1]}}${SEP}${hex[4]}${hex[5]} ∩ ${hex[0]}${hex[1]} = {${tri[2]}}`
+      /(?:([A-Z]{6})\s+سداسي\s+منتظم|سداسي\s+منتظم\s+([A-Z]{6}))\s+ممتدة\s+أضلاعه\s+البديلة\s+لتكون\s+مثلث(?:اً|ا)?(?:\s+كبير(?:اً|ا)?)?\s+([A-Z]{3})\b/g,
+      (_m, h1: string | undefined, h2: string | undefined, tri: string) => {
+        const hex = h1 ?? h2!;
+        return `سداسي منتظم ${hex}${SEP}${hex[0]}${hex[1]} ∩ ${hex[2]}${hex[3]} = {${tri[0]}}${SEP}${hex[2]}${hex[3]} ∩ ${hex[4]}${hex[5]} = {${tri[1]}}${SEP}${hex[4]}${hex[5]} ∩ ${hex[0]}${hex[1]} = {${tri[2]}}`;
+      }
     )
     .replace(
       /(?:مُدت|مدت)\s+أضلاعه(?:\s+البديلة)?\s*(?:([A-Z]{2})\s*[,،و]\s*([A-Z]{2})\s*[,،و]\s*([A-Z]{2})\s*)?(?:لتلتقي[^؛;]*?وتشكل|لتكون)\s+مثلث(?:اً|ا)?(?:\s+كبير(?:اً|ا)?)?\s+([A-Z]{3})\b/g,
       (_m, s1?: string, s2?: string, s3?: string, tri?: string) =>
         s1 && s2 && s3 && tri
-          ? `${SEP}${s1} ∩ ${s2} = {${tri[0]}}${SEP}${s2} ∩ ${s3} = {${tri[1]}}${SEP}${s3} ∩ ${s1} = {${tri[2]}}${SEP}مثلث ${tri}`
-          : `${SEP}مثلث ${tri}`
+          ? `${SEP}${s1} ∩ ${s2} = {${tri[0]}}${SEP}${s2} ∩ ${s3} = {${tri[1]}}${SEP}${s3} ∩ ${s1} = {${tri[2]}}`
+          : `${SEP}`
     );
 
   return out;

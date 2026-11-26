@@ -36,6 +36,7 @@ export function tryPlaceIntersectingBowTieTriangles(
   numSide: (a: string, b: string) => number | undefined,
   angleOf: (v: string) => number | undefined
 ): boolean {
+  if (facts.some((f) => f.k === "polygon")) return false;
   const rawTris = facts.filter((f): f is Extract<GeoFact, { k: "triangle" }> => f.k === "triangle");
   const seenTri = new Set<string>();
   const tris: Array<Extract<GeoFact, { k: "triangle" }>> = rawTris.filter((t) => {

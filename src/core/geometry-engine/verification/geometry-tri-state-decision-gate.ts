@@ -129,6 +129,7 @@ export function evaluateFigureTriStateDecision(
   // أما نقص معطى أو سطر غير مفهوم قابل لإعادة الصياغة في قائمة الحقائق ← أصفر (yellow)
   const isHardRed =
     fidelity.isPurelyTheoretical ||
+    fidelity.reasons.some((r) => r.includes("عدم تطابق عدد أضلاع المضلع")) ||
     !check3NoExtrasOrLeakPassed ||
     !check1MeasurementPassed ||
     !parallelCheckPassed;

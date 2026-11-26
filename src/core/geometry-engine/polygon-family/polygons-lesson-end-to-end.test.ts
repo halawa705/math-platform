@@ -11,6 +11,7 @@ import { mergeBookletThreeStagesRepliesToPrintableItems } from "../../ingestion/
 import { matchGeometryWithDiagnostics } from "../natural-arabic-geometry-matcher";
 import { projectGeometryFigureToSVGMarkup } from "../vector-svg-figure-projector";
 import { hasFigurePolygonSelfIntersection } from "../verification/polygon-winding-and-self-intersection-guard";
+import { checkFigureFidelityToPrompt } from "../verification/geometry-figure-fidelity-gate";
 
 const STAGE1_SAMPLE = `
 الفكرة الأولى: التمييز بين المضلع وغير المضلع، وتصنيف المضلع المحدب والمقعر | المستوى: تأسيسي | نوع المسألة: مفاهيم هندسية وتصنيف | معرف الفكرة: idea-01
@@ -211,5 +212,67 @@ describe("polygons lesson system-wide geometry, parser & diagram guard", () => {
     expect(reflexRes.decision).toBe("green");
     const svg = projectGeometryFigureToSVGMarkup(reflexRes.figure!, {});
     expect(svg).toContain(" 1 ");
+  });
+
+  it("enforces polygon-count mismatch guard and rejects impossible or n>10 figures", () => {
+    const tri = matchGeometryWithDiagnostics({ problemPrompt: "مثلث ABC قائم الزاوية في B" }, "tri_src").figure!;
+    const guard12 = checkFigureFidelityToPrompt(tri, "مضلع محدب عدد أضلاعه 12 ضلعاً، احسب عدد المثلثات");
+    expect(guard12.passed).toBe(false);
+    expect(guard12.reasons.some((r) => r.includes("عدد أضلاع"))).toBe(true);
+
+    const guard7 = checkFigureFidelityToPrompt(tri, "في الشكل المقابل، مضلع سباعي منتظم");
+    expect(guard7.passed).toBe(false);
+
+    const n12 = matchGeometryWithDiagnostics({ problemPrompt: "مضلع محدب عدد أضلاعه 12 ضلعاً، احسب عدد المثلثات الناتجة من أحد رؤوسه" }, "n12_guard");
+    expect(n12.figure).toBeUndefined();
+
+    const impHex = matchGeometryWithDiagnostics({ problemPrompt: "في الشكل المقابل، تصميم هندسي على شكل مضلع مقعر ذي 6 أضلاع، قياسات خمس زوايا فيه هي 100° و 100° و 100° و 100° و 420°" }, "imp_420");
+    expect(impHex.figure).toBeUndefined();
+  });
+
+  it("synthesizes verbal 5/6/7/8/10-gons, double-reflex 7-gon, equilateral partners, diagonals & circumscribing XYZ", () => {
+    const verbalCases: Array<[string, number, string[]?]> = [
+      ["إذا كانت النسبة بين قياسات الزوايا الداخلة لشكل خماسي محدب هي 2 : 3 : 4 : 5 : 6.", 5],
+      ["مضلع سداسي منتظم طول ضلعه يساوي 8 سم. احسب محيطه.", 6],
+      ["صُمم ممر مشاة في حديقة على شكل مضلع مقعر ذي 7 أضلاع، فيه زاوية منعكسة قياسها 210° وزاوية منعكسة أخرى قياسها 230°، والزوايا الخمس الباقية متساوية في القياس.", 7, ["210°", "230°"]],
+      ["مضلع ثماني منتظم طول ضلعه يساوي 7 سم. احسب محيطه.", 8],
+      ["مضلع عشاري منتظم طول ضلعه 8.5 سم. احسب محيطه.", 10],
+    ];
+    for (const [prompt, sides, expectedLabels] of verbalCases) {
+      const res = matchGeometryWithDiagnostics({ problemPrompt: prompt }, `v_${sides}`);
+      expect(res.figure, `Missing verbal figure for n=${sides}`).toBeDefined();
+      expect(res.figure!.polygons?.[0]?.length).toBe(sides);
+      expect(hasFigurePolygonSelfIntersection(res.figure!)).toBe(false);
+      for (const lbl of expectedLabels ?? []) {
+        expect(res.figure!.angles.some((a) => a.degreesLabel === lbl)).toBe(true);
+      }
+    }
+
+    const eqPartners = [
+      "في الشكل المقابل، ABCD شكل رباعي فيه m(∠A) = 100° و m(∠B) = 110° و m(∠D) = 90°، و CEF مثلث متساوي الأضلاع يتقاطع مع DC في C.",
+      "في الشكل المقابل، ABCD شكل رباعي تقاطع قطراه في M. أُعطي المثلث CDE متساوي الأضلاع ملاصقاً للضلع CD.",
+    ];
+    for (const p of eqPartners) {
+      const r = matchGeometryWithDiagnostics({ problemPrompt: p }, "eq_partner");
+      expect(r.figure).toBeDefined();
+      expect(r.figure!.polygons?.length).toBe(2);
+      expect(hasFigurePolygonSelfIntersection(r.figure!)).toBe(false);
+    }
+
+    const hw37 = matchGeometryWithDiagnostics({ problemPrompt: "في الخماسي المنتظم ABCDE، قياس الزاوية المحصورة بين الضلع AB والقطر AC." }, "hw37");
+    const hw38 = matchGeometryWithDiagnostics({ problemPrompt: "في السداسي المنتظم ABCDEF، المثلث الناتج عن توصيل الرؤوس A, C, E بالأقطار." }, "hw38");
+    const hw39 = matchGeometryWithDiagnostics({ problemPrompt: "في الشكل المقابل، ABCDE خماسي منتظم، رُسم القطران AC و AD." }, "hw39");
+    expect(hw37.figure?.segments.length).toBe(6);
+    expect(hw38.figure?.segments.length).toBe(9);
+    expect(hw39.figure?.segments.length).toBe(7);
+
+    const hw40 = items.find((item) => item.promptAr.includes("مثلثاً كبيراً $XYZ$"));
+    expect(hw40?.figureDiagnosticsAr?.length ?? 0).toBe(0);
+    expect(hw40?.geometryFigure?.segments.length).toBe(15);
+    expect(hw40?.geometryFigure?.vertices.some((v) => v.label === "X")).toBe(true);
+
+    const d104 = items.find((item) => item.promptAr.includes("المثلث $ABM$ متساوي الساقين"));
+    expect(d104?.geometryFigure?.segments.length).toBe(10);
+    expect(d104?.geometryFigure?.vertices.some((v) => v.label === "M")).toBe(true);
   });
 });

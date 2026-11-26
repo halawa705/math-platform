@@ -115,7 +115,8 @@ export function tryDispatchPreDeclarationDomainFigure(opts: {
   const { description, figureId, notation } = opts;
 
   const isQuadOrMidpointContext = /(?:شبه\s*منحرف|متوازي\s*أضلاع|مستطيل|معين|مربع|شكل\s*رباعي|منتصف|متوسط|تلاقي)/.test(description);
-  if (!isQuadOrMidpointContext && isSimilarityGeometryContext(description)) {
+  const isNonSimilarityPoly = /(?:خماسي|سداسي|سباعي|ثماني|تساعي|عشاري)/.test(description) && !/(?:~|∼|تشابه|متشابهان|متشابهين|معامل\s*التشابه)/.test(description);
+  if (!isQuadOrMidpointContext && !isNonSimilarityPoly && isSimilarityGeometryContext(description)) {
     const simFig = buildParametricSimilarityFigure(description, figureId, notation);
     if (simFig) return simFig;
   }

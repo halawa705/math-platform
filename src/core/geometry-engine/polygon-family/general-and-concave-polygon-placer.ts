@@ -96,11 +96,29 @@ function resolvePolygonInteriorAngles(
     }
   }
 
+  // 2-ب. قيد المثلث المتساوي الأضلاع المجاور للرباعي (تقابل بالرأس = 60°، استقامة واحدة = 120°)
+  if (n === 4) {
+    for (const tf of facts) {
+      if (tf.k !== "triangle" || !tf.equilateral) continue;
+      const shared = labels.filter((l) => tf.labels.includes(l));
+      if (shared.length !== 1) continue;
+      const cIdx = labels.indexOf(shared[0]);
+      if (cIdx < 0 || resolved[cIdx] !== null) continue;
+      const hasInterAtShared = facts.some((f) => f.k === "intersect" && f.p === shared[0]);
+      const hasColAtShared = facts.some(
+        (f) => f.k === "collinear" && f.labels.includes(shared[0]) && f.labels.some((x) => tf.labels.includes(x) && x !== shared[0])
+      );
+      if (hasInterAtShared) resolved[cIdx] = 60;
+      else if (hasColAtShared) resolved[cIdx] = 120;
+    }
+  }
+
   // 3. استنتاج الزوايا غير المعلومة المتبقية
   const missingIdxs = resolved.map((v, i) => (v === null ? i : -1)).filter((i) => i >= 0);
   if (missingIdxs.length === 0) {
     const curSum = resolved.reduce((s, v) => s! + v!, 0)!;
     if (Math.abs(curSum - totalSum) > 5) return null;
+    if (resolved.some((a) => a === null || a < 12 || a >= 348)) return null;
     return resolved as number[];
   }
   if (missingIdxs.length === n && !isConcave) return null;
@@ -109,6 +127,7 @@ function resolvePolygonInteriorAngles(
   const rem = totalSum - knownSum;
   if (rem <= missingIdxs.length * 15) return null;
   const share = rem / missingIdxs.length;
+  if (share < 12 || share >= 348) return null;
   for (const idx of missingIdxs) resolved[idx] = share;
   return resolved as number[];
 }
@@ -126,6 +145,7 @@ function solveClosedPolygon(anglesDeg: readonly number[], baseLenScale = 5): Vec
   const lengthProfiles: Array<(i: number) => number> = [
     () => baseLenScale,
     (i) => (anglesDeg[i] > 180 || anglesDeg[(i + 1) % n] > 180 ? baseLenScale * 0.6 : baseLenScale * 1.4),
+    (i) => (anglesDeg[i] > 180 || anglesDeg[(i + 1) % n] > 180 ? baseLenScale * 0.45 : baseLenScale * 1.55),
     (i) => (anglesDeg[i] < 50 || anglesDeg[(i + 1) % n] < 50 ? baseLenScale * 1.6 : baseLenScale * 0.8),
   ];
 
@@ -144,7 +164,7 @@ function solveClosedPolygon(anglesDeg: readonly number[], baseLenScale = 5): Vec
         }
         const lp = (rx * dirs[q].y - ry * dirs[q].x) / det;
         const lq = (dirs[p].x * ry - dirs[p].y * rx) / det;
-        if (lp < 0.9 || lq < 0.9 || lp > baseLenScale * 6 || lq > baseLenScale * 6) continue;
+        if (lp < 0.45 || lq < 0.45 || lp > baseLenScale * 8.5 || lq > baseLenScale * 8.5) continue;
         lengths[p] = lp;
         lengths[q] = lq;
 
@@ -202,24 +222,15 @@ export function tryPlaceGeneralOrConcavePolygon(params: {
   const hasSideLengths = facts.some(
     (f) => f.k === "length" && polySet.has(f.seg[0]) && polySet.has(f.seg[1])
   );
-  if (n === 4 && !isConcave && !hasReflex && !(allLinearXAngles && !hasSideLengths)) {
+  const hasEquilateralPartner =
+    n === 4 && facts.some((f) => f.k === "triangle" && Boolean(f.equilateral) && f.labels.some((l) => polySet.has(l)));
+  const hasThreeNumericAngles =
+    n === 4 && !hasSideLengths && facts.filter((f) => f.k === "angle" && polySet.has(f.vertex) && f.deg !== undefined).length >= 3;
+  if (n === 4 && !isConcave && !hasReflex && !hasEquilateralPartner && !hasThreeNumericAngles && !(allLinearXAngles && !hasSideLengths)) {
     return null;
   }
-  const hasParallelOrCustom = n >= 5 || hasReflex || allLinearXAngles || Boolean(isConcave);
+  const hasParallelOrCustom = n >= 5 || hasReflex || hasEquilateralPartner || hasThreeNumericAngles || allLinearXAngles || Boolean(isConcave);
   if (!hasParallelOrCustom) return null;
 
-  const solved = solveClosedPolygon(angles);
-  if (solved) return solved;
-
-  // احتياطي لمضلع مقعر برأس واحد غائر إذا فشل التوازن العام
-  if (hasReflex) {
-    const rIdx = angles.findIndex((a) => a > 180.5);
-    const radius = 5.5;
-    return labels.map((_, i) => {
-      const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
-      const r = i === rIdx ? radius * 0.25 : radius;
-      return { x: r * Math.cos(a), y: r * Math.sin(a) };
-    });
-  }
-  return null;
+  return solveClosedPolygon(angles);
 }

@@ -234,7 +234,8 @@ export function composeFigureFromGeometryDescription(
         if (r) { points.set(f.p, r); addExtra(d1[0], d1[1]); addExtra(d2[0], d2[1]); }
       } else if (f.k === "extend") {
         if (!P(f.from) || !P(f.through)) { nextPending.push({ fact: f }); continue; }
-        if (!facts.some((inf) => inf.k === "intersect" && inf.p === f.to)) resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
+        const polyExt = polygons.some((pl) => pl.labels.length >= 5) && facts.some((inf) => inf.k === "intersect" && (pairKey(inf.a[0], inf.a[1]) === pairKey(f.from, f.through) || pairKey(inf.b[0], inf.b[1]) === pairKey(f.from, f.through)));
+        if (!polyExt && !facts.some((inf) => inf.k === "intersect" && inf.p === f.to)) resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
       } else if (f.k === "collinear") {
         if (!resolveCollinearFactInComposer({ fact: f, points, host, lengths, isPolygonSide, addExtra })) nextPending.push({ fact: f, warn: "نقاط الاستقامة غير معرّفة" });
       }
