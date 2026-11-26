@@ -202,6 +202,7 @@ export default function SideBySideDiagramDocker({
                 correctMcqIndex={question.correctMcqIndex}
                 synthesizedMcqIndices={question.synthesizedMcqIndices}
                 palette={palette}
+                themeId={settings.colorThemeId}
                 numeralMode={settings.numeralMode}
                 notationLanguage={settings.notationLanguage}
               />

@@ -22,9 +22,9 @@ import {
 } from "./sovereign-a4-page-chrome-elements";
 import {
   OfficialSchoolFirstPageHeader,
-  OfficialSchoolPageFooterBar,
   OfficialSchoolRunningPageHeader,
 } from "./official-school-exam-page-chrome";
+import { OfficialSchoolPageFooterBar } from "./official-school-exam-frame-and-footer";
 
 export const MODULE_ID_FLOW_MEASUREMENT_STAGING_PLATFORM = "flow_measurement_staging_platform" as const;
 

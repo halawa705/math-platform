@@ -43,18 +43,19 @@ export function SovereignFirstPageHeader({
     <header
       style={{
         borderColor: palette.primaryHex,
-        boxShadow: "0 2px 8px rgba(30, 58, 138, 0.07)",
+        boxShadow: "0 1px 4px rgba(15, 23, 42, 0.05)",
       }}
-      className={`rounded-xl border-2 bg-white overflow-hidden ${compact ? "mb-1" : "mb-1.5"} shrink-0`}
+      className={`rounded-xl border-[1.6px] bg-white overflow-hidden ${compact ? "mb-1" : "mb-1.5"} shrink-0`}
     >
+      {/* ١. الصف الأول: الهوية المؤسسية يميناً وبيانات المعلم والإحصائيات يساراً */}
       <div
         style={{ backgroundColor: isPhotocopy ? "#FFFFFF" : "#F8FAFC" }}
-        className={`grid grid-cols-12 items-center ${compact ? "px-2 py-1" : "px-2.5 py-1.5"} gap-2 border-b border-slate-200`}
+        className={`flex items-center justify-between ${compact ? "px-2.5 py-0.5" : "px-2.5 py-1"} gap-2 border-b border-slate-200`}
       >
-        <div className="col-span-4 border-l border-slate-200 pl-2 flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <div
             style={{ background: palette.headerGradientCss }}
-            className="w-8 h-8 rounded-lg text-white flex items-center justify-center text-sm font-black overflow-hidden shrink-0 shadow-xs"
+            className="w-7 h-7 rounded-md text-white flex items-center justify-center text-xs font-black overflow-hidden shrink-0"
           >
             {identity.platformLogoUrl ? (
               <img
@@ -66,54 +67,69 @@ export function SovereignFirstPageHeader({
               <span>{identity.platformLogoSymbol || "∑"}</span>
             )}
           </div>
-          <div className="min-w-0 space-y-0.5">
-            <div style={{ color: palette.primaryHex }} className="text-[10pt] font-black leading-tight truncate">
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+            <span style={{ color: palette.primaryHex }} className="text-[9.5pt] font-black leading-tight truncate">
               {identity.platformBrandName}
-            </div>
-            <div className="text-[7.2pt] font-extrabold text-slate-600 truncate">إدارة التربية والتعليم</div>
-            <div style={{ color: palette.accentHex }} className="text-[7.2pt] font-black truncate">
+            </span>
+            <span className="text-slate-300">|</span>
+            <span style={{ color: palette.secondaryHex }} className="text-[7.5pt] font-extrabold truncate">
               {/اختبار|امتحان|تقييم/i.test(documentTitle)
                 ? isSolvedMode
-                  ? "نموذج إجابة الاختبار الرسمي المعتمد"
-                  : "ورقة تقييم واختبار رسمي معتمد"
+                  ? "نموذج إجابة الاختبار الرسمي"
+                  : "ورقة تقييم واختبار رسمي"
                 : isSolvedMode
                   ? "مذكرة الشرح والتأسيس والتطبيقات"
-                  : "ورقة تقييم واختبار رسمي معتمد"}
-            </div>
+                  : "ورقة تقييم وتدريب"}
+            </span>
           </div>
         </div>
 
-        <div className="col-span-4 text-center space-y-1 px-1 min-w-0">
-          <div className="text-[10.8pt] font-black text-slate-950 leading-snug break-words">{documentTitle}</div>
-          {!compact && subtitleAr && (
-            <span
-              style={{ background: palette.headerGradientCss }}
-              className="inline-block px-3 py-0.5 rounded-full text-white text-[7.8pt] font-black shadow-2xs"
-            >
-              {subtitleAr}
-            </span>
-          )}
-        </div>
-
-        <div className="col-span-4 border-r border-slate-200 pr-2 text-left space-y-0.5 text-[8pt] font-bold min-w-0">
-          <div style={{ color: palette.primaryHex }} className="text-[9pt] font-black truncate">
+        <div className="flex items-center gap-2 text-[7.8pt] font-bold shrink-0">
+          <span style={{ color: palette.primaryHex }} className="font-black">
             المعلم: {identity.teacherFullName}
             {identity.teacherNickname ? ` (${identity.teacherNickname})` : ""}
-          </div>
+          </span>
           {identity.teacherPhone && (
-            <div className="text-slate-700 font-mono font-extrabold text-[7.8pt]">
-              هاتف: {formatNumeralsByModeSSOT(identity.teacherPhone, numeralMode)}
-            </div>
+            <span className="text-slate-700 font-mono font-extrabold">
+              • {formatNumeralsByModeSSOT(identity.teacherPhone, numeralMode)}
+            </span>
           )}
           {!compact && (
-            <div className="text-slate-500 font-extrabold text-[7.5pt]">
-              الأفكار: ({formatNumeralsByModeSSOT(totalIdeasCount, numeralMode)}) | المسائل: (
+            <span className="text-slate-500 font-extrabold">
+              • الأفكار ({formatNumeralsByModeSSOT(totalIdeasCount, numeralMode)}) | المسائل (
               {formatNumeralsByModeSSOT(totalQuestionsCount, numeralMode)})
-            </div>
+            </span>
           )}
         </div>
       </div>
 
+      {/* ٢. الصف الثاني: شريط عنوان المستند العرضي الكامل بخلفية هادئة غير صارخة */}
+      <div
+        style={{
+          backgroundColor: isPhotocopy ? "#FFFFFF" : palette.softSurfaceHex,
+          borderRight: `3.5px solid ${palette.primaryHex}`,
+          borderLeft: `3.5px solid ${palette.primaryHex}`,
+        }}
+        className={`w-full ${compact ? "px-3 py-0.5" : "px-3 py-1"} flex flex-wrap items-center justify-center gap-2 text-center border-b border-slate-200`}
+      >
+        <span style={{ color: palette.primaryHex }} className="text-[10.8pt] font-black leading-snug">
+          {documentTitle}
+        </span>
+        {!compact && subtitleAr && (
+          <span
+            style={{
+              backgroundColor: isPhotocopy ? "#FFFFFF" : palette.badgeBgHex,
+              color: palette.secondaryHex,
+              border: `1px solid ${isPhotocopy ? "#334155" : `${palette.borderHex}66`}`,
+            }}
+            className="inline-block px-2.5 py-0.2 rounded-full text-[7.6pt] font-black shrink-0"
+          >
+            {subtitleAr}
+          </span>
+        )}
+      </div>
+
+      {/* ٣. الصف الثالث: شريط بيانات الطالب */}
       <div
         style={{ backgroundColor: isPhotocopy ? "#FFFFFF" : palette.badgeBgHex }}
         className="px-3 py-0.5 flex flex-wrap items-center justify-between gap-2 text-[7.8pt] font-black text-slate-800"

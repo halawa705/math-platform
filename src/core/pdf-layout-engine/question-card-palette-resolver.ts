@@ -32,95 +32,95 @@ export function resolveAnswerThemeTokens(
   isOddQuestion: boolean
 ): AnswerThemeTokens {
   switch (themeId) {
-    case "emerald_moasser": // أرجواني المعاصر -> تدرج أرجواني فاخر مع كحلي أنديجو عميق
+    case "emerald_moasser": // أرجواني المعاصر -> باذنجاني ملكي هادئ مع أنديجو رصين
       return isOddQuestion
         ? {
-            badgeBgColorHex: "#4C1D95",
-            badgeGradientCss: "linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)",
-            cardBorderColorHex: "#8B5CF6",
-            accentStepBorderHex: "#6D28D9",
+            badgeBgColorHex: "#331459",
+            badgeGradientCss: "linear-gradient(135deg, #240D40 0%, #4C227E 100%)",
+            cardBorderColorHex: "#6E4F9E",
+            accentStepBorderHex: "#4C227E",
           }
         : {
-            badgeBgColorHex: "#1E1B4B",
-            badgeGradientCss: "linear-gradient(135deg, #1E1B4B 0%, #4338CA 100%)",
-            cardBorderColorHex: "#6366F1",
-            accentStepBorderHex: "#3730A3",
+            badgeBgColorHex: "#24194A",
+            badgeGradientCss: "linear-gradient(135deg, #1E153F 0%, #3E2D75 100%)",
+            cardBorderColorHex: "#65589E",
+            accentStepBorderHex: "#332563",
           };
 
-    case "amber_gold": // ذهبي المراجعات -> ألوان كلاسيكية معتمدة وفاخرة
+    case "amber_gold": // ذهبي المراجعات -> برونزي إسبرسو مع عنبري مطفأ
       return isOddQuestion
         ? {
-            badgeBgColorHex: "#78350F",
-            badgeGradientCss: "linear-gradient(135deg, #78350F 0%, #B45309 100%)",
-            cardBorderColorHex: "#D97706",
-            accentStepBorderHex: "#B45309",
+            badgeBgColorHex: "#422008",
+            badgeGradientCss: "linear-gradient(135deg, #331805 0%, #6B3710 100%)",
+            cardBorderColorHex: "#94663B",
+            accentStepBorderHex: "#6B3710",
           }
         : {
-            badgeBgColorHex: "#92400E",
-            badgeGradientCss: "linear-gradient(135deg, #92400E 0%, #D97706 100%)",
-            cardBorderColorHex: "#F59E0B",
-            accentStepBorderHex: "#92400E",
+            badgeBgColorHex: "#592D0C",
+            badgeGradientCss: "linear-gradient(135deg, #472409 0%, #824618 100%)",
+            cardBorderColorHex: "#A66A32",
+            accentStepBorderHex: "#6B3710",
           };
 
-    case "navy_gold": // كحلي وذهبي -> كحلي داكن ملكي مع ذهبي عنبري أصيل
+    case "navy_gold": // كحلي وذهبي -> كحلي أكسفورد عميق مع برونزي ذهبي عتيق مطفأ
+      return isOddQuestion
+        ? {
+            badgeBgColorHex: "#0F1E36",
+            badgeGradientCss: "linear-gradient(135deg, #0A1526 0%, #1C3358 100%)",
+            cardBorderColorHex: "#344D73",
+            accentStepBorderHex: "#1C3358",
+          }
+        : {
+            badgeBgColorHex: "#594312",
+            badgeGradientCss: "linear-gradient(135deg, #47350D 0%, #7C5F1C 100%)",
+            cardBorderColorHex: "#B08D3A",
+            accentStepBorderHex: "#9A7828",
+          };
+
+    case "royal_indigo": // زمردي المعاصر -> زمردي غابي عميق مع ميرمية هادئة
+      return isOddQuestion
+        ? {
+            badgeBgColorHex: "#0A4736",
+            badgeGradientCss: "linear-gradient(135deg, #073629 0%, #115E49 100%)",
+            cardBorderColorHex: "#3D7A68",
+            accentStepBorderHex: "#115E49",
+          }
+        : {
+            badgeBgColorHex: "#12423D",
+            badgeGradientCss: "linear-gradient(135deg, #0C332F 0%, #195E57 100%)",
+            cardBorderColorHex: "#467E77",
+            accentStepBorderHex: "#12423D",
+          };
+
+    case "photocopy_black": // تصوير ليزري -> فحمي وأسود عالي التباين
       return isOddQuestion
         ? {
             badgeBgColorHex: "#0F172A",
-            badgeGradientCss: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)",
-            cardBorderColorHex: "#B8892B",
-            accentStepBorderHex: "#1E3A8A",
+            badgeGradientCss: "linear-gradient(135deg, #000000 0%, #1E293B 100%)",
+            cardBorderColorHex: "#334155",
+            accentStepBorderHex: "#0F172A",
           }
         : {
-            badgeBgColorHex: "#78350F",
-            badgeGradientCss: "linear-gradient(135deg, #78350F 0%, #B45309 100%)",
-            cardBorderColorHex: "#D4AF5A",
-            accentStepBorderHex: "#B8892B",
-          };
-
-    case "royal_indigo": // زمردي المعاصر -> تدرج زمردي مشرق مع تيل غابي وقور
-      return isOddQuestion
-        ? {
-            badgeBgColorHex: "#064E3B",
-            badgeGradientCss: "linear-gradient(135deg, #064E3B 0%, #059669 100%)",
-            cardBorderColorHex: "#10B981",
-            accentStepBorderHex: "#059669",
-          }
-        : {
-            badgeBgColorHex: "#134E4A",
-            badgeGradientCss: "linear-gradient(135deg, #134E4A 0%, #0F766E 100%)",
-            cardBorderColorHex: "#14B8A6",
-            accentStepBorderHex: "#0F766E",
-          };
-
-    case "photocopy_black": // تصوير ليزري -> تدرج رمادي وفحمي عالي التباين
-      return isOddQuestion
-        ? {
             badgeBgColorHex: "#1E293B",
-            badgeGradientCss: "linear-gradient(135deg, #1E293B 0%, #475569 100%)",
-            cardBorderColorHex: "#64748B",
-            accentStepBorderHex: "#1E293B",
-          }
-        : {
-            badgeBgColorHex: "#0F172A",
             badgeGradientCss: "linear-gradient(135deg, #0F172A 0%, #334155 100%)",
             cardBorderColorHex: "#475569",
-            accentStepBorderHex: "#0F172A",
+            accentStepBorderHex: "#1E293B",
           };
 
-    case "math_teal": // الأزرق الملكي -> أزرق كحلي ملكي هادئ مع تيل مائي وقور
+    case "math_teal": // الأزرق الملكي -> ياقوتي ملكي هادئ مع كحلي فولاذي رصين
     default:
       return isOddQuestion
         ? {
-            badgeBgColorHex: "#1E3A8A",
-            badgeGradientCss: "linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)",
-            cardBorderColorHex: "#3B82F6",
-            accentStepBorderHex: "#1D4ED8",
+            badgeBgColorHex: "#172B5E",
+            badgeGradientCss: "linear-gradient(135deg, #112046 0%, #23427C 100%)",
+            cardBorderColorHex: "#4A6FA5",
+            accentStepBorderHex: "#23427C",
           }
         : {
-            badgeBgColorHex: "#0F766E",
-            badgeGradientCss: "linear-gradient(135deg, #0F766E 0%, #0D9488 100%)",
-            cardBorderColorHex: "#14B8A6",
-            accentStepBorderHex: "#0F766E",
+            badgeBgColorHex: "#1C3B5E",
+            badgeGradientCss: "linear-gradient(135deg, #142B47 0%, #2B5B8A 100%)",
+            cardBorderColorHex: "#4E78A0",
+            accentStepBorderHex: "#1C3B5E",
           };
   }
 }
@@ -151,41 +151,43 @@ export function resolveQuestionCardColorScheme(params: {
   const cardSurfaceBgHex = isPhotocopy
     ? "#FFFFFF"
     : isBookletSolvedExample
-      ? isOddQuestion
-        ? "#FAFFFD"
-        : "#F8FCFF"
+      ? palette.softSurfaceHex
       : "#FFFFFF";
 
   const cardBorderColorHex = isPhotocopy
     ? "#334155"
     : isBookletSolvedExample
       ? isOddQuestion
-        ? "#10B981"
-        : "#0EA5E9"
+        ? palette.borderHex
+        : palette.ruleBorderHex
       : isBookletDrill
-        ? "#6366F1"
+        ? palette.secondaryHex
         : isBookletHomework
-          ? "#9D174D"
+          ? palette.accentHex
           : palette.borderHex;
 
   const badgeBgColorHex = isPhotocopy
     ? "#0F172A"
     : isBookletSolvedExample
       ? isOddQuestion
-        ? "#059669"
-        : "#0284C7"
-      : palette.primaryHex;
+        ? palette.primaryHex
+        : palette.secondaryHex
+      : isBookletDrill
+        ? palette.secondaryHex
+        : isBookletHomework
+          ? palette.accentHex
+          : palette.primaryHex;
 
   const badgeGradientCss = isPhotocopy
     ? "linear-gradient(135deg, #0F172A 0%, #334155 100%)"
     : isBookletSolvedExample
       ? isOddQuestion
-        ? "linear-gradient(135deg, #059669 0%, #10B981 100%)"
-        : "linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)"
+        ? palette.headerGradientCss
+        : `linear-gradient(135deg, ${palette.secondaryHex} 0%, ${palette.accentHex} 100%)`
       : isBookletDrill
-        ? "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)"
+        ? `linear-gradient(135deg, ${palette.primaryHex} 0%, ${palette.secondaryHex} 100%)`
         : isBookletHomework
-          ? "linear-gradient(135deg, #9D174D 0%, #BE185D 100%)"
+          ? `linear-gradient(135deg, ${palette.secondaryHex} 0%, ${palette.accentHex} 100%)`
           : palette.headerGradientCss;
 
   const exampleRoleLabel = isOddQuestion ? "تطبيقي" : "متقدم";

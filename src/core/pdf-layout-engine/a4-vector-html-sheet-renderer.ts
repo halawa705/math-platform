@@ -65,102 +65,110 @@ export interface PrintThemePaletteTokens {
 export function resolvePrintThemePalette(
   themeId: PrintColorThemeId
 ): PrintThemePaletteTokens {
-  // ١. أرجواني المعاصر (Emerald Moasser -> Royal Purple)
+  // ١. أرجواني المعاصر (باذنجاني ملكي مطفأ ومتناغم مطبعياً)
   if (themeId === "emerald_moasser") {
     return {
-      primaryHex: "#3B0764",
-      secondaryHex: "#6B21A8",
-      accentHex: "#9333EA",
-      badgeBgHex: "#F3E8FF",
-      borderHex: "#7E22CE",
-      softSurfaceHex: "#FAF5FF",
-      ruleBgHex: "#FDF4FF",
-      ruleBorderHex: "#A855F7",
-      solvedBgHex: "#FAF5FF",
-      solvedBorderHex: "#C084FC",
-      solvedTextHex: "#3B0764",
+      primaryHex: "#331459",
+      secondaryHex: "#4C227E",
+      accentHex: "#6B38A6",
+      badgeBgHex: "#F4EFFA",
+      borderHex: "#6E4F9E",
+      softSurfaceHex: "#FAF8FD",
+      ruleBgHex: "#F7F3FC",
+      ruleBorderHex: "#7C58B0",
+      solvedBgHex: "#F5F3FA",
+      solvedBorderHex: "#9F87C4",
+      solvedTextHex: "#2D124F",
       headerGradientCss:
-        "linear-gradient(135deg, #2E1065 0%, #581C87 55%, #7E22CE 100%)",
+        "linear-gradient(135deg, #240D40 0%, #3B1866 55%, #552789 100%)",
     };
   }
-  // ٢. أزرق ملكي (الافتراضي: Math Teal -> Royal Blue)
+  // ٢. أزرق ملكي (الافتراضي: ياقوتي ملكي عميق مع كحلي فولاذي هادئ)
   if (themeId === "math_teal") {
     return {
-      primaryHex: "#1E3A8A",
-      secondaryHex: "#1D4ED8",
-      accentHex: "#0284C7",
-      badgeBgHex: "#EFF6FF",
-      borderHex: "#2563EB",
-      softSurfaceHex: "#F8FAFC",
-      ruleBgHex: "#F0F9FF",
-      ruleBorderHex: "#3B82F6",
-      solvedBgHex: "#F0FDF4",
-      solvedBorderHex: "#86EFAC",
-      solvedTextHex: "#064E3B",
+      primaryHex: "#172B5E",
+      secondaryHex: "#23427C",
+      accentHex: "#2B5B9E",
+      badgeBgHex: "#EEF3FA",
+      borderHex: "#4A6FA5",
+      softSurfaceHex: "#F7F9FC",
+      ruleBgHex: "#F2F6FC",
+      ruleBorderHex: "#3B629B",
+      solvedBgHex: "#F4F8F6",
+      solvedBorderHex: "#6DA88E",
+      solvedTextHex: "#134030",
       headerGradientCss:
-        "linear-gradient(135deg, #1E1B4B 0%, #1E3A8A 50%, #2563EB 100%)",
+        "linear-gradient(135deg, #112046 0%, #1B356B 55%, #284E8F 100%)",
     };
   }
-  // ٣. ذهبي المراجعات
+  // ٣. ذهبي المراجعات (برونزي إسبرسو دافئ مع عنبري مطفأ)
   if (themeId === "amber_gold") {
     return {
-      primaryHex: "#451A03",
-      secondaryHex: "#92400E",
-      accentHex: "#D97706",
-      badgeBgHex: "#FFFBEB",
-      borderHex: "#B45309",
-      softSurfaceHex: "#FEF3C7",
-      ruleBgHex: "#FFF7ED",
-      ruleBorderHex: "#EA580C",
-      solvedBgHex: "#FFFBEB",
-      solvedBorderHex: "#FCD34D",
-      solvedTextHex: "#451A03",
+      primaryHex: "#422008",
+      secondaryHex: "#6B3710",
+      accentHex: "#9C5A25",
+      badgeBgHex: "#FBF5EE",
+      borderHex: "#94663B",
+      softSurfaceHex: "#FCF9F4",
+      ruleBgHex: "#FAF4EC",
+      ruleBorderHex: "#A66A32",
+      solvedBgHex: "#FAF6F0",
+      solvedBorderHex: "#C49A6C",
+      solvedTextHex: "#3E1E07",
       headerGradientCss:
-        "linear-gradient(135deg, #451A03 0%, #78350F 55%, #B45309 100%)",
+        "linear-gradient(135deg, #331805 0%, #592D0C 55%, #824618 100%)",
     };
   }
-  // ٤. أسود نقي (تصوير ليزري)
+  // ٤. أسود نقي (تصوير ليزري حاد وعالي التباين)
   if (themeId === "photocopy_black") {
     return {
       primaryHex: "#000000",
       secondaryHex: "#1E293B",
       accentHex: "#334155",
       badgeBgHex: "#F8FAFC",
-      borderHex: "#0F172A",
-      softSurfaceHex: "#F8FAFC",
-      ruleBgHex: "#F8FAFC",
+      borderHex: "#1E293B",
+      softSurfaceHex: "#FFFFFF",
+      ruleBgHex: "#FFFFFF",
       ruleBorderHex: "#334155",
-      solvedBgHex: "#F8FAFC",
-      solvedBorderHex: "#64748B",
-      solvedTextHex: "#0F172A",
+      solvedBgHex: "#FFFFFF",
+      solvedBorderHex: "#475569",
+      solvedTextHex: "#000000",
       headerGradientCss: "linear-gradient(135deg, #000000 0%, #1E293B 100%)",
     };
   }
-  // ٤ب. كحلي وذهبي فاخر
+  // ٤ب. كحلي وذهبي فاخر (كحلي أكسفورد عميق مع لمسات ذهبية عتيقة مطفأة)
   if (themeId === "navy_gold") {
     return {
-      primaryHex: "#14213D", secondaryHex: "#1F3A68", accentHex: "#B8892B",
-      badgeBgHex: "#FBF5E6", borderHex: "#B8892B", softSurfaceHex: "#FDFBF4",
-      ruleBgHex: "#FBF5E6", ruleBorderHex: "#D4AF5A",
-      solvedBgHex: "#F4F8F1", solvedBorderHex: "#9DBF8A", solvedTextHex: "#1F3D1A",
-      headerGradientCss: "linear-gradient(135deg, #0B1530 0%, #14213D 55%, #1F3A68 100%)",
+      primaryHex: "#0F1E36",
+      secondaryHex: "#1C3358",
+      accentHex: "#9A7828",
+      badgeBgHex: "#F8F4EA",
+      borderHex: "#344D73",
+      softSurfaceHex: "#FAF8F3",
+      ruleBgHex: "#FBF8F0",
+      ruleBorderHex: "#B08D3A",
+      solvedBgHex: "#F4F7F4",
+      solvedBorderHex: "#7A9E84",
+      solvedTextHex: "#193824",
+      headerGradientCss:
+        "linear-gradient(135deg, #0A1526 0%, #132644 58%, #1E3A63 100%)",
     };
   }
-  // ٥. زمردي المعاصر الأصيل (Royal Indigo slot -> Emerald Green)
+  // ٥. زمردي المعاصر الأصيل (زمردي غابي عميق وحواف ميرمية هادئة)
   return {
-    primaryHex: "#064E3B",
-    secondaryHex: "#065F46",
-    accentHex: "#0D9488",
-    badgeBgHex: "#ECFDF5",
-    borderHex: "#059669",
-    softSurfaceHex: "#F0FDF4",
-    ruleBgHex: "#FFFBEB",
-    ruleBorderHex: "#F59E0B",
-    solvedBgHex: "#ECFDF5",
-    solvedBorderHex: "#6EE7B7",
-    solvedTextHex: "#064E3B",
+    primaryHex: "#0A4736",
+    secondaryHex: "#115E49",
+    accentHex: "#1B7A62",
+    badgeBgHex: "#EDF7F4",
+    borderHex: "#3D7A68",
+    softSurfaceHex: "#F6FBF9",
+    ruleBgHex: "#F2F9F6",
+    ruleBorderHex: "#2E705C",
+    solvedBgHex: "#EEF8F4",
+    solvedBorderHex: "#6EB09B",
+    solvedTextHex: "#0A4736",
     headerGradientCss:
-      "linear-gradient(135deg, #064E3B 0%, #047857 55%, #0D9488 100%)",
+      "linear-gradient(135deg, #073629 0%, #0D523E 55%, #166B54 100%)",
   };
 }
 

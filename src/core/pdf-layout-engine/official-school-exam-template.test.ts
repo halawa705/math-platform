@@ -2,12 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PDF_PRINT_SETTINGS_SSOT,
   loadPersistedPDFPrintSettingsSSOT,
+  type PrintColorThemeId,
 } from "../ssot/pdf-print-settings-ssot";
 import { buildFlowItems } from "./flow-items-builder";
 import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
 import { packFlowItemsIntoPages } from "./flow-page-packer";
 import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
-import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
+import {
+  resolvePrintThemePalette,
+  type PrintableMathQuestionItem,
+} from "./a4-vector-html-sheet-renderer";
+import { resolveMcqChoiceVisualTokens } from "./pdf-mcq-choice-palette-resolver";
 
 const SAMPLE_QUESTIONS: readonly PrintableMathQuestionItem[] = [
   {
@@ -172,5 +177,37 @@ describe("Official School Exam Template & Flow Items Builder", () => {
     // Last item is the wish banner
     const wish = items[items.length - 1];
     expect(wish.kind).toBe("exam_wish_banner");
+  });
+
+  it("resolves calm, non-red MCQ choice tokens and distinct valid hex palettes across all 6 print themes", () => {
+    const allThemes: readonly PrintColorThemeId[] = [
+      "math_teal",
+      "navy_gold",
+      "emerald_moasser",
+      "royal_indigo",
+      "amber_gold",
+      "photocopy_black",
+    ];
+    const primarySet = new Set<string>();
+
+    for (const themeId of allThemes) {
+      const palette = resolvePrintThemePalette(themeId);
+      const mcqTokens = resolveMcqChoiceVisualTokens(themeId, palette);
+
+      expect(palette.primaryHex).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(palette.borderHex).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(palette.softSurfaceHex).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      primarySet.add(palette.primaryHex.toLowerCase());
+
+      // Never output garish red (#dc2626) or bright cyan (#0284c7)
+      const serialized = JSON.stringify(mcqTokens).toLowerCase();
+      expect(serialized).not.toContain("#dc2626");
+      expect(serialized).not.toContain("#991b1b");
+      expect(serialized).not.toContain("#0284c7");
+      expect(mcqTokens.choiceTextHex).toBe("#0F172A");
+      expect(mcqTokens.capsuleBgHex).toBe("#FFFFFF");
+    }
+
+    expect(primarySet.size).toBe(6);
   });
 });

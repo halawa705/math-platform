@@ -18,11 +18,13 @@ import {
   SovereignRunningPageHeader,
 } from "./sovereign-a4-page-chrome-elements";
 import {
-  OfficialSchoolCornerCropMarks,
   OfficialSchoolFirstPageHeader,
-  OfficialSchoolPageFooterBar,
   OfficialSchoolRunningPageHeader,
 } from "./official-school-exam-page-chrome";
+import {
+  OfficialSchoolCornerCropMarks,
+  OfficialSchoolPageFooterBar,
+} from "./official-school-exam-frame-and-footer";
 
 export const MODULE_ID_SOVEREIGN_DISCRETE_PAGE_VIEW =
   "sovereign_discrete_page_view" as const;
@@ -96,9 +98,6 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
         fontSize: `${settings.exactFontSizePt}pt`,
         lineHeight: activeFont.optimalLineHeight,
         boxShadow: isSchoolExam ? undefined : `inset 0 0 0 1px ${palette.borderHex}33`,
-        border: isSchoolExam ? "2.5pt solid #1e3a8a" : undefined,
-        outline: isSchoolExam ? "1.2pt dashed #93c5fd" : undefined,
-        outlineOffset: isSchoolExam ? "-5pt" : undefined,
         borderRadius: isSchoolExam ? "4pt" : undefined,
       }}
       className={`sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl ${

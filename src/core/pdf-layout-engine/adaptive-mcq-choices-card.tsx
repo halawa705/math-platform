@@ -7,11 +7,13 @@
  */
 
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
+import type { PrintColorThemeId } from "../ssot/pdf-print-settings-ssot";
 import {
   getChoiceLetterByNotationSSOT,
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
+import { resolveMcqChoiceVisualTokens } from "./pdf-mcq-choice-palette-resolver";
 
 export interface AdaptiveMCQChoicesCardProps {
   readonly mcqChoicesAr: readonly string[];
@@ -21,6 +23,7 @@ export interface AdaptiveMCQChoicesCardProps {
   readonly correctMcqIndex?: number;
   readonly synthesizedMcqIndices?: readonly number[];
   readonly palette: PrintThemePaletteTokens;
+  readonly themeId?: PrintColorThemeId;
   readonly numeralMode: NumeralDisplayMode;
   readonly notationLanguage?: "arabic" | "english";
 }
@@ -33,13 +36,19 @@ export function AdaptiveMCQChoicesCard({
   correctMcqIndex,
   synthesizedMcqIndices,
   palette,
+  themeId,
   numeralMode,
   notationLanguage,
 }: AdaptiveMCQChoicesCardProps) {
+  const mcqTokens = resolveMcqChoiceVisualTokens(themeId, palette);
+
   return (
     <div
-      style={{ fontSize: optionsFontEm }}
-      className={`grid ${mcqGridClass} gap-1 pt-1 mt-1 border-t border-purple-100`}
+      style={{
+        fontSize: optionsFontEm,
+        borderTopColor: mcqTokens.dividerBorderHex,
+      }}
+      className={`grid ${mcqGridClass} gap-1 pt-1 mt-1 border-t`}
     >
       {mcqChoicesAr.map((choice, cIdx) => {
         const isCorrect = isSolvedMode && correctMcqIndex === cIdx;
@@ -52,39 +61,46 @@ export function AdaptiveMCQChoicesCard({
               borderColor: isSynthesized
                 ? "#16A34A"
                 : isCorrect
-                  ? palette.primaryHex
-                  : palette.solvedBorderHex,
+                  ? mcqTokens.correctBorderHex
+                  : mcqTokens.capsuleBorderHex,
               backgroundColor: isSynthesized
                 ? "#F0FDF4"
                 : isCorrect
-                  ? palette.badgeBgHex
-                  : palette.primaryHex === "#000000"
-                    ? "#FFFFFF"
-                    : "#F8FAFC",
-              boxShadow: isCorrect
-                ? `0 0 0 1px ${palette.primaryHex} inset`
-                : "0 1px 2px rgba(76, 29, 149, 0.04)",
+                  ? mcqTokens.correctBgHex
+                  : mcqTokens.capsuleBgHex,
+              boxShadow: isCorrect ? "none" : mcqTokens.capsuleShadowCss,
             }}
-            className="min-w-0 px-1.5 py-0.5 rounded-lg border-2 flex items-center justify-between gap-1 min-h-[2rem]"
+            className="min-w-0 px-1.5 py-0.5 rounded-lg border-[1.5px] flex items-center justify-between gap-1 min-h-[2rem]"
           >
             <span
               style={{
-                background: isSynthesized
+                backgroundColor: isSynthesized
                   ? "#16A34A"
                   : isCorrect
-                    ? palette.headerGradientCss
-                    : palette.primaryHex,
-                color: "#ffffff",
+                    ? mcqTokens.correctBadgeBgHex
+                    : mcqTokens.letterBadgeBgHex,
+                color: mcqTokens.letterBadgeTextHex,
+                border: `1px solid ${
+                  isSynthesized
+                    ? "#15803D"
+                    : isCorrect
+                      ? mcqTokens.correctBorderHex
+                      : mcqTokens.letterBadgeBorderHex
+                }`,
               }}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-[0.8em] font-black shrink-0 shadow-2xs"
+              className="w-5 h-5 rounded-md flex items-center justify-center text-[0.8em] font-black shrink-0"
             >
               {getChoiceLetterByNotationSSOT(cIdx, notationLanguage)}
             </span>
             <div
-              style={isSynthesized ? { color: "#15803D" } : undefined}
-              className={`flex-1 min-w-0 flex items-center justify-center text-center font-extrabold break-normal leading-normal py-0.5 ${
-                isSynthesized ? "" : "text-slate-900"
-              }`}
+              style={{
+                color: isSynthesized
+                  ? "#15803D"
+                  : isCorrect
+                    ? mcqTokens.correctTextHex
+                    : mcqTokens.choiceTextHex,
+              }}
+              className="flex-1 min-w-0 flex items-center justify-center text-center font-extrabold break-normal leading-normal py-0.5"
             >
               <SafeKaTeXBiDiMathRenderer
                 text={choice}

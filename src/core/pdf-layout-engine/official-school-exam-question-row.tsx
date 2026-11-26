@@ -92,9 +92,19 @@ export function OfficialSchoolExamQuestionRow({
 
   const renderEssaySolvedModelAnswer = () => {
     if (!isSolvedMode || !question.modelAnswerAr) return null;
+    const isPhotocopy = settings.colorThemeId === "photocopy_black";
     return (
-      <div className="mt-1.5 p-2 rounded-lg bg-white border border-r-4 border-emerald-500 text-emerald-950 text-xs font-bold shadow-xs">
-        <span className="font-black text-emerald-800 ml-1.5">الحل النموذجي:</span>
+      <div
+        style={{
+          backgroundColor: isPhotocopy ? "#FFFFFF" : palette.solvedBgHex,
+          borderColor: palette.solvedBorderHex,
+          color: palette.solvedTextHex,
+        }}
+        className="mt-1.5 p-2 rounded-lg border border-r-4 text-xs font-bold shadow-xs"
+      >
+        <span style={{ color: palette.primaryHex }} className="font-black ml-1.5">
+          الحل النموذجي:
+        </span>
         <SafeKaTeXBiDiMathRenderer
           text={question.modelAnswerAr}
           numeralMode={numeralMode}
@@ -118,7 +128,7 @@ export function OfficialSchoolExamQuestionRow({
           <div className="flex flex-row items-start justify-between gap-2.5 w-full">
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
-                <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
+                <span style={{ color: palette.primaryHex }} className="shrink-0 font-black min-w-[1.4rem] text-right font-mono">
                   {qNumStr}
                 </span>
                 <div className="flex-1 min-w-0 break-words">
@@ -167,7 +177,7 @@ export function OfficialSchoolExamQuestionRow({
       ) : (
         <div>
           <div className="flex items-start gap-1.5 text-[0.92em] font-extrabold leading-snug">
-            <span className="shrink-0 font-black text-indigo-950 min-w-[1.4rem] text-right font-mono">
+            <span style={{ color: palette.primaryHex }} className="shrink-0 font-black min-w-[1.4rem] text-right font-mono">
               {qNumStr}
             </span>
             <div className="flex-1 min-w-0 break-words">

@@ -25,6 +25,7 @@ import {
   estimateVisualChoiceLength,
   renderPromptWithInlineBlankBoxes,
 } from "./compact-mcq-inline-prompt-renderer";
+import { resolveMcqChoiceVisualTokens } from "./pdf-mcq-choice-palette-resolver";
 
 export const MODULE_ID_COMPACT_TEXTBOOK_MCQ_ROW = "compact_textbook_mcq_row" as const;
 
@@ -72,19 +73,7 @@ export function CompactTextbookMcqRow({
 
   const renderChoicesStrip = () => {
     if (choices.length === 0) return null;
-    const isRedChoicesMode =
-      settings.colorThemeId === "amber_gold" ||
-      settings.colorThemeId === "navy_gold" ||
-      settings.colorThemeId === "photocopy_black";
-
-    // القاعدة اللونية المتقابلة:
-    // ١) خط الاختيارات أزرق فاتح (#0284c7) ← خلفية دائرة الحرف (أ، ب، جـ، د) حمراء (#dc2626)
-    // ٢) خط الاختيارات أحمر (#dc2626) ← خلفية دائرة الحرف (أ، ب، جـ، د) سوداء غامقة (#111827)
-    const choiceTextHex = isRedChoicesMode ? "#dc2626" : "#0284c7";
-    const choiceBorderHex = isRedChoicesMode ? "#dc2626" : "#0284c7";
-    const choiceCircleBg = isRedChoicesMode ? "#111827" : "#dc2626";
-    const choiceCircleBorder = isRedChoicesMode ? "#000000" : "#991b1b";
-    const choiceCircleShadow = isRedChoicesMode ? "0 1.5px 0 #000000" : "0 1.5px 0 #7f1d1d";
+    const mcqTokens = resolveMcqChoiceVisualTokens(settings.colorThemeId, palette);
 
     return (
       <div
@@ -101,26 +90,38 @@ export function CompactTextbookMcqRow({
               key={optIdx}
               title={isSynthesized ? "خيار فارغ في المصدر — تم ملؤه تلقائياً" : undefined}
               style={{
-                backgroundColor: isSynthesized ? "#F0FDF4" : "#ffffff",
+                backgroundColor: isSynthesized
+                  ? "#F0FDF4"
+                  : isCorrect
+                    ? mcqTokens.correctBgHex
+                    : mcqTokens.capsuleBgHex,
                 border: isSynthesized
                   ? "1.5px solid #16A34A"
                   : isCorrect
-                    ? "1.8px solid #059669"
-                    : `1.1px solid ${choiceBorderHex}55`,
+                    ? `1.6px solid ${mcqTokens.correctBorderHex}`
+                    : `1.1px solid ${mcqTokens.capsuleBorderHex}`,
                 borderRadius: "6px",
                 padding: "1.5px 5px",
-                boxShadow: isCorrect
-                  ? "0 1.5px 0 #05966955"
-                  : `0 1px 0 ${choiceBorderHex}28`,
+                boxShadow: isCorrect ? "none" : mcqTokens.capsuleShadowCss,
               }}
               className="min-w-0 flex items-center gap-1.5"
             >
               <span
                 style={{
-                  backgroundColor: isSynthesized ? "#16A34A" : isCorrect ? "#059669" : choiceCircleBg,
-                  color: "#ffffff",
-                  border: `1px solid ${isSynthesized ? "#15803D" : isCorrect ? "#047857" : choiceCircleBorder}`,
-                  boxShadow: isCorrect ? "0 1.5px 0 #064e3b" : choiceCircleShadow,
+                  backgroundColor: isSynthesized
+                    ? "#16A34A"
+                    : isCorrect
+                      ? mcqTokens.correctBadgeBgHex
+                      : mcqTokens.letterBadgeBgHex,
+                  color: mcqTokens.letterBadgeTextHex,
+                  border: `1px solid ${
+                    isSynthesized
+                      ? "#15803D"
+                      : isCorrect
+                        ? mcqTokens.correctBorderHex
+                        : mcqTokens.letterBadgeBorderHex
+                  }`,
+                  boxShadow: "none",
                   width: "18px",
                   height: "18px",
                   borderRadius: "9999px",
@@ -136,7 +137,13 @@ export function CompactTextbookMcqRow({
                 {letter}
               </span>
               <div
-                style={{ color: isSynthesized ? "#15803D" : isCorrect ? "#064e3b" : choiceTextHex }}
+                style={{
+                  color: isSynthesized
+                    ? "#15803D"
+                    : isCorrect
+                      ? mcqTokens.correctTextHex
+                      : mcqTokens.choiceTextHex,
+                }}
                 className="flex-1 min-w-0 text-right font-extrabold text-[0.92em] break-words leading-tight"
               >
                 <SafeKaTeXBiDiMathRenderer
@@ -147,7 +154,7 @@ export function CompactTextbookMcqRow({
                 />
               </div>
               {isCorrect && (
-                <span style={{ color: "#059669" }} className="font-black text-[0.82em] shrink-0">
+                <span style={{ color: mcqTokens.correctBorderHex }} className="font-black text-[0.82em] shrink-0">
                   ✓
                 </span>
               )}

@@ -17,7 +17,7 @@ import type { FlowItem } from "./flow-item-model";
 import { SovereignDocumentAccreditationBox } from "./sovereign-a4-page-chrome-elements";
 import { OfficialSchoolExamQuestionRow } from "./official-school-exam-question-row";
 import { OfficialSchoolExamSectionBanner } from "./official-school-exam-section-banner";
-import { OfficialSchoolEndWishBanner } from "./official-school-exam-page-chrome";
+import { OfficialSchoolEndWishBanner } from "./official-school-exam-frame-and-footer";
 import { AnswerSectionBanner } from "./answer-section-banner";
 import { CompactTextbookMcqRow, isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
 

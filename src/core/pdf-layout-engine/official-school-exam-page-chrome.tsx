@@ -2,128 +2,26 @@
 
 /**
  * @file official-school-exam-page-chrome.tsx
- * @description عناصر ترويسة وتذييل والإطار الهندسي المزخرف المزدوج لورقة A4.
- * جميع الإطارات والزوايا الهندسية مرسومة بـ Inline Styles صريحة لضمان ظهورها بنسبة 100% في المعاينة والطباعة.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 260 سطراً).
+ * @description ترويسات ورقة A4 لقالب الامتحان المدرسي الرسمي بتخطيط عرضي انسيابي هادئ
+ * يمنع التكدس الطولي للعناوين ويزيل الخلفيات الداكنة الصارخة.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 230 سطراً).
  */
 
 import React from "react";
 import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
-import { PdfPhoneIcon, PdfSparkleIcon, PdfUserIcon } from "./pdf-inline-vector-badge-icons";
+
+// إعادة تصدير مؤقتة للتوافق الخلفي لحين تأكيد المراجعة البشرية وحذفها (Phase 3/4)
+export {
+  OfficialSchoolCornerCropMarks,
+  OfficialSchoolPageFooterBar,
+  OfficialSchoolEndWishBanner,
+  type OfficialSchoolPageFooterBarProps,
+} from "./official-school-exam-frame-and-footer";
 
 export const MODULE_ID_OFFICIAL_SCHOOL_EXAM_PAGE_CHROME =
   "official_school_exam_page_chrome" as const;
-
-export function OfficialSchoolCornerCropMarks({
-  primaryHex = "#1e3a8a",
-  accentHex = "#2563eb",
-}: {
-  readonly primaryHex?: string;
-  readonly accentHex?: string;
-}) {
-  const cornerBase: React.CSSProperties = {
-    position: "absolute",
-    width: "22px",
-    height: "22px",
-    pointerEvents: "none",
-  };
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: "6px",
-        right: "6px",
-        bottom: "6px",
-        left: "6px",
-        border: `2px solid ${primaryHex}`,
-        borderRadius: "10px",
-        boxShadow: `inset 0 0 0 2px #ffffff, 0 0 0 1px ${accentHex}33`,
-        pointerEvents: "none",
-        zIndex: 20,
-      }}
-      className="page-frame"
-      aria-hidden="true"
-    >
-      {/* الإطار الداخلي المتقطع */}
-      <svg
-        width="776"
-        height="1105"
-        viewBox="0 0 776 1105"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: "3px",
-          right: "3px",
-          bottom: "3px",
-          left: "3px",
-          width: "calc(100% - 6px)",
-          height: "calc(100% - 6px)",
-          pointerEvents: "none",
-          display: "block",
-        }}
-      >
-        <rect
-          x="0.6"
-          y="0.6"
-          width="774.8"
-          height="1103.8"
-          rx="7"
-          ry="7"
-          fill="none"
-          stroke={accentHex}
-          strokeOpacity={0.6}
-          strokeWidth={1.2}
-          strokeDasharray="5 3.5"
-        />
-      </svg>
-      {/* الزوايا الأربع البارزة */}
-      <span
-        style={{
-          ...cornerBase,
-          top: "-2px",
-          right: "-2px",
-          borderTop: `4px solid ${primaryHex}`,
-          borderRight: `4px solid ${primaryHex}`,
-          borderTopRightRadius: "9px",
-        }}
-      />
-      <span
-        style={{
-          ...cornerBase,
-          top: "-2px",
-          left: "-2px",
-          borderTop: `4px solid ${primaryHex}`,
-          borderLeft: `4px solid ${primaryHex}`,
-          borderTopLeftRadius: "9px",
-        }}
-      />
-      <span
-        style={{
-          ...cornerBase,
-          bottom: "-2px",
-          right: "-2px",
-          borderBottom: `4px solid ${primaryHex}`,
-          borderRight: `4px solid ${primaryHex}`,
-          borderBottomRightRadius: "9px",
-        }}
-      />
-      <span
-        style={{
-          ...cornerBase,
-          bottom: "-2px",
-          left: "-2px",
-          borderBottom: `4px solid ${primaryHex}`,
-          borderLeft: `4px solid ${primaryHex}`,
-          borderBottomLeftRadius: "9px",
-        }}
-      />
-    </div>
-  );
-}
 
 export interface OfficialSchoolFirstPageHeaderProps {
   readonly identity: OwnerTeacherIdentity;
@@ -149,118 +47,129 @@ export function OfficialSchoolFirstPageHeader({
   const academyName = identity.platformBrandName || "أكاديمية وسنتر الفارس";
   const gradeName = subtitleAr || "الصف الثالث الابتدائي";
   const duration = durationText || "ساعة ونصف";
-  const primaryHex = palette?.primaryHex || "#1e3a8a";
-  const accentHex = palette?.accentHex || "#0284c7";
-  const headerGradient =
-    palette?.headerGradientCss || "linear-gradient(135deg, #1E1B4B 0%, #1E3A8A 50%, #2563EB 100%)";
+  const primaryHex = palette?.primaryHex || "#172B5E";
+  const borderHex = palette?.borderHex || "#4A6FA5";
+  const badgeBgHex = palette?.badgeBgHex || "#EEF3FA";
+  const softSurfaceHex = palette?.softSurfaceHex || "#F7F9FC";
+  const isPhotocopy = primaryHex === "#000000";
 
   return (
     <header
       style={{
         backgroundColor: "#ffffff",
-        border: `2px solid ${primaryHex}`,
-        borderRadius: "10px",
-        boxShadow: `0 2px 0 ${primaryHex}25`,
-        padding: "7px 10px",
+        border: `1.6px solid ${primaryHex}`,
+        borderRadius: "9px",
+        padding: "6px 10px",
         marginBottom: "6px",
       }}
       className="w-full bg-white text-slate-900 select-none"
     >
-      {/* 1. الصف الأول: الأكاديمية والمادة (يمين) | عنوان الاختبار داخل كبسولة ملونة (وسط) | المعلم والهاتف (يسار) */}
+      {/* ١. الصف الأول: البيانات المؤسسية يميناً ويساراً بدون تكدس */}
       <div
-        style={{ borderBottom: `1.5px dashed ${accentHex}66`, paddingBottom: "5px", marginBottom: "5px" }}
-        className="grid grid-cols-12 items-center text-xs font-bold"
+        style={{ borderBottom: "1px solid #E2E8F0", paddingBottom: "4px" }}
+        className="flex items-center justify-between gap-2 text-[11px] font-bold"
       >
-        <div className="col-span-4 flex items-center gap-1.5 text-right">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span
             style={{
-              background: headerGradient,
-              color: "#ffffff",
-              borderRadius: "6px",
-              padding: "2px 8px",
-              boxShadow: `0 1.5px 0 ${primaryHex}`,
+              backgroundColor: isPhotocopy ? "#FFFFFF" : badgeBgHex,
+              border: `1px solid ${isPhotocopy ? "#334155" : `${borderHex}66`}`,
+              color: primaryHex,
             }}
-            className="font-black text-[11px]"
+            className="w-[18px] h-[18px] rounded-sm flex items-center justify-center text-[10px] font-black overflow-hidden shrink-0"
           >
+            {identity.platformLogoUrl ? (
+              <img
+                src={identity.platformLogoUrl}
+                alt={academyName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{identity.platformLogoSymbol || "∑"}</span>
+            )}
+          </span>
+          <span style={{ color: primaryHex }} className="font-black truncate">
             {academyName}
           </span>
-          <span className="text-[11px] text-slate-800 font-extrabold">
-            <strong style={{ color: primaryHex }} className="font-black">
-              الرياضيات — {gradeName}
-            </strong>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-700 font-extrabold truncate">
+            الرياضيات — {gradeName}
           </span>
         </div>
 
-        <div className="col-span-4 text-center px-1">
-          <div
-            style={{
-              background: headerGradient,
-              color: "#ffffff",
-              borderRadius: "8px",
-              padding: "2px 10px",
-              boxShadow: `0 2px 0 ${primaryHex}`,
-              display: "inline-block",
-            }}
-            className="text-xs sm:text-sm font-black tracking-tight leading-snug"
-          >
-            {isSolvedMode ? `${documentTitle} (نموذج الإجابة)` : documentTitle}
-          </div>
-          <div className="mt-1">
-            <span
-              style={{
-                backgroundColor: "#ffffff",
-                border: `1.2px solid ${accentHex}`,
-                color: primaryHex,
-                borderRadius: "9999px",
-                padding: "1px 8px",
-              }}
-              className="inline-block text-[10px] font-black"
-            >
-              ⏱️ الزمن: {duration}
-            </span>
-          </div>
-        </div>
-
-        <div className="col-span-4 text-left font-mono text-xs font-bold text-slate-800" dir="ltr">
-          <span>
-            {teacherPhone ? `(${teacherPhone}) ` : ""}
+        <div className="flex items-center gap-2 shrink-0 text-[10.5px]">
+          <span className="text-slate-700">
+            المعلم:{" "}
             <strong style={{ color: primaryHex }} className="font-black">
               {teacherName}
-            </strong>{" "}
-            :المعلم
+            </strong>
+            {teacherPhone ? ` (${formatNumeralsByModeSSOT(teacherPhone, numeralMode)})` : ""}
+          </span>
+          <span
+            style={{
+              backgroundColor: isPhotocopy ? "#ffffff" : badgeBgHex,
+              border: `1px solid ${isPhotocopy ? "#334155" : `${borderHex}66`}`,
+              color: primaryHex,
+              borderRadius: "9999px",
+              padding: "0.5px 7px",
+            }}
+            className="font-black text-[10px] whitespace-nowrap"
+          >
+            ⏱ الزمن: {formatNumeralsByModeSSOT(duration, numeralMode)}
           </span>
         </div>
       </div>
 
-      {/* 2. الصف الثاني: بيانات الطالب مع كبسولات بيضاء مؤطرة */}
-      <div className="grid grid-cols-12 gap-2.5 text-xs font-bold text-slate-900 items-center">
-        <div className="col-span-6 flex items-center gap-1.5">
-          <span style={{ color: primaryHex }} className="shrink-0 font-black text-[11px] inline-flex items-center gap-1">
-            <PdfUserIcon />
-            <span>اسم الطالب:</span>
-          </span>
+      {/* ٢. الصف الثاني: شريط عنوان المستند العرضي الكامل بنبرة هادئة متزنة */}
+      <div
+        style={{
+          backgroundColor: isPhotocopy ? "#ffffff" : softSurfaceHex,
+          borderTop: `1px solid ${isPhotocopy ? "#CBD5E1" : `${borderHex}45`}`,
+          borderBottom: `1px solid ${isPhotocopy ? "#CBD5E1" : `${borderHex}45`}`,
+          borderRight: `3.5px solid ${primaryHex}`,
+          borderLeft: `3.5px solid ${primaryHex}`,
+        }}
+        className="w-full my-1 py-1 px-3 rounded-md flex flex-wrap items-center justify-center gap-2 text-center"
+      >
+        <span style={{ color: primaryHex }} className="text-[12px] font-black tracking-tight leading-snug">
+          {documentTitle}
+        </span>
+        {isSolvedMode && (
           <span
-            style={{ borderBottom: `1.5px dotted ${primaryHex}88` }}
-            className="flex-1 h-3.5 block"
-          />
+            style={{
+              backgroundColor: isPhotocopy ? "#ffffff" : badgeBgHex,
+              border: `1px solid ${primaryHex}55`,
+              color: primaryHex,
+            }}
+            className="px-2 py-0.2 rounded-full text-[10px] font-black shrink-0"
+          >
+            نموذج الإجابة
+          </span>
+        )}
+      </div>
+
+      {/* ٣. الصف الثالث: شريط بيانات الطالب */}
+      <div className="grid grid-cols-12 gap-2.5 pt-0.5 text-[11px] font-bold text-slate-900 items-center">
+        <div className="col-span-6 flex items-center gap-1.5">
+          <span style={{ color: primaryHex }} className="shrink-0 font-black">
+            اسم الطالب:
+          </span>
+          <span style={{ borderBottom: `1.4px dotted ${primaryHex}88` }} className="flex-1 h-3.5 block" />
         </div>
         <div className="col-span-3 flex items-center gap-1.5">
-          <span style={{ color: primaryHex }} className="shrink-0 font-black text-[11px]">
+          <span style={{ color: primaryHex }} className="shrink-0 font-black">
             المجموعة:
           </span>
-          <span
-            style={{ borderBottom: `1.5px dotted ${primaryHex}88` }}
-            className="flex-1 h-3.5 block"
-          />
+          <span style={{ borderBottom: `1.4px dotted ${primaryHex}88` }} className="flex-1 h-3.5 block" />
         </div>
         <div className="col-span-3 flex items-center gap-1.5">
-          <span style={{ color: primaryHex }} className="shrink-0 font-black text-[11px]">
+          <span style={{ color: primaryHex }} className="shrink-0 font-black">
             الدرجة:
           </span>
           <span
             style={{
               backgroundColor: "#ffffff",
-              border: `1.5px solid ${accentHex}`,
+              border: `1.3px solid ${isPhotocopy ? "#334155" : borderHex}`,
               borderRadius: "6px",
               height: "18px",
             }}
@@ -293,45 +202,39 @@ export function OfficialSchoolRunningPageHeader({
 }: OfficialSchoolRunningPageHeaderProps) {
   const teacherName = identity.teacherFullName || "أ/ إسلام محمد";
   const gradeName = subtitleAr || "الصف الثالث الابتدائي";
-  const primaryHex = palette?.primaryHex || "#1e3a8a";
-  const headerGradient =
-    palette?.headerGradientCss || "linear-gradient(135deg, #1E1B4B 0%, #1E3A8A 50%, #2563EB 100%)";
+  const primaryHex = palette?.primaryHex || "#172B5E";
+  const borderHex = palette?.borderHex || "#4A6FA5";
+  const badgeBgHex = palette?.badgeBgHex || "#EEF3FA";
+  const isPhotocopy = primaryHex === "#000000";
 
   return (
     <div
       style={{
         backgroundColor: "#ffffff",
-        border: `1.5px solid ${primaryHex}`,
+        border: `1.3px solid ${primaryHex}`,
         borderRadius: "8px",
         padding: "3px 8px",
         marginBottom: "6px",
       }}
-      className="w-full flex items-center justify-between text-[11px] font-bold text-slate-900 select-none"
+      className="w-full flex items-center justify-between gap-2 text-[11px] font-bold text-slate-900 select-none"
     >
-      <div className="flex items-center gap-1.5">
-        <span
-          style={{
-            background: headerGradient,
-            color: "#ffffff",
-            borderRadius: "5px",
-            padding: "1px 6px",
-          }}
-          className="font-black text-[10.5px]"
-        >
+      <div className="flex items-center gap-1.5 min-w-0 truncate">
+        <span style={{ color: primaryHex }} className="font-black text-[10.5px] truncate">
           {documentTitle}
         </span>
-        <span style={{ color: primaryHex }} className="font-extrabold">
+        <span className="text-slate-600 font-bold text-[10px] shrink-0">
           ({gradeName})
         </span>
       </div>
-      <div className="flex items-center gap-2.5 text-[10.5px]">
+      <div className="flex items-center gap-2.5 text-[10.5px] shrink-0">
         <span>
           المعلم: <strong style={{ color: primaryHex }} className="font-black">{teacherName}</strong>
         </span>
         <span
           style={{
-            background: headerGradient,
-            color: "#ffffff",
+            backgroundColor: isPhotocopy ? "#ffffff" : badgeBgHex,
+            color: primaryHex,
+            border: `1px solid ${isPhotocopy ? "#334155" : `${borderHex}77`}`,
             borderRadius: "9999px",
             padding: "1px 8px",
           }}
@@ -341,120 +244,6 @@ export function OfficialSchoolRunningPageHeader({
           {formatNumeralsByModeSSOT(totalPages, numeralMode)}
         </span>
       </div>
-    </div>
-  );
-}
-
-export interface OfficialSchoolPageFooterBarProps {
-  readonly identity: OwnerTeacherIdentity;
-  readonly pageNumber: number;
-  readonly totalPages: number;
-  readonly numeralMode?: NumeralDisplayMode;
-  readonly palette?: PrintThemePaletteTokens;
-}
-
-export function OfficialSchoolPageFooterBar({
-  identity,
-  pageNumber,
-  totalPages,
-  numeralMode = "western",
-  palette,
-}: OfficialSchoolPageFooterBarProps) {
-  const teacherName = identity.teacherFullName || "أ/ إسلام محمد";
-  const teacherPhone = identity.teacherPhone || "";
-  const academyName = identity.platformBrandName || "أكاديمية وسنتر الفارس";
-  const primaryHex = palette?.primaryHex || "#1e3a8a";
-  const headerGradient =
-    palette?.headerGradientCss || "linear-gradient(135deg, #1E1B4B 0%, #1E3A8A 50%, #2563EB 100%)";
-
-  return (
-    <footer
-      style={{
-        borderTop: `1.5px solid ${primaryHex}`,
-        paddingTop: "4px",
-      }}
-      className="w-full flex items-center justify-between text-[10.5px] text-slate-900 select-none break-inside-avoid print:break-inside-avoid"
-    >
-      {/* يمين التذييل: شارة رقم الصفحة المزدوجة على طراز كتاب سندباد */}
-      <div
-        style={{
-          border: `1.5px solid ${primaryHex}`,
-          borderRadius: "6px",
-          overflow: "hidden",
-          backgroundColor: "#ffffff",
-        }}
-        className="inline-flex items-center"
-      >
-        <span
-          style={{
-            background: headerGradient,
-            color: "#ffffff",
-            padding: "1px 8px",
-          }}
-          className="font-black text-[10.5px] font-mono"
-        >
-          {formatNumeralsByModeSSOT(pageNumber, numeralMode)} / {formatNumeralsByModeSSOT(totalPages, numeralMode)}
-        </span>
-        <span style={{ color: primaryHex, padding: "1px 8px" }} className="font-black text-[10px]">
-          إعداد: {teacherName}
-        </span>
-      </div>
-
-      {/* يسار التذييل: شارة الأكاديمية والهاتف */}
-      <div className="inline-flex items-center gap-1.5">
-        {teacherPhone && (
-          <span
-            style={{
-              backgroundColor: "#ffffff",
-              border: `1.2px solid ${primaryHex}`,
-              color: primaryHex,
-              borderRadius: "6px",
-              padding: "1px 6px",
-            }}
-            className="font-mono font-black text-[10px] inline-flex items-center gap-1"
-          >
-            <PdfPhoneIcon />
-            <span>{formatNumeralsByModeSSOT(teacherPhone, numeralMode)}</span>
-          </span>
-        )}
-        {academyName && (
-          <span
-            style={{
-              background: headerGradient,
-              color: "#ffffff",
-              borderRadius: "6px",
-              padding: "1px 8px",
-              boxShadow: `0 1.5px 0 ${primaryHex}`,
-            }}
-            className="font-black text-[10px]"
-          >
-            {academyName}
-          </span>
-        )}
-      </div>
-    </footer>
-  );
-}
-
-export function OfficialSchoolEndWishBanner({ palette }: { readonly palette?: PrintThemePaletteTokens }) {
-  const primaryHex = palette?.primaryHex || "#1e3a8a";
-  return (
-    <div
-      style={{
-        backgroundColor: "#ffffff",
-        border: `1.5px dashed ${primaryHex}`,
-        borderRadius: "8px",
-        padding: "3px 10px",
-        margin: "4px 0",
-        color: primaryHex,
-      }}
-      className="w-full text-center text-[10.5px] font-black flex items-center justify-center gap-1.5 break-inside-avoid print:break-inside-avoid"
-    >
-      <span className="inline-flex items-center gap-1.5">
-        <PdfSparkleIcon />
-        <span>مع أطيب تمنياتي لكم بالتفوق والدرجة النهائية</span>
-        <PdfSparkleIcon />
-      </span>
     </div>
   );
 }
