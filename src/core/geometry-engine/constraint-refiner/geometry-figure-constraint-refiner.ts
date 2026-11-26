@@ -10,6 +10,7 @@ import { measureAngleDegrees, median, parseNumericLabel } from "../verification/
 import { minimizeResiduals } from "./levenberg-marquardt-residual-minimizer";
 import { verifyGeometryFigure } from "../verification/geometry-figure-verification-orchestrator";
 import type { FigureVerificationReport } from "../verification/verification-report-types-ssot";
+import { figureHasReflexAngles, preservesPolygonConcavitySigns } from "../verification/polygon-winding-and-self-intersection-guard";
 
 export const MODULE_ID_GEOMETRY_FIGURE_CONSTRAINT_REFINER = "geometry_figure_constraint_refiner" as const;
 
@@ -90,6 +91,7 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
   const origSpanY = Math.max(...origYs) - Math.min(...origYs);
   const origIs2D = Math.min(origSpanX, origSpanY) / Math.max(origSpanX, origSpanY, 1e-6) > 0.18;
 
+  const allowReflex = figureHasReflexAngles(fig) || fig.titleArabic.includes("مقعر");
   const preserves2DTopology = (cand: CanonicalGeometryFigureIR): boolean => {
     if (!origIs2D) return true;
     const cxs = cand.vertices.map((v) => v.position.x);
@@ -97,6 +99,7 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
     const cSpanX = Math.max(...cxs) - Math.min(...cxs);
     const cSpanY = Math.max(...cys) - Math.min(...cys);
     if (Math.min(cSpanX, cSpanY) / Math.max(cSpanX, cSpanY, 1e-6) < 0.22) return false;
+    if (!preservesPolygonConcavitySigns(fig, cand)) return false;
     for (const poly of cand.polygons ?? []) {
       if (poly.length < 3) continue;
       for (let i = 0; i < poly.length; i++) {
@@ -105,7 +108,7 @@ export function refineFigureToMatchGivens(fig: CanonicalGeometryFigureIR): Refin
         const next = idxMap.get(poly[(i + 1) % poly.length]);
         if (prev === undefined || cur === undefined || next === undefined) continue;
         const deg = measureAngleDegrees(cand.vertices[cur].position, cand.vertices[prev].position, cand.vertices[next].position);
-        if (deg < 12 || deg > 168) return false;
+        if (deg < 12 || (!allowReflex && deg > 168)) return false;
       }
     }
     return true;

@@ -35,7 +35,8 @@ export function extractExplicitDimensionalGivensFromPrompt(rawText: string): Set
     .replace(/(?:مسألة|مثال|تدريب|سؤال|صفحة|ص|شكل|رقم)\s*\(?\s*\d+(?:\s*[-–]\s*\d+)?\s*\)?/g, " ")
     // حذف عبارات عدد محاور التماثل أو عدد الأضلاع/الزوايا/المستقيمات/المربعات الوصفية
     .replace(/(?:عدد\s*محاور\s*تماثل[هـا]?|محاور\s*تماثل\s*عددها|عددها)\s*\d+/g, " ")
-    .replace(/\d+\s*(?:محاور|أضلاع|زوايا|رؤوس|مستقيمات|دوائر|مثلثات|مربعات|قطع|أجزاء|درجات)/g, " ")
+    .replace(/(?:ذي|ذو|مكوّن\s*من|يتكون\s*من)\s*\d+\s*أضلاع/g, " ")
+    .replace(/\d+\s*(?:محاور|أضلاع|أقطار|قطراً|قطرا|زوايا|رؤوس|مستقيمات|دوائر|مثلثات|مربعات|قطع|أجزاء|درجات)/g, " ")
     // حذف الأسس التربيعية والتكعيبية في النسب المثلثية والمتطابقات مثل sin^2 أو جتا^2 أو x²
     .replace(/\^\s*\{?\s*\d+\s*\}?|[²³]/g, " ")
     // حذف قيم النسب المثلثية المجردة (لأنها نسب غير بعدية وليست أطوال أضلاع على الرسم مثل sin C = 5/13 أو cos θ = 0.6)
@@ -72,7 +73,7 @@ export function extractExplicitDimensionalGivensFromPrompt(rawText: string): Set
   const unitMatches = clean.matchAll(/(\d+(?:\.\d+)?)\s*(?:سم²|م²|سم|مم|كم|ديسم|متر|وحدات|وحدة|°|درجة)(?![أ-يa-zA-Z])/gi);
   for (const m of unitMatches) {
     const token = normalizeNumericToken(m[1]);
-    if (token !== "90" && token !== "180" && token !== "360") {
+    if (token !== "90" && token !== "180" && token !== "360" && !(token === "270" && /صليب|إما\s*90/.test(clean))) {
       givens.add(token);
     }
   }

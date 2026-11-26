@@ -89,7 +89,7 @@ export function projectGeometryAnglesSVGMarkup(
       continue;
     }
 
-    // 2. حساب زوايا الأذرع بالراديان للقوس
+    // 2. حساب زوايا الأذرع بالراديان للقوس (مع دعم الزوايا المنعكسة > 180°)
     let ang1 = Math.atan2(dy1, dx1);
     let ang2 = Math.atan2(dy2, dx2);
 
@@ -97,8 +97,14 @@ export function projectGeometryAnglesSVGMarkup(
     while (diff <= -Math.PI) diff += 2 * Math.PI;
     while (diff > Math.PI) diff -= 2 * Math.PI;
 
+    const isReflexAngle = Boolean(ang.isReflex) || (typeof ang.degrees === "number" && ang.degrees > 180);
+    if (isReflexAngle) {
+      diff = diff > 0 ? diff - 2 * Math.PI : diff + 2 * Math.PI;
+    }
+
     const startAng = ang1;
     const endAng = ang1 + diff;
+    const largeArcFlag = Math.abs(diff) > Math.PI ? 1 : 0;
     const sweepFlag = diff > 0 ? 1 : 0;
     const isUnknownAngle =
       ang.labelKind === "unknown" ||
@@ -117,10 +123,10 @@ export function projectGeometryAnglesSVGMarkup(
 
     // قطاع زاوي ممتلئ بلون شفاف مضيء + قوس ناصع (متقطع برتقالي للزاوية المطلوبة «؟»)
     elements.push(
-      `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${arcFillColor}" fill-opacity="${isUnknownAngle ? "0.11" : "0.14"}" stroke="none" />`
+      `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${arcFillColor}" fill-opacity="${isUnknownAngle ? "0.11" : "0.14"}" stroke="none" />`
     );
     elements.push(
-      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 0 ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${arcStrokeColor}" stroke-width="1.4"${arcDashAttr} />`
+      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${arcStrokeColor}" stroke-width="1.4"${arcDashAttr} />`
     );
 
     // 3. كتابة قياس الزاوية (نص أو درجات) - لا يُكتب أي قياس رقمي إذا وُجدت علامة تطابق أو تنصيف رمزية (نقطة أو علامة x)

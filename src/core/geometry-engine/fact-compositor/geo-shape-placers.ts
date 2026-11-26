@@ -25,6 +25,9 @@ import {
   placeRegularOrGeneralPolygon,
   tryPlaceSharedVertexCompositePolygon,
 } from "./geo-shared-vertex-and-vertical-angle-placer";
+import { tryPlaceGeneralOrConcavePolygon } from "../polygon-family/general-and-concave-polygon-placer";
+import { tryPlaceSharedEdgePolygon } from "../polygon-family/adjacent-shared-polygons-placer";
+import { isSubTriangleFromDiagonalsOrExtensions } from "../polygon-family/polygon-diagonals-and-extensions-solver";
 import type { Vec2 } from "./geo-vector-math";
 
 export const MODULE_ID_GEO_SHAPE_PLACERS = "geo_shape_placers" as const;
@@ -119,8 +122,8 @@ export function placeDeclaredShapes(
     if (x.k === "midpoint" || x.k === "pointOn" || x.k === "intersect") derivedPts.add(x.p);
   }
   const polyPriority = (f: GeoFact): number => {
-    if (f.k === "quad") return f.labels.some((l) => diagMeetPts.has(l)) ? 1 : 0;
-    if (f.k === "polygon") return 1;
+    if (f.k === "polygon") return 0;
+    if (f.k === "quad") return f.labels.some((l) => diagMeetPts.has(l)) ? 1.5 : 1;
     if (f.k === "triangle") return f.labels.some((l) => derivedPts.has(l)) ? 2.5 : 2;
     return 3;
   };
@@ -141,9 +144,21 @@ export function placeDeclaredShapes(
     if (f.k === "triangle" && points.size >= 4 && labels.filter((l) => points.has(l)).length === 2 && facts.some((pf) => (pf.k === "pointOn" || pf.k === "diagonalsMeet") && labels.includes(pf.p))) {
       continue;
     }
+    if (f.k === "triangle" && isSubTriangleFromDiagonalsOrExtensions(labels, facts, points, polygons)) {
+      continue;
+    }
     let local: Vec2[];
     if (f.k === "polygon") {
-      local = placeRegularOrGeneralPolygon(labels, num);
+      local =
+        tryPlaceGeneralOrConcavePolygon({
+          labels,
+          kind: "polygon",
+          isRegular: f.regular,
+          isConcave: f.concave,
+          facts,
+          angleOf,
+        }) ?? placeRegularOrGeneralPolygon(labels, num);
+      if (tryPlaceSharedEdgePolygon({ fact: f, localCoords: local, points, polygons })) continue;
     } else if (f.k === "triangle") {
       const [a, b, c] = labels;
       const keyOf = (l: string): TriVertexKey | undefined => (l === a ? "A" : l === b ? "B" : l === c ? "C" : undefined);
@@ -218,7 +233,14 @@ export function placeDeclaredShapes(
         local = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w + D.x, y: D.y }, D];
       }
       else if (f.kind === "trapezoid") local = placeOrientedTrapezoid(labels, facts, num, angleOf);
-      else local = placeGeneralCompositeQuad(labels, facts, num, angleOf);
+      else local =
+        tryPlaceGeneralOrConcavePolygon({
+          labels,
+          kind: f.kind,
+          isConcave: f.concave,
+          facts,
+          angleOf,
+        }) ?? placeGeneralCompositeQuad(labels, facts, num, angleOf);
     }
     if (f.k === "triangle" && tryPlaceSharedEdgeTriangle(f, facts, num, angleOf, points, polygons)) {
       continue;

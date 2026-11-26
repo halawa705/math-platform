@@ -188,7 +188,9 @@ describe("Page Packer Integration with Idea Capsule Invariants", () => {
     for (const variants of buildSolutionSplitVariants(items).values()) {
       for (const v of variants) {
         heights.set(v.head.id, 260);
+        heights.set(`${v.head.id}::col`, 260);
         heights.set(v.tail.id, 210);
+        heights.set(`${v.tail.id}::col`, 210);
       }
     }
 

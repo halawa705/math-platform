@@ -225,6 +225,7 @@ export interface CanonicalAngleNode {
   readonly degreesLabel?: string;
   readonly labelKind?: FigureLabelSemanticKind;
   readonly isRightAngle?: boolean;
+  readonly isReflex?: boolean;
   readonly arcCount?: 1 | 2;
   readonly markSymbol?: "arc" | "dot" | "cross";
 }

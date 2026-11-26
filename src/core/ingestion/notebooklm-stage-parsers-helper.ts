@@ -158,15 +158,23 @@ export function parseStage2ByIdeas(s2Raw: string): {
         if (alt.length > 1) chunks = alt;
       }
 
-      return chunks.map((s) => ({
-        rawText: s,
-        promptText: cleanStudentFacingMathPromptSSOT(
-          s.replace(/`(\[?\s*رسم[^\]`\n]+\]?)`/gi, "$1").replace(QUESTION_PREFIX_RE, "").replace(/^[:\s\-–•*]+/, "").trim()
-        ),
-        qCode: s.match(codeRe)?.[1]?.toLowerCase(),
-        kindTag: ideaKind,
-        ideaIndex: idx + 1,
-      }));
+      return chunks.map((s) => {
+        const rawCode = s.match(codeRe)?.[1]?.toLowerCase() ?? s.match(/معرف\s*السؤال\s*:\s*([a-zA-Z]+-\d+-\d+)/i)?.[1]?.toLowerCase();
+        const normalizedCode = rawCode
+          ? _isDrill
+            ? rawCode.replace(/^(?:homework|hw)-/, "practice-")
+            : rawCode.replace(/^(?:practice|try|drill)-/, "homework-")
+          : undefined;
+        return {
+          rawText: s,
+          promptText: cleanStudentFacingMathPromptSSOT(
+            s.replace(/`(\[?\s*رسم[^\]`\n]+\]?)`/gi, "$1").replace(QUESTION_PREFIX_RE, "").replace(/^[:\s\-–•*]+/, "").trim()
+          ),
+          qCode: normalizedCode,
+          kindTag: ideaKind,
+          ideaIndex: idx + 1,
+        };
+      });
     };
 
     const drills = tryMatch?.[1] ? parseSplits(tryMatch[1], /معرف\s*السؤال\s*:\s*((?:try|practice|drill|m|q|s)-\d+-\d+)/i, true) : [];
@@ -208,16 +216,9 @@ export function parseSolvedExamplesFromSection(
     const stepsMatch = exBody.match(/(?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل(?:\s*والشرح(?:\s*بالتفصيل)?)?|خطوات_الحل|الحل(?:\s*بالتفصيل)?(?:\*\*|__)?\s*[:：]|البرهان(?:\s*والخطوات)?(?:\*\*|__)?\s*[:：])(?:\*\*|__)?\s*[:：]?\s*([\s\S]*?)(?=(?:^|\n)\s*(?:[-•*]\s*)?(?:\*\*|__)?(?:الناتج\s*النهائي|الإجابة\s*النهائية|نهاية\s*الفكرة|نهاية\s*المثال|المثال|الفكرة|$))/i);
     const rawFinal = exBody.match(/(?:\*\*|__)?(?:الناتج\s*النهائي(?:\s*المعتمد)?|الإجابة\s*النهائية)(?:\*\*|__)?\s*[:：]\s*([^\r\n]+)/i)?.[1]?.replace(/^\*\*|\*\*$/g, "").trim() || "";
     const stepsBoundaryIdx = exBody.search(/(?:\n|\s+)(?:[-•*]\s*)?(?:\*\*|__)?(?:خطوات\s*الحل|خطوات_الحل|الحل(?:\s*بالتفصيل)?\s*[:：]|البرهان(?:\s*والخطوات)?\s*[:：])/i);
-    const stepsSearchArea = stepsMatch?.[1]
-      ? ""
-      : stepsBoundaryIdx !== -1
-        ? exBody.slice(stepsBoundaryIdx)
-        : exBody.slice(rawProblem.length);
+    const stepsSearchArea = stepsMatch?.[1] ? "" : stepsBoundaryIdx !== -1 ? exBody.slice(stepsBoundaryIdx) : exBody.slice(rawProblem.length);
     const fallbackStepsLines = !stepsMatch?.[1]
-      ? stepsSearchArea
-          .split(/\r?\n/)
-          .filter((line) => /^\s*(?:\d+[.\-–)]|\([0-9٠-٩]+\)|(?:الخطوة|خطوة)\s*\S+)\s+/.test(line))
-          .join("\n")
+      ? stepsSearchArea.split(/\r?\n/).filter((line) => /^\s*(?:\d+[.\-–)]|\([0-9٠-٩]+\)|(?:الخطوة|خطوة)\s*\S+)\s+/.test(line)).join("\n")
       : "";
     const cleanedStepsSource = (stepsMatch?.[1] || fallbackStepsLines).replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)\s*:[^\]]*\]/gi, "");
     const steps = mergeLogicalSolutionSteps(cleanedStepsSource).filter(
@@ -225,13 +226,9 @@ export function parseSolvedExamplesFromSection(
         !/example-\d+-\d+/i.test(l) && !/(?:مفهوم\s*الفكرة|القاعدة\s*الرياضية|حاول\s*بنفسك|الواجب\s*المنزلي)/i.test(l)
     );
     if (rawFinal && !steps.some((s) => s.includes(rawFinal))) steps.push(`الناتج النهائي: ${rawFinal}`);
-    const synthExample = rawExampleChoices
-      ? synthesizeEmptyMcqChoices({ choices: rawExampleChoices, solutionText: `${rawFinal} ${steps.join(" ")}` })
-      : undefined;
-    const mcqChoices = synthExample?.choices;
-    const synthesizedMcqIndices = synthExample && synthExample.synthesizedIndices.length > 0 ? synthExample.synthesizedIndices : undefined;
+    const synthExample = rawExampleChoices ? synthesizeEmptyMcqChoices({ choices: rawExampleChoices, solutionText: `${rawFinal} ${steps.join(" ")}` }) : undefined;
     const geoMatch = exBody.match(/\[?\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*([^\]\n]+)\]/i);
-    return { promptAr: finalPrompt || ideaTitle, steps, rawFinal, geometryRaw: geoMatch?.[1], mcqChoicesAr: mcqChoices, synthesizedMcqIndices };
+    return { promptAr: finalPrompt || ideaTitle, steps, rawFinal, geometryRaw: geoMatch?.[1], mcqChoicesAr: synthExample?.choices, synthesizedMcqIndices: synthExample && synthExample.synthesizedIndices.length > 0 ? synthExample.synthesizedIndices : undefined };
   });
 }
 
@@ -249,13 +246,15 @@ export function buildStage2PrintableItem(params: {
   readonly bannerTitleAr?: string;
   readonly solutionsMap: { readonly byCode: Map<string, readonly string[]>; readonly byIndex: Map<number, readonly string[]> };
 }): PrintableMathQuestionItem {
-  const rawChoices = parseChoicesTupleFromBlock(params.block.promptText);
+  const isExplicitDrillNonMcq = params.id.includes("-drill-") && !/\[اختر\]|اختر\s+الإجابة/i.test(params.block.rawText);
+  const rawChoices = parseChoicesTupleFromBlock(params.block.promptText, isExplicitDrillNonMcq ? "مقالي" : params.block.kindTag);
   const rawPrompt = rawChoices ? stripInlineChoicesFromPromptText(params.block.promptText) : params.block.promptText;
   const isMcq = (params.block.rawText || "").includes("اختر") || (params.block.kindTag || "").includes("اختر") || rawChoices !== undefined;
-  const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) || params.solutionsMap.byIndex.get(params.questionNumber);
-  const synthResult = rawChoices
-    ? synthesizeEmptyMcqChoices({ choices: rawChoices, solutionText: matchedSteps?.join(" ") })
+  const altCode = params.block.qCode
+    ? params.block.qCode.startsWith("homework-") ? params.block.qCode.replace(/^homework-/, "practice-") : params.block.qCode.replace(/^practice-/, "homework-")
     : undefined;
+  const matchedSteps = (params.block.qCode ? params.solutionsMap.byCode.get(params.block.qCode) : undefined) || (altCode ? params.solutionsMap.byCode.get(altCode) : undefined) || params.solutionsMap.byIndex.get(params.questionNumber);
+  const synthResult = rawChoices ? synthesizeEmptyMcqChoices({ choices: rawChoices, solutionText: matchedSteps?.join(" ") }) : undefined;
   const mcqChoices = synthResult?.choices;
   const synthesizedMcqIndices = synthResult && synthResult.synthesizedIndices.length > 0 ? synthResult.synthesizedIndices : undefined;
   const graphMatch = params.block.rawText.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);

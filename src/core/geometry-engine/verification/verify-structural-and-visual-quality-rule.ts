@@ -5,6 +5,7 @@
 import type { CanonicalGeometryFigureIR } from "@/core/ssot/geometry-archetype-ssot";
 import type { VerificationIssue } from "./verification-report-types-ssot";
 import { buildVertexPositionMap, measureDistance } from "./figure-vector-measure-helpers";
+import { hasFigurePolygonSelfIntersection } from "./polygon-winding-and-self-intersection-guard";
 
 export const MODULE_ID_VERIFY_STRUCTURAL_AND_VISUAL_QUALITY_RULE = "verify_structural_and_visual_quality_rule" as const;
 
@@ -16,6 +17,9 @@ export function verifyStructuralAndVisualQualityRule(fig: CanonicalGeometryFigur
   }
   for (const poly of fig.polygons ?? []) {
     if (poly.some((id) => !pos.has(id))) issues.push({ rule: "polygon-refs", severity: "error", message: "مضلع يشير إلى رأس غير موجود." });
+  }
+  if (hasFigurePolygonSelfIntersection(fig)) {
+    issues.push({ rule: "polygon-self-intersection", severity: "error", message: "أضلاع المضلع متقاطعة ذاتياً بشكل غير سليم هندسياً." });
   }
   const seen = new Map<string, number>();
   for (const v of fig.vertices) seen.set(v.label, (seen.get(v.label) ?? 0) + 1);

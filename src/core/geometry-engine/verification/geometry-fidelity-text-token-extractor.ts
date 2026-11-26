@@ -49,8 +49,8 @@ export function extractAllVerticesFromText(text: string): Set<string> {
     .replace(/\[\s*رسم\s*(?:هندسي|توضيحي|بياني)\s*:\s*/i, "")
     .replace(/\]/g, "");
 
-  // 1. أي كلمة لاتينية كبيرة من 2-6 أحرف تمثل مضلعاً أو قطعة (مثل ABC, DBE, ABCD, AB, CD)
-  const capitalWordMatches = clean.matchAll(/\b[A-Z]{2,6}\b/g);
+  // 1. أي كلمة لاتينية كبيرة من 2-12 حرفاً تمثل مضلعاً أو قطعة (مثل ABC, DBE, ABCD, ABCDEFGH)
+  const capitalWordMatches = clean.matchAll(/\b[A-Z]{2,12}\b/g);
   for (const cwm of capitalWordMatches) {
     const word = cwm[0];
     if (/^(SIN|COS|TAN|SEC|CSC|COT|LOG|EXP|MAX|MIN|AVG|SUM|PDF|SVG)$/i.test(word)) continue;
@@ -61,7 +61,7 @@ export function extractAllVerticesFromText(text: string): Set<string> {
 
   // 2. مضلعات باللغة العربية بحروف منفصلة: مثلث أ ب جـ
   const polyMatches = clean.matchAll(
-    /(?:مثلث|Δ|مستطيل|مربع|معين|شبه\s*منحرف|متوازي\s*أضلاع|رباعي|خماسي|سداسي|شكل\s*رباعي)\s*([A-Za-z]{3,6}|(?:[أ-ي]ـ?\s+){2,5}[أ-ي]ـ?)/gi
+    /(?:مثلث|Δ|مستطيل|مربع|معين|شبه\s*منحرف|متوازي\s*أضلاع|رباعي|خماسي|سداسي|سباعي|ثماني|تساعي|عشاري|مضلع|شكل\s*رباعي)\s*([A-Za-z]{3,12}|(?:[أ-ي]ـ?\s+){2,9}[أ-ي]ـ?)/gi
   );
   for (const pm of polyMatches) {
     const raw = pm[1].replace(/\s+/g, "");

@@ -82,7 +82,8 @@ export function checkFigureFidelityToPrompt(
 
   // فحص الرؤوس
   if (promptVertices.size >= 3) {
-    const isNamedPolygon = /(?:سداسي|خماسي|مضلع|شبه\s*منحرف|متوازي\s*أضلاع)/i.test(rawPromptOrDescription);
+    const isNamedPolygon = /(?:سداسي|خماسي|سباعي|ثماني|تساعي|عشاري|مضلع|شبه\s*منحرف|متوازي\s*أضلاع|صليب|نجمة)/i.test(rawPromptOrDescription);
+    const isAutoLabeledComposite = /يشتركان\s+في\s+(?:الرأس|الضلع)|ضلعان\s+متوازيان|خارج\s+مضلع/i.test(rawPromptOrDescription);
     for (const v of figure.vertices) {
       if (!v.label) continue;
       const baseChar = v.label.match(/[A-Za-z]|[أإابجدهوزحخيكلمنفقرشطتثغسصع]/)?.[0] ?? "";
@@ -94,7 +95,8 @@ export function checkFigureFidelityToPrompt(
         vKey !== "X" &&
         vKey !== "Y" &&
         vKey !== "Z" &&
-        !(isNamedPolygon && /^[A-F]$/.test(vKey) && figure.vertices.length <= 6)
+        !isAutoLabeledComposite &&
+        !(isNamedPolygon && /^[A-M]$/.test(vKey) && figure.vertices.length <= 12)
       ) {
         alienVertices.push(v.label);
       }

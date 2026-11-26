@@ -218,6 +218,7 @@ export default function SideBySideDiagramDocker({
             notationLanguage={settings.notationLanguage}
             compactScale={autoCompactScale}
             slice={solutionSlice}
+            columnsCount={settings.columnsCount}
           />
         )}
 

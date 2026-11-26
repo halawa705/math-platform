@@ -25,7 +25,7 @@ export function normalizeGeometryText(raw: string): string {
     .trim();
 }
 
-const LEADING_CONNECTORS = /^(?:فيه|فيها|حيث|بحيث|إذا\s*كان|لتكن|ليكن|لتكن|ثم|و(?=\s+(?![أ-ي]ـ?\s*=)))\s*/;
+const LEADING_CONNECTORS = /^(?:(?:فيه|فيها|حيث|بحيث|إذا\s*كانت?|لتكن|ليكن|ثم)\s+|و(?=\s+(?![أ-ي]ـ?\s*=))\s+)/;
 
 export function splitDescriptionIntoFactStrings(description: string): string[] {
   const normalized = restructureGeometryClauses(normalizeGeometryText(convertGeometryLatexToPlainText(description)))

@@ -9,7 +9,7 @@ import type { FlowItem } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_SOLUTION_SPLIT_VARIANTS_BUILDER = "flow_solution_split_variants_builder" as const;
 
-/** أقل عدد خطوات قياسي يبقى في الصفحة الأولى من البطاقة المقسومة (0 = رأس البطاقة يضم السؤال والشكل الهندسي فقط، والخطوات تبدأ في الصفحة التالية). */
+/** أقل عدد خطوات قياسي يبقى في الصفحة الأولى من البطاقة المقسومة (0 = رأس البطاقة يضم السؤال والشكل الهندسي فقط، وتُفضَّل k ≥ 2 عبر أوزان التكلفة). */
 export const MIN_HEAD_STEPS = 0;
 
 export interface SolutionSplitVariant {

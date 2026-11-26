@@ -8,6 +8,7 @@
 import type { GeoFact } from "./geo-fact-types";
 import type { PlacedPolygon } from "./geo-shape-placers";
 import { vAdd, vDist, vScale, vSub, type Vec2 } from "./geo-vector-math";
+import { tryPlaceTranslatedParallelSharedVertexTriangle } from "../polygon-family/adjacent-shared-polygons-placer";
 
 export const MODULE_ID_GEO_SHARED_VERTEX_AND_VERTICAL_ANGLE_PLACER =
   "geo_shared_vertex_and_vertical_angle_placer" as const;
@@ -173,6 +174,7 @@ export function tryPlaceSharedVertexCompositePolygon(params: {
   const centroid = computeExistingCentroid(points, sharedV);
 
   if (fact.k === "triangle") {
+    if (tryPlaceTranslatedParallelSharedVertexTriangle({ fact, sharedV, facts, points, polygons })) return true;
     const others = labels.filter((l) => l !== sharedV);
     const [u, v] = others;
     const dirU = rays.get(u);

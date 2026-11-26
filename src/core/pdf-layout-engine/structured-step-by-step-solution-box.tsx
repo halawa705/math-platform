@@ -51,6 +51,7 @@ export function StructuredStepByStepSolutionBox({
   notationLanguage,
   compactScale = 1,
   slice,
+  columnsCount = 2,
 }: {
   readonly item: PrintableMathQuestionItem;
   readonly palette: PrintThemePaletteTokens;
@@ -60,6 +61,7 @@ export function StructuredStepByStepSolutionBox({
   readonly compactScale?: number;
   /** شريحة الخطوات المعروضة عند تقسيم الحل بين صفحتين (الخطوة تُعرض كاملة دائماً). */
   readonly slice?: FlowSolutionSlice;
+  readonly columnsCount?: 1 | 2;
 }) {
   const rawSteps =
     item.solutionStepsAr && item.solutionStepsAr.length > 0
@@ -85,7 +87,8 @@ export function StructuredStepByStepSolutionBox({
   const isOddQuestion = item.questionNumber % 2 === 1;
   const isPhotocopy = themeId === "photocopy_black";
   const answerTokens = resolveAnswerThemeTokens(themeId, isOddQuestion);
-  const useTwoColLayout = steps.length >= 2;
+  const useTwoColLayout = columnsCount === 1 && steps.length >= 2;
+  const isExampleItem = Boolean(item.isWorkedExample) || item.id.startsWith("booklet-s1-example-");
 
   return (
     <div
@@ -105,8 +108,8 @@ export function StructuredStepByStepSolutionBox({
             <PdfPenIcon />
             <span>
               {isContinuation
-                ? `تابع حل سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`
-                : `إجابة سؤال ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
+                ? `${isExampleItem ? "تابع حل المثال" : "تابع حل سؤال"} ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`
+                : `${isExampleItem ? "حل المثال" : "إجابة سؤال"} ${formatNumeralsByModeSSOT(item.questionNumber, numeralMode)}`}
             </span>
           </span>
           {!isContinuation && (

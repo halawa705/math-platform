@@ -12,8 +12,8 @@ export type QuadKind = "rectangle" | "square" | "rhombus" | "parallelogram" | "t
 
 export type GeoFact =
   | { readonly k: "triangle"; readonly labels: readonly string[]; readonly right?: string; readonly isoApex?: string; readonly equilateral?: boolean }
-  | { readonly k: "quad"; readonly kind: QuadKind; readonly labels: readonly string[]; readonly isoLegs?: boolean; readonly rightAt?: string }
-  | { readonly k: "polygon"; readonly labels: readonly string[]; readonly regular?: boolean }
+  | { readonly k: "quad"; readonly kind: QuadKind; readonly labels: readonly string[]; readonly isoLegs?: boolean; readonly rightAt?: string; readonly concave?: boolean }
+  | { readonly k: "polygon"; readonly labels: readonly string[]; readonly regular?: boolean; readonly concave?: boolean }
   | { readonly k: "circle"; readonly center: string; readonly radius?: number; readonly unit?: ArabicMathUnit }
   | { readonly k: "radius"; readonly r: number; readonly unit?: ArabicMathUnit; readonly seg?: Seg }
   | { readonly k: "onCircle"; readonly labels: readonly string[] }
@@ -23,7 +23,7 @@ export type GeoFact =
   | { readonly k: "length"; readonly seg: Seg; readonly text: string; readonly numeric?: number; readonly symbolic?: boolean; readonly unit?: ArabicMathUnit }
   | { readonly k: "areaOnSide"; readonly seg: Seg; readonly area: number; readonly text: string; readonly unit?: ArabicMathUnit }
   | { readonly k: "equal"; readonly a: Seg; readonly b: Seg }
-  | { readonly k: "angle"; readonly arms?: readonly [string, string, string]; readonly vertex: string; readonly deg?: number; readonly text?: string; readonly right?: boolean }
+  | { readonly k: "angle"; readonly arms?: readonly [string, string, string]; readonly vertex: string; readonly deg?: number; readonly text?: string; readonly right?: boolean; readonly reflex?: boolean }
   | { readonly k: "pointOn"; readonly p: string; readonly seg: Seg }
   | { readonly k: "midpoint"; readonly p: string; readonly seg: Seg }
   | { readonly k: "parallel"; readonly a: Seg; readonly b: Seg; readonly lineKindA?: LinearEntityKind; readonly lineKindB?: LinearEntityKind }
@@ -31,7 +31,7 @@ export type GeoFact =
   | { readonly k: "bisector"; readonly seg: Seg; readonly vertex: string; readonly lineKind?: LinearEntityKind }
   | { readonly k: "median"; readonly seg: Seg }
   | { readonly k: "intersect"; readonly a: Seg; readonly b: Seg; readonly p: string; readonly lineKindA?: LinearEntityKind; readonly lineKindB?: LinearEntityKind }
-  | { readonly k: "diagonalsMeet"; readonly p: string }
+  | { readonly k: "diagonalsMeet"; readonly p: string; readonly diag1?: Seg; readonly diag2?: Seg }
   | { readonly k: "draw"; readonly seg: Seg; readonly lineKind?: LinearEntityKind }
   | { readonly k: "extend"; readonly from: string; readonly through: string; readonly to: string; readonly lineKind?: LinearEntityKind }
   | { readonly k: "collinear"; readonly labels: readonly string[] }

@@ -51,6 +51,19 @@ export function parseChoicesTupleFromBlock(
   ).replace(/^\s*\|.*$/gm, "");
   const markers = Array.from(preAnswerText.matchAll(OPTION_MARKER_REGEX));
   if (markers.length < 4) return undefined;
+
+  const isExplicitMcq = /(?:اختر|mcq|multiple|اختيار)/i.test(rawKind) || /\[اختر\]|اختر\s+الإجابة/i.test(rawBlock);
+  if (!isExplicitMcq) {
+    const stemBeforeA = preAnswerText.slice(0, markers[0].index ?? 0);
+    if (
+      /(?:اذكر|احسب|أوجد|اوجد|بيّن|بين|حدد|قارن|برهن|أثبت|اثبت|اشرح|اختبر)[\s\S]{0,90}(?:لكل\s+(?:مضلع\s+|شكل\s+)?من|كلاً\s+من|كل\s+من|الآتية\s*:|مما\s+يأتي\s*:)/i.test(
+        stemBeforeA
+      ) ||
+      /^(?:\s*[-•*]?\s*)(?:اذكر|احسب|أوجد|اوجد|بيّن|بين|قارن|اشرح|برهن|اختبر)\b/i.test(stemBeforeA)
+    ) {
+      return undefined;
+    }
+  }
   const stopTailMatch = preAnswerText.slice((markers[3].index ?? 0) + markers[3][0].length).match(/\n\s*(?:الإجابة|الحل|خطوات|الناتج|\|\s*معرف)/i);
   const hardEnd = stopTailMatch?.index !== undefined ? (markers[3].index ?? 0) + markers[3][0].length + stopTailMatch.index : preAnswerText.length;
   const slots = [0, 1, 2, 3].map((i) => {

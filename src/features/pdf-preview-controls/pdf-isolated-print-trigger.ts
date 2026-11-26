@@ -212,8 +212,8 @@ export function triggerIsolatedA4Print(
       display: grid !important;
       grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
     }
-    /* رسومات وأشكال الهندسة والإحصاء فقط (باستثناء متجهات KaTeX للرموز الرياضية كالجذور) */
-    svg:not(.katex svg) {
+    /* رسومات وأشكال الهندسة والإحصاء فقط (باستثناء متجهات KaTeX وأيقونات الشارات الصغيرة) */
+    svg[viewBox]:not(.katex svg):not([data-inline-icon]) {
       max-width: 100% !important;
       height: auto !important;
       display: block;

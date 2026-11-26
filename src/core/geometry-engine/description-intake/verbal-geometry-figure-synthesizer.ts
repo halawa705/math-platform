@@ -13,7 +13,7 @@ export const MODULE_ID_VERBAL_GEOMETRY_FIGURE_SYNTHESIZER =
   "verbal_geometry_figure_synthesizer" as const;
 
 const IMPOSSIBLE_OR_THEORETICAL_REGEX =
-  /(?:هل\s+(?:يمكن|تصلح)|اختبر\s+(?:أي|إمكانية)|أيهما\s+يصلح|متباينة\s+المثلث\s+لا|مجموع\s+قياسات\s+زوايا\s+(?:المثلث|الشكل)|عدد\s+محاور\s+التماثل)/i;
+  /(?:هل\s+(?:يمكن|تصلح)|اختبر\s+(?:أي|إمكانية)|أيهما\s+يصلح|متباينة\s+المثلث\s+لا|مجموع\s+قياسات\s+زوايا\s+(?:المثلث|الشكل)|عدد\s+محاور\s+التماثل|عدد\s+محاور\s+تماثل|محاور\s+تماثل|عدد\s+المثلثات|ينقسم[\s\S]{0,50}مثلثات|تقسيم\s+مضلع|عدد\s+أقطار|تبليط|التقاء\s+رأس|تجتمع\s+حول\s+نقطة|قارن\s+في\s+جدول|لكل\s+(?:مضلع|شكل)?\s*من\s+(?:الأشكال|المضلعات))/i;
 
 function stripPromptGoalsAndChoices(text: string): string {
   return text
@@ -97,8 +97,8 @@ export function synthesizeVerbalGeometryFacts(
   const body = stripPromptGoalsAndChoices(plain);
   const out: string[] = [];
 
-  // 1. المسائل اللفظية للمثلث بدون رموز رؤوس معلنة
-  if (/مثلث|حظيرة\s+مثلثة/i.test(plain)) {
+  // 1. المسائل اللفظية للمثلث بدون رموز رؤوس معلنة (مع استثناء الجمع «مثلثات» مع السماح بسوابق مثل «لمثلث»)
+  if (/(?:(?<![أ-ي])(?:ال|[لبوك]ال|[لبوك])?مثلث(?!ات)|حظيرة\s+مثلثة)/i.test(plain)) {
     const isRight = /قائم(?:\s*الزاوية)?/i.test(body);
     const isIso = /متساوي\s*الساقين/i.test(body);
     const isEqui = /متساوي\s*الأضلاع/i.test(body);
@@ -195,6 +195,9 @@ export function synthesizeVerbalGeometryFacts(
     return out;
   }
   if (/(?:مستطيل|مربع|معين|متوازي\s*أضلاع)/i.test(plain)) {
+    const distinctFamilies = ["مستطيل", "مربع", "معين", "متوازي\\s*أضلاع", "شبه\\s*منحرف", "سداسي", "خماسي", "سباعي", "ثماني"]
+      .filter((kw) => new RegExp(kw, "i").test(plain)).length;
+    if (distinctFamilies >= 2 && !/يشتركان|متلاصق|ملاصق|مرسوم/i.test(plain)) return [];
     const shape = plain.match(/مستطيل|مربع|معين|متوازي\s*أضلاع/i)![0];
     const bodyWithoutPerimArea = body
       .replace(/محيط[هـا]?(?:\s*(?:ال)?(?:مثلث|مربع|مستطيل|معين|متوازي\s*(?:ال)?أضلاع|شبه\s*(?:ال)?منحرف))?\s*(?:يساوي|تساوي|=)?\s*\d+(?:\.\d+)?\s*(?:سم|م|كم|مم|ديسم)?/gi, " ")

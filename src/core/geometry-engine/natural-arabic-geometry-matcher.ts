@@ -132,7 +132,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   if (/دائرتان\s*متقاطعتان|خط\s*المركزين/i.test(desc)) return buildCircleIntersectingPairFigure({ figureId, notationLanguage });
   if (/دائرة|وتر\s*في\s*دائرة/i.test(desc)) return buildCircleChordBisectorFigure({ figureId, notationLanguage });
 
-  const hasExtraConstructionPoints = /∈|امتداد|نمد|منتصف|[A-Z]{2}\s*(?:\/\/|⊥|∩)\s*[A-Z]{2}|مثلث\s*[A-Z]{3}/.test(cleanDesc);
+  const hasExtraConstructionPoints = /∈|امتداد|نمد|منتصف|[A-Z]{2}\s*(?:\/\/|⊥|∩)\s*[A-Z]{2}|مثلث\s*[A-Z]{3}|خماسي|سداسي|سباعي|ثماني|تساعي|عشاري|يشتركان|مضلعان|مقعر/.test(cleanDesc);
   if (/شبه\s*منحرف/i.test(desc) && !hasExtraConstructionPoints) return buildTrapezoidAltitudesFigure({ figureId, notationLanguage });
   if (/ساعة\s*رملية|فراشة|تقاطع\s*قطعتين/i.test(desc)) return buildHourglassButterflySimilarityFigure({ figureId, notationLanguage });
   if (/(?:^|\s)(?:ال)?(?:مستطيل|مربع|معين)(?:\s|$|[،.])/i.test(desc) && !/مستطيلان|مربعان/i.test(desc) && !hasExtraConstructionPoints) return buildRectangleSquareRhombusFigure({ figureId, notationLanguage });

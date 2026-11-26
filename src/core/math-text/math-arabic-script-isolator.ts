@@ -128,7 +128,7 @@ function scanTopLevelPieces(rawInner: string): ScanPiece[] {
   return pieces;
 }
 
-/** إن بدأ التعبير بعلامة علاقة (`= 2`) تُخرج العلامة نصاً قبل الكتلة كي لا تنقلب في RTL. */
+/** إن بدأ التعبير بعلامة علاقة (`= 2`) تُخرج العلامة نصاً قبل الكتلة ليطبق العزل الرياضي دون إقحام مسافة صلبة في السلسلة القانونية. */
 function splitLeadingRelation(latex: string): string {
   const trimmed = latex.trim();
   const hit = RELATION_LATEX_TO_UNICODE.find(
@@ -140,14 +140,33 @@ function splitLeadingRelation(latex: string): string {
   return ` ${hit[1]} ${wrapMath(trimmed.slice(hit[0].length))} `;
 }
 
+function unwrapArabicAlternativeParens(inner: string): string {
+  return inner.replace(
+    /(?:\\left)?\(\s*(?:\\text\{\s*(أو|و|أي|حيث)\s*\}|(أو|و|أي|حيث))\s+([^()]+?)(?:\\right)?\)/g,
+    (_m, w1: string | undefined, w2: string | undefined, rest: string) =>
+      ` (${(w1 ?? w2 ?? "").trim()} $${rest.trim()}$) `
+  );
+}
+
 /** يعيد نصاً قانونياً: إما `$latex$` واحدة، أو تسلسل ذرات (نص ورياضيات) إن وُجد عربي نثري. */
 export function isolateArabicInMath(inner: string): string {
-  const pieces = scanTopLevelPieces(inner);
+  const altUnwrapped = unwrapArabicAlternativeParens(inner);
+  if (altUnwrapped !== inner) {
+    return altUnwrapped.replace(/\$([^$]+)\$/g, (_m, sub: string) => isolateArabicInMath(sub));
+  }
+  const fixedSubscriptText = inner.replace(
+    /_\{([^{}]*\\text\{[^{}]+\}[^{}]*)\}/g,
+    (_m, subBody: string) => {
+      const merged = subBody.replace(/\\text\{([^{}]*)\}\s*([A-Za-z0-9])\s*\\text\{([^{}]*)\}/g, "\\text{$1 $2 $3}");
+      return `_{${merged}}`;
+    }
+  );
+  const pieces = scanTopLevelPieces(fixedSubscriptText);
   const hasProse = pieces.some((p) => p.kind === "prose");
   if (!hasProse) {
     return splitLeadingRelation(pieces.map((p) => (p.kind === "math" ? p.latex : "")).join(""));
   }
-  if (/\\begin\{/.test(inner)) {
+  if (/\\begin\{/.test(fixedSubscriptText)) {
     return wrapMath(pieces.map((p) => (p.kind === "math" ? p.latex : `\\text{${p.text}}`)).join(""));
   }
 

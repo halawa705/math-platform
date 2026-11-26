@@ -36,6 +36,12 @@ const QUAD_WORDS: Array<[RegExp, QuadKind]> = [
   [/^(?:ال)?شبه\s*(?:ال)?منحرف/, "trapezoid"], [/^(?:(?:ال)?شكل\s*)?(?:ال)?طائرة\s*ورقية/, "general"], [/^(?:(?:ال)?شكل\s*)?(?:ال)?رباعي/, "general"],
 ];
 
+const POLY_QUAL = "(?:\\s+(?:ال)?(?:منتظم|مقعر|محدب))?";
+const POLY_N_MAP: Readonly<Record<string, number>> = {
+  خماسي: 5, سداسي: 6, سباعي: 7, ثماني: 8, تساعي: 9, عشاري: 10,
+};
+const POLY_PREFIX = "(?:(?:ال)?(?:مضلع|شكل)\\s+)?(?:ال)?(خماسي|سداسي|سباعي|ثماني|تساعي|عشاري)";
+
 export function parseGeoFactString(s: string): GeoFact | null {
   let m: RegExpMatchArray | null;
   // دائرة (G-7)
@@ -95,7 +101,7 @@ export function parseGeoFactString(s: string): GeoFact | null {
   for (const [word, kind] of QUAD_WORDS) {
     const q = s.match(
       new RegExp(
-        `^${word.source.slice(1)}(?:\\s+(?:متساوي\\s*الساقين|دائري|قائم(?:\\s*الزاوية)?(?:\\s*(?:في|عند)\\s*${ONE})?))?\\s*${LIST}(?:\\s+(?:متساوي\\s*الساقين|دائري|قائم(?:\\s*الزاوية)?(?:\\s*(?:في|عند)\\s*${ONE})?))?(?:\\s+متجاوران)?$`,
+        `^${word.source.slice(1)}(?:\\s+(?:متساوي\\s*الساقين|دائري|مقعر|محدب|قائم(?:\\s*الزاوية)?(?:\\s*(?:في|عند)\\s*${ONE})?))?\\s*${LIST}(?:\\s+(?:متساوي\\s*الساقين|دائري|مقعر|محدب|قائم(?:\\s*الزاوية)?(?:\\s*(?:في|عند)\\s*${ONE})?))?(?:\\s+متجاوران)?$`,
         "u"
       )
     );
@@ -109,23 +115,24 @@ export function parseGeoFactString(s: string): GeoFact | null {
           labels,
           isoLegs: /متساوي\s*الساقين/.test(s) || undefined,
           rightAt: rightVertex ? one(rightVertex) : undefined,
+          concave: /مقعر/.test(s) || undefined,
         };
       }
     }
   }
-  // مضلعات خماسية / سداسية / سباعية / ثمانية (بما فيها المنتظمة)
-  if ((m = s.match(new RegExp(`^(?:ال)?(خماسي|سداسي|سباعي|ثماني)(?:\\s+(?:ال)?منتظم)?\\s+${LIST}(?:\\s+(?:ال)?منتظم)?$`, "u")))) {
-    const labels = parseLabelList(m[2], 8);
-    const expectedLen = m[1] === "خماسي" ? 5 : m[1] === "سداسي" ? 6 : m[1] === "سباعي" ? 7 : 8;
-    if (labels && labels.length === expectedLen) {
-      return { k: "polygon", labels, regular: /منتظم/.test(s) || undefined };
+  const LIST_POLY = `((?:${L}\\s+)+${L}|[A-Z]{5,10})(?![A-Za-zء-ي])`;
+  if ((m = s.match(new RegExp(`^${POLY_PREFIX}${POLY_QUAL}\\s+${LIST_POLY}${POLY_QUAL}$`, "u")))) {
+    const labels = parseLabelList(m[2], 10);
+    const expectedLen = POLY_N_MAP[m[1]];
+    if (labels && expectedLen && labels.length === expectedLen) {
+      return { k: "polygon", labels, regular: /منتظم/.test(s) || undefined, concave: /مقعر/.test(s) || undefined };
     }
   }
-  if ((m = s.match(new RegExp(`^${LIST}\\s+(?:ال)?(خماسي|سداسي|سباعي|ثماني)(?:\\s+(?:ال)?منتظم)?$`, "u")))) {
-    const labels = parseLabelList(m[1], 8);
-    const expectedLen = m[2] === "خماسي" ? 5 : m[2] === "سداسي" ? 6 : m[2] === "سباعي" ? 7 : 8;
-    if (labels && labels.length === expectedLen) {
-      return { k: "polygon", labels, regular: /منتظم/.test(s) || undefined };
+  if ((m = s.match(new RegExp(`^${LIST_POLY}\\s+${POLY_PREFIX}${POLY_QUAL}$`, "u")))) {
+    const labels = parseLabelList(m[1], 10);
+    const expectedLen = POLY_N_MAP[m[2]];
+    if (labels && expectedLen && labels.length === expectedLen) {
+      return { k: "polygon", labels, regular: /منتظم/.test(s) || undefined, concave: /مقعر/.test(s) || undefined };
     }
   }
   // مساحة المربع المنشأ على ضلع
@@ -138,16 +145,17 @@ export function parseGeoFactString(s: string): GeoFact | null {
       return { k: "areaOnSide", seg: a, area, text: `${area}`, unit };
     }
   }
-  // قياس زاوية
-  if ((m = s.match(new RegExp(`^ق\\s*\\(\\s*∠?\\s*${LIST1}\\s*\\)\\s*=\\s*(.+)$`, "u"))) || (m = s.match(new RegExp(`^∠\\s*${LIST1}\\s*=\\s*(.+)$`, "u")))) {
+  // قياس زاوية (بما فيها الزوايا المنعكسة)
+  if ((m = s.match(new RegExp(`^ق\\s*\\(\\s*∠?\\s*${LIST1}\\s*\\)(?:\\s*المنعكسة)?\\s*=\\s*(.+)$`, "u"))) || (m = s.match(new RegExp(`^∠\\s*${LIST1}(?:\\s*المنعكسة)?\\s*=\\s*(.+)$`, "u")))) {
     const labels = parseLabelList(m[1]); const rawVal = m[2].trim();
+    const isReflex = /المنعكسة/.test(s);
     const hasDeg = /°|درجة/.test(rawVal);
     const val = rawVal.replace(/°|درجة/g, "").trim();
     if (labels && (labels.length === 1 || labels.length === 3)) {
       const num = Number(val);
       const isUnknown = val === "؟" || val === "?";
       const displayText = hasDeg && !isUnknown && !val.includes("°") ? `${val}°` : val;
-      return { k: "angle", arms: labels.length === 3 ? [labels[0], labels[1], labels[2]] : undefined, vertex: labels.length === 3 ? labels[1] : labels[0], deg: Number.isFinite(num) ? num : undefined, text: Number.isFinite(num) ? undefined : displayText, right: num === 90 || undefined };
+      return { k: "angle", arms: labels.length === 3 ? [labels[0], labels[1], labels[2]] : undefined, vertex: labels.length === 3 ? labels[1] : labels[0], deg: Number.isFinite(num) ? num : undefined, text: Number.isFinite(num) ? undefined : displayText, right: num === 90 || undefined, reflex: isReflex || (Number.isFinite(num) && num > 180) || undefined };
     }
   }
   if ((m = s.match(new RegExp(`^∠\\s*${LIST1}\\s*قائمة$`, "u"))) || (m = s.match(new RegExp(`^(?:زاوية\\s*)?${LIST1}\\s*قائمة$`, "u")))) {
@@ -179,7 +187,12 @@ export function parseGeoFactString(s: string): GeoFact | null {
     const a = seg(m[2]); const b = seg(m[4]);
     if (a && b) return { k: "intersect", a, b, p: one(m[5]), lineKindA: inferLineKind(m[1]), lineKindB: inferLineKind(m[3]) };
   }
-  if ((m = s.match(new RegExp(`قطرا.*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`, "u")))) return { k: "diagonalsMeet", p: one(m[1]) };
+  if ((m = s.match(new RegExp(`^ق\\s*\\(\\s*∠?\\s*${LIST1}\\s*\\)\\s*=\\s*(.+)$`, "u"))) && false) { /* noop */ }
+  if ((m = s.match(new RegExp(`^قطرا(?:ه|ها)?\\s*${SEGRX}\\s*و\\s*${SEGRX}\\s*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`, "u")))) {
+    const d1 = seg(m[1]); const d2 = seg(m[2]);
+    if (d1 && d2) return { k: "diagonalsMeet", p: one(m[3]), diag1: d1, diag2: d2 };
+  }
+  if ((m = s.match(new RegExp(`^قطرا.*يتقاطعان\\s*(?:في|عند)\\s*${ONE}`, "u")))) return { k: "diagonalsMeet", p: one(m[1]) };
   if ((m = s.match(re(`${LIN_PREFIX}${SEGRX}\\s*(?:و|،|,)?\\s*${LIN_PREFIX}${SEGRX}\\s*يتقاطعان\\s*(?:في|عند)\\s*(?:النقطة\\s+)?${ONE}`)))) {
     const a = seg(m[2]); const b = seg(m[4]);
     if (a && b) return { k: "intersect", a, b, p: one(m[5]), lineKindA: inferLineKind(m[1]), lineKindB: inferLineKind(m[3]) };
@@ -212,8 +225,8 @@ export function parseGeoFactString(s: string): GeoFact | null {
       return { k: "ratio", a, b, num, den };
     }
   }
-  // تساوي أضلاع / طول
-  if ((m = s.match(re(`${SEGRX}\\s*=\\s*${SEGRX}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "equal", a, b }; }
+  // تساوي / تطابق أضلاع أو قطع مستقيمة
+  if ((m = s.match(re(`${SEGRX}\\s*(?:=|≅|يطابق|تطابق)\\s*${SEGRX}`)))) { const a = seg(m[1]); const b = seg(m[2]); if (a && b) return { k: "equal", a, b }; }
   if ((m = s.match(/^محيط\s*=\s*(\d+(?:\.\d+)?)\s*(سم|م|متراً|مترا|متر)?$/))) {
     return { k: "perimeter", value: Number(m[1]), unit: normalizeArabicGeometryUnitSSOT(m[2]) ?? "سم" };
   }

@@ -120,6 +120,18 @@ function buildProblemSpecFromFacts(
           subtype: f.kind,
         });
       }
+    } else if (f.k === "polygon") {
+      f.labels.forEach(ensurePoint);
+      const id = f.labels.join("");
+      if (!seenObjects.has(id)) {
+        seenObjects.add(id);
+        objects.push({
+          kind: "polygon",
+          id,
+          vertices: f.labels,
+          subtype: f.concave ? "concave" : f.regular ? "regular" : "general",
+        });
+      }
     } else if (f.k === "circle") {
       ensurePoint(f.center);
       const id = `circle_${f.center}`;

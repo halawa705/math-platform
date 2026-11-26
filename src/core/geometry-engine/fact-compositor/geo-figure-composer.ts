@@ -27,18 +27,10 @@ import { tryComposeStandaloneLinearFigure } from "./geo-standalone-linear-placer
 import { autoConnectReferencedSubPolygons } from "./geo-subpolygon-autoconnect-helper";
 import { resolveEqualSegmentRatioOnHost } from "./geo-quad-angle-and-shared-placer";
 import { resolveCollinearFactInComposer } from "./geo-collinear-constraint-resolver";
-import {
-  allocateDedupParallelGroup,
-  emitSubTriangleRightAngles,
-  shouldSkipOverloadedMidpointFact,
-  tryResolveConstrainedPerpWithPointOn,
-  tryResolveRayExtensionEqualityPoint,
-} from "./geo-pointon-perp-and-ray-helper";
+import { allocateDedupParallelGroup, emitSubTriangleRightAngles, shouldSkipOverloadedMidpointFact, tryResolveConstrainedPerpWithPointOn, tryResolveRayExtensionEqualityPoint } from "./geo-pointon-perp-and-ray-helper";
 import { buildExplicitConstraintsFromGeoFacts } from "../constraint-refiner/geo-explicit-constraints-bridge";
-import {
-  tryDispatchFallbackDomainFigure,
-  tryDispatchPreDeclarationDomainFigure,
-} from "./geo-parametric-domains-dispatcher";
+import { tryDispatchFallbackDomainFigure, tryDispatchPreDeclarationDomainFigure } from "./geo-parametric-domains-dispatcher";
+import { solvePolygonDiagonalsAndExtensions } from "../polygon-family/polygon-diagonals-and-extensions-solver";
 
 export const MODULE_ID_GEO_FIGURE_COMPOSER = "geo_figure_composer" as const;
 
@@ -114,7 +106,10 @@ export function composeFigureFromGeometryDescription(
 
   for (const p of polygons) {
     if (p.rightAt && p.labels.length === 3) addAngle(p.rightAt, ...(p.labels.filter((l) => l !== p.rightAt) as [string, string]), { isRightAngle: true, degrees: 90 });
-    if (p.kind === "general" && p.labels.length === 4) {
+    const isCustomOrConcaveQuad =
+      facts.some((f) => (f.k === "quad" && f.concave) || (f.k === "angle" && f.reflex)) ||
+      facts.filter((f) => f.k === "angle" && p.labels.includes(f.vertex)).length >= 2;
+    if (p.kind === "general" && p.labels.length === 4 && !isCustomOrConcaveQuad) {
       const [a, b, c, d] = p.labels;
       const hasDiag = (u: string, v: string) => extras.some((e) => pairKey(e.a, e.b) === pairKey(u, v)) || facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(u, v));
       if (!hasDiag(a, c) && !hasDiag(b, d)) addExtra(a, c);
@@ -193,7 +188,7 @@ export function composeFigureFromGeometryDescription(
             continue;
           }
         }
-        if (f.k === "pointOn" && P(f.p)) { host.set(f.p, f.seg); continue; }
+        if (f.k === "pointOn" && P(f.p) && P(a) && P(b)) { host.set(f.p, f.seg); continue; }
         if (f.k === "pointOn" && pass === 0 && !lengths.has(pairKey(a, f.p)) && !lengths.has(pairKey(f.p, b)) && facts.some((pf) => pf.k === "perp" && (pf.a.includes(f.p) || pf.b.includes(f.p)))) { nextPending.push({ fact: f }); continue; }
         if (f.k === "pointOn" && tryResolveRayExtensionEqualityPoint({ fact: f, facts, points, linearKindMap, isPolygonSide, addExtra })) continue;
         if (f.k === "pointOn" && tryPlacePointOnWithCollinearExtension({ p: f.p, seg: f.seg, points, lengths, addExtra })) { host.set(f.p, f.seg); continue; }
@@ -203,8 +198,9 @@ export function composeFigureFromGeometryDescription(
         points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
         if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
       } else if (f.k === "parallel") {
-        const awaitsIntersect = [f.a[0], f.a[1], f.b[0], f.b[1]].some((pt) => !P(pt) && facts.some((inf) => inf.k === "intersect" && inf.p === pt));
-        if (awaitsIntersect) { deferredParallels.push(f); continue; }
+        if ([f.a[0], f.a[1], f.b[0], f.b[1]].some((pt) => !P(pt) && facts.some((inf) => inf.k === "intersect" && inf.p === pt))) {
+          deferredParallels.push(f); continue;
+        }
         const parWarns: string[] = [];
         runParallel(f, parWarns);
         if (parWarns.length > 0) nextPending.push({ fact: f, warn: parWarns[0] });
@@ -226,17 +222,21 @@ export function composeFigureFromGeometryDescription(
           if (!r) { warnings.push("مستقيمان متوازيان لا يتقاطعان"); continue; }
           points.set(f.p, r);
         }
-        for (const s of [f.a, f.b]) registerIntersectingRaySegments({ s, p: f.p, points, host, isPolygonSide, addExtra });
+        if (!polygons.some((pl) => pl.labels.length >= 5)) {
+          for (const s of [f.a, f.b]) registerIntersectingRaySegments({ s, p: f.p, points, host, isPolygonSide, addExtra });
+        }
       } else if (f.k === "diagonalsMeet") {
-        const q = polygons.find((x) => x.labels.length === 4); if (!q) continue; const [a, b, c, d] = q.labels;
-        const r = lineIntersection(P(a)!, P(c)!, P(b)!, P(d)!); if (r) { points.set(f.p, r); addExtra(a, c); addExtra(b, d); }
+        const q = polygons.find((x) => x.labels.length >= 4);
+        const d1 = f.diag1 ?? (q ? [q.labels[0], q.labels[2]] as Seg : undefined);
+        const d2 = f.diag2 ?? (q ? [q.labels[1], q.labels[3]] as Seg : undefined);
+        if (!d1 || !d2 || !P(d1[0]) || !P(d1[1]) || !P(d2[0]) || !P(d2[1])) continue;
+        const r = lineIntersection(P(d1[0])!, P(d1[1])!, P(d2[0])!, P(d2[1])!);
+        if (r) { points.set(f.p, r); addExtra(d1[0], d1[1]); addExtra(d2[0], d2[1]); }
       } else if (f.k === "extend") {
         if (!P(f.from) || !P(f.through)) { nextPending.push({ fact: f }); continue; }
-        resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
+        if (!facts.some((inf) => inf.k === "intersect" && inf.p === f.to)) resolveExtendWithEqualHelper({ fact: f, facts, points, host, lengths, addExtra });
       } else if (f.k === "collinear") {
-        if (!resolveCollinearFactInComposer({ fact: f, points, host, lengths, isPolygonSide, addExtra })) {
-          nextPending.push({ fact: f, warn: "نقاط الاستقامة غير معرّفة" });
-        }
+        if (!resolveCollinearFactInComposer({ fact: f, points, host, lengths, isPolygonSide, addExtra })) nextPending.push({ fact: f, warn: "نقاط الاستقامة غير معرّفة" });
       }
     }
     pending = nextPending;
@@ -269,6 +269,7 @@ export function composeFigureFromGeometryDescription(
     }
   }
 
+  solvePolygonDiagonalsAndExtensions({ facts, polygons, points, isPolygonSide, addExtra });
   autoConnectReferencedSubPolygons({ description, facts, polygons, points, lengths, parallelMarks, isPolygonSide, addExtra, addAngle });
   const keyId = (k: string) => `${figureId}_v_${k}`;
   const segments = assembleCanonicalFigureSegments({

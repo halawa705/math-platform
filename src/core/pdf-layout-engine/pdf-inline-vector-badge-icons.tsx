@@ -34,6 +34,7 @@ function SvgIconFrame({
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      data-inline-icon="true"
       className={className ? `${DEFAULT_ICON_CLASS} ${className}` : DEFAULT_ICON_CLASS}
     >
       {children}

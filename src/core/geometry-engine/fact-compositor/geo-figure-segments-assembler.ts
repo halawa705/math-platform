@@ -101,6 +101,7 @@ export function resolveAngleFactHelper(params: {
       degrees: fact.deg,
       degreesLabel: fact.text ?? (fact.deg !== undefined && !fact.right ? `${fact.deg}°` : undefined),
       isRightAngle: fact.right,
+      isReflex: fact.reflex || (fact.deg !== undefined && fact.deg > 180) || undefined,
     });
   }
 }

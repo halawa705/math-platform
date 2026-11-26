@@ -32,7 +32,17 @@ export function verifyAngleDegreesRule(fig: CanonicalGeometryFigureIR): Verifica
       issues.push({ rule: "angle-refs", severity: "error", message: `الزاوية ${ang.id} تشير إلى رأس غير موجود.` });
       continue;
     }
-    if (typeof expected !== "number" || expected >= REFLEX_LIMIT_DEG) continue;
+    if (typeof expected !== "number") continue;
+    if (ang.isReflex || expected > REFLEX_LIMIT_DEG) {
+      const drawnReflex = 360 - measureAngleDegrees(v, p, q);
+      const tol = Math.max(42, expected * 0.16);
+      const minR = Math.max(182, expected - tol);
+      const maxR = Math.min(355, expected + tol);
+      if (drawnReflex < minR || drawnReflex > maxR) {
+        issues.push({ rule: "angle-degrees", severity: "error", message: `الزاوية المنعكسة ${ang.id} معطاة ${expected}° لكنها مرسومة ${drawnReflex.toFixed(1)}° (المقبول ${minR.toFixed(0)}–${maxR.toFixed(0)}°).` });
+      }
+      continue;
+    }
     const drawn = measureAngleDegrees(v, p, q);
     const range = acceptableAngleRangeDegrees(expected);
     if (drawn < range.min || drawn > range.max) {

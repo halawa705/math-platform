@@ -4,12 +4,13 @@
  * إلى حقائق مفصولة بـ «؛» ويعيد ترتيب صيغ الإعلان («ABCD متوازي أضلاع» ← «متوازي أضلاع ABCD») ويحذف مقدمات الإنشاء.
  */
 import { parseLabelList } from "../fact-compositor/geo-label-utils";
+import { restructurePolygonAndExtensionClauses } from "../polygon-family/polygon-clause-restructurer-helper";
 
 export const MODULE_ID_GEOMETRY_CLAUSE_RESTRUCTURER = "geometry_clause_restructurer" as const;
 
 const SEP = " ؛ ";
 const STRUCTURED_HEADER_REGEX =
-  /(?:^|[؛;\s])(?:الرؤوس|الأشكال|الشكل|أطوال\s*الأضلاع(?:\s*ووحداتها)?|الأطوال|الزوايا(?:\s*والتعامد)?|التوازي(?:\s*والتعامد)?|الأشعة(?:\s*والامتداد)?|المعطيات|الأضلاع\s*والزوايا|النقاط)\s*\(/g;
+  /(?:^|[؛;\s])(?:الرؤوس|الأشكال|الشكل|أطوال\s*الأضلاع(?:\s*ووحداتها)?|الأطوال|الزوايا(?:\s*والتعامد)?|التوازي(?:\s*والتعامد)?|الأشعة(?:\s*والامتداد)?|الروابط|المعطيات|الأضلاع\s*والزوايا|النقاط)\s*\(/g;
 
 /**
  * يفك أغلفة الأقواس الهيكلية مثل `الرؤوس (مثلث ABC)` و`الزوايا والتعامد (m(∠B) = 90° ; m(∠A) = 35°)`
@@ -46,10 +47,10 @@ export function unwrapStructuredCategoryHeaders(text: string): string {
 /** جمل «المطلوب» وأوصاف التوضيح العامة ليست حقائق رسم فتُحذف. */
 const GOAL_CLAUSE =
   /^(?:ثم\s+)?[فو]?\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|استنتج|علل|بين\s*أن|بيّن\s*نوع|بين\s*نوع|حدد|اذكر|ما\s*(?:هو|هي|قيمة|نوع)|المطلوب|فإن\b|هل\b|منشأ\s*على\s*أضلاعه|المربع\s*\(\d+\)\s*منشأ)/;
-const SHAPE = "(?:مثلث|مستطيل|مربع|معين|متوازي\\s*أضلاع|شبه\\s*منحرف|طائرة\\s*ورقية|شكل\\s*رباعي|رباعي|خماسي|سداسي|سباعي|ثماني|دائرة)";
+const SHAPE = "(?:مثلث|مستطيل|مربع|معين|متوازي\\s*أضلاع|شبه\\s*منحرف|طائرة\\s*ورقية|شكل\\s*رباعي|رباعي(?:\\s*مقعر)?|(?:مضلع\\s+|شكل\\s+)?(?:خماسي|سداسي|سباعي|ثماني|تساعي|عشاري)(?:\\s+(?:منتظم|مقعر|محدب))?|دائرة)";
 const AR = "[أ-ي]ـ?";
 const LABELS_ONE_SEG = "[A-Z]{2}";
-const LABELS = `(?:[A-Z]{2,8}|(?:${AR}\\s+){1,4}${AR})`;
+const LABELS = `(?:[A-Z]{2,10}|(?:${AR}\\s+){1,9}${AR})`;
 const FACT_START = `(?:(?:ال)?${SHAPE}|ق\\s*\\(|∠|(?:ال)?زاوية|قياس|[A-Z]{1,5}\\s*(?:=|//|⊥|∈|∩|منتصف|وتر|قطر|مماس|ينصف|منصف|متوسط)|${AR}\\s*${AR}\\s*(?:=|//|⊥)|نصف|طول|نق\\b|مساحة\\s*(?:ال)?مربع)`;
 const QUAD_DIMENSIONS = new RegExp(`(?:^\\s*|${SEP.trim()}\\s*)((?:مستطيل|مربع)\\s*(${LABELS}))([^؛;]*)`, "g");
 const TRI_SIDE_DIMENSION = new RegExp(`(?:^\\s*|${SEP.trim()}\\s*)(مثلث\\s*(${LABELS})\\s*متساوي\\s*الأضلاع)\\s*(?:طول\\s*)?ضلعه\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم|م)?`, "g");
@@ -135,6 +136,7 @@ export function restructureGeometryClauses(plain: string): string {
   t = expandNestedAndMultiMidpoints(t);
   t = unwrapStructuredCategoryHeaders(t)
     .replace(/(?<!\d)\.(?!\d)/g, SEP);
+  t = restructurePolygonAndExtensionClauses(t);
   t = t
     .replace(new RegExp(`(^|${SEP.trim()}\\s*)[^؛;]{2,35}?على\\s+شكل\\s+(?=${SHAPE})`, "g"), "$1")
     .replace(/(?:خط\s*العمل|العارضة|ممر\s*المشاة|الرف|السلك)\s+(?=[A-Z]{2}\b)/g, "")
@@ -249,7 +251,7 @@ export function restructureGeometryClauses(plain: string): string {
     .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+(?:يمثل|يمثّل)\\s+[^؛;]*?قطر[^؛;]*`, "g"), "ارسم $1")
     .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+(?:يمثل|يمثّل)\\s+[^؛;]*`, "g"), "")
     .replace(new RegExp(`(?:ال)?(?:قطر|قطعة)\\s+(${LABELS_ONE_SEG})\\s+(?:واصل(?:ة)?\\s+بين[^؛;]*|تصل\\s+بين[^؛;]*|ل(?:ل|لمثلث|لمربع|لمستطيل|لمعين|لشكل)[^؛;]*)`, "g"), "ارسم $1")
-    .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+قطر(?:\\s*ل(?:ل|لمستطيل|لمربع|لمعين|لشكل)[^؛;]*)?`, "g"), "ارسم $1")
+    .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+قطر(?:\\s*(?:واصل|تصل|ل(?:ل|لمستطيل|لمربع|لمعين|لشكل))[^؛;]*)?`, "g"), "ارسم $1")
     .replace(new RegExp(`\\b(${LABELS_ONE_SEG})\\b\\s+([^؛;]*?)(?:طوله|طولها)\\s*=?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:سم)?`, "g"), "$1 $2 ؛ $1 = $3 سم ")
     .replace(/\s+على\s+استقامة\s+واحدة\s+و\s+/g, ` على استقامة واحدة${SEP}`)
     .replace(

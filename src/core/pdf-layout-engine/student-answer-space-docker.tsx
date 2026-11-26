@@ -33,16 +33,15 @@ export function StudentAnswerSpaceDocker({
   const labelColor = isBookletDrill ? "#4338CA" : isBookletHomework ? "#9D174D" : primaryHex;
   const labelText = "الإجابة:";
 
-  const gapClass = lineCount <= 4 ? "gap-1.5" : lineCount <= 7 ? "gap-1" : "gap-0.5";
-  const itemHeightClass = lineCount <= 4 ? "h-3" : lineCount <= 7 ? "h-2.5" : "h-2";
+  const gapClass = lineCount <= 3 ? "gap-1.5" : lineCount <= 6 ? "gap-1" : "gap-0.5";
+  const itemHeightClass = lineCount <= 3 ? "h-[22px]" : lineCount <= 5 ? "h-[19px]" : "h-[16px]";
 
   const renderLine = (lineIdx: number) =>
     answerSpaceStyle === "dotted" ? (
-      <div className="flex-1 min-w-0 h-full flex items-end">
-        <svg className="w-full h-[2px] block overflow-visible" aria-hidden="true">
-          <line x1="0" y1="1" x2="100%" y2="1" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 3.5" />
-        </svg>
-      </div>
+      <div
+        key={lineIdx}
+        className="flex-1 min-w-0 h-full border-b-[1.5px] border-dotted border-slate-400"
+      />
     ) : (
       <div
         key={lineIdx}

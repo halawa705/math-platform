@@ -31,7 +31,7 @@ export function toDisplayLabel(key: string, notation: "english" | "arabic"): str
 }
 
 /** يحلل «أ ب جـ» أو «ABC» أو «أب» إلى مفاتيح. يعيد null إن لم يكن النص قائمة أسماء نقاط صالحة. */
-export function parseLabelList(text: string, maxTokenLen = 4): string[] | null {
+export function parseLabelList(text: string, maxTokenLen = 10): string[] | null {
   if (!text) return null;
   const tokens = text.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return null;
