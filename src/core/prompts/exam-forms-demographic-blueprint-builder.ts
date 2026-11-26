@@ -1,7 +1,7 @@
 /**
  * @file exam-forms-demographic-blueprint-builder.ts
- * @description حاسبة التوزيع الديموجرافي المتوازن للأسئلة (اختر ومقالي معاً) على الدروس ومستويات الصعوبة المتكافئة أو المتدرجة للنماذج.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 170 سطراً).
+ * @description حاسبة التوزيع الديموجرافي المتوازن للأسئلة (اختر ومقالي معاً) على الدروس ومستويات الصعوبة المتكافئة أو المتدرجة للنماذج بصيغة مضغوطة لحدود NotebookLM.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 160 سطراً).
  */
 
 import type { CurriculumLessonNode, CurriculumUnitNode } from "../ssot/curriculum-hierarchy-ssot";
@@ -101,42 +101,26 @@ export function resolveTargetedLessonsForBlueprint(params: {
 export function resolveDifficultyArabicLabel(profile: ExamFormsDifficultyProfile): string {
   switch (profile) {
     case "foundational_gradual":
-      return "تأسيسي متدرج (٦٠٪ تطبيق مباشر وتأسيسي، ٣٠٪ فهم متوسط، ١٠٪ تمييز)";
+      return "تأسيسي متدرج (٦٠٪ مباشر، ٣٠٪ فهم، ١٠٪ تمييز)";
     case "comprehensive_rigorous":
-      return "شامل ودقيق (٥٠٪ تطبيقي، ٣٠٪ برهان واستدلال، ٢٠٪ مستويات عليا)";
+      return "شامل ودقيق (٥٠٪ تطبيقي، ٣٠٪ برهان، ٢٠٪ عليا)";
     case "olympiad_challenge":
-      return "مستويات عليا وتحدي للمتفوقين (٤٠٪ تطبيقي عميق، ٦٠٪ برهان مركب وتفكير ابتكاري)";
+      return "مستويات عليا وتحدي (٤٠٪ تطبيقي عميق، ٦٠٪ برهان وابتكار)";
     default:
-      return "متوازن رسمي مطابق للمواصفات الوزارية (٣٠٪ تذكر وتطبيق مباشر، ٥٠٪ فهم وبرهان، ٢٠٪ تمييز)";
+      return "متوازن وزاري (٣٠٪ مباشر، ٥٠٪ فهم وبرهان، ٢٠٪ تمييز)";
   }
 }
 
 function getProgressiveRampDescs(profile: ExamFormsDifficultyProfile): readonly [string, string, string] {
   switch (profile) {
     case "foundational_gradual":
-      return [
-        "مباشر مبسط (٨٠٪ مباشر وتأسيسي، ٢٠٪ فهم بسيط)",
-        "تأسيسي متوسط (٧٠٪ مباشر، ٣٠٪ فهم متوسط)",
-        "تأسيسي متدرج (٦٠٪ مباشر، ٣٠٪ فهم، ١٠٪ تمييز)",
-      ];
+      return ["مباشر مبسط (٨٠٪ مباشر)", "تأسيسي متوسط (٧٠٪ مباشر)", "تأسيسي متدرج (٦٠٪ مباشر، ٣٠٪ فهم، ١٠٪ تمييز)"];
     case "comprehensive_rigorous":
-      return [
-        "متوازن وزاري (٣٥٪ مباشر، ٥٠٪ تطبيقي، ١٥٪ تمييز)",
-        "تطبيقي وبرهان متقدم (٢٥٪ مباشر، ٥٠٪ برهان وتطبيق، ٢٥٪ تمييز)",
-        "شامل ودقيق (٢٠٪ مباشر، ٥٠٪ برهان واستدلال، ٣٠٪ مستويات عليا)",
-      ];
+      return ["متوازن وزاري (٣٥٪ مباشر)", "تطبيقي وبرهان (٢٥٪ مباشر)", "شامل ودقيق (٥٠٪ برهان، ٣٠٪ عليا)"];
     case "olympiad_challenge":
-      return [
-        "متوسط وتطبيقي (٣٠٪ مباشر، ٥٠٪ برهان، ٢٠٪ تمييز)",
-        "تطبيقي متقدم (٢٠٪ مباشر، ٤٥٪ برهان، ٣٥٪ مستويات عليا)",
-        "تحدٍ ومستويات عليا للمتفوقين (٣٥٪ تطبيقي مركب، ٦٥٪ برهان وتفكير ابتكاري)",
-      ];
+      return ["متوسط وتطبيقي (٣٠٪ مباشر)", "تطبيقي متقدم (٤٥٪ برهان، ٣٥٪ عليا)", "تحدٍ ومستويات عليا (٣٥٪ مركب، ٦٥٪ برهان وابتكار)"];
     default:
-      return [
-        "تأسيسي مباشر (٦٥٪ تطبيق مباشر، ٣٥٪ فهم وتطبيق)",
-        "تطبيقي متوسط (٤٥٪ مباشر، ٤٥٪ فهم وبرهان، ١٠٪ تمييز)",
-        "متوازن وزاري رسمي (٣٠٪ مباشر، ٥٠٪ فهم وبرهان، ٢٠٪ تمييز)",
-      ];
+      return ["تأسيسي مباشر (٦٥٪ مباشر)", "تطبيقي متوسط (٤٥٪ فهم وبرهان)", "متوازن وزاري رسمي (٣٠٪ مباشر، ٥٠٪ برهان، ٢٠٪ تمييز)"];
   }
 }
 
@@ -144,84 +128,66 @@ function buildDifficultyAndProgressionSection(
   formsCount: number,
   difficultyProfile: ExamFormsDifficultyProfile,
   progressionMode: ExamFormsProgressionMode
-): readonly string[] {
+): string {
   const baseLabel = resolveDifficultyArabicLabel(difficultyProfile);
   if (formsCount <= 1 || progressionMode === "uniform_equivalent") {
-    return [
-      `⚖️ سياسة الصعوبة والتكافؤ: جميع النماذج (${formsCount}) بنفس مستوى الصعوبة تماماً [${baseLabel}]، مع تكافؤ الوزن النسبي والزمن والدرجات بحيث لا يكون نموذج أسهل أو أصعب من الآخر.`,
-    ];
+    return `⚖️ سياسة الصعوبة والتكافؤ: كل النماذج (${formsCount}) بنفس المستوى [${baseLabel}].`;
   }
 
   const [lowDesc, midDesc, ceilDesc] = getProgressiveRampDescs(difficultyProfile);
-  const levelsAr = Array.from({ length: formsCount }, (_, i) => {
-    const letter = getArabicFormLetter(i);
-    const ratio = formsCount > 1 ? i / (formsCount - 1) : 1;
-    const desc = ratio <= 0.3 ? lowDesc : ratio < 0.8 ? midDesc : ceilDesc;
-    return `   • النموذج (${letter}): ${desc}.`;
-  });
+  if (formsCount <= 4) {
+    const chain = Array.from({ length: formsCount }, (_, i) => {
+      const ratio = formsCount > 1 ? i / (formsCount - 1) : 1;
+      const desc = ratio <= 0.3 ? lowDesc : ratio < 0.8 ? midDesc : ceilDesc;
+      return `النموذج (${getArabicFormLetter(i)}): ${desc}`;
+    }).join(" ← ");
+    return `📈 سياسة الصعوبة المتدرجة تصاعدياً عبر النماذج: ${chain}.`;
+  }
 
-  return [
-    `📈 سياسة الصعوبة المتدرجة تصاعدياً عبر النماذج (السقف المختار: ${baseLabel}):`,
-    ...levelsAr,
-  ];
+  return `📈 سياسة الصعوبة المتدرجة تصاعدياً عبر النماذج: من (${getArabicFormLetter(0)}) [${lowDesc}] حتى (${getArabicFormLetter(formsCount - 1)}) [${ceilDesc}].`;
 }
 
 export function buildExamFormsDemographicAndDifficultyBlueprint(
   params: DemographicBlueprintParams
 ): string {
   const totalQPerForm = Math.max(1, params.mcqCount + params.essayCount);
-  const totalAllForms = Math.max(1, params.formsCount * totalQPerForm);
   const progressionMode: ExamFormsProgressionMode = params.progressionMode ?? "uniform_equivalent";
   const lessons = resolveTargetedLessonsForBlueprint(params);
 
   const lines: string[] = [
-    ...buildDifficultyAndProgressionSection(params.formsCount, params.difficultyProfile, progressionMode),
+    buildDifficultyAndProgressionSection(params.formsCount, params.difficultyProfile, progressionMode),
   ];
 
   if (lessons.length > 0) {
     const lessonCount = lessons.length;
-    lines.push(
-      `📊 التوزيع الديموجرافي الإلزامي للدروس (${lessonCount} دروس ← ${totalQPerForm} سؤالاً/نموذج × ${params.formsCount} نماذج = ${totalAllForms} سؤالاً — يُوزّع الاختر والمقالي معاً بعدالة بين الدروس):`
-    );
+    const basePerForm = Math.floor(totalQPerForm / lessonCount);
+    const remPerForm = totalQPerForm % lessonCount;
+    const quotaText =
+      lessonCount <= totalQPerForm
+        ? remPerForm === 0
+          ? `${basePerForm} س/درس`
+          : `${basePerForm}–${basePerForm + 1} س/درس`
+        : "يُحظر تكرار درس داخل النموذج؛ وزّعها بالتناوب الدائري";
 
-    if (lessonCount <= totalQPerForm) {
-      const basePerForm = Math.floor(totalQPerForm / lessonCount);
-      const remPerForm = totalQPerForm % lessonCount;
-      const totalBase = Math.floor(totalAllForms / lessonCount);
-      const totalRem = totalAllForms % lessonCount;
-
-      lessons.forEach((lesson, idx) => {
-        const expectedTotalAcrossForms = totalBase + (idx < totalRem ? 1 : 0);
-        const perFormRange =
-          remPerForm === 0 ? `${basePerForm} أسئلة بكل نموذج` : `${basePerForm}–${basePerForm + 1} سؤالاً/نموذج`;
-        const conceptsNote =
-          lesson.coreConcepts.length > 0 ? ` | أفكار: ${lesson.coreConcepts.slice(0, 3).join("، ")}` : "";
-        lines.push(
-          `   ${idx + 1}. «${lesson.lessonTitleArabic}»: ${perFormRange} (إجمالي ≈ ${expectedTotalAcrossForms} أسئلة)${conceptsNote}.`
-        );
-      });
-    } else {
-      const totalBase = Math.floor(totalAllForms / lessonCount);
-      const totalRem = totalAllForms % lessonCount;
+    if (lessonCount <= 5) {
+      const names = lessons.map((l) => `«${l.lessonTitleArabic}»`).join("، ");
       lines.push(
-        `   ⚠️ عدد الدروس (${lessonCount}) أكبر من أسئلة النموذج (${totalQPerForm}): يُحظر تكرار أي درس مرتين داخل نفس النموذج؛ وزّع الدروس بالتناوب الدائري بين النماذج (اختر ومقالي معاً):`
+        `📊 التوزيع الديموجرافي للدروس (${lessonCount} دروس: ${names} ← ${quotaText}): وزّع الاختر والمقالي معاً بعدالة بلا تركيز على درس.`
       );
-      lessons.forEach((lesson, idx) => {
-        const expectedTotalAcrossForms = Math.max(1, totalBase + (idx < totalRem ? 1 : 0));
-        const conceptsNote =
-          lesson.coreConcepts.length > 0 ? ` | أفكار: ${lesson.coreConcepts.slice(0, 2).join("، ")}` : "";
-        lines.push(`   ${idx + 1}. «${lesson.lessonTitleArabic}» (إجمالي ≈ ${expectedTotalAcrossForms})${conceptsNote}.`);
-      });
+    } else {
+      lines.push(
+        `📊 التوزيع الديموجرافي للدروس (${lessonCount} درساً ← ${quotaText}): وزّع الاختر والمقالي معاً بالتساوي والتناوب الدائري على كل الدروس.`
+      );
     }
   } else {
     lines.push(
-      "📊 التوزيع الديموجرافي الإلزامي: احصر جميع دروس النطاق المحدد من الكتب المرفوعة، ووزّع أسئلة (اختر) و(المقالي) بالتساوي العادل بين كل درس (فارق ≤ 1 سؤال وتدوير الباقي بين النماذج) بلا تركيز على درس وإهمال غيره."
+      "📊 التوزيع الديموجرافي: احصر دروس النطاق من المصادر، ووزّع الاختر والمقالي معاً بالتساوي وتدوير الباقي بلا تركيز على درس."
     );
   }
 
   if (params.unitFocusWeights && params.unitFocusWeights.length > 1) {
     lines.push(
-      `⚖️ مراعاة أوزان الوحدات المحددة: ${params.unitFocusWeights.map((w) => `${w.unitTitle} (${w.percentage}%)`).join(" | ")}.`
+      `⚖️ أوزان الوحدات: ${params.unitFocusWeights.map((w) => `${w.unitTitle} (${w.percentage}%)`).join(" | ")}.`
     );
   }
 

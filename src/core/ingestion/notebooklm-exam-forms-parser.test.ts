@@ -45,14 +45,14 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
       difficultyProfile: "standard_balanced",
     });
 
-    expect(prompt).toContain("(3) نماذج امتحانية ورقية");
+    expect(prompt).toContain("(3) نماذج امتحانية");
     expect(prompt).toContain("النموذج (أ)");
     expect(prompt).toContain("النموذج (ب)");
     expect(prompt).toContain("النموذج (جـ)");
     expect(prompt).toContain("سياسة الصعوبة والتكافؤ");
-    expect(prompt).toContain("منع تكرار الفكرة عبر جميع النماذج");
+    expect(prompt).toContain("منع تكرار الفكرة عبر النماذج");
     expect(prompt).toContain("المطابقة الصارمة والتامة للمصادر");
-    expect(prompt).toContain("=== [FORM: رقم_النموذج]");
+    expect(prompt).toContain("=== [FORM: رقم]");
   });
 
   it("parses multi-form NotebookLM output into isolated form blocks with distinct questions", () => {
@@ -141,7 +141,7 @@ describe("Exam Forms NotebookLM Prompt & Parser Invariants", () => {
       difficultyProfile: "standard_balanced",
     });
 
-    expect(prompt).toContain("(15) نماذج امتحانية ورقية");
+    expect(prompt).toContain("(15) نماذج امتحانية");
     expect(prompt).toContain("إجمالي 15 نماذج متتالية");
     expect(prompt).toContain("0% تكرار");
     expect(prompt).not.toContain("استثناء النماذج الضخمة");

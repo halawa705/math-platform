@@ -1,8 +1,8 @@
 /**
  * @file exam-forms-notebooklm-prompt-builder.ts
  * @description مولد برومبت النماذج الامتحانية المتعددة المتكافئة أو المتدرجة الموجه لـ NotebookLM
- * مع التوزيع الديموجرافي الصارم على الدروس ومنع تكرار الأفكار بنسبة 100% عبر جميع النماذج.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 150 سطراً).
+ * ضمن سقف الحجم الآمن لـ NotebookLM مع التوزيع الديموجرافي ومنع تكرار الأفكار بنسبة 100%.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 115 سطراً).
  */
 
 import type { MathBranchId } from "../ssot/math-branches-ssot";
@@ -60,14 +60,14 @@ export function buildExamFormsNotebookLMPrompt(
     config.scopeKind === "end_of_term"
       ? "اختبار نهاية الترم"
       : config.scopeKind === "monthly_exam"
-        ? "اختبار شهر تقييمي"
-        : "مراجعة تدريبية بالنماذج";
+        ? "اختبار شهر"
+        : "مراجعة بالنماذج";
 
   const scopeLabel = config.scopeDescriptionArabic?.trim()
-    ? `${scopeKindText} على نطاق: [${config.scopeDescriptionArabic.trim()}]`
+    ? `${scopeKindText}: [${config.scopeDescriptionArabic.trim()}]`
     : config.scopeKind === "end_of_term"
-      ? "اختبارات نهاية الترم (شاملة كامل وحدات ودروس المنهج المقرر)"
-      : `${scopeKindText} على الوحدات والدروس المقررة`;
+      ? "اختبارات نهاية الترم (كامل المنهج)"
+      : `${scopeKindText} على الدروس المقررة`;
 
   const blueprintBlock = buildExamFormsDemographicAndDifficultyBlueprint({
     units: config.units,
@@ -88,17 +88,10 @@ export function buildExamFormsNotebookLMPrompt(
     : undefined;
 
   return [
-    `مطلوب توليد (${config.formsCount}) نماذج امتحانية ورقية: [${formLettersList}] | مادة الرياضيات (${branchSpec.nameArabic}) | ${config.gradeNameArabic} (${termLabel}) | زمن كل نموذج: ${config.durationTextArabic} | الدرجة لكل نموذج: ${config.totalMarksPerForm}.`,
-    `🎯 نطاق الاختبار المستهدف: ${scopeLabel}.`,
-    `📊 التركيب الحسابي الإلزامي لكل نموذج (إجمالي ${totalQPerForm} سؤالاً بكل نموذج بلا زيادة أو نقصان — الإجمالي الكلي ${totalAllQuestions} سؤالاً):`,
-    `   - (${config.mcqQuestionsCount}) أسئلة اختيار من متعدد [MCQ].`,
-    `   - (${config.essayAndProofQuestionsCount}) أسئلة مقالية وبرهان هندسي/جبري استدلالي [PROOF/ESSAY].`,
+    `مطلوب (${config.formsCount}) نماذج امتحانية: [${formLettersList}] | ${branchSpec.nameArabic} | ${config.gradeNameArabic} (${termLabel}) | ${config.durationTextArabic} | ${config.totalMarksPerForm} درجة.`,
+    `🎯 النطاق: ${scopeLabel} | بكل نموذج ${totalQPerForm}س: (${config.mcqQuestionsCount}) اختر [MCQ] + (${config.essayAndProofQuestionsCount}) مقالي/برهان [PROOF/ESSAY] (إجمالي ${totalAllQuestions}س).`,
     blueprintBlock,
-    `⚠️ ضوابط حاسمة غير قابلة للكسر (Zero-Idea-Repetition & Demographic Balance):`,
-    `   ١. التوازن الديموجرافي الصارم: وزّع الأسئلة بعدالة بين جميع الدروس المحددة دون تركيز على درس وإهمال آخر.`,
-    `   ٢. منع تكرار الفكرة عبر جميع النماذج (0% تكرار): يُمنع تكرار أي فكرة رياضية بين النماذج (${config.formsCount}) أو داخل النموذج، ويُحظر تغيير الأرقام فقط؛ استنفد كل أفكار الدروس حتى لا نهدر أي سؤال.`,
-    `   ٣. الالتزام بالنطاق: التزم بالدروس المحددة، ويُحظر تماماً وضع أي مسألة من أي درس تم النص على استثنائه.`,
-    `   ٤. المطابقة الصارمة والتامة للمصادر: المسائل مستقاة 100% من كتب التقييمات والوزارة والمحافظات الرسمية.`,
+    `⚠️ ضوابط: منع تكرار الفكرة عبر النماذج (0% تكرار) أو تغيير الأرقام فقط وتغطية كل الأفكار | يُحظر تماماً وضع أي مسألة من أي درس تم النص على استثنائه | المطابقة الصارمة والتامة للمصادر.`,
     ...(customRule ? [customRule] : []),
     buildSharedMathInvariantsPromptBlock({
       branchId: config.branchId,
@@ -106,15 +99,13 @@ export function buildExamFormsNotebookLMPrompt(
       lessonTitleArabic: scopeLabel,
       gradeId: config.gradeId,
     }),
-    `📐 قالب الإخراج الإلزامي الدقيق (التزم به حرفياً لكل نموذج ولكل سؤال):`,
-    `اكتب كل نموذج تحت ترويسة واضحة بهذا النمط:`,
-    `=== [FORM: رقم_النموذج] | النموذج: [أ أو ب أو جـ...] ===`,
-    `ثم لكل سؤال داخل النموذج:`,
-    `=== [QUESTION: رقم_السؤال] | النموذج: [رمز_النموذج] | النوع: [MCQ أو PROOF أو ESSAY] | الدرس: [اسم_الدرس_بدقة] | الدرجة: [الدرجة] ===`,
-    `النص: [نص السؤال الرياضي بالمعادلات داخل $...$]`,
-    `الرسم: [[رسم هندسي: ...] باللغة العربية الطبيعية إن تطلب السؤال، أو اترك السطر فارغاً تماماً بدون كتابة كلمة فارغ]`,
-    `البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ... (لأسئلة MCQ فقط: وزّع الإجابات الصحيحة عشوائياً بالتساوي بين أ، ب، جـ، د)`,
-    `الإجابة_الصحيحة: [البديل الصحيح أو الناتج النهائي بالوحدة العربية]`,
-    `البرهان_والخطوات: [خطوات الحل النموذجية والبرهان مفصولة بـ |]`,
+    `📐 قالب الإخراج حرفياً:`,
+    `=== [FORM: رقم] | النموذج: [أ، ب...] ===`,
+    `=== [QUESTION: رقم] | النموذج: [رمز] | النوع: [MCQ|PROOF|ESSAY] | الدرس: [الدرس] | الدرجة: [رقم] ===`,
+    `النص: [السؤال بـ $...$]`,
+    `الرسم: [[رسم هندسي: ...] إن لزم وإلا فارغ]`,
+    `البدائل: (أ) ... | (ب) ... | (جـ) ... | (د) ...`,
+    `الإجابة_الصحيحة: [البديل/الناتج بالوحدة]`,
+    `البرهان_والخطوات: [الخطوات بـ |]`,
   ].join("\n");
 }

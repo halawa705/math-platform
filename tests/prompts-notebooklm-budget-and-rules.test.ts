@@ -5,6 +5,7 @@ import {
 } from "@/core/prompts/booklet-three-stages-prompt-builder";
 import { buildOfficialExamNotebookLMPrompt } from "@/core/prompts/official-exam-prompt-builder";
 import { buildOnlineExamNotebookLMPrompt } from "@/core/prompts/online-exam-prompt-builder";
+import { buildExamFormsNotebookLMPrompt } from "@/core/prompts/exam-forms-notebooklm-prompt-builder";
 import { buildFinalReviewNotebookLMPrompt } from "@/core/prompts/final-review-prompt-builder";
 import { buildWorksheetDrillNotebookLMPrompt } from "@/core/prompts/worksheet-drill-prompt-builder";
 import { buildCurriculumSplitterPrompt } from "@/core/ssot/curriculum-hierarchy-ssot";
@@ -69,6 +70,36 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
       totalMarks: 15,
       durationTextArabic: "ساعة",
       difficultyProfile: "standard_balanced",
+    }),
+    examFormsMonthly: buildExamFormsNotebookLMPrompt({
+      gradeId: "prep-3",
+      gradeNameArabic: "الصف الثالث الإعدادي",
+      termNumber: 1,
+      branchId: "plane_geometry",
+      scopeKind: "monthly_exam",
+      scopeDescriptionArabic: "الوحدة الأولى (الدائرة وتعاريفها) كاملة",
+      formsCount: 3,
+      mcqQuestionsCount: 9,
+      essayAndProofQuestionsCount: 8,
+      totalMarksPerForm: 33,
+      durationTextArabic: "ساعة ونصف",
+      difficultyProfile: "standard_balanced",
+      progressionMode: "progressive_escalating",
+    }),
+    examFormsEndOfTerm: buildExamFormsNotebookLMPrompt({
+      gradeId: "prep-2",
+      gradeNameArabic: "الصف الثاني الإعدادي",
+      termNumber: 1,
+      branchId: "plane_geometry",
+      scopeKind: "end_of_term",
+      scopeDescriptionArabic: "كامل وحدات ودروس المنهج المقرر",
+      formsCount: 4,
+      mcqQuestionsCount: 9,
+      essayAndProofQuestionsCount: 8,
+      totalMarksPerForm: 33,
+      durationTextArabic: "ساعتان",
+      difficultyProfile: "comprehensive_rigorous",
+      progressionMode: "uniform_equivalent",
     }),
     reviewStage1: buildFinalReviewNotebookLMPrompt({
       reviewScope: "final_exam_night_capsule",

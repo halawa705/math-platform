@@ -48,8 +48,8 @@ describe("Exam Forms 5-Point Verification Suite", () => {
       progressionMode: "uniform_equivalent",
     });
 
-    expect(prompt5).toContain("التوزيع الديموجرافي الإلزامي للدروس (5 دروس");
-    expect(prompt5).toContain("يُوزّع الاختر والمقالي معاً بعدالة بين الدروس");
+    expect(prompt5).toContain("التوزيع الديموجرافي للدروس (5 دروس");
+    expect(prompt5).toContain("وزّع الاختر والمقالي معاً بعدالة");
     expect(prompt5).toContain("«تعاريف ومفاهيم أساسية على الدائرة»");
     expect(prompt5).toContain("«الزاوية المركزية وقياس الأقواس»");
 
@@ -69,8 +69,9 @@ describe("Exam Forms 5-Point Verification Suite", () => {
       difficultyProfile: "standard_balanced",
     });
     expect(genericPrompt).not.toContain("1 دروس");
-    expect(genericPrompt).toContain("احصر جميع دروس النطاق المحدد من الكتب المرفوعة، ووزّع أسئلة (اختر) و(المقالي) بالتساوي العادل");
+    expect(genericPrompt).toContain("احصر دروس النطاق من المصادر، ووزّع الاختر والمقالي معاً بالتساوي");
     expect(genericPrompt).not.toContain("| الفكرة:");
+    expect(genericPrompt.length).toBeLessThanOrEqual(2400);
   });
 
   it("2. supports uniform vs progressive difficulty anchored to selected ceiling & single-form [FORM: 1] parsing", () => {
