@@ -32,6 +32,21 @@ export function resolveAnswerThemeTokens(
   isOddQuestion: boolean
 ): AnswerThemeTokens {
   switch (themeId) {
+    case "sky_editorial": // سماوي المذكرات -> سماوي مع بنفسجي أنديجو رصين
+      return isOddQuestion
+        ? {
+            badgeBgColorHex: "#0284C7",
+            badgeGradientCss: "linear-gradient(135deg, #0369A1 0%, #0284C7 100%)",
+            cardBorderColorHex: "#2998D0",
+            accentStepBorderHex: "#0284C7",
+          }
+        : {
+            badgeBgColorHex: "#5B3E96",
+            badgeGradientCss: "linear-gradient(135deg, #4C227E 0%, #5B3E96 100%)",
+            cardBorderColorHex: "#7C58B0",
+            accentStepBorderHex: "#5B3E96",
+          };
+
     case "emerald_moasser": // أرجواني المعاصر -> باذنجاني ملكي هادئ مع أنديجو رصين
       return isOddQuestion
         ? {

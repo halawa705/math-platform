@@ -114,7 +114,7 @@ export default function TwoColumnNewspaperPacker({
     [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
-  const stagingStamp = `${flowItems.length}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}:${isSweepingOrPending ? 1 : 0}`;
+  const stagingStamp = `${flowItems.length}:${effSettings.paperTemplateId}:${effectiveColumnsCount}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}:${isSweepingOrPending ? 1 : 0}`;
   const measured = useFlowStagingLiveMeasurer(stagingRef, stagingStamp, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = React.useMemo(

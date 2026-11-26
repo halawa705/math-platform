@@ -115,15 +115,22 @@ export default function SideBySideDiagramDocker({
   const cleanPromptText = cleanStudentFacingMathPromptSSOT(question.promptAr);
   const hasEmbeddedDiagram = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
 
+  const hasWatermarkBg = Boolean(settings.watermarkEnabled && (settings.watermarkOpacityPct ?? 0) > 0);
+  const effectiveCardBg = hasWatermarkBg
+    ? cardSurfaceBgHex === "#FFFFFF"
+      ? "rgba(255, 255, 255, 0.72)"
+      : cardSurfaceBgHex
+    : cardSurfaceBgHex;
+
   return (
     <article
       style={{
-        backgroundColor: cardSurfaceBgHex,
+        backgroundColor: effectiveCardBg,
         borderColor: cardBorderColorHex,
         boxShadow: "0 1px 4px rgba(15, 23, 42, 0.05)",
         breakInside: "avoid",
       }}
-      className="min-w-0 w-full rounded-xl border-2 bg-white flex flex-col flex-1 h-full justify-between break-inside-avoid print:break-inside-avoid"
+      className="min-w-0 w-full rounded-xl border-2 flex flex-col flex-1 h-full justify-between break-inside-avoid print:break-inside-avoid"
     >
       <div className={`${densityMetrics.cardPaddingClass} min-w-0 flex-1 flex flex-col justify-start gap-1`}>
         {!isContinuation && (

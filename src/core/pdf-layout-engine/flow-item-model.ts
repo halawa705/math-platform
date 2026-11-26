@@ -63,7 +63,30 @@ export type FlowItem =
       readonly subtitleArabic?: string;
     }
   | { readonly id: string; readonly kind: "mcq_answer_key"; readonly span: "full" }
-  | { readonly id: string; readonly kind: "accreditation_footer"; readonly span: "full" };
+  | { readonly id: string; readonly kind: "accreditation_footer"; readonly span: "full" }
+  | {
+      readonly id: string;
+      readonly kind: "editorial_ribbon_banner";
+      readonly span: "full";
+      readonly titleArabic: string;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "editorial_sub_banner";
+      readonly span: "full";
+      readonly badgeLabelAr: string;
+      readonly instructionAr?: string;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "editorial_question_group";
+      readonly span: "full";
+      readonly slots: readonly {
+        readonly question: PrintableMathQuestionItem;
+        readonly displayNumber: number;
+        readonly isSolved: boolean;
+      }[];
+    };
 
 export type FlowPageSegment =
   | { readonly kind: "full"; readonly item: FlowItem; readonly heightPx: number }
@@ -112,6 +135,9 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
     case "answer_section_banner": return 48;
     case "mcq_answer_key": return 260;
     case "accreditation_footer": return 95;
+    case "editorial_ribbon_banner": return 34;
+    case "editorial_sub_banner": return 30;
+    case "editorial_question_group": return 210;
     case "question":
       return isCompactTextbookMcqQuestion(item.question, item.isAnswerCard) ? 56 : 190;
     default: return 190;

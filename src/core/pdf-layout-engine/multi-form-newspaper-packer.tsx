@@ -124,7 +124,7 @@ export default function MultiFormNewspaperPacker({
 
   const allStagingItems = useMemo(() => formFlows.flatMap((ff) => ff.items), [formFlows]);
   const measureStamp = activeRung ? `rung-${activeRungIdx}` : "off";
-  const stagingStamp = `${allStagingItems.length}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}:${stagingSettings.customDocumentTitle}`;
+  const stagingStamp = `${allStagingItems.length}:${effSettings.paperTemplateId}:${effectiveColumnsCount}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}:${stagingSettings.customDocumentTitle}`;
   const measured = useFlowStagingLiveMeasurer(stagingRef, stagingStamp, measureStamp);
   const pageBudgets = useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = useMemo(

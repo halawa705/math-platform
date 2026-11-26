@@ -24,8 +24,9 @@ interface TemplateOption {
 }
 
 const TEMPLATE_OPTIONS: readonly TemplateOption[] = [
+  { id: "modern_editorial_handout", labelAr: "القالب المدرسي الحديث (مذكرة ومراجعة)", icon: "📘" },
   { id: "classic_sovereign", labelAr: "القالب السيادي (المعاصر)", icon: "🏛️" },
-  { id: "official_school_exam", labelAr: "قالب الامتحان المدرسي الرسمي", icon: "🏫" },
+  { id: "official_school_exam", labelAr: "قالب ورقة الامتحان الرسمي", icon: "🏫" },
 ];
 
 export default function PDFPaperTemplateSelector({

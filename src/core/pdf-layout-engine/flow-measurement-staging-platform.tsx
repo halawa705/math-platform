@@ -25,6 +25,10 @@ import {
   OfficialSchoolRunningPageHeader,
 } from "./official-school-exam-page-chrome";
 import { OfficialSchoolPageFooterBar } from "./official-school-exam-frame-and-footer";
+import {
+  ModernEditorialPageFooter,
+  ModernEditorialPageHeader,
+} from "./modern-editorial-page-chrome";
 
 export const MODULE_ID_FLOW_MEASUREMENT_STAGING_PLATFORM = "flow_measurement_staging_platform" as const;
 
@@ -76,7 +80,16 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
       }}
     >
       <div data-flow-chrome="first" style={WRAPPER_BASE_STYLE}>
-        {settings.paperTemplateId === "official_school_exam" ? (
+        {settings.paperTemplateId === "modern_editorial_handout" ? (
+          <ModernEditorialPageHeader
+            identity={identity}
+            palette={palette}
+            documentTitle={settings.customDocumentTitle}
+            subtitleAr={props.subtitleAr}
+            isSolvedMode={props.isSolvedMode}
+            numeralMode={numeralMode}
+          />
+        ) : settings.paperTemplateId === "official_school_exam" ? (
           <OfficialSchoolFirstPageHeader
             identity={identity}
             documentTitle={settings.customDocumentTitle}
@@ -96,7 +109,16 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
         )}
       </div>
       <div data-flow-chrome="running" style={WRAPPER_BASE_STYLE}>
-        {settings.paperTemplateId === "official_school_exam" ? (
+        {settings.paperTemplateId === "modern_editorial_handout" ? (
+          <ModernEditorialPageHeader
+            identity={identity}
+            palette={palette}
+            documentTitle={settings.customDocumentTitle}
+            subtitleAr={props.subtitleAr}
+            isSolvedMode={props.isSolvedMode}
+            numeralMode={numeralMode}
+          />
+        ) : settings.paperTemplateId === "official_school_exam" ? (
           <OfficialSchoolRunningPageHeader
             identity={identity}
             documentTitle={settings.customDocumentTitle}
@@ -114,7 +136,14 @@ export function FlowMeasurementStagingPlatform(props: FlowMeasurementStagingPlat
         )}
       </div>
       <div data-flow-chrome="footer" style={WRAPPER_BASE_STYLE}>
-        {settings.paperTemplateId === "official_school_exam" ? (
+        {settings.paperTemplateId === "modern_editorial_handout" ? (
+          <ModernEditorialPageFooter
+            identity={identity}
+            palette={palette}
+            pageNumber={88}
+            numeralMode={numeralMode}
+          />
+        ) : settings.paperTemplateId === "official_school_exam" ? (
           <OfficialSchoolPageFooterBar identity={identity} pageNumber={88} totalPages={88} numeralMode={numeralMode} palette={palette} />
         ) : (
           <SovereignPageNumberFooterBar identity={identity} palette={palette} pageNumber={88} totalPages={88} numeralMode={numeralMode} />

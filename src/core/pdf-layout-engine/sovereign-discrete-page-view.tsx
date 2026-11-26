@@ -25,6 +25,12 @@ import {
   OfficialSchoolCornerCropMarks,
   OfficialSchoolPageFooterBar,
 } from "./official-school-exam-frame-and-footer";
+import {
+  ModernEditorialPageFooter,
+  ModernEditorialPageHeader,
+  ModernEditorialSideHatchedRails,
+} from "./modern-editorial-page-chrome";
+import { PdfDecorativeWatermarkLayer } from "./pdf-decorative-watermark-layer";
 
 export const MODULE_ID_SOVEREIGN_DISCRETE_PAGE_VIEW =
   "sovereign_discrete_page_view" as const;
@@ -88,6 +94,7 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
   isSolvedMode, totalIdeasCount, totalQuestionsCount, totalMarks, renderFlowItem,
 }: SovereignDiscretePageViewProps) {
   const isSchoolExam = settings.paperTemplateId === "official_school_exam";
+  const isModernEditorial = settings.paperTemplateId === "modern_editorial_handout";
 
   return (
     <section
@@ -97,22 +104,41 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
         fontFamily: activeFont.cssFontStack,
         fontSize: `${settings.exactFontSizePt}pt`,
         lineHeight: activeFont.optimalLineHeight,
-        boxShadow: isSchoolExam ? undefined : `inset 0 0 0 1px ${palette.borderHex}33`,
+        boxShadow: isSchoolExam || isModernEditorial ? undefined : `inset 0 0 0 1px ${palette.borderHex}33`,
         borderRadius: isSchoolExam ? "4pt" : undefined,
       }}
       className={`sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl ${
         settings.boldProseText ? "pdf-bold-prose" : "pdf-normal-prose"
       } ${settings.boldMathExpressions !== false ? "pdf-bold-math" : "pdf-normal-math"} ${
-        isSchoolExam ? "px-[16px] py-[14px]" : "px-[18px] py-[14px]"
+        isSchoolExam || isModernEditorial ? "px-[16px] py-[12px]" : "px-[18px] py-[14px]"
       } flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none`}
     >
-      <OfficialSchoolCornerCropMarks
-        primaryHex={palette.primaryHex}
-        accentHex={palette.borderHex}
+      <PdfDecorativeWatermarkLayer
+        settings={settings}
+        teacherFallbackName={identity.teacherFullName}
+        palette={palette}
       />
 
+      {isModernEditorial ? (
+        <ModernEditorialSideHatchedRails palette={palette} pageKey={page.pageNumber} />
+      ) : (
+        <OfficialSchoolCornerCropMarks
+          primaryHex={palette.primaryHex}
+          accentHex={palette.borderHex}
+        />
+      )}
+
       <div className="w-full min-w-0 flex-1 flex flex-col relative z-10">
-        {isSchoolExam ? (
+        {isModernEditorial ? (
+          <ModernEditorialPageHeader
+            identity={identity}
+            palette={palette}
+            documentTitle={settings.customDocumentTitle}
+            subtitleAr={subtitleAr}
+            isSolvedMode={isSolvedMode}
+            numeralMode={settings.numeralMode}
+          />
+        ) : isSchoolExam ? (
           page.isFirstPage ? (
             <OfficialSchoolFirstPageHeader
               identity={identity}
@@ -206,7 +232,14 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
       </div>
 
       <div className="relative z-10 w-full">
-        {isSchoolExam ? (
+        {isModernEditorial ? (
+          <ModernEditorialPageFooter
+            identity={identity}
+            palette={palette}
+            pageNumber={page.pageNumber}
+            numeralMode={settings.numeralMode}
+          />
+        ) : isSchoolExam ? (
           <OfficialSchoolPageFooterBar
             identity={identity}
             pageNumber={page.pageNumber}

@@ -18,7 +18,10 @@ import type { MathNotationLanguage, NumeralDisplayMode } from "./numeral-and-uni
 
 export type PrintFontFamilyId = "almarai" | "cairo" | "ibm_plex" | "readex_pro" | "tajawal";
 
-export type PrintPaperTemplateId = "classic_sovereign" | "official_school_exam";
+export type PrintPaperTemplateId =
+  | "classic_sovereign"
+  | "modern_editorial_handout"
+  | "official_school_exam";
 
 export type DocumentAnswerVisibilityMode =
   | "questions_only"
@@ -37,12 +40,15 @@ export type PageColumnsLayoutMode = 1 | 2;
 export type AnswerSpaceStyleMode = "lined" | "dotted" | "grid" | "blank" | "hidden";
 
 export type PrintColorThemeId =
+  | "sky_editorial"
   | "royal_indigo"
   | "emerald_moasser"
   | "math_teal"
   | "amber_gold"
   | "navy_gold"
   | "photocopy_black";
+
+export type WatermarkRenderMode = "decorative_svg" | "custom_image";
 
 export interface PrintFontFamilySpecification {
   readonly id: PrintFontFamilyId;
@@ -112,12 +118,18 @@ export interface PDFPrintSettingsStateSSOT {
   readonly hideAccreditation?: boolean;
   readonly boldProseText?: boolean;
   readonly boldMathExpressions?: boolean;
+  readonly watermarkEnabled?: boolean;
+  readonly watermarkText?: string;
+  readonly watermarkOpacityPct?: number;
+  readonly watermarkMode?: WatermarkRenderMode;
+  readonly watermarkImageDataUrl?: string;
+  readonly watermarkRotationDeg?: number;
   readonly customDocumentTitle: string;
   readonly customDurationText: string;
 }
 
 export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
-  paperTemplateId: "classic_sovereign",
+  paperTemplateId: "modern_editorial_handout",
   numeralMode: "western",
   notationLanguage: "english",
   fontFamilyId: "cairo",
@@ -128,20 +140,40 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
   showColumnDivider: true,
   answerSpaceStyle: "dotted",
   essayAnswerLinesCount: 3,
-  colorThemeId: "math_teal",
+  colorThemeId: "sky_editorial",
   autoFitMode: "booklet_fill",
   boldProseText: false,
   boldMathExpressions: true,
+  watermarkEnabled: true,
+  watermarkText: "أ/ إسلام محمد",
+  watermarkOpacityPct: 16,
+  watermarkMode: "decorative_svg",
+  watermarkRotationDeg: 0,
   customDocumentTitle: "مستند رياضيات",
   customDurationText: "ساعة ونصف",
 };
 
 const PDF_PRINT_SETTINGS_STORAGE_KEY =
-  "math_platform_pdf_print_settings_ssot_v2" as const;
+  "math_platform_pdf_print_settings_ssot_v3" as const;
+
+const VALID_PAPER_TEMPLATES: readonly PrintPaperTemplateId[] = [
+  "classic_sovereign",
+  "modern_editorial_handout",
+  "official_school_exam",
+];
+
+const VALID_COLOR_THEMES: readonly PrintColorThemeId[] = [
+  "sky_editorial",
+  "royal_indigo",
+  "emerald_moasser",
+  "math_teal",
+  "amber_gold",
+  "navy_gold",
+  "photocopy_black",
+];
 
 /**
- * يسترجع إعدادات تخصيص ورقة الـ PDF المحفوظة للمعلم، أو يرجع الإعدادات الافتراضية المعتمدة:
- * (1- أرقام عربية غربية 0-9، 2- حجم الخط 13pt، 3- خط كايرو، 4- حروف إنجليزية x, y، 5- قالب أزرق).
+ * يسترجع إعدادات تخصيص ورقة الـ PDF المحفوظة للمعلم، أو يرجع الإعدادات الافتراضية المعتمدة.
  */
 export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
   if (typeof window === "undefined") return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
@@ -149,12 +181,16 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
     const raw = window.localStorage.getItem(PDF_PRINT_SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
     const parsed = JSON.parse(raw) as Partial<PDFPrintSettingsStateSSOT>;
+    const rawOpacity =
+      typeof parsed.watermarkOpacityPct === "number" && !Number.isNaN(parsed.watermarkOpacityPct)
+        ? Math.max(0, Math.min(100, Math.round(parsed.watermarkOpacityPct)))
+        : (DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkOpacityPct ?? 16);
+
     return {
       ...DEFAULT_PDF_PRINT_SETTINGS_SSOT,
       ...parsed,
       paperTemplateId:
-        parsed.paperTemplateId === "official_school_exam" ||
-        parsed.paperTemplateId === "classic_sovereign"
+        parsed.paperTemplateId && VALID_PAPER_TEMPLATES.includes(parsed.paperTemplateId)
           ? parsed.paperTemplateId
           : DEFAULT_PDF_PRINT_SETTINGS_SSOT.paperTemplateId,
       numeralMode:
@@ -177,7 +213,9 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
           ? (parsed.exactFontSizePt as ExactPrintFontSizePt)
           : DEFAULT_PDF_PRINT_SETTINGS_SSOT.exactFontSizePt,
       colorThemeId:
-        parsed.colorThemeId || DEFAULT_PDF_PRINT_SETTINGS_SSOT.colorThemeId,
+        parsed.colorThemeId && VALID_COLOR_THEMES.includes(parsed.colorThemeId)
+          ? parsed.colorThemeId
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.colorThemeId,
       boldProseText:
         typeof parsed.boldProseText === "boolean"
           ? parsed.boldProseText
@@ -186,6 +224,23 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
         typeof parsed.boldMathExpressions === "boolean"
           ? parsed.boldMathExpressions
           : DEFAULT_PDF_PRINT_SETTINGS_SSOT.boldMathExpressions,
+      watermarkEnabled:
+        typeof parsed.watermarkEnabled === "boolean"
+          ? parsed.watermarkEnabled
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkEnabled,
+      watermarkText:
+        typeof parsed.watermarkText === "string"
+          ? parsed.watermarkText
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkText,
+      watermarkOpacityPct: rawOpacity,
+      watermarkMode:
+        parsed.watermarkMode === "custom_image" || parsed.watermarkMode === "decorative_svg"
+          ? parsed.watermarkMode
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkMode,
+      watermarkRotationDeg:
+        typeof parsed.watermarkRotationDeg === "number"
+          ? parsed.watermarkRotationDeg
+          : DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkRotationDeg,
     };
   } catch {
     return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
@@ -193,19 +248,27 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
 }
 
 /**
- * يحفظ أي تغيير يختاره المعلم في تخصيص الصفحة (الخط، الحجم، الأرقام، الرموز، اللون، الأعمدة، إلخ) للاستخدام التالي.
+ * يحفظ أي تغيير يختاره المعلم في تخصيص الصفحة (الخط، الحجم، الأرقام، الرموز، اللون، الأعمدة، العلامة المائية).
  */
 export function savePersistedPDFPrintSettingsSSOT(
   settings: PDFPrintSettingsStateSSOT
 ): void {
   if (typeof window === "undefined") return;
+  const { customDocumentTitle: _ignoreTitle, ...persistedPrefs } = settings;
   try {
-    const { customDocumentTitle: _ignoreTitle, ...persistedPrefs } = settings;
     window.localStorage.setItem(
       PDF_PRINT_SETTINGS_STORAGE_KEY,
       JSON.stringify(persistedPrefs)
     );
   } catch {
-    // ignore storage write error
+    try {
+      const { watermarkImageDataUrl: _dropLargeImg, ...lightweight } = persistedPrefs;
+      window.localStorage.setItem(
+        PDF_PRINT_SETTINGS_STORAGE_KEY,
+        JSON.stringify(lightweight)
+      );
+    } catch {
+      // ignore storage write error
+    }
   }
 }

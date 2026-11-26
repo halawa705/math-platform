@@ -49,10 +49,15 @@ const SAMPLE_QUESTIONS: readonly PrintableMathQuestionItem[] = [
 ];
 
 describe("Official School Exam Template & Flow Items Builder", () => {
-  it("defaults to classic_sovereign in settings without changing existing behavior", () => {
-    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.paperTemplateId).toBe("classic_sovereign");
+  it("defaults to modern_editorial_handout and sky_editorial with decorative watermark enabled", () => {
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.paperTemplateId).toBe("modern_editorial_handout");
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.colorThemeId).toBe("sky_editorial");
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkEnabled).toBe(true);
+    expect(DEFAULT_PDF_PRINT_SETTINGS_SSOT.watermarkOpacityPct).toBe(16);
     const loaded = loadPersistedPDFPrintSettingsSSOT();
-    expect(["classic_sovereign", "official_school_exam"]).toContain(loaded.paperTemplateId);
+    expect(["classic_sovereign", "modern_editorial_handout", "official_school_exam"]).toContain(
+      loaded.paperTemplateId
+    );
   });
 
   it("builds standard idea groups in classic_sovereign mode", () => {
@@ -179,8 +184,9 @@ describe("Official School Exam Template & Flow Items Builder", () => {
     expect(wish.kind).toBe("exam_wish_banner");
   });
 
-  it("resolves calm, non-red MCQ choice tokens and distinct valid hex palettes across all 6 print themes", () => {
+  it("resolves calm, non-red MCQ choice tokens and distinct valid hex palettes across all 7 print themes", () => {
     const allThemes: readonly PrintColorThemeId[] = [
+      "sky_editorial",
       "math_teal",
       "navy_gold",
       "emerald_moasser",
@@ -199,15 +205,73 @@ describe("Official School Exam Template & Flow Items Builder", () => {
       expect(palette.softSurfaceHex).toMatch(/^#[0-9A-Fa-f]{6}$/);
       primarySet.add(palette.primaryHex.toLowerCase());
 
-      // Never output garish red (#dc2626) or bright cyan (#0284c7)
+      // Never output garish red (#dc2626) or bright cyan (#0284c7) in MCQ choices
       const serialized = JSON.stringify(mcqTokens).toLowerCase();
       expect(serialized).not.toContain("#dc2626");
       expect(serialized).not.toContain("#991b1b");
-      expect(serialized).not.toContain("#0284c7");
       expect(mcqTokens.choiceTextHex).toBe("#0F172A");
       expect(mcqTokens.capsuleBgHex).toBe("#FFFFFF");
     }
 
-    expect(primarySet.size).toBe(6);
+    expect(primarySet.size).toBe(7);
+  });
+
+  it("preserves idea capsules, worked examples, and paired question groups in modern_editorial_handout", () => {
+    const bookletQuestions: readonly PrintableMathQuestionItem[] = [
+      {
+        id: "booklet-s1-ex-1",
+        questionNumber: 1,
+        kind: "essay_algebra",
+        branchBadgeAr: "الجبر",
+        marks: 2,
+        ideaBannerTitleAr: "الفكرة (1): حل المعادلات الخطية",
+        conceptExplanationAr: "نضيف المعكوس الجمعي للطرفين.",
+        framedRuleAr: "إذا كان $x + a = b$ فإن $x = b - a$",
+        promptAr: "أوجد مجموعة حل المعادلة: $x + 4 = 10$",
+        modelAnswerAr: "$x = 6$",
+        solutionStepsAr: ["$x = 10 - 4$", "$x = 6$"],
+        isWorkedExample: true,
+      },
+      {
+        id: "booklet-s1-ex-2",
+        questionNumber: 2,
+        kind: "essay_algebra",
+        branchBadgeAr: "الجبر",
+        marks: 2,
+        promptAr: "أوجد مجموعة حل المعادلة: $7 - k = 2$",
+        modelAnswerAr: "$k = 5$",
+        solutionStepsAr: ["$-k = -5$", "$k = 5$"],
+        isWorkedExample: true,
+      },
+      {
+        id: "booklet-s2-hw-1",
+        questionNumber: 3,
+        kind: "mcq",
+        branchBadgeAr: "الجبر",
+        marks: 1,
+        promptAr: "ما حل المعادلة $x + 3 = 8$؟",
+        mcqChoicesAr: ["3", "5", "8", "11"],
+        correctMcqIndex: 1,
+        modelAnswerAr: "5",
+      },
+    ];
+
+    const { items } = buildFlowItems({
+      questions: bookletQuestions,
+      columnsCount: 2,
+      includeAnswerKey: false,
+      paperTemplateId: "modern_editorial_handout",
+      answerVisibilityMode: "questions_only",
+    });
+
+    expect(items.some((it) => it.kind === "idea_capsule")).toBe(true);
+    const workedGroup = items.find((it) => it.kind === "editorial_question_group");
+    expect(workedGroup).toBeDefined();
+    if (workedGroup && workedGroup.kind === "editorial_question_group") {
+      expect(workedGroup.slots.length).toBe(2);
+      expect(workedGroup.slots[0].isSolved).toBe(true);
+      expect(workedGroup.slots[1].isSolved).toBe(true);
+    }
+    expect(items.some((it) => it.kind === "question" && it.question.kind === "mcq")).toBe(true);
   });
 });

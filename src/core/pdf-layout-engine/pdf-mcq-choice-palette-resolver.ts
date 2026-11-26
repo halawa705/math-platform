@@ -41,6 +41,13 @@ const PHOTOCOPY_CORRECT_TOKENS = {
 } as const;
 
 const THEME_MCQ_TOKENS_MAP: Record<PrintColorThemeId, Omit<McqChoiceVisualTokens, keyof typeof STANDARD_CORRECT_TOKENS | "capsuleBgHex" | "letterBadgeTextHex" | "choiceTextHex">> = {
+  sky_editorial: {
+    capsuleBorderHex: "#BAE6FD",
+    dividerBorderHex: "#E0F2FE",
+    capsuleShadowCss: "0 1px 0 rgba(2, 132, 199, 0.08)",
+    letterBadgeBgHex: "#0284C7",
+    letterBadgeBorderHex: "#0369A1",
+  },
   math_teal: {
     capsuleBorderHex: "#CBD5E1",
     dividerBorderHex: "#E2E8F0",

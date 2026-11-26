@@ -27,6 +27,7 @@ import PDFHeaderBrandingEditor from "./pdf-header-branding-editor";
 import PDFAutoFitModeSelector from "./pdf-autofit-mode-selector";
 import PDFPaperTemplateSelector from "./pdf-paper-template-selector";
 import PDFBoldWeightToggles from "./pdf-bold-weight-toggles";
+import PDFWatermarkControl from "./pdf-watermark-control";
 
 export const MODULE_ID_PDF_CONTROLS_GROUPED_TOOL_PANEL =
   "pdf_controls_grouped_tool_panel" as const;
@@ -39,6 +40,7 @@ export interface PDFControlsGroupedToolPanelProps {
 const GROUP_TABS: readonly SegmentedTabItem[] = [
   { id: "look", labelAr: "المظهر", icon: "🎨" },
   { id: "content", labelAr: "المحتوى", icon: "📑" },
+  { id: "watermark", labelAr: "العلامة المائية", icon: "✒️" },
   { id: "header", labelAr: "الترويسة", icon: "🏷️" },
 ];
 
@@ -179,6 +181,10 @@ export default function PDFControlsGroupedToolPanel({
             </ToolRow>
           )}
         </div>
+      )}
+
+      {activeGroup === "watermark" && (
+        <PDFWatermarkControl settings={settings} onChange={(patch) => set(patch)} />
       )}
 
       {activeGroup === "header" && (

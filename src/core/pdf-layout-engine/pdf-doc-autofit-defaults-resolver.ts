@@ -43,23 +43,40 @@ export function resolveExamAwarePDFSettings(params: {
   readonly customQuestions: readonly PrintableMathQuestionItem[] | undefined;
   readonly customForms?: readonly PrintableExamFormGroup[];
   readonly preserveAutoFit?: boolean;
+  readonly preserveTemplate?: boolean;
   readonly prevSettings?: PDFPrintSettingsStateSSOT;
 }): PDFPrintSettingsStateSSOT {
-  const { persisted, customTitle, customQuestions, customForms, preserveAutoFit, prevSettings } = params;
+  const {
+    persisted,
+    customTitle,
+    customQuestions,
+    customForms,
+    preserveAutoFit,
+    preserveTemplate,
+    prevSettings,
+  } = params;
   const { isBookletOrReview, isExamDoc } = resolveDocAutoFitDefaults(
     customTitle,
     customQuestions,
     customForms
   );
 
+  const nonExamPersistedTemplate =
+    persisted.paperTemplateId === "official_school_exam"
+      ? "modern_editorial_handout"
+      : (persisted.paperTemplateId ?? "modern_editorial_handout");
+
   return {
     ...(prevSettings ?? persisted),
     ...persisted,
-    paperTemplateId: isExamDoc
-      ? "official_school_exam"
-      : isBookletOrReview
-        ? "classic_sovereign"
-        : (persisted.paperTemplateId ?? "classic_sovereign"),
+    paperTemplateId:
+      preserveTemplate && prevSettings?.paperTemplateId
+        ? prevSettings.paperTemplateId
+        : isExamDoc
+          ? "official_school_exam"
+          : isBookletOrReview
+            ? nonExamPersistedTemplate
+            : (persisted.paperTemplateId ?? "modern_editorial_handout"),
     columnsCount: isBookletOrReview ? 2 : isExamDoc ? 1 : (persisted.columnsCount ?? 2),
     answerVisibilityMode: isBookletOrReview
       ? "questions_only"

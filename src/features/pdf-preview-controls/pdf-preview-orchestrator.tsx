@@ -53,6 +53,7 @@ export default function PDFPreviewOrchestrator({
   children,
 }: PDFPreviewOrchestratorProps) {
   const userChangedAutoFitRef = useRef<boolean>(false);
+  const userChangedTemplateRef = useRef<boolean>(false);
   const [pagesCount, setPagesCount] = useState<number>(1);
   const [selectedFormId, setSelectedFormId] = useState<string>("all");
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() =>
@@ -75,6 +76,7 @@ export default function PDFPreviewOrchestrator({
         customQuestions,
         customForms,
         preserveAutoFit: userChangedAutoFitRef.current,
+        preserveTemplate: userChangedTemplateRef.current,
         prevSettings: prev,
       })
     );
@@ -120,6 +122,9 @@ export default function PDFPreviewOrchestrator({
       next.exactFontSizePt !== settings.exactFontSizePt
     ) {
       userChangedAutoFitRef.current = true;
+    }
+    if (next.paperTemplateId !== settings.paperTemplateId) {
+      userChangedTemplateRef.current = true;
     }
     const withLock =
       next.essayAnswerLinesCount !== settings.essayAnswerLinesCount

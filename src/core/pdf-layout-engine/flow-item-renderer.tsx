@@ -20,6 +20,12 @@ import { OfficialSchoolExamSectionBanner } from "./official-school-exam-section-
 import { OfficialSchoolEndWishBanner } from "./official-school-exam-frame-and-footer";
 import { AnswerSectionBanner } from "./answer-section-banner";
 import { CompactTextbookMcqRow, isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
+import {
+  ModernEditorialSectionRibbonBar,
+  ModernEditorialSubQuestionBanner,
+} from "./modern-editorial-page-chrome";
+import { ModernEditorialMcqRow } from "./modern-editorial-mcq-row";
+import { ModernEditorialPairedGroupRow } from "./modern-editorial-paired-group-row";
 
 export const MODULE_ID_FLOW_ITEM_RENDERER = "flow_item_renderer" as const;
 
@@ -33,9 +39,28 @@ export interface FlowItemRendererProps {
 
 export function FlowItemRenderer({ item, settings, palette, identity, questions }: FlowItemRendererProps) {
   const isSchoolExam = settings.paperTemplateId === "official_school_exam";
+  const isModernEditorial = settings.paperTemplateId === "modern_editorial_handout";
   const isSolvedMode = settings.answerVisibilityMode !== "questions_only";
 
   switch (item.kind) {
+    case "editorial_ribbon_banner":
+      return <ModernEditorialSectionRibbonBar titleArabic={item.titleArabic} palette={palette} />;
+    case "editorial_sub_banner":
+      return (
+        <ModernEditorialSubQuestionBanner
+          badgeLabelAr={item.badgeLabelAr}
+          instructionAr={item.instructionAr}
+          palette={palette}
+        />
+      );
+    case "editorial_question_group":
+      return (
+        <ModernEditorialPairedGroupRow
+          slots={item.slots}
+          settings={settings}
+          palette={palette}
+        />
+      );
     case "exam_section_banner":
       return (
         <OfficialSchoolExamSectionBanner
@@ -70,9 +95,21 @@ export function FlowItemRenderer({ item, settings, palette, identity, questions 
     case "question": {
       const effectiveSolved = item.forceHideSolution ? false : item.isAnswerCard ? true : isSolvedMode;
       const isCompactMcq = isCompactTextbookMcqQuestion(item.question, item.isAnswerCard);
+      const isEditorialMcq =
+        isModernEditorial &&
+        (item.question.kind === "mcq" ||
+          (Array.isArray(item.question.mcqChoicesAr) && item.question.mcqChoicesAr.length >= 2));
       return (
         <div className="w-full min-w-0 flex-1 flex flex-col">
-          {isCompactMcq ? (
+          {isEditorialMcq ? (
+            <ModernEditorialMcqRow
+              question={item.question}
+              displayQuestionNumber={item.sectionLocalNumber ?? item.question.questionNumber}
+              settings={settings}
+              palette={palette}
+              isSolvedMode={effectiveSolved}
+            />
+          ) : isCompactMcq ? (
             <CompactTextbookMcqRow
               question={item.question}
               displayQuestionNumber={item.sectionLocalNumber ?? item.question.questionNumber}

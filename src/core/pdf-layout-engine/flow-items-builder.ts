@@ -12,6 +12,7 @@ import type {
   PrintPaperTemplateId,
 } from "../ssot/pdf-print-settings-ssot";
 import { isCompactTextbookMcqQuestion } from "./compact-textbook-mcq-row";
+import { buildModernEditorialFlowItems } from "./modern-editorial-flow-builder";
 import type { FlowItem } from "./flow-item-model";
 
 export const MODULE_ID_FLOW_ITEMS_BUILDER = "flow_items_builder" as const;
@@ -72,6 +73,17 @@ export function buildFlowItems(params: {
     paperTemplateId,
     answerVisibilityMode,
   } = params;
+
+  if (paperTemplateId === "modern_editorial_handout") {
+    return buildModernEditorialFlowItems({
+      questions,
+      columnsCount,
+      includeAnswerKey,
+      includeAccreditation,
+      answerVisibilityMode,
+    });
+  }
+
   const questionSpan = columnsCount === 2 ? "column" : "full";
   const nonExampleQuestions = questions.filter((q) => !isSolvedExample(q));
   const hasMcqs = nonExampleQuestions.some((q) => isMcqQuestion(q) && q.correctMcqIndex !== undefined);

@@ -142,11 +142,10 @@ export default function StudioWorksheetGeneratorTab({
     });
     onApplyParsedQuestionsToSheet?.(withLines);
 
-    // مزامنة نمط مساحات الحل وقالب الورقة السيادي لورقة العمل
+    // مزامنة نمط مساحات الحل للمعاينة مع الحفاظ على القالب المختار
     const currentPrint = loadPersistedPDFPrintSettingsSSOT();
     savePersistedPDFPrintSettingsSSOT({
       ...currentPrint,
-      paperTemplateId: "classic_sovereign",
       answerSpaceStyle: includeAnswerLines ? "dotted" : "hidden",
       essayAnswerLinesCount: essayAnswerLines,
     });

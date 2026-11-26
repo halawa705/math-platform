@@ -65,6 +65,24 @@ export interface PrintThemePaletteTokens {
 export function resolvePrintThemePalette(
   themeId: PrintColorThemeId
 ): PrintThemePaletteTokens {
+  // ٠. سماوي المذكرات (الافتراضي: ألوان المذكرة المرجعية — أزرق سماوي صريح مع بنفسجي أنديجو وقرمزي هادئ)
+  if (themeId === "sky_editorial") {
+    return {
+      primaryHex: "#0284C7",
+      secondaryHex: "#5B3E96",
+      accentHex: "#C81E1E",
+      badgeBgHex: "#E3F2F8",
+      borderHex: "#2998D0",
+      softSurfaceHex: "#ECE9F5",
+      ruleBgHex: "#F0F8FC",
+      ruleBorderHex: "#0284C7",
+      solvedBgHex: "#F0FDF4",
+      solvedBorderHex: "#15803D",
+      solvedTextHex: "#064E3B",
+      headerGradientCss:
+        "linear-gradient(135deg, #0369A1 0%, #0284C7 55%, #0EA5E9 100%)",
+    };
+  }
   // ١. أرجواني المعاصر (باذنجاني ملكي مطفأ ومتناغم مطبعياً)
   if (themeId === "emerald_moasser") {
     return {
