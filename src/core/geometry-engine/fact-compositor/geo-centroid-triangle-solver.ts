@@ -168,8 +168,63 @@ export function tryOrientCentroidAndPerpMediansTriangle(params: {
   const isEquilateral = facts.some((f) => f.k === "triangle" && f.equilateral);
   if (tri.rightAt || isEquilateral) return {};
 
-  // الحالة 2: مثلث معلوم فيه متوسط واحد وضلع أو ضلعان (نظرية أبولونيوس مثل حاول 40 و 42 ومثال 37)
-  for (const [apex, foot] of medianFootByApex.entries()) {
+  // الحالة 2: معطيات أطوال على متوسطين أو جزأيهما (A + B + C = 3M) — تُعطى الأولوية على المتوسط المفرد
+  const rMap = new Map<string, number>();
+  for (const v of tri.labels) {
+    const rv = getCentroidRadius(v);
+    if (rv !== undefined) rMap.set(v, rv);
+  }
+  if (rMap.size >= 2) {
+    const [u, v] = [...rMap.keys()];
+    const w = tri.labels.find((x) => x !== u && x !== v)!;
+    const ru = rMap.get(u)!;
+    const rv = rMap.get(v)!;
+    const suv = getOuterSide(u, v);
+
+    if (suv !== undefined) {
+      if (ru + rv <= suv + 1e-3 || Math.abs(ru - rv) >= suv - 1e-3) return { notToScale: true };
+      const xm = (ru * ru + suv * suv - rv * rv) / (2 * suv);
+      const ym = Math.sqrt(Math.max(0.04, ru * ru - xm * xm));
+      const rawPts: Record<string, Vec2> = { [u]: { x: 0, y: 0 }, [v]: { x: suv, y: 0 }, [w]: { x: 3 * xm - suv, y: 3 * ym } };
+      const oriented = orientTriangleRigidlyOnBaseBC(rawPts[AKey], rawPts[BKey], rawPts[CKey]);
+      points.set(AKey, oriented.A); points.set(BKey, oriented.B); points.set(CKey, oriented.C);
+      return {};
+    }
+
+    const suw = getOuterSide(u, w);
+    const svw = getOuterSide(v, w);
+    const adjAnchor = suw !== undefined ? u : svw !== undefined ? v : undefined;
+    const adjOther = adjAnchor === u ? v : u;
+    const adjBase = suw ?? svw;
+    if (adjAnchor && adjBase !== undefined) {
+      const rAnc = rMap.get(adjAnchor)!;
+      const rOth = rMap.get(adjOther)!;
+      const xOth = (9 * rAnc * rAnc - 2.25 * rOth * rOth - 0.75 * adjBase * adjBase) / (3 * adjBase);
+      const ySq = (1.5 * rOth) ** 2 - (xOth - adjBase / 2) ** 2;
+      if (ySq <= 1e-4) return { notToScale: true };
+      const rawPts: Record<string, Vec2> = {
+        [adjAnchor]: { x: 0, y: 0 },
+        [w]: { x: adjBase, y: 0 },
+        [adjOther]: { x: xOth, y: Math.sqrt(ySq) },
+      };
+      const oriented = orientTriangleRigidlyOnBaseBC(rawPts[AKey], rawPts[BKey], rawPts[CKey]);
+      points.set(AKey, oriented.A); points.set(BKey, oriented.B); points.set(CKey, oriented.C);
+      return {};
+    }
+
+    const angRad = (102 * Math.PI) / 180;
+    const rawPts: Record<string, Vec2> = {
+      [u]: { x: ru, y: 0 },
+      [v]: { x: rv * Math.cos(angRad), y: rv * Math.sin(angRad) },
+      [w]: { x: -(ru + rv * Math.cos(angRad)), y: -rv * Math.sin(angRad) },
+    };
+    const oriented = orientTriangleRigidlyOnBaseBC(rawPts[AKey], rawPts[BKey], rawPts[CKey]);
+    points.set(AKey, oriented.A); points.set(BKey, oriented.B); points.set(CKey, oriented.C);
+    return {};
+  }
+
+  // الحالة 3: مثلث معلوم فيه متوسط واحد وضلع أو ضلعان (نظرية أبولونيوس مثل حاول 40 و 42 ومثال 37)
+  for (const [apex] of medianFootByApex.entries()) {
     const rApex = getCentroidRadius(apex);
     if (!rApex) continue;
     const medLen = rApex * 1.5;
@@ -209,37 +264,5 @@ export function tryOrientCentroidAndPerpMediansTriangle(params: {
     }
   }
 
-  // الحالة 3: معطيات أطوال على متوسطين أو جزأيهما (A + B + C = 3M)
-  const rMap = new Map<string, number>();
-  for (const v of tri.labels) {
-    const rv = getCentroidRadius(v);
-    if (rv !== undefined) rMap.set(v, rv);
-  }
-  if (rMap.size < 2) return {};
-
-  const [u, v] = [...rMap.keys()];
-  const w = tri.labels.find((x) => x !== u && x !== v)!;
-  const ru = rMap.get(u)!;
-  const rv = rMap.get(v)!;
-  const suv = getOuterSide(u, v);
-
-  if (suv !== undefined) {
-    if (ru + rv <= suv + 1e-3 || Math.abs(ru - rv) >= suv - 1e-3) return { notToScale: true };
-    const xm = (ru * ru + suv * suv - rv * rv) / (2 * suv);
-    const ym = Math.sqrt(Math.max(0.04, ru * ru - xm * xm));
-    const rawPts: Record<string, Vec2> = { [u]: { x: 0, y: 0 }, [v]: { x: suv, y: 0 }, [w]: { x: 3 * xm - suv, y: 3 * ym } };
-    const oriented = orientTriangleRigidlyOnBaseBC(rawPts[AKey], rawPts[BKey], rawPts[CKey]);
-    points.set(AKey, oriented.A); points.set(BKey, oriented.B); points.set(CKey, oriented.C);
-    return {};
-  }
-
-  const angRad = (102 * Math.PI) / 180;
-  const rawPts: Record<string, Vec2> = {
-    [u]: { x: ru, y: 0 },
-    [v]: { x: rv * Math.cos(angRad), y: rv * Math.sin(angRad) },
-    [w]: { x: -(ru + rv * Math.cos(angRad)), y: -rv * Math.sin(angRad) },
-  };
-  const oriented = orientTriangleRigidlyOnBaseBC(rawPts[AKey], rawPts[BKey], rawPts[CKey]);
-  points.set(AKey, oriented.A); points.set(BKey, oriented.B); points.set(CKey, oriented.C);
   return {};
 }

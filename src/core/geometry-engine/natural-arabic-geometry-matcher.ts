@@ -245,7 +245,10 @@ export function matchGeometryWithDiagnostics(
   if (composed.figure) {
     const withAsked = applyAskedQuestionMarkToFigure(composed.figure, rawVerify);
     const verified = finalizeVerifiedFigure(withAsked, []);
-    const isLocked = Boolean(verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId));
+    const isLocked = Boolean(
+      (verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId)) ||
+      verified.figure.titleArabic?.includes("غير مرسوم بمقياس رسم")
+    );
     const tri = evaluateFigureTriStateDecision(verified.figure, rawVerify, verified.warnings, isLocked);
     if (tri.decision === "green") return { figure: verified.figure, warnings: [], source: "compositor", decision: "green" };
   }
@@ -253,7 +256,10 @@ export function matchGeometryWithDiagnostics(
   if (legacy) {
     const withAsked = applyAskedQuestionMarkToFigure(legacy, rawVerify);
     const verifiedLegacy = finalizeVerifiedFigure(withAsked, []);
-    const isLocked = Boolean(verifiedLegacy.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verifiedLegacy.figure.branchId));
+    const isLocked = Boolean(
+      (verifiedLegacy.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verifiedLegacy.figure.branchId)) ||
+      verifiedLegacy.figure.titleArabic?.includes("غير مرسوم بمقياس رسم")
+    );
     const triLegacy = evaluateFigureTriStateDecision(verifiedLegacy.figure, rawVerify, verifiedLegacy.warnings, isLocked);
     if (triLegacy.decision === "green") return { figure: verifiedLegacy.figure, warnings: [], source: "catalog", decision: "green" };
     return { warnings: triLegacy.reasons, source: "none", decision: triLegacy.decision };
@@ -261,7 +267,10 @@ export function matchGeometryWithDiagnostics(
   if (composed.figure) {
     const withAsked = applyAskedQuestionMarkToFigure(composed.figure, rawVerify);
     const verified = finalizeVerifiedFigure(withAsked, composed.warnings);
-    const isLocked = Boolean(verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId));
+    const isLocked = Boolean(
+      (verified.figure.branchId && TOPOLOGY_LOCKED_BRANCH_IDS.has(verified.figure.branchId)) ||
+      verified.figure.titleArabic?.includes("غير مرسوم بمقياس رسم")
+    );
     const tri = evaluateFigureTriStateDecision(verified.figure, rawVerify, verified.warnings, isLocked);
     return { warnings: tri.reasons.length > 0 ? tri.reasons : ["تعذر التحقق الكامل من مطابقة الشكل للمعطيات."], source: "none", decision: tri.decision };
   }

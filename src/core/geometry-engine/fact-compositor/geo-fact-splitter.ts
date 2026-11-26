@@ -74,12 +74,25 @@ function splitSimilarityPair(fact: string): string[] {
 }
 
 const SEG_TOKEN = "(?:[A-Z]{2}|[أ-ي]ـ?\\s*[أ-ي]ـ?)";
-const CHAIN = new RegExp(`^(${SEG_TOKEN})\\s*=\\s*(${SEG_TOKEN})\\s*=\\s*(.+)$`, "u");
+const SEG_TOKEN_EXACT = new RegExp(`^${SEG_TOKEN}$`, "u");
+const CHAIN = new RegExp(`^(${SEG_TOKEN}(?:\\s*=\\s*${SEG_TOKEN})+)\\s*=\\s*(.+)$`, "u");
 
-/** «أ ب = أ جـ = 7» ← «أ ب = أ جـ» و«أ ب = 7» و«أ جـ = 7». */
+/** «أ ب = أ جـ = 7» أو «BD = AD = CD = 6 سم» ← مساويات ثنائية وأطوال كل قطعة على حدة. */
 function expandEqualityChain(fact: string): string[] {
   const m = fact.match(CHAIN);
-  return m ? [`${m[1]} = ${m[2]}`, `${m[1]} = ${m[3]}`, `${m[2]} = ${m[3]}`] : [fact];
+  if (!m) return [fact];
+  const segs = m[1].split(/\s*=\s*/).map((s) => s.trim()).filter(Boolean);
+  const tail = m[2].trim();
+  const tailIsSeg = SEG_TOKEN_EXACT.test(tail);
+  const allSegs = tailIsSeg ? [...segs, tail] : segs;
+  const out: string[] = [];
+  for (let i = 0; i + 1 < allSegs.length; i++) {
+    out.push(`${allSegs[i]} = ${allSegs[i + 1]}`);
+  }
+  if (!tailIsSeg) {
+    for (const s of allSegs) out.push(`${s} = ${tail}`);
+  }
+  return out.length > 0 ? out : [fact];
 }
 
 

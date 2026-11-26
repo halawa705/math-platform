@@ -27,6 +27,28 @@ function hasExactVertexAngle(facts: readonly GeoFact[], v: string, arms?: readon
   return undefined;
 }
 
+function isSubTriangleRightAt(facts: readonly GeoFact[], v: string, tri: readonly [string, string, string]): boolean {
+  const set = new Set(tri);
+  return facts.some((f) => f.k === "triangle" && f.right === v && f.labels.every((l) => set.has(l)));
+}
+
+/** يعيد ترتيب رؤوس الطائرة الورقية ABCD إلى محيطها الفعلي [A, B, D, C] عندما AB = AC و BD = CD. */
+export function reorderKiteLabelsIfSymmetric(labels: readonly string[], facts: readonly GeoFact[]): readonly string[] {
+  if (labels.length !== 4) return labels;
+  const [a, b, c, d] = labels;
+  const hasEq = (u1: string, v1: string, u2: string, v2: string) =>
+    facts.some(
+      (f) =>
+        f.k === "equal" &&
+        ((pairKey(f.a[0], f.a[1]) === pairKey(u1, v1) && pairKey(f.b[0], f.b[1]) === pairKey(u2, v2)) ||
+          (pairKey(f.b[0], f.b[1]) === pairKey(u1, v1) && pairKey(f.a[0], f.a[1]) === pairKey(u2, v2)))
+    );
+  if (hasEq(a, b, a, c) && hasEq(b, d, c, d)) {
+    return [a, b, d, c];
+  }
+  return labels;
+}
+
 /** يضع مربعين متجاورين يشتركان في رأس واحد على خط مستقيم (مثل ABCD و DEFG عند D). */
 export function tryPlaceAdjacentSquares(
   facts: readonly GeoFact[],
@@ -155,22 +177,47 @@ export function placeGeneralCompositeQuad(
   angleOf: AngleOfFn
 ): Vec2[] {
   const [a, b, c, d] = labels;
+  const hasEq = (u1: string, v1: string, u2: string, v2: string) =>
+    facts.some(
+      (f) =>
+        f.k === "equal" &&
+        ((pairKey(f.a[0], f.a[1]) === pairKey(u1, v1) && pairKey(f.b[0], f.b[1]) === pairKey(u2, v2)) ||
+          (pairKey(f.b[0], f.b[1]) === pairKey(u1, v1) && pairKey(f.a[0], f.a[1]) === pairKey(u2, v2)))
+    );
+  if (hasEq(a, b, a, d) && hasEq(c, b, c, d)) {
+    const topLeg = num(a, b) ?? num(a, d) ?? 5;
+    const botLeg = num(b, c) ?? num(c, d) ?? topLeg * 1.35;
+    const halfW = Math.min(topLeg, botLeg) * 0.65;
+    const hTop = Math.sqrt(Math.max(topLeg * topLeg - halfW * halfW, 1));
+    const hBot = Math.sqrt(Math.max(botLeg * botLeg - halfW * halfW, 1));
+    return [
+      { x: halfW, y: hBot + hTop },
+      { x: 0, y: hBot },
+      { x: halfW, y: 0 },
+      { x: 2 * halfW, y: hBot },
+    ];
+  }
+  const rightAtBInABC = angleOf(b) === 90 || isSubTriangleRightAt(facts, b, [a, b, c]);
+  const rightAtCInACD = hasExactVertexAngle(facts, c, [a, c, d]) === 90 || isSubTriangleRightAt(facts, c, [a, c, d]);
+  const rightAtBInABD = hasExactVertexAngle(facts, b, [a, b, d]) === 90 || isSubTriangleRightAt(facts, b, [a, b, d]);
+  const rightAtDInADB = hasExactVertexAngle(facts, d, [a, d, b]) === 90 || isSubTriangleRightAt(facts, d, [a, d, b]);
+  const rightAtCInBCD = angleOf(c) === 90 || isSubTriangleRightAt(facts, c, [b, c, d]);
   const bdDiagonal =
     facts.some((f) => f.k === "draw" && pairKey(f.seg[0], f.seg[1]) === pairKey(b, d)) ||
-    angleOf(c) === 90 ||
-    hasExactVertexAngle(facts, b, [a, b, d]) === 90 ||
-    hasExactVertexAngle(facts, d, [a, d, b]) === 90;
-  const useBD = bdDiagonal && angleOf(b) !== 90 && hasExactVertexAngle(facts, c, [a, c, d]) !== 90;
+    rightAtCInBCD ||
+    rightAtBInABD ||
+    rightAtDInADB;
+  const useBD = bdDiagonal && !rightAtBInABC && !rightAtCInACD;
 
   if (!useBD) {
     // القطر AC: مثلث ABC ثم المثلث ADC على الجهة المقابلة
-    const angB = angleOf(b);
+    const angB = rightAtBInABC ? 90 : angleOf(b);
     const tri1 = placeTriangleFromKnowns({
       ab: num(a, b),
       bc: num(b, c),
       ca: num(a, c),
       angleDeg: { A: hasExactVertexAngle(facts, a, [b, a, c]), B: angB, C: hasExactVertexAngle(facts, c, [a, c, b]) },
-      rightAt: angB === 90 ? "B" : undefined,
+      rightAt: rightAtBInABC ? "B" : undefined,
     });
     const A = tri1.A;
     const B = tri1.B;

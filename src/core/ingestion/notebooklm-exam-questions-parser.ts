@@ -28,6 +28,7 @@ export function parseChoicesTupleFromBlock(
   if (!rawBlock) return undefined;
   const cleanChoice = (c: string) =>
     c
+      .trim()
       .replace(/^(?:(?:أ|ا|ب|جـ?|د|[ABCD1-4])[)\].:-]\s*|\((?:أ|ا|ب|جـ?|د|[ABCD1-4])\)\s*)/i, "")
       .replace(/\|\s*معرف\s*السؤال.*$/i, "")
       .replace(/^\s*\|\s*|\s*\|\s*$/g, "")

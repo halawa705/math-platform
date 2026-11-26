@@ -84,7 +84,7 @@ export function extractParallelEqualChains(
 
 export function extractParallelNamedSegLengths(text: string): Map<string, string> {
   const map = new Map<string, string>();
-  const re = /\b([A-Z]{2})\s*=\s*([^;؛\n،]+?)(?=\s*(?:سم|متر|؛|;|،|\n|$))/g;
+  const re = /\b([A-Z]{2})\s*=\s*([^;؛\n،,]+?)(?=\s*(?:سم|متر|؛|;|،|,|\n|و\s+[A-Z]{2}\s*=|$))/g;
   for (const m of text.matchAll(re)) {
     const seg = m[1];
     const rhs = m[2].trim();

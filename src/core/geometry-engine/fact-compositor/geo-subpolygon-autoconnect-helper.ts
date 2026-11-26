@@ -69,6 +69,10 @@ export function autoConnectReferencedSubPolygons(params: {
   }
   for (const q of quadRefs) {
     const verts = q.split("");
+    const sortedKey = [...verts].sort().join("");
+    if (polygons?.some((pl) => pl.labels.length === 4 && [...pl.labels].sort().join("") === sortedKey)) {
+      continue;
+    }
     if (verts.every((v) => points.has(v))) {
       for (let i = 0; i < 4; i++) connectEdgeIfMissing(verts[i], verts[(i + 1) % 4], false);
     }

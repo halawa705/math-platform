@@ -27,23 +27,35 @@ const FORM_SPLIT_REGEX =
   /(?:^|\n)\s*(?:===\s*\[(?:FORM|نموذج|MODEL)\s*:\s*(?:\d+|[^\n\]]+)\][^\n]*===|النموذج\s*(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|\([^\n)]+\)|[^\n:.-]+|\d+)\s*[:.-]?)/gi;
 
 function extractFormLetterFromHeader(headerText: string, fallbackIndex: number): string {
+  const mapFormToken = (rawInput: string): string => {
+    const cleaned = rawInput.replace(/[\[\]()=|]+/g, "").trim();
+    if (!cleaned) return "";
+    if (cleaned === "ا" || cleaned === "أ" || cleaned === "A" || cleaned === "1" || cleaned === "الأول") return "أ";
+    if (cleaned === "ب" || cleaned === "B" || cleaned === "2" || cleaned === "الثاني") return "ب";
+    if (cleaned === "ج" || cleaned === "جـ" || cleaned === "C" || cleaned === "3" || cleaned === "الثالث") return "جـ";
+    if (cleaned === "د" || cleaned === "D" || cleaned === "4" || cleaned === "الرابع") return "د";
+    if (cleaned === "هـ" || cleaned === "ه" || cleaned === "E" || cleaned === "5" || cleaned === "الخامس") return "هـ";
+    if (cleaned === "و" || cleaned === "F" || cleaned === "6" || cleaned === "السادس") return "و";
+    return cleaned;
+  };
+
+  // الأولوية القصوى لحقل «النموذج: أ» حتى لو سبقه «[FORM: 1] |»
+  const arabicTagMatch = headerText.match(/النموذج\s*:\s*\[?\(?([^\]\)\n|=.-]+)\)?\]?/i);
+  if (arabicTagMatch?.[1]) {
+    const mapped = mapFormToken(arabicTagMatch[1]);
+    if (mapped) return mapped;
+  }
+
   const parenMatch = headerText.match(/\(([^)\n]+)\)/);
   if (parenMatch?.[1]) {
-    const raw = parenMatch[1].trim();
-    if (raw === "ا" || raw === "A" || raw === "1") return "أ";
-    if (raw === "B" || raw === "2") return "ب";
-    if (raw === "C" || raw === "3") return "جـ";
-    if (raw === "D" || raw === "4") return "د";
-    return raw;
+    const mapped = mapFormToken(parenMatch[1]);
+    if (mapped) return mapped;
   }
-  const match = headerText.match(/(?:النموذج|MODEL|FORM)\s*[:\s]*([^\n:.-]+)/i);
+
+  const match = headerText.match(/(?:النموذج|MODEL|FORM)\s*[:\s]*([^\n:\].|=-]+)/i);
   if (match?.[1]) {
-    const raw = match[1].trim();
-    if (raw === "ا" || raw === "A" || raw === "1") return "أ";
-    if (raw === "B" || raw === "2") return "ب";
-    if (raw === "C" || raw === "3") return "جـ";
-    if (raw === "D" || raw === "4") return "د";
-    return raw;
+    const mapped = mapFormToken(match[1]);
+    if (mapped) return mapped;
   }
   return getArabicFormLetter(fallbackIndex);
 }

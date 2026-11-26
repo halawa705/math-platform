@@ -11,6 +11,7 @@ import {
 import {
   placeGeneralCompositeQuad,
   placeOrientedTrapezoid,
+  reorderKiteLabelsIfSymmetric,
   tryPlaceAdjacentSquares,
 } from "./geo-composite-quad-placer";
 import {
@@ -111,20 +112,32 @@ export function placeDeclaredShapes(
     }
   }
 
-  // ترتيب المضلعات طوبولوجياً: الرباعيات الأساسية أولاً، ثم الرباعيات والمضلعات المشتركة، ثم المثلثات الفرعية
+  // ترتيب المضلعات طوبولوجياً: الرباعيات الأساسية أولاً، ثم المثلثات الخارجية، ثم المثلثات الفرعية ذات الرؤوس المشتقة (مثل EMD داخل ABC)
   const diagMeetPts = new Set(facts.filter((x): x is Extract<GeoFact, { k: "diagonalsMeet" }> => x.k === "diagonalsMeet").map((x) => x.p));
+  const derivedPts = new Set<string>();
+  for (const x of facts) {
+    if (x.k === "midpoint" || x.k === "pointOn" || x.k === "intersect") derivedPts.add(x.p);
+  }
   const polyPriority = (f: GeoFact): number => {
     if (f.k === "quad") return f.labels.some((l) => diagMeetPts.has(l)) ? 1 : 0;
     if (f.k === "polygon") return 1;
-    if (f.k === "triangle") return 2;
+    if (f.k === "triangle") return f.labels.some((l) => derivedPts.has(l)) ? 2.5 : 2;
     return 3;
   };
   effectiveFacts.sort((a, b) => polyPriority(a) - polyPriority(b));
 
+  const isDerivedFromPlacedVertex = (v: string) =>
+    derivedPts.has(v) ||
+    facts.some((mf) => mf.k === "median" && ((mf.seg[0] === v && points.has(mf.seg[1])) || (mf.seg[1] === v && points.has(mf.seg[0]))));
+
   for (const f of effectiveFacts) {
     if (f.k !== "triangle" && f.k !== "quad" && f.k !== "polygon") continue;
-    const labels = f.labels;
+    const labels = f.k === "quad" && f.kind === "general" ? reorderKiteLabelsIfSymmetric(f.labels, facts) : f.labels;
     if (f.k === "triangle" && labels.every((l) => points.has(l))) continue;
+    const unplaced = labels.filter((l) => !points.has(l));
+    if (f.k === "triangle" && polygons.length > 0 && unplaced.length >= 2 && unplaced.every((l) => isDerivedFromPlacedVertex(l))) {
+      continue;
+    }
     if (f.k === "triangle" && points.size >= 4 && labels.filter((l) => points.has(l)).length === 2 && facts.some((pf) => (pf.k === "pointOn" || pf.k === "diagonalsMeet") && labels.includes(pf.p))) {
       continue;
     }
@@ -134,9 +147,28 @@ export function placeDeclaredShapes(
     } else if (f.k === "triangle") {
       const [a, b, c] = labels;
       const keyOf = (l: string): TriVertexKey | undefined => (l === a ? "A" : l === b ? "B" : l === c ? "C" : undefined);
-      const abVal = num(a, b);
+      let abVal = num(a, b);
       let bcVal = num(b, c);
-      const caVal = num(c, a);
+      let caVal = num(c, a);
+      // استنتاج طول الوتر من متوسط رأس القائمة أو من مثلث قائم شريك على نفس الوتر
+      const inferHypFromMedianOrPartner = (v0: string, v1: string, rightV: string): number | undefined => {
+        const midF = facts.find((mf): mf is Extract<GeoFact, { k: "midpoint" }> => mf.k === "midpoint" && pairKey(mf.seg[0], mf.seg[1]) === pairKey(v0, v1));
+        const medLen = midF ? num(rightV, midF.p) : undefined;
+        if (medLen !== undefined) return medLen * 2;
+        const partner = effectiveFacts.find(
+          (tf): tf is Extract<GeoFact, { k: "triangle" }> =>
+            tf.k === "triangle" && tf !== f && Boolean(tf.right) && tf.labels.includes(v0) && tf.labels.includes(v1) && tf.right !== v0 && tf.right !== v1
+        );
+        if (partner && partner.right) {
+          const l0 = num(partner.right, v0);
+          const l1 = num(partner.right, v1);
+          if (l0 && l1) return Math.hypot(l0, l1);
+        }
+        return undefined;
+      };
+      if (f.right === b && caVal === undefined) caVal = inferHypFromMedianOrPartner(a, c, b);
+      else if (f.right === a && bcVal === undefined) bcVal = inferHypFromMedianOrPartner(b, c, a);
+      else if (f.right === c && abVal === undefined) abVal = inferHypFromMedianOrPartner(a, b, c);
       // إذا كان هناك قاطع موازٍ للقاعدة BC (مثل DE // BC) معلوم الطول مع نسبة تقسيم معلومة، نستنتج طول BC المتناسب
       if (bcVal === undefined) {
         const par = facts.find((pf) => pf.k === "parallel" && (pairKey(pf.a[0], pf.a[1]) === pairKey(b, c) || pairKey(pf.b[0], pf.b[1]) === pairKey(b, c)));

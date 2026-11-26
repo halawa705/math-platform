@@ -88,6 +88,7 @@ export function evaluatePageCandidate(
   let cost = oversized ? W.oversizedPenalty : 0;
   if (last.kind === "idea_capsule" && !flags.isLastPage) cost += lone ? W.orphanPenalty : W.capsuleAtPageBottomCost;
   if (last.kind === "answer_section_banner" && !flags.isLastPage) cost += W.orphanPenalty;
+  if (last.kind === "exam_section_banner" && !flags.isLastPage) cost += W.orphanPenalty;
   if (lone && first.kind === "answer_section_banner" && !flags.isLastPage) cost += W.orphanPenalty;
   if (first.kind === "idea_divider") cost += W.orphanPenalty;
   if (lone && first.kind === "accreditation_footer" && !flags.isFirstPage) cost += W.loneFooterPenalty;

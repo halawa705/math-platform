@@ -27,6 +27,13 @@ import { tryComposeStandaloneLinearFigure } from "./geo-standalone-linear-placer
 import { autoConnectReferencedSubPolygons } from "./geo-subpolygon-autoconnect-helper";
 import { resolveEqualSegmentRatioOnHost } from "./geo-quad-angle-and-shared-placer";
 import { resolveCollinearFactInComposer } from "./geo-collinear-constraint-resolver";
+import {
+  allocateDedupParallelGroup,
+  emitSubTriangleRightAngles,
+  shouldSkipOverloadedMidpointFact,
+  tryResolveConstrainedPerpWithPointOn,
+  tryResolveRayExtensionEqualityPoint,
+} from "./geo-pointon-perp-and-ray-helper";
 import { buildExplicitConstraintsFromGeoFacts } from "../constraint-refiner/geo-explicit-constraints-bridge";
 import {
   tryDispatchFallbackDomainFigure,
@@ -113,6 +120,7 @@ export function composeFigureFromGeometryDescription(
       if (!hasDiag(a, c) && !hasDiag(b, d)) addExtra(a, c);
     }
   }
+  emitSubTriangleRightAngles({ facts, points, addAngle });
 
   const centroidOriented = tryOrientCentroidAndPerpMediansTriangle({ facts, polygons, lengths, points });
   const perpMedians = centroidOriented.perpRightAngle ?? null;
@@ -138,17 +146,17 @@ export function composeFigureFromGeometryDescription(
   };
 
   const deferredParallels: Extract<GeoFact, { k: "parallel" }>[] = [];
-  const runParallel = (pf: Extract<GeoFact, { k: "parallel" }>, targetWarnings: string[] = warnings) => resolveParallelConstraintFact({
-    parallelFact: pf, facts, polygons, points, host, addExtra,
-    addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
-    nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
-    tryComposite: () => tryPlaceParallelWithMissingEndpoints({
-      parallelFact: pf, facts, points, host, lengths, addExtra,
+  const parallelPairGroupMap = new Map<string, number>();
+  const runParallel = (pf: Extract<GeoFact, { k: "parallel" }>, targetWarnings: string[] = warnings) => {
+    const allocGroup = () => allocateDedupParallelGroup(pf, parallelPairGroupMap, () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; });
+    resolveParallelConstraintFact({
+      parallelFact: pf, facts, polygons, points, host, addExtra,
       addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp),
-      nextGroup: () => { parallelGroup = Math.min(2, parallelGroup + 1); return parallelGroup; },
-    }),
-    warnings: targetWarnings,
-  });
+      nextGroup: allocGroup,
+      tryComposite: () => tryPlaceParallelWithMissingEndpoints({ parallelFact: pf, facts, points, host, lengths, addExtra, addParallelMark: (s0, s1, grp) => parallelMarks.set(pairKey(s0, s1), grp), nextGroup: allocGroup }),
+      warnings: targetWarnings,
+    });
+  };
 
   const sorted = sortComposerFactsTopologically(facts);
   const postFacts = sorted.filter((f) => f.k === "draw" || f.k === "equal" || f.k === "angle");
@@ -185,9 +193,13 @@ export function composeFigureFromGeometryDescription(
             continue;
           }
         }
+        if (f.k === "pointOn" && P(f.p)) { host.set(f.p, f.seg); continue; }
+        if (f.k === "pointOn" && pass === 0 && !lengths.has(pairKey(a, f.p)) && !lengths.has(pairKey(f.p, b)) && facts.some((pf) => pf.k === "perp" && (pf.a.includes(f.p) || pf.b.includes(f.p)))) { nextPending.push({ fact: f }); continue; }
+        if (f.k === "pointOn" && tryResolveRayExtensionEqualityPoint({ fact: f, facts, points, linearKindMap, isPolygonSide, addExtra })) continue;
         if (f.k === "pointOn" && tryPlacePointOnWithCollinearExtension({ p: f.p, seg: f.seg, points, lengths, addExtra })) { host.set(f.p, f.seg); continue; }
         const isDeferredHostLine = f.k === "pointOn" && facts.some((pf) => pf.k === "parallel" && (pairKey(pf.a[0], pf.a[1]) === pairKey(a, b) || pairKey(pf.b[0], pf.b[1]) === pairKey(a, b)));
         if (!P(a) || !P(b)) { if (!isDeferredHostLine) nextPending.push({ fact: f, warn: `نقطتا ${a}${b} غير معرّفتين` }); continue; }
+        if (f.k === "midpoint" && shouldSkipOverloadedMidpointFact(f, facts, points)) continue;
         points.set(f.p, vLerp(P(a)!, P(b)!, f.k === "midpoint" ? 0.5 : ratioOnSeg(f.p, a, b))); host.set(f.p, f.seg);
         if (f.k === "midpoint") { ticks.set(pairKey(a, f.p), ++tickGroup); ticks.set(pairKey(f.p, b), tickGroup); }
       } else if (f.k === "parallel") {
@@ -199,7 +211,7 @@ export function composeFigureFromGeometryDescription(
       } else if (f.k === "perp") {
         const ka = pairKey(f.a[0], f.a[1]); const kb = pairKey(f.b[0], f.b[1]);
         if (perpMedians && ((ka === perpMedians.seg1Key && kb === perpMedians.seg2Key) || (kb === perpMedians.seg1Key && ka === perpMedians.seg2Key))) continue;
-        if (!resolvePerpFactHelper({ fact: f, points, host, lengths, addExtra, addAngle })) nextPending.push({ fact: f, warn: "تعامد بنقاط غير معرّفة" });
+        if (!tryResolveConstrainedPerpWithPointOn({ fact: f, facts, points, host, addExtra, addAngle }) && !resolvePerpFactHelper({ fact: f, points, host, lengths, addExtra, addAngle })) nextPending.push({ fact: f, warn: "تعامد بنقاط غير معرّفة" });
       } else if (f.k === "bisector") {
         const opp = trianglesSides(f.vertex); const d = f.seg[0] === f.vertex ? f.seg[1] : f.seg[0];
         if (!opp || !P(f.vertex)) { nextPending.push({ fact: f }); continue; }

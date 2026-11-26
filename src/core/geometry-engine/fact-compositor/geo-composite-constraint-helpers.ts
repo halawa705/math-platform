@@ -280,6 +280,12 @@ export function resolveParallelConstraintFact(params: {
       }
     }
   }
+  const vA = vSub(points.get(y)!, points.get(x)!);
+  const vB = vSub(points.get(q)!, points.get(p)!);
+  const lenProduct = Math.hypot(vA.x, vA.y) * Math.hypot(vB.x, vB.y);
+  if (lenProduct < 1e-6) return;
+  const sinAngle = Math.abs(vA.x * vB.y - vA.y * vB.x) / lenProduct;
+  if (sinAngle > 0.08) return;
   const grp = nextGroup();
   addParallelMark(x, y, grp);
   addParallelMark(p, q, grp);

@@ -33,7 +33,7 @@ function one(raw: string): string { return normalizeLabelKey(raw.trim()); }
 
 const QUAD_WORDS: Array<[RegExp, QuadKind]> = [
   [/^(?:ال)?مستطيل/, "rectangle"], [/^(?:ال)?مربع/, "square"], [/^(?:ال)?معين/, "rhombus"], [/^(?:ال)?متوازي\s*(?:ال)?أضلاع/, "parallelogram"],
-  [/^(?:ال)?شبه\s*(?:ال)?منحرف/, "trapezoid"], [/^(?:(?:ال)?شكل\s*)?(?:ال)?رباعي/, "general"],
+  [/^(?:ال)?شبه\s*(?:ال)?منحرف/, "trapezoid"], [/^(?:(?:ال)?شكل\s*)?(?:ال)?طائرة\s*ورقية/, "general"], [/^(?:(?:ال)?شكل\s*)?(?:ال)?رباعي/, "general"],
 ];
 
 export function parseGeoFactString(s: string): GeoFact | null {
