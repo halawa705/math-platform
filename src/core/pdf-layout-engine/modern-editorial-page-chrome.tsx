@@ -249,25 +249,31 @@ export function ModernEditorialSubQuestionBanner({
   badgeLabelAr,
   instructionAr,
   palette,
+  zoneVariant = "algebra",
 }: {
   readonly badgeLabelAr: string;
   readonly instructionAr?: string;
   readonly palette: PrintThemePaletteTokens;
+  readonly zoneVariant?: "algebra" | "geometry";
 }) {
   const isPhotocopy = palette.primaryHex === "#000000";
+  const isGeometry = zoneVariant === "geometry";
+  const barHex = isPhotocopy ? "#0F172A" : isGeometry ? palette.primaryHex : palette.secondaryHex;
+  const bgHex = isPhotocopy ? "#F8FAFC" : isGeometry ? palette.badgeBgHex : palette.softSurfaceHex;
+  const badgeColorHex = isPhotocopy ? "#0F172A" : isGeometry ? palette.primaryHex : palette.secondaryHex;
   return (
     <div
       style={{
-        backgroundColor: isPhotocopy ? "#F8FAFC" : palette.softSurfaceHex,
-        borderRight: `9px solid ${palette.secondaryHex}`,
+        backgroundColor: bgHex,
+        borderRight: `9px solid ${barHex}`,
         padding: "2.5px 8px",
       }}
       className="w-full flex flex-wrap items-center gap-2 break-inside-avoid print:break-inside-avoid"
     >
       <span
         style={{
-          border: `1.3px solid ${palette.primaryHex}`,
-          color: palette.primaryHex,
+          border: `1.3px solid ${badgeColorHex}`,
+          color: badgeColorHex,
           backgroundColor: "#FFFFFF",
           borderRadius: "9999px",
           padding: "0px 8px",

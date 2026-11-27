@@ -21,6 +21,7 @@ export interface RenderQuestionFigureSvgOptions {
   readonly notationLanguage?: MathNotationLanguage;
   readonly monochromePrintSafe?: boolean;
   readonly strokeWidthMultiplier?: number;
+  readonly editorialTextbookStyle?: boolean;
 }
 
 export function renderQuestionFigureSvg(

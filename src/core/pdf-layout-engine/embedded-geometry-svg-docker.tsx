@@ -26,6 +26,7 @@ export interface EmbeddedGeometrySVGDockerProps {
   readonly columnsCount?: 1 | 2;
   readonly monochromePrintSafe?: boolean;
   readonly strokeWidthMultiplier?: number;
+  readonly editorialFrameless?: boolean;
 }
 
 export function EmbeddedGeometrySVGDocker({
@@ -33,7 +34,7 @@ export function EmbeddedGeometrySVGDocker({
   graphSpec,
   rawSvgMarkup,
   borderHex,
-  softSurfaceHex,
+  softSurfaceHex: _softSurfaceHex,
   primaryHex,
   accentHex,
   numeralMode,
@@ -42,25 +43,48 @@ export function EmbeddedGeometrySVGDocker({
   columnsCount = 2,
   monochromePrintSafe = false,
   strokeWidthMultiplier = 1,
+  editorialFrameless = false,
 }: EmbeddedGeometrySVGDockerProps) {
   if (!geometryFigure && !graphSpec && !rawSvgMarkup) return null;
 
   const aspect = geometryFigure ? computeFigureAspectFromVertices(geometryFigure.vertices) : 1.4;
-  const box = computeFigureBoxSizePx({ aspect, figureScale, columnsCount });
+  const box = computeFigureBoxSizePx({
+    aspect,
+    figureScale,
+    columnsCount,
+    editorialTextbook: editorialFrameless,
+  });
   const svgMarkup = renderQuestionFigureSvg(
     { geometryFigure, graphSpec, rawSvgMarkup },
     {
       widthPx: box.svgWidthPx,
       heightPx: box.svgHeightPx,
-      strokeColorHex: primaryHex,
-      accentColorHex: accentHex,
+      strokeColorHex: editorialFrameless ? "#0F172A" : primaryHex,
+      accentColorHex: editorialFrameless && !monochromePrintSafe ? accentHex : monochromePrintSafe ? "#0F172A" : accentHex,
+      backgroundColorHex: editorialFrameless ? "transparent" : "#FFFFFF",
       numeralMode,
       notationLanguage,
       monochromePrintSafe,
       strokeWidthMultiplier,
+      editorialTextbookStyle: editorialFrameless,
     }
   );
   if (!svgMarkup) return null;
+
+  if (editorialFrameless) {
+    return (
+      <div
+        style={{
+          width: `${box.boxWidthPx}px`,
+          minWidth: `${box.boxWidthPx}px`,
+          maxHeight: `${Math.round(box.boxHeightPx * 1.28)}px`,
+          backgroundColor: "transparent",
+        }}
+        className="flex items-center justify-center shrink-0 overflow-visible"
+        dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      />
+    );
+  }
 
   return (
     <div

@@ -12,6 +12,7 @@ export interface FigureBoxSizePx {
 }
 
 const BASE_AREA_PX2 = 146 * 102; // مساحة الرسم الحالية (146×102) عند figureScale = 1
+const EDITORIAL_BASE_AREA_PX2 = 206 * 134; // مساحة أشكال الكتب المدرسية الكبيرة الشفافة عند figureScale = 1
 const BOX_PADDING_PX = 6;
 
 /** @param aspect العرض ÷ الارتفاع للشكل (يُقصّ بين 0.6 و 2.6). */
@@ -19,19 +20,23 @@ export function computeFigureBoxSizePx(params: {
   readonly aspect: number;
   readonly figureScale: number;
   readonly columnsCount: 1 | 2;
+  readonly editorialTextbook?: boolean;
 }): FigureBoxSizePx {
   const aspect = Math.min(2.6, Math.max(0.6, Number.isFinite(params.aspect) ? params.aspect : 1.4));
   const scale = Math.min(1.6, Math.max(0.6, params.figureScale));
-  const maxW = params.columnsCount === 2 ? 190 : 260;
-  const area = BASE_AREA_PX2 * scale * scale;
+  const isEd = Boolean(params.editorialTextbook);
+  const maxW = isEd ? (params.columnsCount === 2 ? 235 : 265) : params.columnsCount === 2 ? 190 : 260;
+  const maxH = isEd ? (params.columnsCount === 2 ? 152 : 165) : 170;
+  const area = (isEd ? EDITORIAL_BASE_AREA_PX2 : BASE_AREA_PX2) * scale * scale;
   let w = Math.sqrt(area * aspect);
   let h = w / aspect;
   if (w > maxW) { w = maxW; h = w / aspect; }
-  if (h > 170) { h = 170; w = h * aspect; }
+  if (h > maxH) { h = maxH; w = h * aspect; }
   if (w < 84) { w = 84; h = w / aspect; }
   const svgWidthPx = Math.round(w);
   const svgHeightPx = Math.round(h);
-  return { boxWidthPx: svgWidthPx + BOX_PADDING_PX, boxHeightPx: svgHeightPx + BOX_PADDING_PX, svgWidthPx, svgHeightPx };
+  const pad = isEd ? 0 : BOX_PADDING_PX;
+  return { boxWidthPx: svgWidthPx + pad, boxHeightPx: svgHeightPx + pad, svgWidthPx, svgHeightPx };
 }
 
 /** نسبة أبعاد شكل من إحداثيات رؤوسه (عرض ÷ ارتفاع). */

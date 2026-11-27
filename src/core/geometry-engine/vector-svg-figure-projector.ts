@@ -50,6 +50,7 @@ export interface SVGProjectorOptions {
   readonly backgroundColorHex?: string;
   readonly numeralMode?: NumeralDisplayMode;
   readonly notationLanguage?: MathNotationLanguage;
+  readonly editorialTextbookStyle?: boolean;
 }
 
 export function projectGeometryFigureToSVGMarkup(
@@ -58,9 +59,11 @@ export function projectGeometryFigureToSVGMarkup(
 ): string {
   const width = options.widthPx ?? 230;
   const height = options.heightPx ?? 165;
-  const strokeColor = options.strokeColorHex ?? "#1E293B";
+  const isEd = Boolean(options.editorialTextbookStyle);
+  const strokeColor = isEd ? "#0F172A" : (options.strokeColorHex ?? "#1E293B");
   const accentColor = options.accentColorHex ?? "#0D9488";
-  const backgroundColor = options.backgroundColorHex ?? "#FFFFFF";
+  const lineDecorColor = isEd ? strokeColor : accentColor;
+  const backgroundColor = options.backgroundColorHex ?? (isEd ? "transparent" : "#FFFFFF");
   const numeralMode = options.numeralMode ?? "western";
   const notation = options.notationLanguage || "english";
   const padding = Math.max(16, Math.min(22, Math.round(Math.min(width, height) * 0.14)));
@@ -174,13 +177,13 @@ export function projectGeometryFigureToSVGMarkup(
         const off = (i - (seg.tickMarks - 1) / 2) * 4;
         const tx = mx + ux * off;
         const ty = my + uy * off;
-        decorations += `<line x1="${(tx - nx * 4).toFixed(1)}" y1="${(ty - ny * 4).toFixed(1)}" x2="${(tx + nx * 4).toFixed(1)}" y2="${(ty + ny * 4).toFixed(1)}" stroke="${accentColor}" stroke-width="1.5" />`;
+        decorations += `<line x1="${(tx - nx * 4).toFixed(1)}" y1="${(ty - ny * 4).toFixed(1)}" x2="${(tx + nx * 4).toFixed(1)}" y2="${(ty + ny * 4).toFixed(1)}" stroke="${lineDecorColor}" stroke-width="1.5" />`;
       }
     }
     if (seg.parallelArrows) {
       const ax = mx - ux * 3;
       const ay = my - uy * 3;
-      decorations += `<path d="M ${(ax - ux * 4 + nx * 3).toFixed(1)} ${(ay - uy * 4 + ny * 3).toFixed(1)} L ${(ax + ux * 2.5).toFixed(1)} ${(ay + uy * 2.5).toFixed(1)} L ${(ax - ux * 4 - nx * 3).toFixed(1)} ${(ay - uy * 4 - ny * 3).toFixed(1)}" fill="none" stroke="${accentColor}" stroke-width="1.5" stroke-linecap="round"/>`;
+      decorations += `<path d="M ${(ax - ux * 4 + nx * 3).toFixed(1)} ${(ay - uy * 4 + ny * 3).toFixed(1)} L ${(ax + ux * 2.5).toFixed(1)} ${(ay + uy * 2.5).toFixed(1)} L ${(ax - ux * 4 - nx * 3).toFixed(1)} ${(ay - uy * 4 - ny * 3).toFixed(1)}" fill="none" stroke="${lineDecorColor}" stroke-width="1.5" stroke-linecap="round"/>`;
     }
     const aLen = 7.5;
     const aW = 3.2;
@@ -190,26 +193,30 @@ export function projectGeometryFigureToSVGMarkup(
     if (seg.arrowAtStart || seg.isLine) {
       decorations += `<polygon points="${x1.toFixed(1)},${y1.toFixed(1)} ${(x1 + ux * aLen + nx * aW).toFixed(1)},${(y1 + uy * aLen + ny * aW).toFixed(1)} ${(x1 + ux * aLen - nx * aW).toFixed(1)},${(y1 + uy * aLen - ny * aW).toFixed(1)}" fill="${strokeColor}" />`;
     }
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="1.8" stroke-linecap="round" ${dashAttr} />${decorations}`;
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="${isEd ? "1.95" : "1.8"}" stroke-linecap="round" ${dashAttr} />${decorations}`;
   }).join("");
 
   const surfaceTintsSvg = projectGeometrySurfaceShadingSVGMarkup({ figure, vertexMap });
   const explicitOverlaySvg = projectExplicitConstraintsOverlaySVGMarkup({ figure, vertexMap, strokeColor, accentColor });
   const anglesSvg = projectGeometryAnglesSVGMarkup({
-    angles: figure.angles, vertexMap, strokeColor, accentColor, numeralMode, notation, occupiedBoxes, obstacleSegments,
+    angles: figure.angles, vertexMap, strokeColor, accentColor, numeralMode, notation, occupiedBoxes, obstacleSegments, editorialTextbookStyle: isEd,
   });
 
   const verticesSvg = Array.from(vertexMap.values()).map((v) => {
     const cleanLabel = (v.label || "").trim();
     const isRayTip = v.hideVertexDot || (arrowTipVertexIds.has(v.id) && (outgoingCount.get(v.id) ?? 0) <= 0);
     if (v.hideVertexDot && !cleanLabel) return "";
-    const dotsSvg = isRayTip ? "" : `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" /><circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" />`;
+    const dotsSvg = isRayTip
+      ? ""
+      : isEd
+        ? `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="1.8" fill="#0F172A" />`
+        : `<circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="4" fill="#6366F1" fill-opacity="0.16" /><circle cx="${v.screen.sx}" cy="${v.screen.sy}" r="2" fill="${strokeColor}" />`;
     if (!cleanLabel) return dotsSvg;
     const localized = localizeGeometricVertexLabelSSOT(cleanLabel, notation);
     const placed = solveVertexLabelPlacement({
       sx: v.screen.sx, sy: v.screen.sy, label: localized, centerSx, centerSy, isRayTip, occupiedBoxes, segments: obstacleSegments, bounds: { width, height },
     });
-    return `${dotsSvg}<text x="${placed.lx.toFixed(1)}" y="${placed.ly.toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="900" font-family="system-ui, sans-serif" fill="${strokeColor}" paint-order="stroke" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round">${localized}</text>`;
+    return `${dotsSvg}<text x="${placed.lx.toFixed(1)}" y="${placed.ly.toFixed(1)}" text-anchor="middle" font-size="${isEd ? "11.2" : "9.5"}" font-weight="900" font-family="system-ui, sans-serif" fill="${isEd ? accentColor : strokeColor}" paint-order="stroke" stroke="#ffffff" stroke-width="${isEd ? "2.6" : "2.4"}" stroke-linejoin="round">${localized}</text>`;
   }).join("");
 
   const wrapLtrMath = (expr: string): string =>
@@ -229,7 +236,7 @@ export function projectGeometryFigureToSVGMarkup(
     const placement = solveSegmentPillOrBracketPlacement({
       seg: obs, textStr, centerSx, centerSy, occupiedBoxes, allSegments: obstacleSegments, bounds: { width, height },
     });
-    const pillTextCol = isUnknown ? "#D97706" : accentColor;
+    const pillTextCol = isEd ? accentColor : isUnknown ? "#D97706" : accentColor;
     let bracketSvg = "";
     if (placement.mode === "bracket" && placement.bracket) {
       const { x1, y1, x2, y2, nx, ny, offset } = placement.bracket;
@@ -242,12 +249,13 @@ export function projectGeometryFigureToSVGMarkup(
       const bx2 = x2 + nx * offset;
       const by2 = y2 + ny * offset;
       extraPointsForBounds.push({ sx: bx1, sy: by1 }, { sx: bx2, sy: by2 });
-      bracketSvg = `<path d="M ${sx1.toFixed(1)} ${sy1.toFixed(1)} L ${bx1.toFixed(1)} ${by1.toFixed(1)} L ${bx2.toFixed(1)} ${by2.toFixed(1)} L ${sx2.toFixed(1)} ${sy2.toFixed(1)}" fill="none" stroke="${accentColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.85" />`;
+      bracketSvg = `<path d="M ${sx1.toFixed(1)} ${sy1.toFixed(1)} L ${bx1.toFixed(1)} ${by1.toFixed(1)} L ${bx2.toFixed(1)} ${by2.toFixed(1)} L ${sx2.toFixed(1)} ${sy2.toFixed(1)}" fill="none" stroke="${lineDecorColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.85" />`;
     }
-    const labelBoxSvg = isUnknown
-      ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${UNKNOWN_LABEL_BORDER}" stroke-width="0.8" stroke-dasharray="${UNKNOWN_LABEL_DASHARRAY}" />`
-      : "";
-    return `${bracketSvg}${labelBoxSvg}<text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="8.0" font-weight="800" font-family="system-ui, sans-serif" fill="${pillTextCol}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${displayInnerSvg}</text>`;
+    const labelBoxSvg =
+      !isEd && isUnknown
+        ? `<rect x="${(placement.lx - placement.pillW / 2).toFixed(1)}" y="${(placement.ly - 8).toFixed(1)}" width="${placement.pillW.toFixed(1)}" height="11" rx="3" fill="${GIVEN_LABEL_BACKGROUND_FILL}" stroke="${UNKNOWN_LABEL_BORDER}" stroke-width="0.8" stroke-dasharray="${UNKNOWN_LABEL_DASHARRAY}" />`
+        : "";
+    return `${bracketSvg}${labelBoxSvg}<text x="${placement.lx.toFixed(1)}" y="${placement.ly.toFixed(1)}" text-anchor="middle" font-size="${isEd ? "10.0" : "8.0"}" font-weight="${isEd ? "900" : "800"}" font-family="system-ui, sans-serif" fill="${pillTextCol}" stroke="${GIVEN_LABEL_HALO_STROKE}" stroke-width="${isEd ? "2.6" : GIVEN_LABEL_HALO_WIDTH}" paint-order="stroke" stroke-linejoin="round">${displayInnerSvg}</text>`;
   }).join("");
 
   const interiorBadgesSvg = (figure.interiorBadges ?? []).map((b) => {

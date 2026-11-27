@@ -35,6 +35,7 @@ export interface AngleProjectorOptions {
   readonly notation?: MathNotationLanguage;
   readonly occupiedBoxes?: ScreenBox[];
   readonly obstacleSegments?: readonly ScreenSegmentObstacle[];
+  readonly editorialTextbookStyle?: boolean;
 }
 
 export function projectGeometryAnglesSVGMarkup(
@@ -76,8 +77,11 @@ export function projectGeometryAnglesSVGMarkup(
       const p2x = vx + u2x * boxSize;
       const p2y = vy + u2y * boxSize;
 
+      const isEd = Boolean(opts.editorialTextbookStyle);
       elements.push(
-        `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${cornerX.toFixed(1)} ${cornerY.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)} Z" fill="${opts.accentColor}" fill-opacity="0.15" stroke="${opts.strokeColor}" stroke-width="1.3" />`
+        isEd
+          ? `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${cornerX.toFixed(1)} ${cornerY.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)} Z" fill="none" stroke="#0F172A" stroke-width="1.45" />`
+          : `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${cornerX.toFixed(1)} ${cornerY.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)} Z" fill="${opts.accentColor}" fill-opacity="0.15" stroke="${opts.strokeColor}" stroke-width="1.3" />`
       );
       if (opts.occupiedBoxes) {
         const minRx = Math.min(vx, p1x, cornerX, p2x);
@@ -112,21 +116,24 @@ export function projectGeometryAnglesSVGMarkup(
     const sameVertexPriorCount = opts.angles.slice(0, opts.angles.indexOf(ang)).filter((o) => o.vertexId === ang.vertexId).length;
     const sharesVertexWithOther = isUnknownAngle && opts.angles.some((o) => o !== ang && o.vertexId === ang.vertexId);
     const rArc = sharesVertexWithOther ? (sameVertexPriorCount > 0 ? 18 : 14) : 14;
-    const arcStrokeColor = isUnknownAngle ? "#D97706" : opts.accentColor;
+    const isEd = Boolean(opts.editorialTextbookStyle);
+    const arcStrokeColor = isEd ? "#0F172A" : isUnknownAngle ? "#D97706" : opts.accentColor;
     const arcFillColor = isUnknownAngle ? "#F59E0B" : opts.accentColor;
-    const arcDashAttr = isUnknownAngle ? ` stroke-dasharray="3,2"` : "";
+    const arcDashAttr = !isEd && isUnknownAngle ? ` stroke-dasharray="3,2"` : "";
 
     const sx = vx + Math.cos(startAng) * rArc;
     const sy = vy + Math.sin(startAng) * rArc;
     const ex = vx + Math.cos(endAng) * rArc;
     const ey = vy + Math.sin(endAng) * rArc;
 
-    // قطاع زاوي ممتلئ بلون شفاف مضيء + قوس ناصع (متقطع برتقالي للزاوية المطلوبة «؟»)
+    // قطاع زاوي ممتلئ في القوالب الملونة، وقوس كتاب مدرسي أسود حاد بدون تعبئة في القالب المدرسي الحديث
+    if (!isEd) {
+      elements.push(
+        `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${arcFillColor}" fill-opacity="${isUnknownAngle ? "0.11" : "0.14"}" stroke="none" />`
+      );
+    }
     elements.push(
-      `<path d="M ${vx.toFixed(1)} ${vy.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)} Z" fill="${arcFillColor}" fill-opacity="${isUnknownAngle ? "0.11" : "0.14"}" stroke="none" />`
-    );
-    elements.push(
-      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${arcStrokeColor}" stroke-width="1.4"${arcDashAttr} />`
+      `<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${rArc} ${rArc} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${arcStrokeColor}" stroke-width="${isEd ? "1.45" : "1.4"}"${arcDashAttr} />`
     );
 
     // 3. كتابة قياس الزاوية (نص أو درجات) - لا يُكتب أي قياس رقمي إذا وُجدت علامة تطابق أو تنصيف رمزية (نقطة أو علامة x)
@@ -184,26 +191,37 @@ export function projectGeometryAnglesSVGMarkup(
         ang.labelKind === "unknown" ||
         labelText.includes("؟") ||
         labelText.includes("?");
-      const angTextColor = isUnknown ? "#D97706" : opts.accentColor;
-      const fontSize = labelText.length >= 8 ? "6.6" : labelText.length >= 6 ? "7.2" : "8";
+      const angTextColor = isEd ? opts.accentColor : isUnknown ? "#D97706" : opts.accentColor;
+      const fontSize = isEd
+        ? labelText.length >= 8
+          ? "8.6"
+          : labelText.length >= 6
+            ? "9.4"
+            : "10.2"
+        : labelText.length >= 8
+          ? "6.6"
+          : labelText.length >= 6
+            ? "7.2"
+            : "8";
       elements.push(
-        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-weight="bold" fill="${angTextColor}" paint-order="stroke" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round">${labelText}</text>`
+        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-weight="${isEd ? "900" : "bold"}" fill="${angTextColor}" paint-order="stroke" stroke="#ffffff" stroke-width="${isEd ? "2.6" : "2.2"}" stroke-linejoin="round">${labelText}</text>`
       );
     }
 
     // 4. علامات التطابق الرمزية (نقطة • أو علامة ×)
+    const markColor = isEd ? "#0F172A" : opts.accentColor;
     if (ang.markSymbol === "dot") {
       const mx = vx + Math.cos(midAng) * (rArc - 4);
       const my = vy + Math.sin(midAng) * (rArc - 4);
       elements.push(
-        `<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="1.8" fill="${opts.accentColor}" />`
+        `<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="1.9" fill="${markColor}" />`
       );
     } else if (ang.markSymbol === "cross") {
       const mx = vx + Math.cos(midAng) * (rArc - 4);
       const my = vy + Math.sin(midAng) * (rArc - 4);
       const s = 2.2;
       elements.push(
-        `<path d="M ${(mx - s).toFixed(1)} ${(my - s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my + s).toFixed(1)} M ${(mx - s).toFixed(1)} ${(my + s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my - s).toFixed(1)}" stroke="${opts.accentColor}" stroke-width="1.3" />`
+        `<path d="M ${(mx - s).toFixed(1)} ${(my - s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my + s).toFixed(1)} M ${(mx - s).toFixed(1)} ${(my + s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my - s).toFixed(1)}" stroke="${markColor}" stroke-width="1.35" />`
       );
     }
   }
