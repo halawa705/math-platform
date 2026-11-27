@@ -53,7 +53,14 @@ export function healShatteredAnglesAndEquations(text: string): string {
   for (let pass = 0; pass < 4; pass++) {
     out = out.replace(
       /\$([^$\n]+)\$\s*(=|⇒|⟹|⇔|\/\/|\|\||\\parallel)\s*\$([^$\n]+)\$/g,
-      (_m, lhs: string, rel: string, rhs: string) => {
+      (m, lhs: string, rel: string, rhs: string, offset: number, fullStr: string) => {
+        if (
+          rel === "=" &&
+          /^\([^()]+\)$/.test(lhs.trim()) &&
+          /[\u0621-\u064A]\s+$/.test(fullStr.slice(Math.max(0, offset - 20), offset))
+        ) {
+          return m;
+        }
         const op =
           rel === "⇒" || rel === "⟹"
             ? "\\implies"

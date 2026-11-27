@@ -25,11 +25,17 @@ const isWorkedExampleItem = (q: PrintableMathQuestionItem): boolean =>
 const hasDiagram = (q: PrintableMathQuestionItem): boolean =>
   Boolean(q.geometryFigure || q.graphSpec || q.rawSvgMarkup);
 
-/** يميز مسائل الهندسة الإقليدية الصرفة عن النماذج الحسابية والبصرية والإحصائية. */
+/** يميز مسائل الهندسة الإقليدية الصرفة عن النماذج الحسابية والبصرية والإحصائية والأشكال المركبة للمحيط والمساحة. */
 const isTrueEuclideanGeometryEssay = (q: PrintableMathQuestionItem): boolean =>
   Boolean(q.geometryFigure) &&
   q.geometryFigure!.familyId !== "primary_visual_models_family" &&
   q.geometryFigure!.familyId !== "statistics_family" &&
+  q.geometryFigure!.branchId !== "quad_composite_rectilinear_shape" &&
+  !(
+    q.geometryFigure!.familyId === "quadrilateral_family" &&
+    !/(?:هندسة|مثلثات)/.test(q.branchBadgeAr || "") &&
+    !/برهن|أثبت/.test(q.promptAr)
+  ) &&
   !q.geometryFigure!.rawSvgMarkup &&
   !q.rawSvgMarkup;
 

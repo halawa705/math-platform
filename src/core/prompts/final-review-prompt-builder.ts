@@ -18,6 +18,7 @@ export type FinalReviewStageNumber = 1 | 2 | 3;
 export interface FinalReviewPromptConfig {
   readonly reviewScope: FinalReviewScopeKind;
   readonly stageNumber?: FinalReviewStageNumber;
+  readonly gradeId?: string;
   readonly gradeNameArabic: string;
   readonly termNumber: 1 | 2;
   readonly branchId: MathBranchId;
@@ -38,7 +39,7 @@ export function extractEssayQuestionsFromReviewStage2Reply(
   const results: string[] = [];
   for (const line of stage2Raw.split(/\r?\n/)) {
     const clean = line.replace(/\*\*/g, "").trim();
-    if (/^(?:#\d+\b|\[\d+\]|\d+[.)-]|السؤال\s+|===\s*\[QUESTION:\s*\d+\])/i.test(clean)) {
+    if (/^(?:#\d+(?:\b|(?=\[))|\[\d+\]|\d+[.)-]|السؤال\s+|===\s*\[QUESTION:\s*\d+\])/i.test(clean)) {
       results.push(clean.slice(0, 40));
     }
   }
@@ -77,6 +78,7 @@ export function buildFinalReviewNotebookLMPrompt(
     branchId: config.branchId,
     notationLanguage: config.notationLanguage,
     unitTitleArabic: unitsList,
+    gradeId: config.gradeId,
   });
 
   if (stage === 1) {

@@ -64,6 +64,11 @@ export function localizeCanonicalLatex(
     out = reverseLatexForEasternRtl(out);
   }
   if (/\\frac|\\sqrt/.test(out) && !out.includes("\\displaystyle")) out = `\\displaystyle ${out}`;
+  if (numeralMode === "western") {
+    out = out
+      .replace(/(\d),(\d{3})(?![0-9])/g, "$1{,}$2")
+      .replace(/(\d),(\d{3})(?![0-9])/g, "$1{,}$2");
+  }
   return formatNumeralsByModeSSOT(out, numeralMode);
 }
 

@@ -26,7 +26,11 @@ export function renderKatexHtmlCached(latex: string): string {
   try {
     html = katex
       .renderToString(slantedLatex, { throwOnError: true, strict: "ignore", output: "html" })
-      .replace(/<\/span><span class="base">/g, '</span><wbr><span class="base">');
+      .replace(/<\/span><span class="base">/g, '</span><wbr><span class="base">')
+      .replace(
+        /([\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*)/g,
+        '<bdi dir="rtl" style="unicode-bidi:isolate">$1</bdi>'
+      );
   } catch {
     html = `<span dir="ltr">${escapeHtml(degradeLatexToPlainUnicode(latex))}</span>`;
   }

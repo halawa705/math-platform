@@ -173,9 +173,9 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   let rawBlocks: string[] = [];
   if (/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\]/i.test(cleanedText)) {
     rawBlocks = cleanedText.split(/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\][^\n]*===/i).map((b) => b.trim()).filter((b) => b.length > 6);
-  } else if (/(?:^|\n)\s*(?:\[\d+\]|#\d+)\s*[:.-]?\s+/m.test(cleanedText)) {
+  } else if (/(?:^|\n)\s*(?:\[\d+\]|#\d+)(?:\s*[:.-]?\s+|\s*(?=\[))/m.test(cleanedText)) {
     rawBlocks = cleanedText
-      .split(/(?:^|\n)\s*(?=(?:\[\d+\]|#\d+)\s*[:.-]?\s+)/m)
+      .split(/(?:^|\n)\s*(?=(?:\[\d+\]|#\d+)(?:\s*[:.-]?\s+|\s*(?=\[)))/m)
       .map((b) => b.replace(/^\s*(?:\[\d+\]|#\d+)\s*[:.-]?\s*/, "").trim())
       .filter((b) => b.length > 6 && !isNonQuestionMetaBlock(b));
   } else if (hasTrueSequentialParenthesesNumbering(cleanedText)) {
@@ -235,9 +235,11 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       .trim();
 
     const basePrompt = healFourRaysHallucination(explicitPrompt || fallbackPrompt || block);
+    const rawChoices = parseChoicesTupleFromBlock(block, rawKind);
+    const promptWithoutChoices = rawChoices ? stripInlineChoicesFromPromptText(basePrompt) : basePrompt;
     const extractedDiagrams = extractExamQuestionDiagrams({
       block,
-      basePrompt,
+      basePrompt: promptWithoutChoices,
       rawDrawing,
       branchId: params.branchId,
       lessonId: params.lessonId,
@@ -249,7 +251,6 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       numeralMode: params.numeralMode,
     });
 
-    const rawChoices = parseChoicesTupleFromBlock(block, rawKind);
     const modelSolutionStepsArabic = rawSteps ? mergeLogicalSolutionSteps(rawSteps) : rawCorrect ? [rawCorrect] : [];
     const finalCanonicalAnswerArabic = rawFinalAnswer || rawCorrect || modelSolutionStepsArabic[modelSolutionStepsArabic.length - 1] || "";
     const synthResult = rawChoices
@@ -263,8 +264,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const hasRenderedDiagram = Boolean(
       extractedDiagrams.attachedGeometryFigure || extractedDiagrams.graphSpec || extractedDiagrams.rawSvgMarkup
     );
-    const rawCleanPrompt = cleanExamStudentPromptArabic(basePrompt, hasRenderedDiagram);
-    const cleanPrompt = stripDifficultyMarkerFromPrompt(mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt);
+    const cleanPrompt = stripDifficultyMarkerFromPrompt(cleanExamStudentPromptArabic(promptWithoutChoices, hasRenderedDiagram));
 
     const patternKind: MathQuestionPatternKind =
       rawKind.includes("mcq") || rawKind.includes("اختر") || rawKind.includes("multiple") || mcqChoicesArabic !== undefined ? "mcq"

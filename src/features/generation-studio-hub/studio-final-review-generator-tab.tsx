@@ -90,7 +90,7 @@ export default function StudioFinalReviewGeneratorTab({
   useEffect(() => {
     setPrompt(
       buildFinalReviewNotebookLMPrompt({
-        reviewScope: scope, stageNumber: activeStage, gradeNameArabic: gradeNameAr, termNumber: 1, branchId,
+        reviewScope: scope, stageNumber: activeStage, gradeId, gradeNameArabic: gradeNameAr, termNumber: 1, branchId,
         coveredUnitsTitlesArabic: unitTitleAr ? [unitTitleAr] : [],
         targetedScopeArabic: targetedScopeText,
         totalReviewQuestionsCount: Math.max(1, effectiveMcq + effectiveEssay),
@@ -105,7 +105,7 @@ export default function StudioFinalReviewGeneratorTab({
     const activeScope = targetedScopeText || defaultScope;
     const items = mergeFinalReviewThreeStagesToPrintableItems({
       stage1Raw: replies[1], stage2Raw: replies[2], stage3Raw: withStage3 ? replies[3] : "", branchId, branchNameAr,
-      titleArabic: defaultScope,
+      titleArabic: defaultScope, gradeId,
     });
     if (items.length === 0) { setNotice("⚠️ الصق رد المرحلة ١ أو ٢ أولاً ثم اضغط إنشاء."); return; }
     setNotice(null);

@@ -19,7 +19,7 @@ export interface RectilinearCompositeOptions {
   readonly notationLanguage?: MathNotationLanguage;
 }
 
-function buildPolygonFromCoords(
+export function buildPolygonFromCoords(
   coords: readonly (readonly [number, number])[],
   labels: readonly (string | undefined)[],
   u: ArabicMathUnit,
@@ -130,13 +130,24 @@ export function buildRectilinearAdjacentRectanglesFigure(
   params: { w1: number | string; h1: number | string; w2: number | string; h2: number | string; unit: ArabicMathUnit },
   opts: RectilinearCompositeOptions
 ): CanonicalGeometryFigureIR {
+  const nW1 = typeof params.w1 === "number" ? params.w1 : 5;
+  const nH1 = typeof params.h1 === "number" ? params.h1 : 5;
+  const nW2 = typeof params.w2 === "number" ? params.w2 : 3;
+  const nH2 = typeof params.h2 === "number" ? params.h2 : 3;
+  const totW = Math.max(nW1 + nW2, 1);
+  const maxH = Math.max(nH1, nH2, 1);
+  const wRatio = Math.max(0.32, Math.min(0.68, nW1 / totW));
+  const xMid = Number((1.5 + 7.0 * wRatio).toFixed(2));
+  const yTop1 = Number((1.5 + 6.8 * Math.max(0.38, Math.min(1, nH1 / maxH))).toFixed(2));
+  const yTop2 = Number((1.5 + 6.8 * Math.max(0.38, Math.min(1, nH2 / maxH))).toFixed(2));
+
   return buildPolygonFromCoords(
-    [[1.5, 1.5], [5.0, 1.5], [8.5, 1.5], [8.5, 5.5], [5.0, 5.5], [5.0, 8.5], [1.5, 8.5]],
-    [`${params.w1}`, `${params.w2}`, `${params.h2}`, `${params.w2}`, undefined, `${params.w1}`, `${params.h1}`],
+    [[1.5, 1.5], [xMid, 1.5], [8.5, 1.5], [8.5, yTop2], [xMid, yTop2], [xMid, yTop1], [1.5, yTop1]],
+    [undefined, undefined, `${params.h2}`, `${params.w2}`, undefined, `${params.w1}`, `${params.h1}`],
     params.unit,
     opts,
     `شكل مركب من مستطيلين ملتصقين (${params.w1}×${params.h1} و ${params.w2}×${params.h2} ${params.unit})`,
     "ar",
-    { divider: [1, 4], polygons: [[0, 1, 4, 5, 6], [1, 2, 3, 4]] }
+    { divider: [1, nH1 >= nH2 ? 4 : 5], polygons: [[0, 1, 4, 5, 6], [1, 2, 3, 4]] }
   );
 }

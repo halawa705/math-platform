@@ -184,6 +184,7 @@ export function cleanExamStudentPromptArabic(
   basePrompt: string,
   hasRenderedFigure = true
 ): string {
+  const hadLeadingTag = /^`?[ \t]*\[\s*(?:رسم|نموذج\s*بصري)/i.test(basePrompt.trim());
   const withFallbackTag = hasRenderedFigure
     ? basePrompt.replace(
         /`?[ \t]*\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*[^\]\n`]+\][ \t]*`?/gi,
@@ -193,7 +194,7 @@ export function cleanExamStudentPromptArabic(
         /`?[ \t]*\[\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*([^\]\n`]+)\][ \t]*`?/gi,
         "($1)"
       );
-  const stripped = withFallbackTag
+  let stripped = withFallbackTag
     .replace(/`/g, "")
     .replace(
       /(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|الإحصائي|الاحصائي|التوضيحي|التخطيطي))?\s*:[^\n]*/gi,
@@ -212,5 +213,8 @@ export function cleanExamStudentPromptArabic(
     )
     .replace(/^[\s،,.:؛\-–]+(?=(?:فإن|المتباينة|أوجد|احسب|ما\b|كم\b|حدد))/i, "")
     .trim();
+  if (hasRenderedFigure && hadLeadingTag && /^[\s،,.:؛\-–]*فإن\s+/i.test(stripped)) {
+    stripped = stripped.replace(/^[\s،,.:؛\-–]*فإن\s+/i, "في الشكل المقابل، ");
+  }
   return cleanStudentFacingMathPromptSSOT(stripped);
 }

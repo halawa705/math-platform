@@ -40,7 +40,10 @@ const EXPLICIT_VISUAL_CUES_REGEX =
 const STUDENT_MUST_DRAW_REGEX =
   /(?:^|[\s،.:؛\-])(?:ارسم|أنشئ|انشئ|ارسمي)\s+(?:ال)?(?:شكل|مثلث|مربع|مستطيل|معين|شبه|دائرة|زاوية|قطعة|محور|منصف)/i;
 
-/** أسئلة نظرية بحتة / خصائص مجردة / سؤال هل يمكن رسم مثلث / تحليل جبري بدون وسم صريح. */
+/** أسئلة نظرية أو لفظية مباشرة لقانون المحيط/المساحة أو قابلية الرسم بدون شكل مرسوم في السؤال. */
+const VERBAL_PERIMETER_AREA_LAW_NO_DIAGRAM_REGEX =
+  /(?:(?:محيط|مساحة)\s+(?:ال)?(?:مستطيل|مربع)\s+الذي|(?:مستطيل|مربع|حديقة|منضدة|لوحة|حظيرة|قطعة\s+أرض|سجادة|حوض|ملعب|نافذة|صالة|برواز|سلك|فناء)\s+(?:على\s+شكل\s+)?(?:مستطيل[ة]?|مربع[ة]?)?(?:\s+الشكل)?\s*(?:طول[هـا]?|عرض[هـا]?|أبعاده[ا]?|محيط[هـا]?|مساحت[هـا]?))/i;
+
 const CONCEPTUAL_OR_IMPOSSIBILITY_NO_DIAGRAM_REGEX =
   /(?:^|\s|،)(?:مجموع\s+قياسات\s+(?:ال)?زوايا|(?:ال)?شكل\s+(?:ال)?رباعي\s+(?:الذي|الناتج\s+عن\s+توصيل\s+منتصفات)[^:؟?]+(?:يسمى|يكون|هو)|(?:ال)?قطران\s+(?:متساويان|متعامدان|ينصف)[^:؟?]+(?:في|ما\s*عدا)|(?:ال)?(?:معين|متوازي\s*(?:ال)?أضلاع|مستطيل)\s+الذي\s+[^:؟?]+(?:يسمى|يكون)|يكون\s+متوازي\s*(?:ال)?أضلاع\s+[^:؟?]+إذا\s+كان|يتساوى\s+طولا\s+ضلعين\s+متجاورين|اذكر\s+(?:شرطين|خاصيتين)|ما\s+الشرط\s+اللازم\s+توافره|قياس\s+(?:أي\s+)?(?:ال)?زاوية\s+(?:ال)?خارجة\s+(?:عن\s+(?:ال)?مثلث|للمثلث)\s+(?:ال)?متساوي\s+الأضلاع|اختبر\s+(?:أي\s*مما\s*يلي\s*يصلح|إمكانية\s+رسم)|[وف]?هل\s+يمكن\s+(?:رسم\s+مثلث|أن\s+[يت]?كون|تشكيل\s+مثلث|لزاوية)|لا\s+يمكن\s+رسم\s+مثلث|أي\s+من\s+مجموع(?:تي|ات)\s+الأطوال|أيهما\s+يصلح\s+أن\s+يكون\s+أطوال\s+أضلاع\s+مثلث|الأعداد\s+التي\s+تصلح\s+أن\s+تكون\s+أطوال\s+أضلاع\s+مثلث|(?:الشعاع\s+المرسوم|القطعة\s+المستقيمة\s+الواصلة)\s+(?:من\s+منتصف|بين\s+منتصفي)|عدد\s+(?:متوسطات|ارتفاعات|محاور|أقطار)\s+(?:ال)?(?:مثلث|مضلع|شكل)|نقطة\s+(?:تقاطع|تلاقي)\s+متوسطات\s+المثلث\s+تقسم|النسبة\s+بين\s+طول\s+متوسط\s+المثلث\s+القائم|يتطابق\s+المثلثان|إذا\s+قطع\s+مستقيم\s+عدة\s+مستقيمات\s+متوازية|حدد\s+نوع\s+(?:كل\s+)?(?:ال)?مثلث|\([A-Za-z]{2}\)\^2\s*[=<>+]\s*\([A-Za-z]{2}\)\^2|الزاوية\s+الحادة\s+في\s+المثلث\s+القائم|أصغر\s+عدد\s+من\s+الزوايا\s+الحادة|مربع(?:اً|ا)?\s+كامل|(?:ب)?إكمال\s+المربع|الفرق\s+بين\s+مربعين|مجموع\s+المكعبين|تحليل\s+المقدار|حلل\s+(?:ب|كل|المقدار|تحليلاً)|عدد\s+المثلثات|ينقسم[^.؟\n]{0,50}إلى\s*[0-9٠-٩]+\s*مثلثات|تقسيم\s+مضلع[^.؟\n]{0,40}مثلثات|إجمالي\s+عدد\s+أقطار|أقطار\s+(?:الشكل|المضلع|كل)|عدد\s+أضلاعه\s+(?:1[1-9]|[2-9]\d)|مضلع\s+اثناعشري|اثنا\s*عشري|نجمة\s+(?:خماسية|سداسية|ثمانية)|عدد\s+أضلاع\s+هذا\s+المضلع|احسب\s+(?:بالخطوات\s+الرياضية\s+)?(?:مجموع\s+قياسات|قياس\s+(?:أي\s+)?(?:ال)?زاوية)\s+[^.\n]{0,55}لكل\s+من|عدد\s+محاور\s+(?:ال)?تماثل|محاور\s+تماثل[هـا]?|(?:يمتلك|له)\s+(?:[0-9٠-٩]+|محورين|محوران|محور)\s*(?:محاور\s*)?تماثل|ليس\s+له\s+(?:أي\s*)?محور\s+تماثل|تبليط\s+أرضية|(?:ثلاث|ثلاثة|[0-9٠-٩]+)\s+مضلعات\s+منتظمة\s+تجتمع\s+حول\s+نقطة|عند\s+التقاء\s+رأس\s+\S+\s+مع\s+رأس|لكل\s+(?:مضلع|شكل)?\s*من\s+(?:الأشكال|المضلعات)(?:\s+الهندسية)?\s+الآتية|قارن\s+(?:في\s+جدول|حسابياً|بالبرهان\s+والحساب)\s+بين)/i;
 
@@ -80,6 +83,12 @@ export function shouldTriggerGeometryDiagramForPrompt(params: {
   if (!params.hasExplicitTag && !hasShapePictureCue) {
     if (STUDENT_MUST_DRAW_REGEX.test(cleanPrompt)) return false;
     if (CONCEPTUAL_OR_IMPOSSIBILITY_NO_DIAGRAM_REGEX.test(cleanPrompt)) return false;
+    if (
+      VERBAL_PERIMETER_AREA_LAW_NO_DIAGRAM_REGEX.test(cleanPrompt) &&
+      !/[A-Z]{3,4}|قطر|زاوي|برهن\s+أن|أثبت\s+أن/.test(cleanPrompt)
+    ) {
+      return false;
+    }
   }
 
   if (params.hasExplicitTag || hasShapePictureCue || EXPLICIT_VISUAL_CUES_REGEX.test(cleanPrompt)) {
@@ -87,7 +96,7 @@ export function shouldTriggerGeometryDiagramForPrompt(params: {
   }
 
   const stage = resolveCurriculumStageFromGradeId(params.gradeId, params.stage);
-  if (stage === "secondary") {
+  if (stage === "secondary" || stage === "primary") {
     return false;
   }
 
@@ -132,10 +141,18 @@ export function isDiagramJustifiedForQuestion(params: {
       cleanPrompt
     );
 
-  // منع الرسم إذا طُلب صراحة أن يرسم الطالب بنفسه، أو كان سؤالاً نظرياً مجرداً بلا وسم
+  // منع الرسم إذا طُلب صراحة أن يرسم الطالب بنفسه، أو كان سؤالاً نظرياً مجرداً أو قانوناً لفظياً بلا وسم في الابتدائي
+  const stage = resolveCurriculumStageFromGradeId(params.gradeId, params.stage);
   if (!params.hasExplicitTag && !hasShapePictureCue) {
     if (STUDENT_MUST_DRAW_REGEX.test(cleanPrompt)) return false;
     if (CONCEPTUAL_OR_IMPOSSIBILITY_NO_DIAGRAM_REGEX.test(cleanPrompt)) return false;
+    if (
+      stage === "primary" ||
+      (VERBAL_PERIMETER_AREA_LAW_NO_DIAGRAM_REGEX.test(cleanPrompt) &&
+        !/[A-Z]{3,4}|قطر|زاوي|برهن\s+أن|أثبت\s+أن/.test(cleanPrompt))
+    ) {
+      return false;
+    }
   }
 
   if (EXPLICIT_VISUAL_CUES_REGEX.test(cleanPrompt) || params.hasExplicitTag) {
@@ -156,8 +173,7 @@ export function isDiagramJustifiedForQuestion(params: {
     return false;
   }
 
-  const stage = resolveCurriculumStageFromGradeId(params.gradeId, params.stage);
-  if (stage === "secondary") {
+  if (stage === "secondary" || stage === "primary") {
     return false;
   }
 

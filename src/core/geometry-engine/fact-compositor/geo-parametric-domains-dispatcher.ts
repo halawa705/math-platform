@@ -15,6 +15,7 @@ import { tryBuildCoordinateFunctionOrLineFigure } from "../analytic-function-fam
 import { buildCoordinatePlanePolygonFigure } from "../analytic-function-family/coordinate-plane-polygon-plotter";
 import { buildNumberLineIntervalFigure } from "../analytic-function-family/number-line-intervals-branch";
 import { matchRectilinearCompositeFigure } from "../quadrilateral-family/rectilinear-composite-shapes-matcher";
+import { matchNestedRectanglesFrameFigure } from "../quadrilateral-family/nested-rectangles-frame-builder";
 import { matchRectangleSquareUnknownDimensionFigure } from "../quadrilateral-family/rectangle-square-unknown-dimension-builder";
 import { matchParametricPerimeterAreaFigure } from "../quadrilateral-family/rectangle-square-perimeter-area-builder";
 import { matchPrimaryAltitudeAreaAndStandaloneFigure } from "../triangle-family/triangle-parallelogram-altitude-area-builder";
@@ -156,6 +157,9 @@ export function tryDispatchPreDeclarationDomainFigure(opts: {
   const solid3d = tryBuildSolid3DFromDescription(description, figureId, notation);
   if (solid3d) return solid3d;
 
+  const nestedRect = matchNestedRectanglesFrameFigure(description, { figureId, notationLanguage: notation });
+  if (nestedRect) return nestedRect;
+
   const rectilinear = matchRectilinearCompositeFigure(description, { figureId, notationLanguage: notation });
   if (rectilinear) return rectilinear;
 
@@ -179,6 +183,9 @@ export function tryDispatchPrimaryParametricFigure(opts: {
   readonly notation: MathNotationLanguage;
 }): CanonicalGeometryFigureIR | undefined {
   const { description, figureId, notation } = opts;
+  const nestedRect = matchNestedRectanglesFrameFigure(description, { figureId, notationLanguage: notation });
+  if (nestedRect) return nestedRect;
+
   const rectilinear = matchRectilinearCompositeFigure(description, { figureId, notationLanguage: notation });
   if (rectilinear) return rectilinear;
   const unknownDim = matchRectangleSquareUnknownDimensionFigure(description, { figureId, notationLanguage: notation });

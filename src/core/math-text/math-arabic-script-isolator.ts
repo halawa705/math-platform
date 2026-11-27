@@ -12,6 +12,7 @@ import { wrapMath } from "./math-dollar-segment-utils";
 import {
   RELATION_LATEX_TO_UNICODE,
   peelDanglingEdgeOperators,
+  splitAtTopLevelRelations,
   splitAtTopLevelThereforeBecause,
 } from "./math-relation-operator-splitter";
 
@@ -64,7 +65,10 @@ function readArabicPhrase(src: string, start: number): { phrase: string; end: nu
   let phrase = "";
   while (j < src.length) {
     if (ARABIC_LETTER.test(src[j])) { phrase += src[j++]; continue; }
-    if (src[j] === " " && phrase && ARABIC_LETTER.test(src[j + 1] ?? "")) { phrase += src[j++]; continue; }
+    if ((src[j] === " " || src[j] === ".") && phrase && ARABIC_LETTER.test(src[j + 1] ?? "")) {
+      phrase += src[j++];
+      continue;
+    }
     break;
   }
   return { phrase, end: j };
@@ -175,6 +179,31 @@ export function isolateArabicInMath(inner: string): string {
     if (piece.kind === "prose") { atoms.push(piece.text); continue; }
     for (const sub of splitAtTopLevelThereforeBecause(piece.latex)) {
       const { leading, core, trailing } = peelDanglingEdgeOperators(sub);
+      const prevIsArabicProse =
+        atoms.length > 0 && /[\u0621-\u064A]/.test(atoms[atoms.length - 1]);
+
+      if (prevIsArabicProse && leading.length === 0 && core) {
+        const tupleEq = core.match(/^\(([^()]+)\)\s*=\s*(.+)$/);
+        if (tupleEq) {
+          atoms.push(wrapMath(`(${tupleEq[1].trim()})`), "=", wrapMath(tupleEq[2].trim()));
+          atoms.push(...trailing);
+          continue;
+        }
+      }
+
+      if (
+        prevIsArabicProse &&
+        leading.length === 1 &&
+        leading[0] === "=" &&
+        core &&
+        splitAtTopLevelRelations(core).some((p) => p.kind === "relation" && p.symbol === "=")
+      ) {
+        atoms.push(":");
+        atoms.push(wrapMath(core));
+        atoms.push(...trailing);
+        continue;
+      }
+
       atoms.push(...leading);
       if (core) atoms.push(wrapMath(core));
       atoms.push(...trailing);

@@ -14,6 +14,19 @@ import {
 } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { sanitizeNotebookLMCitationsAndLatex } from "./notebooklm-citation-latex-sanitizer";
 import { parseNotebookLMExamQuestionsToIR } from "./notebooklm-exam-questions-parser";
+import type { CurriculumStageKind } from "./unsolicited-diagram-guard";
+
+/**
+ * @deprecated مُحْتَفَظ به مؤقتاً للحذف النهائي بعد المراجعة البشرية (Phase 3/4).
+ */
+export const legacyEveryLineStage3PrefixStripRegex =
+  /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|===\s*\[[^\n\]]+\]|\[\d+\]|\(\d+\)|#\d+\b|\d+[.)-]\s*)\s*[:.-]?\s*/i;
+
+const STAGE3_HEADER_LINE_PREFIX_REGEX =
+  /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|===\s*\[[^\n\]]+\]|\[\d+\]|\(\d+\)|#\d+(?=\s|\[|:|$))\s*[:.-]?\s*/i;
+
+const STAGE3_STEP_NUMBERED_PREFIX_REGEX =
+  /^(?:(?:حل|إجابة)\s+(?:السؤال|المسألة|التمرين)\s*(?:\[\d+\]|\(\d+\)|#?\d+)\s*[:.-]?|(?:السؤال|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|#\d+|\d+)\s*[:.-]|===\s*\[[^\n\]]+\]|\[\d+\]\s*|\(\d+\)\s*|#\d+\b\s*|\d+[.)-]\s*)\s*/i;
 
 export const MODULE_ID_NOTEBOOKLM_FINAL_REVIEW_PARSER =
   "notebooklm_final_review_parser" as const;
@@ -100,16 +113,16 @@ function extractStage3EssaySolutionsByNumber(
     const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     const steps: string[] = [];
 
-    for (let line of lines) {
-      line = line
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      let line = lines[lineIdx]
         .replace(/^(?:#{1,6}\s+|[-•*]\s+)/, "")
         .replace(
-          /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|===\s*\[[^\n\]]+\]|\[\d+\]|\(\d+\)|#\d+\b|\d+[.)-]\s*)\s*[:.-]?\s*/i,
+          lineIdx === 0 ? STAGE3_HEADER_LINE_PREFIX_REGEX : STAGE3_STEP_NUMBERED_PREFIX_REGEX,
           ""
         )
         .trim();
 
-      if (!line || /^[-*_]{3,}$/.test(line)) continue;
+      if (!line || /^[-*_]{3,}$/.test(line) || /^(?:💡|📄)?\s*هل\s+(?:ننتقل|ترغب|تود)\b/i.test(line)) continue;
 
       if (/^خطوات[_\s]الحل\s*:\s*/i.test(line)) {
         const afterColon = line.replace(/^خطوات[_\s]الحل\s*:\s*/i, "").trim();
@@ -159,6 +172,8 @@ export function mergeFinalReviewThreeStagesToPrintableItems(params: {
   readonly branchId: MathBranchId;
   readonly branchNameAr: string;
   readonly titleArabic: string;
+  readonly gradeId?: string;
+  readonly stage?: CurriculumStageKind;
 }): readonly PrintableMathQuestionItem[] {
   const cleanS1 = sanitizeNotebookLMCitationsAndLatex(params.stage1Raw || "").cleanedText;
   const cleanS2 = sanitizeNotebookLMCitationsAndLatex(params.stage2Raw || "").cleanedText;
@@ -174,6 +189,8 @@ export function mergeFinalReviewThreeStagesToPrintableItems(params: {
       unitId: "review-mcq-unit",
       lessonId: "review-mcq",
       lessonTitleArabic: params.titleArabic,
+      gradeId: params.gradeId,
+      stage: params.stage,
     });
 
     s1Questions.forEach((q, idx) => {
@@ -200,6 +217,8 @@ export function mergeFinalReviewThreeStagesToPrintableItems(params: {
       unitId: "review-essay-unit",
       lessonId: "review-essay",
       lessonTitleArabic: params.titleArabic,
+      gradeId: params.gradeId,
+      stage: params.stage,
     });
 
     s2Essays.forEach((q, idx) => {

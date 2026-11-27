@@ -67,13 +67,15 @@ export function OfficialMcqAnswerKeySummaryTable({
           const letter = getChoiceLetterByNotationSSOT(idx, notationLanguage);
           const rawChoiceVal = q.mcqChoicesAr?.[idx] || q.modelAnswerAr || "";
           const choiceVal = rawChoiceVal.replace(/[،,.;]+$/g, "").trim();
-          const showChoiceValue = choiceVal.length > 0 && estimateVisualChoiceLength(choiceVal) <= 18;
+          const maxLen = gridCols === 5 ? 10 : 18;
+          const isComplexFormula = gridCols === 5 && /\\times|\\div|[×÷+]/.test(choiceVal) && estimateVisualChoiceLength(choiceVal) > 7;
+          const showChoiceValue = choiceVal.length > 0 && !isComplexFormula && estimateVisualChoiceLength(choiceVal) <= maxLen;
           return (
             <div key={q.id} className="px-1.5 py-0.5 border-l border-b border-slate-200 flex items-center justify-between gap-1 min-w-0">
-              <span style={{ backgroundColor: palette.primaryHex }} className="text-white font-black px-1.5 py-0.2 rounded text-[0.82em] shrink-0 shadow-2xs">
+              <span style={{ backgroundColor: palette.primaryHex }} className="text-white font-black px-1.5 py-0.2 rounded text-[0.82em] shrink-0 shadow-2xs whitespace-nowrap">
                 س{formatNumeralsByModeSSOT(q.questionNumber, numeralMode)}
               </span>
-              <span style={{ color: palette.primaryHex }} className="font-bold truncate inline-flex items-center gap-1 min-w-0 text-[0.88em]">
+              <span style={{ color: palette.primaryHex }} className="font-bold truncate inline-flex items-center gap-1 min-w-0 text-[0.88em] whitespace-nowrap">
                 <bdi dir="ltr" className="font-black text-slate-800">({letter})</bdi>
                 {showChoiceValue && (
                   <SafeKaTeXBiDiMathRenderer text={choiceVal} numeralMode={numeralMode} notationLanguage={notationLanguage} />
