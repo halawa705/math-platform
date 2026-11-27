@@ -40,8 +40,9 @@ function packQuestionsIntoEditorialGroups(params: {
   while (cursor < questions.length) {
     const q = questions[cursor];
     const qHasFig = hasDiagram(q);
+    const qHasTable = /\n\s*\|.*\|/.test(q.promptAr);
     const qLen = estimateVisualChoiceLength(q.promptAr);
-    const qFitsMultiCol = (!qHasFig && qLen <= 145) || (qHasFig && qLen <= 130);
+    const qFitsMultiCol = !qHasTable && ((!qHasFig && qLen <= 145) || (qHasFig && qLen <= 130));
 
     if (columnsCount === 1 || !qFitsMultiCol) {
       result.push({
@@ -76,7 +77,7 @@ function packQuestionsIntoEditorialGroups(params: {
     if (cursor + 1 < questions.length) {
       const nextQ = questions[cursor + 1];
       const nextLen = estimateVisualChoiceLength(nextQ.promptAr);
-      if ((!hasDiagram(nextQ) && nextLen <= 145) || (hasDiagram(nextQ) && nextLen <= 130)) {
+      if (!/\n\s*\|.*\|/.test(nextQ.promptAr) && ((!hasDiagram(nextQ) && nextLen <= 145) || (hasDiagram(nextQ) && nextLen <= 130))) {
         result.push({
           id: `${idPrefix}-g-${++groupSeq}`,
           kind: "editorial_question_group",
@@ -116,7 +117,13 @@ export function buildModernEditorialFlowItems(params: {
   const showQuestionsFlow = !isAnswerKeyOnly;
   const showAnswersSection = isParentEdition || isAnswerKeyOnly;
   const hasPedagogicalBooklet = questions.some(
-    (q) => Boolean(q.ideaBannerTitleAr || q.conceptExplanationAr || q.framedRuleAr || isWorkedExampleItem(q))
+    (q) =>
+      Boolean(
+        q.conceptExplanationAr ||
+          q.framedRuleAr ||
+          isWorkedExampleItem(q) ||
+          (q.ideaBannerTitleAr && /^(?:###?\s*)?الفكرة\b/i.test(q.ideaBannerTitleAr.trim()))
+      )
   );
 
   const items: FlowItem[] = [];

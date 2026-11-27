@@ -129,6 +129,10 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
         const geoMatch = geoDiag?.figure;
         const figureDiagnosticsAr =
           geoDiag && (!geoDiag.figure || geoDiag.warnings.length > 0) ? geoDiag.warnings : undefined;
+        const safePromptAr =
+          !geoMatch && !graphSpec && ex.geometryRaw && !ex.promptAr.includes(ex.geometryRaw.slice(0, 12))
+            ? `${ex.promptAr} (${ex.geometryRaw.trim()})`
+            : ex.promptAr;
         resultItems.push({
           id: `booklet-s1-example-${ideaIdx + 1}-${exIdx + 1}`,
           questionNumber: ++exampleCounter,
@@ -137,7 +141,7 @@ export function mergeBookletThreeStagesRepliesToPrintableItems(params: {
           branchBadgeAr: params.branchNameAr,
           marks: 2,
           isWorkedExample: true,
-          promptAr: ex.promptAr,
+          promptAr: safePromptAr,
           mcqChoicesAr: ex.mcqChoicesAr,
           synthesizedMcqIndices: ex.synthesizedMcqIndices,
           correctMcqIndex: resolveCorrectChoiceIndex(ex.rawFinal || ex.steps.join(" "), ex.mcqChoicesAr),

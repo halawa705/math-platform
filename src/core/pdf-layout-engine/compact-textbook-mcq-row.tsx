@@ -66,7 +66,7 @@ export function CompactTextbookMcqRow({
   const hasFigure = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
   const maxChoiceVisualLen = choices.length > 0 ? Math.max(...choices.map(estimateVisualChoiceLength)) : 0;
 
-  const useFourColumns = !hasFigure ? maxChoiceVisualLen <= 34 : maxChoiceVisualLen <= 16;
+  const useFourColumns = !hasFigure ? maxChoiceVisualLen <= 22 : maxChoiceVisualLen <= 14;
   const gridColsClass = useFourColumns
     ? "grid-cols-4 gap-x-2 gap-y-1"
     : "grid-cols-2 gap-x-3 gap-y-1";

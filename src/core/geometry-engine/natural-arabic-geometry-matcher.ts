@@ -104,7 +104,7 @@ export function matchOptionalGeometryFigureFromArabicDescription(
   }
 
   if (/منحنى|دالة\s*تربيعية|شبكة\s*بيانية/i.test(desc)) return buildQuadraticParabolaCurveFigure({ figureId, notationLanguage, description: desc });
-  if (/خط\s*الأعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage, description: desc });
+  if (/خط\s*(?:ال)?أعداد|فترة/i.test(desc)) return buildNumberLineIntervalFigure({ figureId, notationLanguage, description: desc });
   if (/(?:(?:ال)?مستوى\s*(?:ال)?إحداثي|شبكة\s*تربيعية|محوري\s*الإحداثيات)/i.test(desc) && /(?:ارسم|مث[ّل]?\s*بياني|عي[ّن]?\s*النقاط|مضلع|قطعة)/i.test(desc)) {
     const coordPoly = buildCoordinatePlanePolygonFigure({ figureId, notationLanguage, description: desc });
     if (coordPoly) return coordPoly;

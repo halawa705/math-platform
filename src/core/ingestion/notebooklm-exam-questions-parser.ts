@@ -15,6 +15,12 @@ import {
   cleanExamStudentPromptArabic,
 } from "./exam-question-diagram-extractor";
 import { splitRawSolutionStepsMathSafe } from "./math-safe-solution-steps-splitter";
+import { isNonQuestionMetaBlock } from "./notebooklm-stage-envelope-cleaner";
+import {
+  hasTrueSequentialDotNumbering,
+  hasTrueSequentialParenthesesNumbering,
+  splitUnnumberedQuestionParagraphs,
+} from "./notebooklm-unnumbered-questions-splitter";
 
 export const MODULE_ID_NOTEBOOKLM_EXAM_QUESTIONS_PARSER = "notebooklm_exam_questions_parser" as const;
 
@@ -166,39 +172,29 @@ export function parseNotebookLMExamQuestionsToIR(params: {
   let rawBlocks: string[] = [];
   if (/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\]/i.test(cleanedText)) {
     rawBlocks = cleanedText.split(/===\s*\[(?:QUESTION|سؤال|Q)\s*:\s*\d+\][^\n]*===/i).map((b) => b.trim()).filter((b) => b.length > 6);
-  } else if (/(?:^|\n)\s*(?:\[\d+\]|#\d+|\(\d+\))\s*[:.-]?\s+/m.test(cleanedText)) {
+  } else if (/(?:^|\n)\s*(?:\[\d+\]|#\d+)\s*[:.-]?\s+/m.test(cleanedText)) {
     rawBlocks = cleanedText
-      .split(/(?:^|\n)\s*(?=(?:\[\d+\]|#\d+|\(\d+\))\s*[:.-]?\s+)/m)
-      .map((b) => b.replace(/^\s*(?:\[\d+\]|#\d+|\(\d+\))\s*[:.-]?\s*/, "").trim())
-      .filter((b) => b.length > 6 && !/^(?:المراجعة|التعليمات|الهيكل)/i.test(b));
-  } else {
+      .split(/(?:^|\n)\s*(?=(?:\[\d+\]|#\d+)\s*[:.-]?\s+)/m)
+      .map((b) => b.replace(/^\s*(?:\[\d+\]|#\d+)\s*[:.-]?\s*/, "").trim())
+      .filter((b) => b.length > 6 && !isNonQuestionMetaBlock(b));
+  } else if (hasTrueSequentialParenthesesNumbering(cleanedText)) {
+    rawBlocks = cleanedText
+      .split(/(?:^|\n)\s*(?=\(\d+\)\s+)/m)
+      .map((b) => b.replace(/^\s*\(\d+\)\s*/, "").trim())
+      .filter((b) => b.length > 6 && !isNonQuestionMetaBlock(b));
+  } else if (hasTrueSequentialDotNumbering(cleanedText)) {
     rawBlocks = cleanedText
       .split(/(?:^|\n)\s*(?=(?:(?:السؤال|سؤال)\s+(?:\[\d+\]|\(\d+\)|\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[1-9]\d*)\s*[:.-]?|\d+[.)-]\s+))/m)
       .map((b) => b.replace(/^\s*(?:(?:السؤال|سؤال)\s+(?:\[\d+\]|\(\d+\)|\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[1-9]\d*)\s*[:.-]?|\d+[.)-]\s+)/, "").trim())
-      .filter((b) => b.length > 8);
+      .filter((b) => b.length > 8 && !isNonQuestionMetaBlock(b));
   }
 
-  // معالجة ذكية حاسمة في حال عدم وجود أرقام صريحة بالرد أو اندماج الأسئلة في كتلة واحدة
+  // معالجة ذكية في حال غياب الترقيم الصريح (تفصل مسائل اختر والمقالي دون بتر الفروع الداخلية والجداول)
   if (rawBlocks.length <= 1) {
-    const mcqAnswerMatches = cleanedText.match(/(?:^|\n)\s*(?:الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية)\s*:/gi);
-    if (mcqAnswerMatches && mcqAnswerMatches.length > 1) {
-      const mcqSplits = cleanedText
-        .split(/(?<=(?:^|\n)\s*(?:الإجابة[_\s]*الصحيحة|إجابة[_\s]*الصحيحة|الإجابة[_\s]*النهائية)\s*:[^\n]*)(?:\r?\n)+/i)
-        .map((b) => b.trim())
-        .filter((b) => b.length > 8);
-      if (mcqSplits.length > 1) rawBlocks = mcqSplits;
-    }
+    rawBlocks = splitUnnumberedQuestionParagraphs(cleanedText);
   }
 
-  if (rawBlocks.length <= 1) {
-    const paragraphBlocks = cleanedText
-      .split(/(?:\r?\n)\s*(?:\r?\n)+/)
-      .map((b) => b.trim())
-      .filter((b) => b.length > 8 && !/^(?:المرحلة|التعليمات|الهيكل|ملاحظات|المراجعة\s+النهائية)/i.test(b));
-    if (paragraphBlocks.length > 1) rawBlocks = paragraphBlocks;
-  }
-
-  if (rawBlocks.length === 0) rawBlocks = cleanedText.split(/\n{2,}/).map((b) => b.trim()).filter((b) => b.length > 5);
+  rawBlocks = rawBlocks.filter((b) => b.length > 5 && !isNonQuestionMetaBlock(b));
 
   // دمج الجداول المنفصلة أو الكتل الناقصة الملحقة بالمسألة السابقة لمنع تحول الجدول لسؤال مستقل بدون رأس
   const consolidated: string[] = [];
@@ -263,7 +259,10 @@ export function parseNotebookLMExamQuestionsToIR(params: {
     const correctMcqChoiceIndex = resolveCorrectChoiceIndex(rawCorrect || rawFinalAnswer, mcqChoicesArabic);
     const inlineGovMatch = basePrompt.match(/(?:\{\s*(محافظة\s+[^}\n]+)\s*\}|\[\s*(محافظة\s+[^\]\n]+)\s*\]|\(\s*(محافظة\s+[^)\n]+)\s*\))/i);
     const resolvedGov = (rawGov || inlineGovMatch?.[1] || inlineGovMatch?.[2] || inlineGovMatch?.[3] || "").trim();
-    const rawCleanPrompt = cleanExamStudentPromptArabic(basePrompt);
+    const hasRenderedDiagram = Boolean(
+      extractedDiagrams.attachedGeometryFigure || extractedDiagrams.graphSpec || extractedDiagrams.rawSvgMarkup
+    );
+    const rawCleanPrompt = cleanExamStudentPromptArabic(basePrompt, hasRenderedDiagram);
     const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
 
     const patternKind: MathQuestionPatternKind =

@@ -63,7 +63,11 @@ export function buildStandardDocumentTitleSSOT(params: {
     resolvedLessonOrder = parseInt(numInTitle[1], 10);
   }
 
-  if (units.length > 0) {
+  const isMultiUnitScope =
+    /الوحدات|مراجعة|شاملة/.test(resolvedLessonTitle) ||
+    Array.from(resolvedLessonTitle.matchAll(/الوحدة\s+/g)).length >= 2;
+
+  if (units.length > 0 && !isMultiUnitScope) {
     const matchedUnit =
       units.find((u) => u.titleArabic === resolvedUnitTitle) ||
       units.find((u) => u.lessons.some((l) => l.titleArabic === resolvedLessonTitle)) ||
@@ -150,7 +154,15 @@ export function buildStandardDocumentTitleSSOT(params: {
     cleanLesson = units.length > 0 && units[0].lessons[0] ? units[0].lessons[0].titleArabic : "تطبيقات وتمارين شاملة";
   }
 
-  const finalUnit = resolvedUnitTitle || (units.length > 0 ? units[0].titleArabic : "الوحدة");
+  const finalUnit = resolvedUnitTitle
+    ? resolvedUnitTitle
+    : isMultiUnitScope
+      ? ""
+      : units.length > 0
+        ? units[0].titleArabic
+        : "الوحدة";
 
-  return `${resolvedLessonOrder} - ${gradeCode} - ${finalUnit} - ${cleanLesson}`;
+  return finalUnit
+    ? `${resolvedLessonOrder} - ${gradeCode} - ${finalUnit} - ${cleanLesson}`
+    : `${resolvedLessonOrder} - ${gradeCode} - ${cleanLesson}`;
 }

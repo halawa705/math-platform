@@ -120,7 +120,7 @@ export default function StudioFinalReviewGeneratorTab({
     onApplyParsedQuestionsToSheet?.(withLines);
     const standardTitle = buildStandardDocumentTitleSSOT({
       gradeId,
-      unitTitleInput: unitTitleAr,
+      unitTitleInput: targetedScopeText ? "" : unitTitleAr,
       lessonTitleInput: activeScope,
       promptText: prompt,
       rawReplyText: replies[1] || replies[2],

@@ -88,7 +88,7 @@ function decomposeInteger(intStr: string): string[] {
 export function parseAreaModelSpecFromText(text: string): AreaModelSpec | null {
   if (
     !text ||
-    !/مساحة\s*المستطيل|مستطيل\s*(?:القسمة|مقسم|أبعاده|يضم|لحاصل)|نموذج\s*المستطيل/i.test(text)
+    !/نموذج\s*مساحة\s*المستطيل|نموذج\s*المستطيل|مستطيل\s*(?:القسمة|الضرب|مقسم\s*إلى\s*(?:خانات|أجزاء))/i.test(text)
   ) {
     return null;
   }

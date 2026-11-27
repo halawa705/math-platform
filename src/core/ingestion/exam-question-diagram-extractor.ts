@@ -156,12 +156,20 @@ export function extractExamQuestionDiagrams(params: {
   };
 }
 
-export function cleanExamStudentPromptArabic(basePrompt: string): string {
-  const stripped = basePrompt
-    .replace(
-      /\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*[^\]\n]+\]/gi,
-      ""
-    )
+export function cleanExamStudentPromptArabic(
+  basePrompt: string,
+  hasRenderedFigure = true
+): string {
+  const withFallbackTag = hasRenderedFigure
+    ? basePrompt.replace(
+        /\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*[^\]\n]+\]/gi,
+        ""
+      )
+    : basePrompt.replace(
+        /\[\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*([^\]\n]+)\]/gi,
+        "($1)"
+      );
+  const stripped = withFallbackTag
     .replace(
       /(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|الإحصائي|الاحصائي|التوضيحي|التخطيطي))?\s*:[^\n]*/gi,
       ""
@@ -177,6 +185,7 @@ export function cleanExamStudentPromptArabic(basePrompt: string): string {
       /(?:\{\s*محافظة\s+[^}\n]+\s*\}|\[\s*(محافظة\s+[^\]\n]+)\s*\]|\(\s*(محافظة\s+[^)\n]+)\s*\))/gi,
       ""
     )
+    .replace(/^[\s،,.:؛\-–]+(?=(?:فإن|المتباينة|أوجد|احسب|ما\b|كم\b|حدد))/i, "")
     .trim();
   return cleanStudentFacingMathPromptSSOT(stripped);
 }

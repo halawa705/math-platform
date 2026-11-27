@@ -19,7 +19,7 @@ import { FlowMeasurementStagingPlatform } from "./flow-measurement-staging-platf
 import { resolveFlowPageBudgets } from "./flow-page-budget-resolver";
 import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
 import { packFlowItemsWithBestPracticeOrder } from "./flow-practice-items-reorder-search";
-import type { FlowItem } from "./flow-item-model";
+import { dropTrailingAccreditationOnlyPage, type FlowItem } from "./flow-item-model";
 import { PageFillReportChip } from "./page-fill-report-chip";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
@@ -126,12 +126,14 @@ export default function TwoColumnNewspaperPacker({
   );
   const discretePages = React.useMemo(
     () =>
-      packFlowItemsWithBestPracticeOrder(flowItems, measured.heights, {
-        budgets: pageBudgets,
-        density: densityProfile,
-        skipSolutionSplits: isSweepingOrPending,
-        manualCompactHeader: effSettings.compactHeader,
-      }),
+      dropTrailingAccreditationOnlyPage(
+        packFlowItemsWithBestPracticeOrder(flowItems, measured.heights, {
+          budgets: pageBudgets,
+          density: densityProfile,
+          skipSolutionSplits: isSweepingOrPending,
+          manualCompactHeader: effSettings.compactHeader,
+        })
+      ),
     [flowItems, measured.heights, pageBudgets, densityProfile, isSweepingOrPending, effSettings.compactHeader]
   );
 

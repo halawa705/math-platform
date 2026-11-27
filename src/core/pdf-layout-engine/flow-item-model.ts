@@ -146,3 +146,13 @@ export function fallbackFlowItemHeightPx(item: FlowItem): number {
   }
 }
 
+/** يسقط الصفحة الختامية إن كانت لا تحوي سوى تذييل الاعتماد وحده (بلا أسئلة أو مفاتيح إجابة) لمنع ورقة أخيرة شبه فارغة. */
+export function dropTrailingAccreditationOnlyPage(pages: readonly FlowPage[]): readonly FlowPage[] {
+  if (pages.length <= 1) return pages;
+  const last = pages[pages.length - 1];
+  const isOnlyAccreditation =
+    last.segments.length > 0 &&
+    last.segments.every((seg) => seg.kind === "full" && seg.item.kind === "accreditation_footer");
+  return isOnlyAccreditation ? pages.slice(0, -1) : pages;
+}
+

@@ -74,7 +74,7 @@ export default function MathFormulaFitBox({ html, isBlock = false }: MathFormula
     <bdi
       dir="ltr"
       style={{ unicodeBidi: "isolate" }}
-      className={isBlock ? "block w-full" : "inline-block max-w-full align-middle"}
+      className={isBlock ? "block w-full" : "inline-block max-w-full align-middle mx-[0.14em]"}
     >
       <span
         ref={boxRef}

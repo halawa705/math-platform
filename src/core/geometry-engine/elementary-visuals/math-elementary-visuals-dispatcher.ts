@@ -25,6 +25,8 @@ import { tryBuildMathGridAreaFromDescription } from "./math-grid-area-perimeter-
 import { parseMathBarModelFacts } from "./math-bar-model-fact-parser";
 import { buildMathBarModelSvgMarkup } from "./math-bar-model-svg-builder";
 import { parseMathAnalogClockTime, buildMathAnalogClockSvgMarkup } from "./math-analog-clock-reading-svg-builder";
+import { tryBuildMathBalanceScaleSvg } from "./math-balance-scale-svg-builder";
+import { tryBuildInequalityNumberLineSvg } from "./math-inequality-number-line-svg-builder";
 
 export const MODULE_ID_MATH_ELEMENTARY_VISUALS_DISPATCHER =
   "math_elementary_visuals_dispatcher" as const;
@@ -61,6 +63,28 @@ export function detectAndBuildMathElementaryVisualFigure(
   // استبعاد صريح لأي خريطة جغرافية/اجتماعية مع عدم حجب كلمة «محيط» الهندسية
   if (/خريطة|قارة|دولة|نهر|المحيط\s*(?:الأطلسي|الهادئ|الهندي|المتجمد)|تضاريس/i.test(norm)) {
     return undefined;
+  }
+
+  // 0. ميزان الكفتين المتزن وخط أعداد المتباينات
+  const balanceSvg = tryBuildMathBalanceScaleSvg(description, numeralMode);
+  if (balanceSvg) {
+    return buildFigureWrapper(
+      figureId,
+      "primary_bar_model",
+      "ميزان ذو كفتين متزن",
+      notationLanguage,
+      balanceSvg
+    );
+  }
+  const inequalityLineSvg = tryBuildInequalityNumberLineSvg(description, numeralMode);
+  if (inequalityLineSvg) {
+    return buildFigureWrapper(
+      figureId,
+      "primary_bar_model",
+      "تمثيل متباينة على خط الأعداد",
+      notationLanguage,
+      inequalityLineSvg
+    );
   }
 
   // 1. مخطط فن (مجموعات الأعداد المتداخلة أو نظرية المجموعات أو العوامل الأولية)

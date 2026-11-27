@@ -19,20 +19,29 @@ export function parseGradeRibbonInfo(
   subtitleAr: string,
   documentTitle: string
 ): { readonly gradeNumber: string; readonly stageLabelAr: string } {
-  const combined = `${subtitleAr} ${documentTitle}`;
-  let gradeNumber = "1";
-  if (/ثالث|3\s*[بعث]/i.test(combined)) gradeNumber = "3";
-  else if (/ثان[ي|ى]|2\s*[بعث]/i.test(combined)) gradeNumber = "2";
-  else if (/رابع|4\s*ب/i.test(combined)) gradeNumber = "4";
-  else if (/خامس|5\s*ب/i.test(combined)) gradeNumber = "5";
-  else if (/سادس|6\s*ب/i.test(combined)) gradeNumber = "6";
-  else if (/أول|اول|1\s*[بعث]/i.test(combined)) gradeNumber = "1";
+  const tryDetect = (src: string): { grade?: string; stage?: string } => {
+    let grade: string | undefined;
+    if (/سادس|(?:^|[\s\-•])6\s*ب(?=$|[\s\-•])/i.test(src)) grade = "6";
+    else if (/خامس|(?:^|[\s\-•])5\s*ب(?=$|[\s\-•])/i.test(src)) grade = "5";
+    else if (/رابع|(?:^|[\s\-•])4\s*ب(?=$|[\s\-•])/i.test(src)) grade = "4";
+    else if (/(?:الصف\s+ال)?ثالث\s+(?:ال)?(?:ابتدائي|إعدادي|اعدادي|ثانوي)|(?:^|[\s\-•])3\s*[بعث](?=$|[\s\-•])/i.test(src)) grade = "3";
+    else if (/(?:الصف\s+ال)?ثان[ي|ى]\s+(?:ال)?(?:ابتدائي|إعدادي|اعدادي|ثانوي)|(?:^|[\s\-•])2\s*[بعث](?=$|[\s\-•])/i.test(src)) grade = "2";
+    else if (/(?:الصف\s+ال)?أول\s+(?:ال)?(?:ابتدائي|إعدادي|اعدادي|ثانوي)|(?:^|[\s\-•])1\s*[بعث](?=$|[\s\-•])/i.test(src)) grade = "1";
 
-  let stageLabelAr = "إعدادي";
-  if (/ابتدائي|\d+\s*ب/i.test(combined)) stageLabelAr = "ابتدائي";
-  else if (/ثانوي|\d+\s*ث/i.test(combined)) stageLabelAr = "ثانوي";
+    let stage: string | undefined;
+    if (/ابتدائي|(?:^|[\s\-•])\d\s*ب(?=$|[\s\-•])/i.test(src)) stage = "ابتدائي";
+    else if (/ثانوي|(?:^|[\s\-•])\d\s*ث(?=$|[\s\-•])/i.test(src)) stage = "ثانوي";
+    else if (/إعدادي|اعدادي|(?:^|[\s\-•])\d\s*ع(?=$|[\s\-•])/i.test(src)) stage = "إعدادي";
 
-  return { gradeNumber, stageLabelAr };
+    return { grade, stage };
+  };
+
+  const fromSub = tryDetect(subtitleAr);
+  const fromDoc = tryDetect(documentTitle);
+  return {
+    gradeNumber: fromSub.grade ?? fromDoc.grade ?? "1",
+    stageLabelAr: fromSub.stage ?? fromDoc.stage ?? "إعدادي",
+  };
 }
 
 export function ModernEditorialPageHeader({

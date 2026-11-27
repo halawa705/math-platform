@@ -23,7 +23,8 @@ function isTableSeparatorLine(line: string): boolean {
 }
 
 function isStrayBrokenPipeLine(line: string): boolean {
-  return /^\s*\|\s*$/.test(line);
+  const trimmed = line.trim();
+  return trimmed.includes("|") && /^[:|\s]+$/.test(trimmed);
 }
 
 function isTableDataRowLine(line: string): boolean {

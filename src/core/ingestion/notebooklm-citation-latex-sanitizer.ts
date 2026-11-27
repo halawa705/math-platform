@@ -7,6 +7,7 @@
  */
 
 import { canonicalizeMathText } from "../math-text/math-text-canonicalizer";
+import { stripNotebookLMStageEnvelope } from "./notebooklm-stage-envelope-cleaner";
 
 export const MODULE_ID_NOTEBOOKLM_CITATION_LATEX_SANITIZER =
   "notebooklm_citation_latex_sanitizer" as const;
@@ -63,13 +64,18 @@ export function sanitizeNotebookLMCitationsAndLatex(
     }
   );
 
-  // 3. إزالة فواصل --- العشوائية وعبارات المحادثة الاقتراحية في نهاية رد NotebookLM
+  // 3. إزالة فواصل --- خارج الجداول فقط وعبارات المحادثة الاقتراحية في نهاية رد NotebookLM
   text = text
     .replace(/(?:^|\n)\s*💡\s*هل\s+(?:ترغب|تود)[^\n]*/gi, "")
     .replace(/(?:^|\n|\s+)(?:💡\s*)?(?:خطوة\s+تالية\s+اقتراحية|اقتراح\s+الخطوة\s+التالية|خطوة\s+اقتراحية|هل\s+تود\s+الانتقال|هل\s+ترغب\s+في\s+الانتقال|بانتظار\s+تعليماتك|إذا\s+كنت\s+مستعداً)[\s\S]*$/gi, "")
     .replace(/💡\s*[\u0600-\u06FF\s:]*$/gi, "")
-    .replace(/^\s*[-*_]{3,}\s*$/gm, "\n\n")
-    .replace(/(?<!\|[ \t]*)\s*---+\s*(?![ \t]*\|)/g, "\n\n")
+    .split("\n")
+    .map((ln) =>
+      ln.includes("|")
+        ? ln
+        : ln.replace(/^\s*[-*_]{3,}\s*$/, "").replace(/\s+---+\s+/g, "\n\n")
+    )
+    .join("\n")
     .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "")
     .replace(
       /\[\s*(رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي|نموذج\s*بصري)\s*:[^\]]*)\]/gi,
@@ -79,6 +85,8 @@ export function sanitizeNotebookLMCitationsAndLatex(
       /(?:^|(?<![\[أ-ي]))(رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)\s*:\s*[^\]\n]+)\]/gi,
       "[$1]"
     );
+
+  text = stripNotebookLMStageEnvelope(text);
 
   // 3.5 تطبيع أوسمة هيكلة الأسئلة الإنجليزية والمختلطة إلى الأوسمة العربية القياسية قبل معالجة الرياضيات
   text = text

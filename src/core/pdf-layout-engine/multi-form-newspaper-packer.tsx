@@ -20,7 +20,7 @@ import { FlowMeasurementStagingPlatform } from "./flow-measurement-staging-platf
 import { resolveFlowPageBudgets } from "./flow-page-budget-resolver";
 import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
 import { packFlowItemsIntoPages } from "./flow-page-packer";
-import type { FlowItem, FlowPage } from "./flow-item-model";
+import { dropTrailingAccreditationOnlyPage, type FlowItem, type FlowPage } from "./flow-item-model";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
 import { useFlowStagingLiveMeasurer } from "./use-flow-staging-live-measurer";
@@ -135,9 +135,11 @@ export default function MultiFormNewspaperPacker({
   const currentPackedForms = useMemo(
     () => formFlows.map((ff) => ({
       ...ff,
-      pages: packFlowItemsIntoPages(ff.items, measured.heights, {
-        budgets: pageBudgets, density: densityProfile, skipSolutionSplits: isSweeping, manualCompactHeader: effSettings.compactHeader,
-      }),
+      pages: dropTrailingAccreditationOnlyPage(
+        packFlowItemsIntoPages(ff.items, measured.heights, {
+          budgets: pageBudgets, density: densityProfile, skipSolutionSplits: isSweeping, manualCompactHeader: effSettings.compactHeader,
+        })
+      ),
     })),
     [formFlows, measured.heights, pageBudgets, densityProfile, isSweeping, effSettings.compactHeader]
   );

@@ -18,14 +18,13 @@ import {
   type NumeralDisplayMode,
 } from "../ssot/numeral-and-unit-ssot";
 import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-math-renderer";
-import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
 import { estimateVisualChoiceLength } from "./compact-mcq-inline-prompt-renderer";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
+import { renderEditorialHighlightedPrompt } from "./editorial-highlighted-prompt-renderer";
+
+export { renderEditorialHighlightedPrompt };
 
 export const MODULE_ID_MODERN_EDITORIAL_MCQ_ROW = "modern_editorial_mcq_row" as const;
-
-const KEYWORD_HIGHLIGHT_REGEX =
-  /(فإن\s*:?|فما\s+قيمة\s*:?|فأوجد\s*:?|أوجد\s+بالبرهان\s*:?|أوجد\s*:?|اثبت\s+أن\s*:?|برهن\s+أن\s*:?|احسب\s+بالبرهان\s*:?|احسب\s*:?|اجمع\s*:?|اطرح\s*:?|كم\s+ينقص\s*:?|ما\s+زيادة\s*:?|حلل(?:\s+كلاً\s+مما\s+يأتي\s+تحليلاً\s+تاماً)?\s*:?|أي\s+مما\s+يلي|أي\s+الأعداد\s+الآتية)/g;
 
 export function ModernEditorialDoubleRingNumberBadge({
   formattedNumber,
@@ -69,64 +68,6 @@ export function ModernEditorialDoubleRingNumberBadge({
   );
 }
 
-export function renderEditorialHighlightedPrompt(
-  rawPrompt: string,
-  numeralMode: NumeralDisplayMode,
-  notationLanguage: MathNotationLanguage,
-  palette: PrintThemePaletteTokens,
-  isPhotocopy: boolean
-): React.ReactNode {
-  const cleaned = cleanStudentFacingMathPromptSSOT(rawPrompt).replace(
-    /=\s*(?:\.{2,}|\\dots|\\ldots)\s*\$/g,
-    "= $ ..."
-  );
-  const mathAndTextTokens = cleaned.split(/(\$[^$]+\$)/g);
-  const nodes: React.ReactNode[] = [];
-  let keySeq = 0;
-  const kwColor = isPhotocopy ? "#0F172A" : palette.accentHex;
-
-  for (const token of mathAndTextTokens) {
-    if (!token) continue;
-    if (token.startsWith("$") && token.endsWith("$")) {
-      nodes.push(
-        <SafeKaTeXBiDiMathRenderer
-          key={`em-${keySeq++}`}
-          text={token}
-          numeralMode={numeralMode}
-          notationLanguage={notationLanguage}
-          className="!leading-[1.32]"
-        />
-      );
-      continue;
-    }
-
-    const parts = token.split(KEYWORD_HIGHLIGHT_REGEX);
-    for (const part of parts) {
-      if (!part) continue;
-      if (KEYWORD_HIGHLIGHT_REGEX.test(part)) {
-        KEYWORD_HIGHLIGHT_REGEX.lastIndex = 0;
-        nodes.push(
-          <span key={`kw-${keySeq++}`} style={{ color: kwColor }} className="font-black">
-            {part}
-          </span>
-        );
-      } else {
-        KEYWORD_HIGHLIGHT_REGEX.lastIndex = 0;
-        nodes.push(
-          <SafeKaTeXBiDiMathRenderer
-            key={`et-${keySeq++}`}
-            text={part}
-            numeralMode={numeralMode}
-            notationLanguage={notationLanguage}
-            className="!leading-[1.32]"
-          />
-        );
-      }
-    }
-  }
-  return nodes;
-}
-
 export interface ModernEditorialMcqRowProps {
   readonly question: PrintableMathQuestionItem;
   readonly displayQuestionNumber?: number;
@@ -150,7 +91,7 @@ export function ModernEditorialMcqRow({
   const choices = question.mcqChoicesAr ?? [];
   const hasFigure = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
   const maxLen = choices.length > 0 ? Math.max(...choices.map(estimateVisualChoiceLength)) : 0;
-  const useFourCols = !hasFigure ? maxLen <= 34 : maxLen <= 16;
+  const useFourCols = !hasFigure ? maxLen <= 22 : maxLen <= 14;
   const gridColsClass = useFourCols ? "grid-cols-4 gap-x-2 gap-y-0.5" : "grid-cols-2 gap-x-3 gap-y-0.5";
 
   return (

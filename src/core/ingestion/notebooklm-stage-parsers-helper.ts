@@ -22,6 +22,8 @@ import {
   resolveCorrectChoiceIndex,
   stripInlineChoicesFromPromptText,
 } from "./notebooklm-exam-questions-parser";
+import { cleanExamStudentPromptArabic } from "./exam-question-diagram-extractor";
+import { hasTrueSequentialParenthesesNumbering } from "./notebooklm-unnumbered-questions-splitter";
 
 export const MODULE_ID_NOTEBOOKLM_STAGE_PARSERS_HELPER = "notebooklm_stage_parsers_helper" as const;
 
@@ -60,11 +62,11 @@ export function parseStage3SolutionsMap(stage3Cleaned: string): {
     if (steps.length > 0) byCode.set(codeSplits[i].trim().toLowerCase(), steps);
   }
 
-  const numSplits = stage3Cleaned.split(/(?:===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\][^\n]*===|حل\s+السؤال\s*\[?(\d+)\]?\s*:)/i);
+  const numSplits = stage3Cleaned.split(/(?:===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\][^\n]*===|(?:#{1,6}\s*|[-•*]\s*)?حل\s+(?:السؤال|المسألة|التمرين)\s*(?:\[?(\d+)\]?)?\s*:)/i);
   let seq = 1;
   for (let i = 1; i < numSplits.length; i += 3) {
     const qNum = Number(numSplits[i] || numSplits[i + 1]) || seq++;
-    const steps = mergeLogicalSolutionSteps((numSplits[i + 2] || "").replace(/^\s*(?:خطوات[_\s]الحل|الإجابة[_\s]الصحيحة|الناتج[_\s]النهائي)\s*:\s*/gim, ""));
+    const steps = mergeLogicalSolutionSteps((numSplits[i + 2] || "").replace(/^(?:#{1,6}\s*|[-•*]\s*)?(?:خطوات[_\s]الحل|الإجابة[_\s]الصحيحة|الناتج[_\s]النهائي)\s*:\s*/gim, ""));
     if (steps.length > 0) byIndex.set(qNum, steps);
   }
   return { byCode, byIndex };
@@ -140,10 +142,10 @@ export function parseStage2ByIdeas(s2Raw: string): {
       }
 
       if (chunks.length <= 1 && !hasExplicitQuestionCodes) {
-        const hasParentQuestionHeaders = /(?:^|\n)\s*(?:#\d+|(?:ال)?سؤال\b|(?:ال)?تمرين\b|(?:ال)?تدريب\b|(?:ال)?مسألة\b|\[\d+\]|\d+[\.\-–])/i.test(body);
-        const splitRx = hasParentQuestionHeaders
-          ? /(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\d+[\.\-–]))/i
-          : /(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\(\d+\)(?!\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|تحقق|بين))|\d+[\.\-–]))/i;
+        const hasParenSeq = hasTrueSequentialParenthesesNumbering(body);
+        const splitRx = hasParenSeq
+          ? /(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\(\d+\)(?!\s*(?:أوجد|اوجد|احسب|أثبت|اثبت|برهن|تحقق|بين))|\d+[\.\-–]))/i
+          : /(?:^|\n)\s*(?:[-•*]\s*)?(?=(?:\*\*)?(?:(?:ال)?سؤال(?:\s+الواجب|\s*\(?[0-9٠-٩]+\)?|\s*\|)|(?:ال)?تمرين\s*\(?[0-9٠-٩]+\)?|(?:ال)?تدريب\s*\(?[0-9٠-٩]+\)?|(?:ال)?مسألة\s*\(?[0-9٠-٩]+\)?|#\d+|\[\d+\]|\d+[\.\-–]))/i;
         chunks = body
           .split(splitRx)
           .map((s) => s.trim())
@@ -276,7 +278,7 @@ export function buildStage2PrintableItem(params: {
     questionNumber: params.questionNumber,
     kind: isMcq ? "mcq" : geometryFigure || graphSpec ? "essay_geometry" : "essay_algebra",
     branchBadgeAr: params.branchNameAr, marks: isMcq ? 1 : 2,
-    promptAr: cleanStudentFacingMathPromptSSOT(rawPrompt) || params.defaultPrompt,
+    promptAr: cleanExamStudentPromptArabic(rawPrompt, Boolean(geometryFigure || graphSpec)) || params.defaultPrompt,
     mcqChoicesAr: mcqChoices,
     synthesizedMcqIndices,
     correctMcqIndex: resolveCorrectChoiceIndex(matchedSteps?.[matchedSteps.length - 1] || "", mcqChoices),

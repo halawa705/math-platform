@@ -93,9 +93,9 @@ export default function SafeKaTeXBiDiMathRenderer({
           );
         }
         rendered.push(
-          <span key={`${idx}-grp`} dir="ltr" className="inline-block whitespace-nowrap">
+          <bdi key={`${idx}-grp`} dir="ltr" style={{ unicodeBidi: "isolate" }} className="inline-flex items-center whitespace-nowrap mx-[0.12em]">
             ({renderFormula(mathNode.latex)})
-          </span>
+          </bdi>
         );
         if (suffixRest) {
           const localizedPost = localizeGeometricEntitiesInPlainText(suffixRest, notationLanguage);
