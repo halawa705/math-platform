@@ -7,7 +7,7 @@
  * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 195 سطراً).
  */
 
-import type { QuestionAssessmentIR } from "../ir/question-assessment-ir";
+import type { MathQuestionCognitiveDepth, QuestionAssessmentIR } from "../ir/question-assessment-ir";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
 import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
 import type { PrintColorThemeId } from "../ssot/pdf-print-settings-ssot";
@@ -45,6 +45,7 @@ export interface PrintableMathQuestionItem {
   readonly framedRuleAr?: string;
   readonly studentDrillPromptAr?: string;
   readonly isWorkedExample?: boolean;
+  readonly cognitiveDepth?: MathQuestionCognitiveDepth;
 }
 
 export interface PrintThemePaletteTokens {
@@ -231,5 +232,6 @@ export function convertQuestionAssessmentIRToPrintableItem(
     answerLinesCount: q.answerLinesCount,
     hasCustomAnswerLines: q.hasCustomAnswerLines,
     hasDottedDivider: q.hasDottedDivider,
+    cognitiveDepth: q.cognitiveDepth,
   };
 }

@@ -16,6 +16,7 @@ import {
 } from "./exam-question-diagram-extractor";
 import { splitRawSolutionStepsMathSafe } from "./math-safe-solution-steps-splitter";
 import { isNonQuestionMetaBlock } from "./notebooklm-stage-envelope-cleaner";
+import { classifyMathQuestionDifficulty, stripDifficultyMarkerFromPrompt } from "./math-question-difficulty-classifier";
 import {
   hasTrueSequentialDotNumbering,
   hasTrueSequentialParenthesesNumbering,
@@ -263,7 +264,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       extractedDiagrams.attachedGeometryFigure || extractedDiagrams.graphSpec || extractedDiagrams.rawSvgMarkup
     );
     const rawCleanPrompt = cleanExamStudentPromptArabic(basePrompt, hasRenderedDiagram);
-    const cleanPrompt = mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt;
+    const cleanPrompt = stripDifficultyMarkerFromPrompt(mcqChoicesArabic ? stripInlineChoicesFromPromptText(rawCleanPrompt) : rawCleanPrompt);
 
     const patternKind: MathQuestionPatternKind =
       rawKind.includes("mcq") || rawKind.includes("اختر") || rawKind.includes("multiple") || mcqChoicesArabic !== undefined ? "mcq"
@@ -275,7 +276,7 @@ export function parseNotebookLMExamQuestionsToIR(params: {
       questionId: `q_${params.lessonId}_${orderNumber}`, displayOrderNumber: orderNumber,
       branchId: params.branchId, unitId: params.unitId, lessonId: params.lessonId, lessonTitleArabic: effectiveLessonTitle,
       rawDrawingTagArabic: extractedDiagrams.rawDrawingTagArabic,
-      patternKind, cognitiveDepth: patternKind === "proof_reasoning" ? "deductive_proof" : "direct_application",
+      patternKind, cognitiveDepth: classifyMathQuestionDifficulty({ rawBlock: block, promptArabic: cleanPrompt || basePrompt, patternKind }),
       allocatedMarks: Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : 2,
       estimatedSolveMinutes: patternKind === "proof_reasoning" ? 5 : 2,
       promptArabic: cleanPrompt || basePrompt,

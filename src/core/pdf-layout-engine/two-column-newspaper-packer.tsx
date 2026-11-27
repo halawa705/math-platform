@@ -21,6 +21,7 @@ import { FLOW_DENSITY_PROFILES } from "./flow-page-geometry-constants";
 import { packFlowItemsWithBestPracticeOrder } from "./flow-practice-items-reorder-search";
 import { dropTrailingAccreditationOnlyPage, type FlowItem } from "./flow-item-model";
 import { PageFillReportChip } from "./page-fill-report-chip";
+import { PreExportIngestionAuditPill } from "./pre-export-ingestion-audit-pill";
 import { SovereignDiscretePageView } from "./sovereign-discrete-page-view";
 import { useA4MobileZoomScale } from "./use-a4-mobile-zoom-scale";
 import { useAutoFitSweepPhaseController } from "./use-autofit-sweep-controller";
@@ -188,6 +189,7 @@ export default function TwoColumnNewspaperPacker({
           <span className="text-emerald-300">المسائل: {formatNumeralsByModeSSOT(questions.length, viewSettings.numeralMode)}</span>
           <AutoFitStatusBadge sweep={sweep} fontPt={viewSettings.exactFontSizePt} targetMaxPages={settings.targetMaxPages} questionsCount={questions.length} numeralMode={viewSettings.numeralMode} />
           <PageFillReportChip pages={viewPages} heights={viewHeights} numeralMode={viewSettings.numeralMode} />
+          <PreExportIngestionAuditPill questions={questions} numeralMode={viewSettings.numeralMode} />
           {viewPages.some((page) => page.overflowsBudget) && <span className="text-rose-300">⚠️ يوجد عنصر أطول من الصفحة (قد يُقصّ)</span>}
         </div>
       )}

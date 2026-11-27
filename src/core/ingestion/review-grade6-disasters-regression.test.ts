@@ -9,6 +9,8 @@ import {
   buildFinalReviewNotebookLMPrompt,
   extractEssayQuestionsFromReviewStage2Reply,
 } from "../prompts/final-review-prompt-builder";
+import { classifyMathQuestionDifficulty, stripDifficultyMarkerFromPrompt } from "./math-question-difficulty-classifier";
+import { computePreExportIngestionAudit } from "../pdf-layout-engine/pre-export-ingestion-audit-pill";
 
 const SAMPLE_STAGE1_UNNUMBERED = `"### مراجعة مقرر الشهر (المرحلة ١: أسئلة اختيار من متعدد وإجاباتها)
 **الفرع:** الجبر والفترات والمتباينات | **الصف:** السادس الابتدائي (الفصل الدراسي الأول)
@@ -240,5 +242,29 @@ describe("Review Grade 6 Disasters End-to-End Regression", () => {
     expect(essays).toHaveLength(2);
     expect(essays[0].solutionStepsAr?.join(" ")).toContain("5");
     expect(essays[1].solutionStepsAr?.join(" ")).toContain("4");
+  });
+
+  it("classifies cognitive difficulty levels accurately, strips marker tags, and computes pre-export ingestion audit stats", () => {
+    expect(classifyMathQuestionDifficulty({ rawBlock: "[تأسيسي] احسب $2+3$", promptArabic: "احسب $2+3$", patternKind: "mcq" })).toBe("direct_application");
+    expect(classifyMathQuestionDifficulty({ rawBlock: "المستوى: متفوقين\nأوجد أصغر عدد يحقق الشرط", promptArabic: "أوجد", patternKind: "direct_answer" })).toBe("higher_order_olympiad");
+    expect(classifyMathQuestionDifficulty({ rawBlock: "أثبت أن المثلثين متطابقان", promptArabic: "أثبت أن المثلثين متطابقان", patternKind: "proof_reasoning" })).toBe("deductive_proof");
+    expect(classifyMathQuestionDifficulty({ rawBlock: "(1) احسب ثم تحقق (2) استنتج", promptArabic: "(1) احسب (2) استنتج", patternKind: "direct_answer" })).toBe("multi_step_analysis");
+    expect(stripDifficultyMarkerFromPrompt("[متفوقين] أوجد قيمة $x$ | المستوى: تطبيقي")).toBe("أوجد قيمة $x$");
+
+    const merged = mergeFinalReviewThreeStagesToPrintableItems({
+      stage1Raw: SAMPLE_STAGE1_UNNUMBERED,
+      stage2Raw: SAMPLE_STAGE2_UNNUMBERED,
+      stage3Raw: SAMPLE_STAGE3_UNNUMBERED,
+      branchId: "algebra",
+      branchNameAr: "الجبر",
+      titleArabic: "مراجعة شهر",
+    });
+    const audit = computePreExportIngestionAudit(merged);
+    expect(audit.total).toBe(6);
+    expect(audit.mcqCount).toBe(3);
+    expect(audit.essayCount).toBe(3);
+    expect(audit.tablesCount).toBe(1);
+    expect(audit.renderedSvgsCount).toBe(2);
+    expect(audit.solvedEssaysCount).toBe(3);
   });
 });
