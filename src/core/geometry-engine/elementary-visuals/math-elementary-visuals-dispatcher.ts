@@ -27,6 +27,8 @@ import { buildMathBarModelSvgMarkup } from "./math-bar-model-svg-builder";
 import { parseMathAnalogClockTime, buildMathAnalogClockSvgMarkup } from "./math-analog-clock-reading-svg-builder";
 import { tryBuildMathBalanceScaleSvg } from "./math-balance-scale-svg-builder";
 import { tryBuildInequalityNumberLineSvg } from "./math-inequality-number-line-svg-builder";
+import { detectAndBuildAreaModelSvg } from "../arithmetic-area-model/area-model-arithmetic-svg-builder";
+import { detectAndBuildPartialQuotientsDivisionSvg } from "../arithmetic-area-model/partial-quotients-division-svg-builder";
 
 export const MODULE_ID_MATH_ELEMENTARY_VISUALS_DISPATCHER =
   "math_elementary_visuals_dispatcher" as const;
@@ -63,6 +65,35 @@ export function detectAndBuildMathElementaryVisualFigure(
   // استبعاد صريح لأي خريطة جغرافية/اجتماعية مع عدم حجب كلمة «محيط» الهندسية
   if (/خريطة|قارة|دولة|نهر|المحيط\s*(?:الأطلسي|الهادئ|الهندي|المتجمد)|تضاريس/i.test(norm)) {
     return undefined;
+  }
+
+  // 0-أ. نموذج مساحة المستطيل ونموذج القسمة بالتجزئة
+  const partialQuotientsSvg = detectAndBuildPartialQuotientsDivisionSvg(description, {
+    numeralMode,
+    notationLanguage,
+  });
+  if (partialQuotientsSvg) {
+    return buildFigureWrapper(
+      figureId,
+      "primary_bar_model",
+      "نموذج التجزئة للقسمة",
+      notationLanguage,
+      partialQuotientsSvg
+    );
+  }
+
+  const areaModelSvg = detectAndBuildAreaModelSvg(description, {
+    numeralMode,
+    notationLanguage,
+  });
+  if (areaModelSvg) {
+    return buildFigureWrapper(
+      figureId,
+      "primary_bar_model",
+      "نموذج مساحة المستطيل",
+      notationLanguage,
+      areaModelSvg
+    );
   }
 
   // 0. ميزان الكفتين المتزن وخط أعداد المتباينات

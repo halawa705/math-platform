@@ -2,8 +2,9 @@
  * @file modern-editorial-flow-builder.ts
  * @description محرك بناء تدفق القالب المدرسي الحديث (للمذكرات والمراجعات وأوراق العمل):
  * يحافظ بالكامل على كبسولات الأفكار والشرح والقوانين والأمثلة المحلولة في المذكرات،
- * ويرص أسئلة اختر بنمط مسطح عالي الكثافة، ويجمّع المسائل والأمثلة في 1 أو 2 أو 3 أعمدة مع شريط «✍ الحـــــل».
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 255 سطراً).
+ * يبقي النماذج الحسابية والبصرية في تسلسلها الطبيعي دون تصنيفها كهندسة،
+ * ويوحد الترقيم 100% بين ورقة الأسئلة وكراسة الإجابة ويمنع تكديس الحلول الطويلة في عمودين.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 245 سطراً).
  */
 
 import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
@@ -12,6 +13,9 @@ import type { FlowItem } from "./flow-item-model";
 import { estimateVisualChoiceLength } from "./compact-mcq-inline-prompt-renderer";
 
 export const MODULE_ID_MODERN_EDITORIAL_FLOW_BUILDER = "modern_editorial_flow_builder" as const;
+
+/** علامة معزولة للتنظيف المرحلي (Phase 3/4): استُبدل الفحص السابق `essays.filter(hasDiagram)` بتمييز الهندسة الإقليدية الصرفة. */
+export const legacyHasDiagramEssaySplitter = null;
 
 const ARABIC_ORDINALS = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"] as const;
 
@@ -24,38 +28,78 @@ const isWorkedExampleItem = (q: PrintableMathQuestionItem): boolean =>
 const hasDiagram = (q: PrintableMathQuestionItem): boolean =>
   Boolean(q.geometryFigure || q.graphSpec || q.rawSvgMarkup);
 
+/** يميز مسائل الهندسة الإقليدية الصرفة عن النماذج الحسابية والبصرية والإحصائية. */
+const isTrueEuclideanGeometryEssay = (q: PrintableMathQuestionItem): boolean =>
+  Boolean(q.geometryFigure) &&
+  q.geometryFigure!.familyId !== "primary_visual_models_family" &&
+  q.geometryFigure!.familyId !== "statistics_family" &&
+  !q.geometryFigure!.rawSvgMarkup &&
+  !q.rawSvgMarkup;
+
+function getQuestionSteps(q: PrintableMathQuestionItem): readonly string[] {
+  if (q.solutionStepsAr && q.solutionStepsAr.length > 0) return q.solutionStepsAr;
+  return q.modelAnswerAr?.trim() ? [q.modelAnswerAr] : [];
+}
+
+function canFitSlotInMultiCol(
+  q: PrintableMathQuestionItem,
+  isSolved: boolean,
+  idPrefix: string
+): boolean {
+  const qHasFig = hasDiagram(q);
+  const qHasTable = /\n\s*\|.*\|/.test(q.promptAr);
+  if (qHasTable) return false;
+  const qLen = estimateVisualChoiceLength(q.promptAr);
+
+  if (!isSolved) {
+    return (!qHasFig && qLen <= 145) || (qHasFig && qLen <= 130);
+  }
+
+  if (qHasFig && idPrefix === "ed-ans") return false;
+  if (qLen > 115) return false;
+  const steps = getQuestionSteps(q);
+  if (steps.length > 3) return false;
+  const stepLens = steps.map(estimateVisualChoiceLength);
+  const maxStepLen = stepLens.length > 0 ? Math.max(...stepLens) : 0;
+  const totalStepsLen = stepLens.reduce((sum, n) => sum + n, 0);
+  return maxStepLen <= 62 && totalStepsLen <= 155;
+}
+
 function packQuestionsIntoEditorialGroups(params: {
   readonly questions: readonly PrintableMathQuestionItem[];
   readonly columnsCount: 1 | 2;
   readonly startNumber: number;
   readonly isSolved: boolean;
   readonly idPrefix: string;
+  readonly explicitDisplayNumbers?: ReadonlyMap<string, number>;
 }): readonly FlowItem[] {
-  const { questions, columnsCount, startNumber, isSolved, idPrefix } = params;
+  const { questions, columnsCount, startNumber, isSolved, idPrefix, explicitDisplayNumbers } = params;
   const result: FlowItem[] = [];
   let cursor = 0;
   let seqNum = startNumber;
   let groupSeq = 0;
 
+  const numFor = (q: PrintableMathQuestionItem): number =>
+    explicitDisplayNumbers?.get(q.id) ?? seqNum++;
+
   while (cursor < questions.length) {
     const q = questions[cursor];
     const qHasFig = hasDiagram(q);
-    const qHasTable = /\n\s*\|.*\|/.test(q.promptAr);
     const qLen = estimateVisualChoiceLength(q.promptAr);
-    const qFitsMultiCol = !qHasTable && ((!qHasFig && qLen <= 145) || (qHasFig && qLen <= 130));
+    const qFitsMultiCol = canFitSlotInMultiCol(q, isSolved, idPrefix);
 
     if (columnsCount === 1 || !qFitsMultiCol) {
       result.push({
         id: `${idPrefix}-g-${++groupSeq}`,
         kind: "editorial_question_group",
         span: "full",
-        slots: [{ question: q, displayNumber: seqNum++, isSolved }],
+        slots: [{ question: q, displayNumber: numFor(q), isSolved }],
       });
       cursor += 1;
       continue;
     }
 
-    if (!qHasFig && qLen <= 44 && cursor + 2 < questions.length) {
+    if (!isSolved && !qHasFig && qLen <= 44 && cursor + 2 < questions.length) {
       const q2 = questions[cursor + 1];
       const q3 = questions[cursor + 2];
       if (!hasDiagram(q2) && !hasDiagram(q3) && estimateVisualChoiceLength(q2.promptAr) <= 44 && estimateVisualChoiceLength(q3.promptAr) <= 44) {
@@ -64,9 +108,9 @@ function packQuestionsIntoEditorialGroups(params: {
           kind: "editorial_question_group",
           span: "full",
           slots: [
-            { question: q, displayNumber: seqNum++, isSolved },
-            { question: q2, displayNumber: seqNum++, isSolved },
-            { question: q3, displayNumber: seqNum++, isSolved },
+            { question: q, displayNumber: numFor(q), isSolved },
+            { question: q2, displayNumber: numFor(q2), isSolved },
+            { question: q3, displayNumber: numFor(q3), isSolved },
           ],
         });
         cursor += 3;
@@ -76,15 +120,15 @@ function packQuestionsIntoEditorialGroups(params: {
 
     if (cursor + 1 < questions.length) {
       const nextQ = questions[cursor + 1];
-      const nextLen = estimateVisualChoiceLength(nextQ.promptAr);
-      if (!/\n\s*\|.*\|/.test(nextQ.promptAr) && ((!hasDiagram(nextQ) && nextLen <= 145) || (hasDiagram(nextQ) && nextLen <= 130))) {
+      const stepsBalanced = !isSolved || Math.abs(getQuestionSteps(q).length - getQuestionSteps(nextQ).length) <= 1;
+      if (canFitSlotInMultiCol(nextQ, isSolved, idPrefix) && stepsBalanced) {
         result.push({
           id: `${idPrefix}-g-${++groupSeq}`,
           kind: "editorial_question_group",
           span: "full",
           slots: [
-            { question: q, displayNumber: seqNum++, isSolved },
-            { question: nextQ, displayNumber: seqNum++, isSolved },
+            { question: q, displayNumber: numFor(q), isSolved },
+            { question: nextQ, displayNumber: numFor(nextQ), isSolved },
           ],
         });
         cursor += 2;
@@ -96,7 +140,7 @@ function packQuestionsIntoEditorialGroups(params: {
       id: `${idPrefix}-g-${++groupSeq}`,
       kind: "editorial_question_group",
       span: "full",
-      slots: [{ question: q, displayNumber: seqNum++, isSolved }],
+      slots: [{ question: q, displayNumber: numFor(q), isSolved }],
     });
     cursor += 1;
   }
@@ -128,6 +172,16 @@ export function buildModernEditorialFlowItems(params: {
 
   const items: FlowItem[] = [];
   let ideasCount = 1;
+
+  // حساب ترتيب وترقيم المقالي الحتمي الموحد بين ورقة الأسئلة وكراسة الإجابة
+  const allEssays = questions.filter((q) => !isMcqItem(q));
+  const nonGeoEssays = allEssays.filter((q) => !isTrueEuclideanGeometryEssay(q));
+  const trueGeoEssays = allEssays.filter(isTrueEuclideanGeometryEssay);
+  const orderedEssays = [...nonGeoEssays, ...trueGeoEssays];
+  const essayDisplayNumberMap = new Map<string, number>();
+  orderedEssays.forEach((q, idx) => {
+    if (q.id) essayDisplayNumberMap.set(q.id, idx + 1);
+  });
 
   if (showQuestionsFlow) {
     if (hasPedagogicalBooklet) {
@@ -163,25 +217,22 @@ export function buildModernEditorialFlowItems(params: {
       });
     } else {
       const mcqs = questions.filter(isMcqItem);
-      const essays = questions.filter((q) => !isMcqItem(q));
       if (mcqs.length > 0) {
         items.push({ id: "ed-ribbon-mcq", kind: "editorial_ribbon_banner", span: "full", titleArabic: "اختر الإجابة الصحيحة من بين الإجابات المعطاة" });
         mcqs.forEach((q, idx) => {
           items.push({ id: `ed-mcq-${q.id || idx + 1}`, kind: "question", span: "full", question: q, sectionLocalNumber: idx + 1, forceHideSolution: true });
         });
       }
-      if (essays.length > 0) {
+      if (orderedEssays.length > 0) {
         items.push({ id: "ed-ribbon-essay", kind: "editorial_ribbon_banner", span: "full", titleArabic: "المقالي" });
-        const algebraEssays = essays.filter((q) => !hasDiagram(q));
-        const geoEssays = essays.filter(hasDiagram);
         let subIdx = 0;
-        if (algebraEssays.length > 0) {
+        if (nonGeoEssays.length > 0) {
           items.push({ id: "ed-sub-alg", kind: "editorial_sub_banner", span: "full", badgeLabelAr: `السؤال ${ARABIC_ORDINALS[subIdx++] ?? subIdx}`, instructionAr: "أجب عن الأسئلة الآتية :" });
-          items.push(...packQuestionsIntoEditorialGroups({ questions: algebraEssays, columnsCount, startNumber: 1, isSolved: false, idPrefix: "ed-alg" }));
+          items.push(...packQuestionsIntoEditorialGroups({ questions: nonGeoEssays, columnsCount, startNumber: 1, isSolved: false, idPrefix: "ed-alg", explicitDisplayNumbers: essayDisplayNumberMap }));
         }
-        if (geoEssays.length > 0) {
+        if (trueGeoEssays.length > 0) {
           items.push({ id: "ed-sub-geo", kind: "editorial_sub_banner", span: "full", badgeLabelAr: `السؤال ${ARABIC_ORDINALS[subIdx++] ?? subIdx}`, instructionAr: "أسئلة الهندسة والبرهان :" });
-          items.push(...packQuestionsIntoEditorialGroups({ questions: geoEssays, columnsCount, startNumber: algebraEssays.length + 1, isSolved: false, idPrefix: "ed-geo" }));
+          items.push(...packQuestionsIntoEditorialGroups({ questions: trueGeoEssays, columnsCount, startNumber: nonGeoEssays.length + 1, isSolved: false, idPrefix: "ed-geo", explicitDisplayNumbers: essayDisplayNumberMap }));
         }
       }
     }
@@ -190,13 +241,21 @@ export function buildModernEditorialFlowItems(params: {
   if (showAnswersSection) {
     const nonExampleQs = questions.filter((q) => !isWorkedExampleItem(q));
     const hasMcqs = nonExampleQs.some((q) => isMcqItem(q) && q.correctMcqIndex !== undefined);
-    const nonMcqAnswerables = nonExampleQs.filter(
-      (q) => !isMcqItem(q) && ((q.solutionStepsAr?.length ?? 0) > 0 || Boolean(q.modelAnswerAr?.trim()))
+    const answerSourceEssays = hasPedagogicalBooklet ? nonExampleQs.filter((q) => !isMcqItem(q)) : orderedEssays.filter((q) => !isWorkedExampleItem(q));
+    const nonMcqAnswerables = answerSourceEssays.filter(
+      (q) => (q.solutionStepsAr?.length ?? 0) > 0 || Boolean(q.modelAnswerAr?.trim())
     );
     items.push({ id: "ed-ans-banner", kind: "answer_section_banner", span: "full", titleArabic: "كراسة الإجابة ونماذج الحل المعتمدة", subtitleArabic: "مراجعة وتدقيق نموذجي لولي الأمر والمعلم" });
     if (hasMcqs) items.push({ id: "ed-mcq-key", kind: "mcq_answer_key", span: "full" });
     if (nonMcqAnswerables.length > 0) {
-      items.push(...packQuestionsIntoEditorialGroups({ questions: nonMcqAnswerables, columnsCount, startNumber: 1, isSolved: true, idPrefix: "ed-ans" }));
+      items.push(...packQuestionsIntoEditorialGroups({
+        questions: nonMcqAnswerables,
+        columnsCount,
+        startNumber: 1,
+        isSolved: true,
+        idPrefix: "ed-ans",
+        explicitDisplayNumbers: hasPedagogicalBooklet ? undefined : essayDisplayNumberMap,
+      }));
     }
   }
 

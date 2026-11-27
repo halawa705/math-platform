@@ -36,6 +36,7 @@ export interface TwoColumnNewspaperPackerProps {
   readonly sheetContainerRef: React.RefObject<HTMLDivElement | null>;
   readonly onPagesCountChange?: (n: number) => void;
   readonly onAutoFitResolvedLines?: (lines: number) => void;
+  readonly onAutoFitResolvedFontPt?: (fontPt: number) => void;
   readonly children?: React.ReactNode;
 }
 
@@ -46,6 +47,7 @@ export default function TwoColumnNewspaperPacker({
   sheetContainerRef,
   onPagesCountChange,
   onAutoFitResolvedLines,
+  onAutoFitResolvedFontPt,
   children,
 }: TwoColumnNewspaperPackerProps) {
   const [identity, setIdentity] = useState(DEFAULT_OWNER_TEACHER_IDENTITY_SSOT);
@@ -115,7 +117,7 @@ export default function TwoColumnNewspaperPacker({
     [questions, effectiveColumnsCount, isSolvedMode, effSettings.hideAccreditation, isSchoolExam, effSettings.paperTemplateId, effSettings.answerVisibilityMode]
   );
 
-  const stagingStamp = `${flowItems.length}:${effSettings.paperTemplateId}:${effectiveColumnsCount}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}:${isSweepingOrPending ? 1 : 0}`;
+  const stagingStamp = `${flowItems.length}:${effSettings.paperTemplateId}:${effectiveColumnsCount}:${effSettings.exactFontSizePt}:${effSettings.essayAnswerLinesCount ?? ""}:${effSettings.answerSpaceLines ?? ""}:${measureStamp}:${effSettings.boldProseText ? 1 : 0}:${effSettings.boldMathExpressions !== false ? 1 : 0}`;
   const measured = useFlowStagingLiveMeasurer(stagingRef, stagingStamp, measureStamp);
   const pageBudgets = React.useMemo(() => resolveFlowPageBudgets(measured.chrome), [measured.chrome]);
   const densityProfile = React.useMemo(
@@ -131,11 +133,11 @@ export default function TwoColumnNewspaperPacker({
         packFlowItemsWithBestPracticeOrder(flowItems, measured.heights, {
           budgets: pageBudgets,
           density: densityProfile,
-          skipSolutionSplits: isSweepingOrPending,
+          skipSolutionSplits: false,
           manualCompactHeader: effSettings.compactHeader,
         })
       ),
-    [flowItems, measured.heights, pageBudgets, densityProfile, isSweepingOrPending, effSettings.compactHeader]
+    [flowItems, measured.heights, pageBudgets, densityProfile, effSettings.compactHeader]
   );
 
   useEffect(() => {
@@ -148,11 +150,14 @@ export default function TwoColumnNewspaperPacker({
   useEffect(() => {
     if (sweep.phase === "sweeping") {
       sweepDoneReportedRef.current = false;
-    } else if (sweep.phase === "done" && rung && !hasManualLines && !sweepDoneReportedRef.current) {
+    } else if (sweep.phase === "done" && rung && !sweepDoneReportedRef.current) {
       sweepDoneReportedRef.current = true;
-      onAutoFitResolvedLines?.(rung.answerLines);
+      if (!hasManualLines) {
+        onAutoFitResolvedLines?.(rung.answerLines);
+      }
+      onAutoFitResolvedFontPt?.(rung.fontPt);
     }
-  }, [sweep.phase, rung?.answerLines, hasManualLines, onAutoFitResolvedLines]);
+  }, [sweep.phase, rung?.answerLines, rung?.fontPt, hasManualLines, onAutoFitResolvedLines, onAutoFitResolvedFontPt]);
 
   const stableRef = useRef({ pages: discretePages, settings: effSettings, heights: measured.heights });
   if (!isSweepingOrPending || stableRef.current.pages.length === 0) {
@@ -198,7 +203,7 @@ export default function TwoColumnNewspaperPacker({
         stagingRef={stagingRef} flowItems={flowItems} renderFlowItem={renderStagingItem} settings={effSettings}
         identity={identity} palette={palette} activeFont={activeFont} subtitleAr={subtitleAr} isSolvedMode={isSolvedMode}
         totalIdeasCount={totalIdeasCount} totalQuestionsCount={questions.length} totalMarks={totalMarks}
-        skipSplitVariants={isSweepingOrPending}
+        skipSplitVariants={false}
       />
 
       {sweep.phase === "sweeping" && (

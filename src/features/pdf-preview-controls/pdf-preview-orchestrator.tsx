@@ -55,6 +55,7 @@ export default function PDFPreviewOrchestrator({
   const userChangedAutoFitRef = useRef<boolean>(false);
   const userChangedTemplateRef = useRef<boolean>(false);
   const [pagesCount, setPagesCount] = useState<number>(1);
+  const [autoFitResolvedFontPt, setAutoFitResolvedFontPt] = useState<number | null>(null);
   const [selectedFormId, setSelectedFormId] = useState<string>("all");
   const [settings, setSettings] = useState<PDFPrintSettingsStateSSOT>(() =>
     resolveExamAwarePDFSettings({
@@ -122,6 +123,7 @@ export default function PDFPreviewOrchestrator({
       next.exactFontSizePt !== settings.exactFontSizePt
     ) {
       userChangedAutoFitRef.current = true;
+      setAutoFitResolvedFontPt(null);
     }
     if (next.paperTemplateId !== settings.paperTemplateId) {
       userChangedTemplateRef.current = true;
@@ -174,10 +176,16 @@ export default function PDFPreviewOrchestrator({
     setTimeout(() => setDriveFeedback(null), 4000);
   };
 
+  const effectivePreviewFontPt =
+    settings.autoFitMode !== "off" && autoFitResolvedFontPt !== null
+      ? (autoFitResolvedFontPt as PDFPrintSettingsStateSSOT["exactFontSizePt"])
+      : settings.exactFontSizePt;
+
   return (
     <div className="flex flex-col gap-3 w-full">
       <PDFPreviewTopActionBar
         settings={settings}
+        effectiveFontSizePt={effectivePreviewFontPt}
         isToolsOpen={isToolsOpen}
         driveFeedback={driveFeedback}
         onClosePreview={onClosePreview}
@@ -249,6 +257,7 @@ export default function PDFPreviewOrchestrator({
                 sheetContainerRef={sheetContainerRef}
                 onPagesCountChange={setPagesCount}
                 onAutoFitResolvedLines={handleAutoFitResolvedLines}
+                onAutoFitResolvedFontPt={setAutoFitResolvedFontPt}
               >
                 {children}
               </TwoColumnNewspaperPacker>
@@ -263,6 +272,7 @@ export default function PDFPreviewOrchestrator({
           sheetContainerRef={sheetContainerRef}
           onPagesCountChange={setPagesCount}
           onAutoFitResolvedLines={handleAutoFitResolvedLines}
+          onAutoFitResolvedFontPt={setAutoFitResolvedFontPt}
         >
           {children}
         </TwoColumnNewspaperPacker>

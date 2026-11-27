@@ -72,6 +72,8 @@ export function ModernEditorialPairedGroupRow({
           const formattedNum = formatNumeralsByModeSSOT(displayNumber, numeralMode);
           const hasFigure = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
           const cleanPrompt = hasFigure ? stripLeadingFigurePrefix(question.promptAr) : question.promptAr;
+          const showOppositeFigureBadge =
+            hasFigure && !/(?:المقابل|المقابلة|المجاور|التالي|نموذج)/i.test(cleanPrompt);
 
           return (
             <div
@@ -89,18 +91,20 @@ export function ModernEditorialPairedGroupRow({
                         formattedNumber={formattedNum}
                         primaryHex={palette.primaryHex}
                       />
-                      <span
-                        style={{
-                          border: `1.2px solid ${palette.primaryHex}`,
-                          color: palette.primaryHex,
-                          backgroundColor: "rgba(255,255,255,0.85)",
-                          borderRadius: "9999px",
-                          padding: "0px 7px",
-                        }}
-                        className="text-[0.76em] font-black"
-                      >
-                        في الشكل المقابل
-                      </span>
+                      {showOppositeFigureBadge && (
+                        <span
+                          style={{
+                            border: `1.2px solid ${palette.primaryHex}`,
+                            color: palette.primaryHex,
+                            backgroundColor: "rgba(255,255,255,0.85)",
+                            borderRadius: "9999px",
+                            padding: "0px 7px",
+                          }}
+                          className="text-[0.76em] font-black"
+                        >
+                          في الشكل المقابل
+                        </span>
+                      )}
                       {question.isWorkedExample && (
                         <span
                           style={{
@@ -153,18 +157,20 @@ export function ModernEditorialPairedGroupRow({
                         formattedNumber={formattedNum}
                         primaryHex={palette.primaryHex}
                       />
-                      <span
-                        style={{
-                          border: `1.2px solid ${palette.primaryHex}`,
-                          color: palette.primaryHex,
-                          backgroundColor: "rgba(255,255,255,0.85)",
-                          borderRadius: "9999px",
-                          padding: "0px 7px",
-                        }}
-                        className="text-[0.76em] font-black"
-                      >
-                        في الشكل المقابل
-                      </span>
+                      {showOppositeFigureBadge && (
+                        <span
+                          style={{
+                            border: `1.2px solid ${palette.primaryHex}`,
+                            color: palette.primaryHex,
+                            backgroundColor: "rgba(255,255,255,0.85)",
+                            borderRadius: "9999px",
+                            padding: "0px 7px",
+                          }}
+                          className="text-[0.76em] font-black"
+                        >
+                          في الشكل المقابل
+                        </span>
+                      )}
                     </div>
                     {question.isWorkedExample && (
                       <span

@@ -78,7 +78,7 @@ export function sanitizeNotebookLMCitationsAndLatex(
     .join("\n")
     .replace(/^\s*معرف_الفكرة\s*:\s*idea-\d+\s*$/gim, "")
     .replace(
-      /\[\s*(رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي|نموذج\s*بصري)\s*:[^\]]*)\]/gi,
+      /`?[ \t]*\[\s*(رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي|نموذج\s*بصري)\s*:[^\]]*)\][ \t]*`?/gi,
       (_m, inner: string) => `[${inner.trim()}]`
     )
     .replace(

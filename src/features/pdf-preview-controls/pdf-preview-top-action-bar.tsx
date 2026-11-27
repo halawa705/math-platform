@@ -18,6 +18,7 @@ export const MODULE_ID_PDF_PREVIEW_TOP_ACTION_BAR = "pdf_preview_top_action_bar"
 
 export interface PDFPreviewTopActionBarProps {
   readonly settings: PDFPrintSettingsStateSSOT;
+  readonly effectiveFontSizePt?: PDFPrintSettingsStateSSOT["exactFontSizePt"];
   readonly isToolsOpen: boolean;
   readonly driveFeedback: string | null;
   readonly onClosePreview?: () => void;
@@ -29,6 +30,7 @@ export interface PDFPreviewTopActionBarProps {
 
 export default function PDFPreviewTopActionBar({
   settings,
+  effectiveFontSizePt,
   isToolsOpen,
   driveFeedback,
   onClosePreview,
@@ -37,6 +39,7 @@ export default function PDFPreviewTopActionBar({
   onSaveToDrive,
   onToggleTools,
 }: PDFPreviewTopActionBarProps) {
+  const displayFontSizePt = effectiveFontSizePt ?? settings.exactFontSizePt;
   return (
     <div className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
       {onClosePreview && (
@@ -65,7 +68,7 @@ export default function PDFPreviewTopActionBar({
       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <PDFExactFontSizeControl
-            currentSizePt={settings.exactFontSizePt}
+            currentSizePt={displayFontSizePt}
             onChangeSizePt={(exactFontSizePt) =>
               onUpdateSettings({ ...settings, exactFontSizePt, autoFitMode: "off" })
             }
@@ -85,7 +88,7 @@ export default function PDFPreviewTopActionBar({
             }`}
           >
             {settings.autoFitMode !== "off"
-              ? "✨ حجم الخط: تلقائي ذكي (مفعّل)"
+              ? `✨ حجم الخط: تلقائي ذكي (${displayFontSizePt}pt)`
               : "✋ يدوي — اضغط لإعادة الضبط التلقائي"}
           </button>
         </div>

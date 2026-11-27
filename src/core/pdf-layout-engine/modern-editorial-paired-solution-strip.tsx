@@ -32,10 +32,13 @@ function resolveSlotAnswerLines(
   if (settings.hasManualEssayLinesLock && typeof settings.essayAnswerLinesCount === "number") {
     return settings.essayAnswerLinesCount;
   }
+  if (typeof settings.answerSpaceLines === "number" && settings.answerSpaceLines > 0) {
+    return hasFigure ? Math.max(settings.answerSpaceLines, 3) : settings.answerSpaceLines;
+  }
   if (typeof question.answerLinesCount === "number" && question.answerLinesCount > 0) {
     return question.answerLinesCount;
   }
-  if (hasFigure) return 4;
+  if (hasFigure) return 3;
   return slotsCount === 3 ? 2 : 3;
 }
 
@@ -132,6 +135,7 @@ export function ModernEditorialPairedSolutionStrip({
                 <div className="space-y-0.5 text-[0.86em] font-bold text-slate-900 leading-[1.45]">
                   {steps.map((st, sIdx) => {
                     const isLast = sIdx === steps.length - 1;
+                    const cleanStep = st.replace(/(\$)\s*\.\s*$/, "$1");
                     return (
                       <div
                         key={sIdx}
@@ -143,9 +147,10 @@ export function ModernEditorialPairedSolutionStrip({
                         className={isLast ? "font-black" : "font-semibold"}
                       >
                         <SafeKaTeXBiDiMathRenderer
-                          text={st}
+                          text={cleanStep}
                           numeralMode={settings.numeralMode}
                           notationLanguage={settings.notationLanguage}
+                          className="!leading-[1.42]"
                         />
                       </div>
                     );

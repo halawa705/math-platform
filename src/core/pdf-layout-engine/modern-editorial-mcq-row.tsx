@@ -91,8 +91,15 @@ export function ModernEditorialMcqRow({
   const choices = question.mcqChoicesAr ?? [];
   const hasFigure = Boolean(question.geometryFigure || question.graphSpec || question.rawSvgMarkup);
   const maxLen = choices.length > 0 ? Math.max(...choices.map(estimateVisualChoiceLength)) : 0;
-  const useFourCols = !hasFigure ? maxLen <= 22 : maxLen <= 14;
-  const gridColsClass = useFourCols ? "grid-cols-4 gap-x-2 gap-y-0.5" : "grid-cols-2 gap-x-3 gap-y-0.5";
+  const hasCompoundMath = choices.some((c) => /[×÷+=<>]|\\times|\\div/.test(c));
+  const fourColLimit = hasFigure ? (hasCompoundMath ? 10 : 14) : hasCompoundMath ? 14 : 18;
+  const twoColLimit = hasFigure ? (hasCompoundMath ? 28 : 34) : hasCompoundMath ? 34 : 46;
+  const gridColsClass =
+    maxLen <= fourColLimit
+      ? "grid-cols-4 gap-x-2 gap-y-0.5"
+      : maxLen <= twoColLimit
+        ? "grid-cols-2 gap-x-3 gap-y-0.5"
+        : "grid-cols-1 gap-y-0.5";
 
   return (
     <article

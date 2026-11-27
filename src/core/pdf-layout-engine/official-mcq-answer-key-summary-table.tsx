@@ -17,6 +17,7 @@ import type {
   PrintableMathQuestionItem,
   PrintThemePaletteTokens,
 } from "./a4-vector-html-sheet-renderer";
+import { estimateVisualChoiceLength } from "./compact-mcq-inline-prompt-renderer";
 import { PdfKeyIcon } from "./pdf-inline-vector-badge-icons";
 
 export const MODULE_ID_OFFICIAL_MCQ_ANSWER_KEY_SUMMARY_TABLE =
@@ -43,7 +44,7 @@ export function OfficialMcqAnswerKeySummaryTable({
   );
   if (mcqItems.length === 0) return null;
 
-  const gridCols = mcqItems.length > 36 ? 4 : 4;
+  const gridCols = mcqItems.length >= 25 ? 5 : 4;
 
   return (
     <div style={{ borderColor: palette.primaryHex }} className="mt-2 pt-1 border-t-2 break-inside-avoid print:break-inside-avoid">
@@ -66,6 +67,7 @@ export function OfficialMcqAnswerKeySummaryTable({
           const letter = getChoiceLetterByNotationSSOT(idx, notationLanguage);
           const rawChoiceVal = q.mcqChoicesAr?.[idx] || q.modelAnswerAr || "";
           const choiceVal = rawChoiceVal.replace(/[،,.;]+$/g, "").trim();
+          const showChoiceValue = choiceVal.length > 0 && estimateVisualChoiceLength(choiceVal) <= 18;
           return (
             <div key={q.id} className="px-1.5 py-0.5 border-l border-b border-slate-200 flex items-center justify-between gap-1 min-w-0">
               <span style={{ backgroundColor: palette.primaryHex }} className="text-white font-black px-1.5 py-0.2 rounded text-[0.82em] shrink-0 shadow-2xs">
@@ -73,7 +75,9 @@ export function OfficialMcqAnswerKeySummaryTable({
               </span>
               <span style={{ color: palette.primaryHex }} className="font-bold truncate inline-flex items-center gap-1 min-w-0 text-[0.88em]">
                 <bdi dir="ltr" className="font-black text-slate-800">({letter})</bdi>
-                <SafeKaTeXBiDiMathRenderer text={choiceVal} numeralMode={numeralMode} notationLanguage={notationLanguage} />
+                {showChoiceValue && (
+                  <SafeKaTeXBiDiMathRenderer text={choiceVal} numeralMode={numeralMode} notationLanguage={notationLanguage} />
+                )}
               </span>
             </div>
           );

@@ -30,6 +30,8 @@ export function decideBestAutoFitRung(probes: readonly AutoFitProbe[], targetMax
     return { rungIndex: best.rungIndex, pages: best.pages, status: "cannot_fit", overBy: minPages - targetMaxPages };
   }
   const limit = targetMaxPages !== undefined ? targetMaxPages : minPages;
-  const chosen = pool.find((p) => p.pages <= limit) ?? pool[0];
+  const matching = pool.filter((p) => p.pages <= limit);
+  const healthy = targetMaxPages === undefined ? matching.find((p) => p.lastPageFill >= 0.35) : undefined;
+  const chosen = healthy ?? matching[0] ?? pool[0];
   return { rungIndex: chosen.rungIndex, pages: chosen.pages, status: targetMaxPages !== undefined ? "fit" : "fill", overBy: 0 };
 }

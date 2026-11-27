@@ -1,7 +1,7 @@
 /**
  * @file exam-question-diagram-extractor.ts
- * @description مستخرج ومُنظف الرسوم الهندسية والبيانية والإحصائية ونماذج المساحة لأسئلة الاختبارات الإلكترونية والورقية.
- * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (< 180 سطراً).
+ * @description مستخرج ومُنظف الرسوم الهندسية والبيانية والإحصائية ونماذج المساحة والقسمة بالتجزئة لأسئلة الاختبارات.
+ * @invariant ملف ذري مستقل باسم فريد عالمياً وفق دستور المنصة (AGENTS.md) (<= 210 سطراً).
  */
 
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
@@ -9,6 +9,8 @@ import type { CartesianGraphSpec } from "../ssot/cartesian-graph-spec-ssot";
 import type { MathBranchId } from "../ssot/math-branches-ssot";
 import type { MathNotationLanguage, NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import { detectAndBuildAreaModelSvg } from "../geometry-engine/arithmetic-area-model/area-model-arithmetic-svg-builder";
+import { isStudentAskedToConstructAreaModel } from "../geometry-engine/arithmetic-area-model/area-model-decomposer-ssot";
+import { detectAndBuildPartialQuotientsDivisionSvg } from "../geometry-engine/arithmetic-area-model/partial-quotients-division-svg-builder";
 import { combineProblemAndTagGeometryContext } from "../geometry-engine/description-intake/problem-geometry-context-extractor";
 import { parseCartesianGraphDescription } from "../geometry-engine/graph-compositor/graph-fact-parser";
 import { matchGeometryWithDiagnostics } from "../geometry-engine/natural-arabic-geometry-matcher";
@@ -68,19 +70,49 @@ export function extractExamQuestionDiagrams(params: {
   } = params;
 
   const cleanRawDrawing = sanitizeRawDrawingField(rawDrawing);
-  const fullDrawingContext = `${basePrompt} ${cleanRawDrawing}`.trim();
-  const areaModelSvg = detectAndBuildAreaModelSvg(fullDrawingContext, {
-    numeralMode,
-    notationLanguage,
-  });
-  if (areaModelSvg) {
-    return {
-      rawSvgMarkup: areaModelSvg,
-      rawDrawingTagArabic: cleanRawDrawing || undefined,
-    };
+  const graphMatch = block.match(/`?[ \t]*\[?\s*رسم\s*بياني\s*:\s*([^\]\n`]+)\][ \t]*`?/i);
+  const tagMatch = block.match(
+    /`?[ \t]*\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*([^\]\n`]+)\][ \t]*`?/i
+  );
+
+  const explicitTagText =
+    cleanRawDrawing ||
+    graphMatch?.[1] ||
+    sanitizeRawDrawingField(tagMatch?.[1] ?? "");
+  const hasExplicitTag = Boolean(explicitTagText.trim());
+
+  const fullDrawingContext = `${basePrompt} ${explicitTagText}`.trim();
+
+  // ١. نموذج التجزئة للقسمة (خوارزمية التجزئة)
+  if (hasExplicitTag || /المقابل|المقابلة/i.test(basePrompt)) {
+    const partialQuotientsSvg = detectAndBuildPartialQuotientsDivisionSvg(
+      fullDrawingContext,
+      { numeralMode, notationLanguage }
+    );
+    if (partialQuotientsSvg) {
+      return {
+        rawSvgMarkup: partialQuotientsSvg,
+        rawDrawingTagArabic: explicitTagText || undefined,
+      };
+    }
   }
 
-  const graphMatch = block.match(/\[?\s*رسم\s*بياني\s*:\s*([^\]\n]+)\]/i);
+  // ٢. نموذج مساحة المستطيل (الضرب والقسمة) — محمي من التسريب عند أسئلة الحل اليدوي والأسئلة النظرية
+  if (!isStudentAskedToConstructAreaModel(basePrompt, hasExplicitTag)) {
+    const areaModelSource = hasExplicitTag ? explicitTagText : fullDrawingContext;
+    const areaModelSvg =
+      detectAndBuildAreaModelSvg(areaModelSource, { numeralMode, notationLanguage }) ??
+      (hasExplicitTag
+        ? detectAndBuildAreaModelSvg(fullDrawingContext, { numeralMode, notationLanguage })
+        : null);
+    if (areaModelSvg) {
+      return {
+        rawSvgMarkup: areaModelSvg,
+        rawDrawingTagArabic: explicitTagText || undefined,
+      };
+    }
+  }
+
   const rawGraphInput =
     graphMatch?.[1] ??
     (/دالة|منحنى|مستوى\s*إحداثي|شبكة\s*تربيعية|محور(?:ي)?\s*الإحداثيات/i.test(cleanRawDrawing)
@@ -90,14 +122,6 @@ export function extractExamQuestionDiagrams(params: {
     ? parseCartesianGraphDescription(rawGraphInput) ?? undefined
     : undefined;
 
-  const tagMatch = !graphSpec
-    ? block.match(
-        /\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*([^\]\n]+)\]/i
-      )
-    : null;
-
-  const explicitTagText = cleanRawDrawing || graphMatch?.[1] || sanitizeRawDrawingField(tagMatch?.[1] ?? "");
-  const hasExplicitTag = Boolean(explicitTagText.trim());
   const shouldTryGeo =
     !graphSpec &&
     (hasExplicitTag ||
@@ -162,14 +186,15 @@ export function cleanExamStudentPromptArabic(
 ): string {
   const withFallbackTag = hasRenderedFigure
     ? basePrompt.replace(
-        /\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*[^\]\n]+\]/gi,
+        /`?[ \t]*\[?\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*[^\]\n`]+\][ \t]*`?/gi,
         ""
       )
     : basePrompt.replace(
-        /\[\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*([^\]\n]+)\]/gi,
+        /`?[ \t]*\[\s*(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:\s*([^\]\n`]+)\][ \t]*`?/gi,
         "($1)"
       );
   const stripped = withFallbackTag
+    .replace(/`/g, "")
     .replace(
       /(?:^|\n)\s*(?:الرسم|رسم|الشكل)(?:\s*(?:المقابل|الهندسي|البياني|الإحصائي|الاحصائي|التوضيحي|التخطيطي))?\s*:[^\n]*/gi,
       ""
