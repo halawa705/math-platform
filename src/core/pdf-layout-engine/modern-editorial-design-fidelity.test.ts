@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { projectGeometryFigureToSVGMarkup } from "../geometry-engine/vector-svg-figure-projector";
 import type { CanonicalGeometryFigureIR } from "../ssot/geometry-archetype-ssot";
+import { loadPersistedPDFPrintSettingsSSOT } from "../ssot/pdf-print-settings-ssot";
 import { computeFigureBoxSizePx } from "./question-figure-box-size";
-import { buildFlowItems } from "./flow-items-builder";
-import type { PrintableMathQuestionItem } from "./a4-vector-html-sheet-renderer";
 
 const SAMPLE_TRIANGLE_IR: CanonicalGeometryFigureIR = {
   figureId: "fig-editorial-test-1",
@@ -17,8 +16,8 @@ const SAMPLE_TRIANGLE_IR: CanonicalGeometryFigureIR = {
     { id: "C", label: "جـ", position: { x: 3, y: 5 } },
   ],
   segments: [
-    { id: "s-ab", fromVertexId: "A", toVertexId: "B", lengthLabel: { value: "8", unit: "سم", labelKind: "given" } },
-    { id: "s-bc", fromVertexId: "B", toVertexId: "C", lengthLabel: { value: "؟", labelKind: "unknown" } },
+    { id: "s-ab", fromVertexId: "A", toVertexId: "B", tickMarks: 2, lengthLabel: { value: "8", unit: "سم", labelKind: "given" } },
+    { id: "s-bc", fromVertexId: "B", toVertexId: "C", tickMarks: 2, lengthLabel: { value: "؟", labelKind: "unknown" } },
     { id: "s-ca", fromVertexId: "C", toVertexId: "A" },
   ],
   angles: [
@@ -27,8 +26,8 @@ const SAMPLE_TRIANGLE_IR: CanonicalGeometryFigureIR = {
   ],
 };
 
-describe("Modern Editorial Handout Design Fidelity", () => {
-  it("projects frameless black-and-crimson textbook SVG without halos or dashed boxes when editorialTextbookStyle=true", () => {
+describe("Modern Editorial Geometry Contrast & Settings Migration Fidelity", () => {
+  it("projects large frameless #0F172A lines with high-contrast #C81E1E vertices, labels, and tick marks", () => {
     const svg = projectGeometryFigureToSVGMarkup(SAMPLE_TRIANGLE_IR, {
       widthPx: 220,
       heightPx: 150,
@@ -41,6 +40,7 @@ describe("Modern Editorial Handout Design Fidelity", () => {
 
     expect(svg).toContain('stroke="#0F172A"');
     expect(svg).toContain('fill="#C81E1E"');
+    expect(svg).toContain('stroke="#C81E1E"');
     expect(svg).toContain('font-size="11.2"');
     expect(svg).toContain('font-size="10.0"');
     expect(svg).not.toContain("#6366F1");
@@ -72,21 +72,31 @@ describe("Modern Editorial Handout Design Fidelity", () => {
     expect(edBox.svgWidthPx).toBeGreaterThan(legacyBox.svgWidthPx);
   });
 
-  it("assigns algebra and geometry zoneVariants to editorial sub-question banners", () => {
-    const qs: PrintableMathQuestionItem[] = [
-      { id: "alg1", questionNumber: 1, kind: "essay_algebra", branchBadgeAr: "الجبر", marks: 2, promptAr: "أوجد مجموعة حل المعادلة $2س + 1 = 7$", modelAnswerAr: "س = 3" },
-      { id: "geo1", questionNumber: 2, kind: "essay_geometry", branchBadgeAr: "الهندسة", marks: 3, promptAr: "أوجد قياس الزاوية المجهولة", modelAnswerAr: "80°", geometryFigure: SAMPLE_TRIANGLE_IR },
-    ];
-    const { items } = buildFlowItems({
-      questions: qs,
-      columnsCount: 2,
-      includeAnswerKey: false,
-      paperTemplateId: "modern_editorial_handout",
+  it("migrates legacy v3 classic_sovereign settings to modern_editorial_handout while keeping watermark preferences", () => {
+    const store = new Map<string, string>([
+      [
+        "math_platform_pdf_print_settings_ssot_v3",
+        JSON.stringify({
+          paperTemplateId: "classic_sovereign",
+          colorThemeId: "math_teal",
+          watermarkText: "أ/ إسلام محمد",
+          watermarkOpacityPct: 24,
+        }),
+      ],
+    ]);
+    const prevWindow = globalThis.window;
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: { localStorage: { getItem: (k: string) => store.get(k) ?? null } },
     });
-    const subBanners = items.filter((it) => it.kind === "editorial_sub_banner");
-
-    expect(subBanners).toHaveLength(2);
-    expect(subBanners[0]?.kind === "editorial_sub_banner" ? subBanners[0].zoneVariant : undefined).toBe("algebra");
-    expect(subBanners[1]?.kind === "editorial_sub_banner" ? subBanners[1].zoneVariant : undefined).toBe("geometry");
+    try {
+      const migrated = loadPersistedPDFPrintSettingsSSOT();
+      expect(migrated.paperTemplateId).toBe("modern_editorial_handout");
+      expect(migrated.colorThemeId).toBe("sky_editorial");
+      expect(migrated.watermarkText).toBe("أ/ إسلام محمد");
+      expect(migrated.watermarkOpacityPct).toBe(24);
+    } finally {
+      Object.defineProperty(globalThis, "window", { configurable: true, value: prevWindow });
+    }
   });
 });

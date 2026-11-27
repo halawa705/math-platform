@@ -188,6 +188,7 @@ export function triggerIsolatedA4Print(
       border-radius: 0 !important;
       box-shadow: none !important;
       overflow: hidden !important;
+      isolation: isolate !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
@@ -199,6 +200,10 @@ export function triggerIsolatedA4Print(
     .sovereign-a4-page-sheet:last-of-type {
       page-break-after: auto !important;
       break-after: auto !important;
+    }
+    [data-pdf-watermark="true"][data-watermark-front="true"] {
+      z-index: 50 !important;
+      mix-blend-mode: multiply !important;
     }
     .grid.grid-cols-2 {
       display: grid !important;

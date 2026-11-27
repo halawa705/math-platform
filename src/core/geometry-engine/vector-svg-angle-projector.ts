@@ -209,19 +209,19 @@ export function projectGeometryAnglesSVGMarkup(
     }
 
     // 4. علامات التطابق الرمزية (نقطة • أو علامة ×)
-    const markColor = isEd ? "#0F172A" : opts.accentColor;
+    const markColor = opts.accentColor;
     if (ang.markSymbol === "dot") {
       const mx = vx + Math.cos(midAng) * (rArc - 4);
       const my = vy + Math.sin(midAng) * (rArc - 4);
       elements.push(
-        `<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="1.9" fill="${markColor}" />`
+        `<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${isEd ? "2.1" : "1.9"}" fill="${markColor}" />`
       );
     } else if (ang.markSymbol === "cross") {
       const mx = vx + Math.cos(midAng) * (rArc - 4);
       const my = vy + Math.sin(midAng) * (rArc - 4);
       const s = 2.2;
       elements.push(
-        `<path d="M ${(mx - s).toFixed(1)} ${(my - s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my + s).toFixed(1)} M ${(mx - s).toFixed(1)} ${(my + s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my - s).toFixed(1)}" stroke="${markColor}" stroke-width="1.35" />`
+        `<path d="M ${(mx - s).toFixed(1)} ${(my - s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my + s).toFixed(1)} M ${(mx - s).toFixed(1)} ${(my + s).toFixed(1)} L ${(mx + s).toFixed(1)} ${(my - s).toFixed(1)}" stroke="${markColor}" stroke-width="${isEd ? "1.65" : "1.35"}" />`
       );
     }
   }

@@ -80,7 +80,6 @@ export function PdfWatermarkOrnamentalSvg({
           <g transform="translate(350,47)" fill={inkPrimary} opacity="0.86">
             <rect x="-8" y="-8" width="16" height="16" rx="1" />
             <rect x="-8" y="-8" width="16" height="16" rx="1" transform="rotate(45)" />
-            <circle cx="0" cy="0" r="3" fill="#FFFFFF" opacity="0.9" />
           </g>
 
           {/* نقاط خطية (نقطة الخطاط المعينية) حول الوسط */}

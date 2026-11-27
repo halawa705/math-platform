@@ -105,7 +105,7 @@ export default function PDFControlsGroupedToolPanel({
         <div className="space-y-3">
           <ToolRow labelAr="قالب الورقة">
             <PDFPaperTemplateSelector
-              selectedTemplateId={settings.paperTemplateId ?? "classic_sovereign"}
+              selectedTemplateId={settings.paperTemplateId ?? "modern_editorial_handout"}
               onSelectTemplate={(paperTemplateId) => set({ paperTemplateId })}
             />
           </ToolRow>

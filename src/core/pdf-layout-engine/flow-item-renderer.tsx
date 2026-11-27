@@ -26,7 +26,6 @@ import {
 } from "./modern-editorial-page-chrome";
 import { ModernEditorialMcqRow } from "./modern-editorial-mcq-row";
 import { ModernEditorialPairedGroupRow } from "./modern-editorial-paired-group-row";
-import { ModernEditorialIdeaCapsule } from "./modern-editorial-idea-capsule";
 
 export const MODULE_ID_FLOW_ITEM_RENDERER = "flow_item_renderer" as const;
 
@@ -60,7 +59,6 @@ export function FlowItemRenderer({
           badgeLabelAr={item.badgeLabelAr}
           instructionAr={item.instructionAr}
           palette={palette}
-          zoneVariant={item.zoneVariant}
         />
       );
     case "editorial_question_group":
@@ -94,16 +92,7 @@ export function FlowItemRenderer({
         />
       );
     case "idea_capsule":
-      return isModernEditorial ? (
-        <ModernEditorialIdeaCapsule
-          item={item.anchorQuestion}
-          palette={palette}
-          numeralMode={settings.numeralMode}
-          notationLanguage={settings.notationLanguage}
-          ideaIndex={item.ideaIndex}
-          boldProseText={settings.boldProseText}
-        />
-      ) : (
+      return (
         <PedagogicalIdeaAndRuleCapsule
           item={item.anchorQuestion}
           palette={palette}

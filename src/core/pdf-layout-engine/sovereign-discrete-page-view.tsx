@@ -111,6 +111,7 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
         lineHeight: activeFont.optimalLineHeight,
         boxShadow: isSchoolExam || isModernEditorial ? undefined : `inset 0 0 0 1px ${palette.borderHex}33`,
         borderRadius: isSchoolExam ? "4pt" : undefined,
+        isolation: "isolate",
       }}
       className={`sovereign-a4-page-sheet w-[794px] h-[1123px] bg-white text-slate-950 shadow-2xl ${
         settings.boldProseText ? "pdf-bold-prose" : "pdf-normal-prose"
@@ -118,12 +119,6 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
         isSchoolExam || isModernEditorial ? "px-[16px] py-[12px]" : "px-[18px] py-[14px]"
       } flex flex-col justify-between relative overflow-hidden rounded-sm border border-slate-300 print:border-0 print:rounded-none print:shadow-none`}
     >
-      <PdfDecorativeWatermarkLayer
-        settings={settings}
-        teacherFallbackName={identity.teacherFullName}
-        palette={palette}
-      />
-
       {isModernEditorial ? (
         <ModernEditorialSideHatchedRails palette={palette} pageKey={page.pageNumber} />
       ) : (
@@ -263,6 +258,12 @@ export const SovereignDiscretePageView = React.memo(function SovereignDiscretePa
           />
         )}
       </div>
+
+      <PdfDecorativeWatermarkLayer
+        settings={settings}
+        teacherFallbackName={identity.teacherFullName}
+        palette={palette}
+      />
     </section>
   );
 });

@@ -201,7 +201,7 @@ export function ModernEditorialPageFooter({
       }}
       className="w-full text-[9.8pt] font-black select-none shrink-0"
     >
-      <div className="px-3 flex items-center justify-start truncate">
+      <div className="px-3.5 flex items-center justify-start truncate">
         <span style={{ color: palette.primaryHex }}>{teacherName}</span>
       </div>
       <div
@@ -214,8 +214,8 @@ export function ModernEditorialPageFooter({
       >
         {formatNumeralsByModeSSOT(pageNumber, numeralMode)}
       </div>
-      <div className="px-3 flex items-center justify-end font-mono truncate" dir="ltr">
-        <span style={{ color: palette.primaryHex }}>
+      <div className="px-3.5 flex items-center justify-end font-mono truncate">
+        <span dir="ltr" style={{ color: palette.primaryHex }}>
           {teacherPhone ? formatNumeralsByModeSSOT(teacherPhone, numeralMode) : ""}
         </span>
       </div>
@@ -249,31 +249,25 @@ export function ModernEditorialSubQuestionBanner({
   badgeLabelAr,
   instructionAr,
   palette,
-  zoneVariant = "algebra",
 }: {
   readonly badgeLabelAr: string;
   readonly instructionAr?: string;
   readonly palette: PrintThemePaletteTokens;
-  readonly zoneVariant?: "algebra" | "geometry";
 }) {
   const isPhotocopy = palette.primaryHex === "#000000";
-  const isGeometry = zoneVariant === "geometry";
-  const barHex = isPhotocopy ? "#0F172A" : isGeometry ? palette.primaryHex : palette.secondaryHex;
-  const bgHex = isPhotocopy ? "#F8FAFC" : isGeometry ? palette.badgeBgHex : palette.softSurfaceHex;
-  const badgeColorHex = isPhotocopy ? "#0F172A" : isGeometry ? palette.primaryHex : palette.secondaryHex;
   return (
     <div
       style={{
-        backgroundColor: bgHex,
-        borderRight: `9px solid ${barHex}`,
+        backgroundColor: isPhotocopy ? "#F8FAFC" : palette.softSurfaceHex,
+        borderRight: `9px solid ${palette.secondaryHex}`,
         padding: "2.5px 8px",
       }}
       className="w-full flex flex-wrap items-center gap-2 break-inside-avoid print:break-inside-avoid"
     >
       <span
         style={{
-          border: `1.3px solid ${badgeColorHex}`,
-          color: badgeColorHex,
+          border: `1.3px solid ${palette.primaryHex}`,
+          color: palette.primaryHex,
           backgroundColor: "#FFFFFF",
           borderRadius: "9999px",
           padding: "0px 8px",

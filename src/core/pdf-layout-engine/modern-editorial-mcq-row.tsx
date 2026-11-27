@@ -21,11 +21,11 @@ import SafeKaTeXBiDiMathRenderer from "@/components/global-ui/safe-katex-bidi-ma
 import { cleanStudentFacingMathPromptSSOT } from "../ingestion/notebooklm-citation-latex-sanitizer";
 import { estimateVisualChoiceLength } from "./compact-mcq-inline-prompt-renderer";
 import { EmbeddedGeometrySVGDocker } from "./embedded-geometry-svg-docker";
-import { renderEditorialHighlightedPrompt } from "./editorial-prompt-keyword-highlighter";
-
-export { renderEditorialHighlightedPrompt };
 
 export const MODULE_ID_MODERN_EDITORIAL_MCQ_ROW = "modern_editorial_mcq_row" as const;
+
+const KEYWORD_HIGHLIGHT_REGEX =
+  /(فإن\s*:?|فما\s+قيمة\s*:?|فأوجد\s*:?|أوجد\s+بالبرهان\s*:?|أوجد\s*:?|اثبت\s+أن\s*:?|برهن\s+أن\s*:?|احسب\s+بالبرهان\s*:?|احسب\s*:?|اجمع\s*:?|اطرح\s*:?|كم\s+ينقص\s*:?|ما\s+زيادة\s*:?|حلل(?:\s+كلاً\s+مما\s+يأتي\s+تحليلاً\s+تاماً)?\s*:?|أي\s+مما\s+يلي|أي\s+الأعداد\s+الآتية)/g;
 
 export function ModernEditorialDoubleRingNumberBadge({
   formattedNumber,
@@ -37,8 +37,8 @@ export function ModernEditorialDoubleRingNumberBadge({
   return (
     <span
       style={{
-        width: "22px",
-        height: "22px",
+        width: "21px",
+        height: "21px",
         borderRadius: "9999px",
         border: `1.2px solid ${primaryHex}`,
         padding: "1.2px",
@@ -58,7 +58,7 @@ export function ModernEditorialDoubleRingNumberBadge({
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: "0.75em",
+          fontSize: "0.74em",
           fontWeight: 900,
           lineHeight: 1,
         }}
@@ -67,6 +67,64 @@ export function ModernEditorialDoubleRingNumberBadge({
       </span>
     </span>
   );
+}
+
+export function renderEditorialHighlightedPrompt(
+  rawPrompt: string,
+  numeralMode: NumeralDisplayMode,
+  notationLanguage: MathNotationLanguage,
+  palette: PrintThemePaletteTokens,
+  isPhotocopy: boolean
+): React.ReactNode {
+  const cleaned = cleanStudentFacingMathPromptSSOT(rawPrompt).replace(
+    /=\s*(?:\.{2,}|\\dots|\\ldots)\s*\$/g,
+    "= $ ..."
+  );
+  const mathAndTextTokens = cleaned.split(/(\$[^$]+\$)/g);
+  const nodes: React.ReactNode[] = [];
+  let keySeq = 0;
+  const kwColor = isPhotocopy ? "#0F172A" : palette.accentHex;
+
+  for (const token of mathAndTextTokens) {
+    if (!token) continue;
+    if (token.startsWith("$") && token.endsWith("$")) {
+      nodes.push(
+        <SafeKaTeXBiDiMathRenderer
+          key={`em-${keySeq++}`}
+          text={token}
+          numeralMode={numeralMode}
+          notationLanguage={notationLanguage}
+          className="!leading-[1.32]"
+        />
+      );
+      continue;
+    }
+
+    const parts = token.split(KEYWORD_HIGHLIGHT_REGEX);
+    for (const part of parts) {
+      if (!part) continue;
+      if (KEYWORD_HIGHLIGHT_REGEX.test(part)) {
+        KEYWORD_HIGHLIGHT_REGEX.lastIndex = 0;
+        nodes.push(
+          <span key={`kw-${keySeq++}`} style={{ color: kwColor }} className="font-black">
+            {part}
+          </span>
+        );
+      } else {
+        KEYWORD_HIGHLIGHT_REGEX.lastIndex = 0;
+        nodes.push(
+          <SafeKaTeXBiDiMathRenderer
+            key={`et-${keySeq++}`}
+            text={part}
+            numeralMode={numeralMode}
+            notationLanguage={notationLanguage}
+            className="!leading-[1.32]"
+          />
+        );
+      }
+    }
+  }
+  return nodes;
 }
 
 export interface ModernEditorialMcqRowProps {
@@ -154,13 +212,13 @@ export function ModernEditorialMcqRow({
                                 : "#15803D"
                               : palette.primaryHex
                         }`,
-                        width: "20px",
-                        height: "20px",
+                        width: "18px",
+                        height: "18px",
                         borderRadius: "9999px",
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: "0.78em",
+                        fontSize: "0.76em",
                         fontWeight: 900,
                         lineHeight: 1,
                       }}
@@ -200,7 +258,7 @@ export function ModernEditorialMcqRow({
               accentHex={palette.accentHex}
               numeralMode={numeralMode}
               notationLanguage={notationLanguage}
-              figureScale={settings.figureScale ?? 0.92}
+              figureScale={Math.max(0.92, settings.figureScale ?? 0.92)}
               columnsCount={1}
               monochromePrintSafe={isPhotocopy}
               editorialFrameless={true}

@@ -56,19 +56,6 @@ export function ModernEditorialPairedSolutionStrip({
   if (!anySolved && settings.answerSpaceStyle === "hidden") return null;
 
   const isPhotocopy = settings.colorThemeId === "photocopy_black";
-  const isGeometryGroup = slots.some((s) =>
-    Boolean(s.question.geometryFigure || s.question.graphSpec || s.question.rawSvgMarkup)
-  );
-  const stripBgHex = isPhotocopy
-    ? "#F1F5F9"
-    : isGeometryGroup
-      ? `${palette.badgeBgHex}E0`
-      : `${palette.softSurfaceHex}E0`;
-  const stripInkHex = isPhotocopy
-    ? "#0F172A"
-    : isGeometryGroup
-      ? palette.primaryHex
-      : palette.secondaryHex;
   const gridColsStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))`,
@@ -99,15 +86,15 @@ export function ModernEditorialPairedSolutionStrip({
     <>
       <div
         style={{
-          backgroundColor: stripBgHex,
-          padding: "1.5px 8px",
+          backgroundColor: isPhotocopy ? "#F1F5F9" : `${palette.softSurfaceHex}D9`,
+          padding: "1px 8px",
         }}
         className="w-full flex items-center justify-center"
       >
         <div className="inline-flex flex-col items-center leading-none">
           <div
-            style={{ color: stripInkHex }}
-            className="inline-flex items-center gap-1 text-[0.88em] font-black"
+            style={{ color: palette.secondaryHex }}
+            className="inline-flex items-center gap-1 text-[0.86em] font-black"
           >
             <span aria-hidden="true">✍</span>
             <span>{isContinuationTail ? "تابع الحـــــــل" : "الحـــــــل"}</span>
@@ -116,8 +103,8 @@ export function ModernEditorialPairedSolutionStrip({
             <path
               d="M 4 2 Q 39 7 74 2"
               fill="none"
-              stroke={stripInkHex}
-              strokeWidth="1.25"
+              stroke={palette.secondaryHex}
+              strokeWidth="1.2"
               strokeLinecap="round"
             />
           </svg>
@@ -139,7 +126,7 @@ export function ModernEditorialPairedSolutionStrip({
               style={{
                 borderRight: idx > 0 ? `1.2px solid ${palette.borderHex}88` : undefined,
               }}
-              className="min-w-0 px-3 py-1.5 flex flex-col justify-start"
+              className="min-w-0 px-2.5 py-1 flex flex-col justify-start"
             >
               {slot.isSolved ? (
                 <div className="space-y-0.5 text-[0.86em] font-bold text-slate-900 leading-[1.45]">
@@ -165,9 +152,9 @@ export function ModernEditorialPairedSolutionStrip({
                   })}
                 </div>
               ) : (
-                <div className="space-y-1 w-full">
+                <div className="space-y-0.5 w-full">
                   {Array.from({ length: maxLinesCount }).map((_, lIdx) => (
-                    <div key={lIdx} className={`w-full h-[20px] ${lineBorderClass}`} />
+                    <div key={lIdx} className={`w-full h-[18px] ${lineBorderClass}`} />
                   ))}
                 </div>
               )}

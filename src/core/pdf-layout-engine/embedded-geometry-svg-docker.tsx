@@ -60,7 +60,7 @@ export function EmbeddedGeometrySVGDocker({
       widthPx: box.svgWidthPx,
       heightPx: box.svgHeightPx,
       strokeColorHex: editorialFrameless ? "#0F172A" : primaryHex,
-      accentColorHex: editorialFrameless && !monochromePrintSafe ? accentHex : monochromePrintSafe ? "#0F172A" : accentHex,
+      accentColorHex: editorialFrameless ? (monochromePrintSafe ? "#0F172A" : "#C81E1E") : accentHex,
       backgroundColorHex: editorialFrameless ? "transparent" : "#FFFFFF",
       numeralMode,
       notationLanguage,

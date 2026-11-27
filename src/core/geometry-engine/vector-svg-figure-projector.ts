@@ -62,7 +62,7 @@ export function projectGeometryFigureToSVGMarkup(
   const isEd = Boolean(options.editorialTextbookStyle);
   const strokeColor = isEd ? "#0F172A" : (options.strokeColorHex ?? "#1E293B");
   const accentColor = options.accentColorHex ?? "#0D9488";
-  const lineDecorColor = isEd ? strokeColor : accentColor;
+  const lineDecorColor = accentColor;
   const backgroundColor = options.backgroundColorHex ?? (isEd ? "transparent" : "#FFFFFF");
   const numeralMode = options.numeralMode ?? "western";
   const notation = options.notationLanguage || "english";
@@ -177,13 +177,13 @@ export function projectGeometryFigureToSVGMarkup(
         const off = (i - (seg.tickMarks - 1) / 2) * 4;
         const tx = mx + ux * off;
         const ty = my + uy * off;
-        decorations += `<line x1="${(tx - nx * 4).toFixed(1)}" y1="${(ty - ny * 4).toFixed(1)}" x2="${(tx + nx * 4).toFixed(1)}" y2="${(ty + ny * 4).toFixed(1)}" stroke="${lineDecorColor}" stroke-width="1.5" />`;
+        decorations += `<line x1="${(tx - nx * 4).toFixed(1)}" y1="${(ty - ny * 4).toFixed(1)}" x2="${(tx + nx * 4).toFixed(1)}" y2="${(ty + ny * 4).toFixed(1)}" stroke="${lineDecorColor}" stroke-width="${isEd ? "1.65" : "1.5"}" />`;
       }
     }
     if (seg.parallelArrows) {
       const ax = mx - ux * 3;
       const ay = my - uy * 3;
-      decorations += `<path d="M ${(ax - ux * 4 + nx * 3).toFixed(1)} ${(ay - uy * 4 + ny * 3).toFixed(1)} L ${(ax + ux * 2.5).toFixed(1)} ${(ay + uy * 2.5).toFixed(1)} L ${(ax - ux * 4 - nx * 3).toFixed(1)} ${(ay - uy * 4 - ny * 3).toFixed(1)}" fill="none" stroke="${lineDecorColor}" stroke-width="1.5" stroke-linecap="round"/>`;
+      decorations += `<path d="M ${(ax - ux * 4 + nx * 3).toFixed(1)} ${(ay - uy * 4 + ny * 3).toFixed(1)} L ${(ax + ux * 2.5).toFixed(1)} ${(ay + uy * 2.5).toFixed(1)} L ${(ax - ux * 4 - nx * 3).toFixed(1)} ${(ay - uy * 4 - ny * 3).toFixed(1)}" fill="none" stroke="${lineDecorColor}" stroke-width="${isEd ? "1.65" : "1.5"}" stroke-linecap="round"/>`;
     }
     const aLen = 7.5;
     const aW = 3.2;

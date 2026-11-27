@@ -164,6 +164,8 @@ export const DEFAULT_PDF_PRINT_SETTINGS_SSOT: PDFPrintSettingsStateSSOT = {
 };
 
 const PDF_PRINT_SETTINGS_STORAGE_KEY =
+  "math_platform_pdf_print_settings_ssot_v4" as const;
+const LEGACY_V3_SETTINGS_STORAGE_KEY =
   "math_platform_pdf_print_settings_ssot_v3" as const;
 
 const VALID_PAPER_TEMPLATES: readonly PrintPaperTemplateId[] = [
@@ -195,14 +197,22 @@ const oneOf = <T extends string>(v: unknown, valid: readonly T[], fb: T): T =>
 export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
   if (typeof window === "undefined") return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
   try {
-    const raw = window.localStorage.getItem(PDF_PRINT_SETTINGS_STORAGE_KEY);
+    const rawV4 = window.localStorage.getItem(PDF_PRINT_SETTINGS_STORAGE_KEY);
+    const rawLegacyV3 = !rawV4 ? window.localStorage.getItem(LEGACY_V3_SETTINGS_STORAGE_KEY) : null;
+    const raw = rawV4 || rawLegacyV3;
     if (!raw) return DEFAULT_PDF_PRINT_SETTINGS_SSOT;
     const p = JSON.parse(raw) as Partial<PDFPrintSettingsStateSSOT>;
     const d = DEFAULT_PDF_PRINT_SETTINGS_SSOT;
+    const migratedTemplate =
+      rawLegacyV3 && p.paperTemplateId === "classic_sovereign"
+        ? d.paperTemplateId!
+        : oneOf(p.paperTemplateId, VALID_PAPER_TEMPLATES, d.paperTemplateId!);
+    const migratedTheme =
+      rawLegacyV3 ? d.colorThemeId : oneOf(p.colorThemeId, VALID_COLOR_THEMES, d.colorThemeId);
     return {
       ...d,
       ...p,
-      paperTemplateId: oneOf(p.paperTemplateId, VALID_PAPER_TEMPLATES, d.paperTemplateId!),
+      paperTemplateId: migratedTemplate,
       numeralMode: oneOf(p.numeralMode, ["eastern", "western"], d.numeralMode),
       notationLanguage: oneOf(p.notationLanguage, ["arabic", "english"], d.notationLanguage),
       fontFamilyId: p.fontFamilyId && p.fontFamilyId in PRINT_FONT_FAMILIES_SSOT ? p.fontFamilyId : d.fontFamilyId,
@@ -210,7 +220,7 @@ export function loadPersistedPDFPrintSettingsSSOT(): PDFPrintSettingsStateSSOT {
         typeof p.exactFontSizePt === "number" && p.exactFontSizePt >= 12 && p.exactFontSizePt <= 16
           ? (p.exactFontSizePt as ExactPrintFontSizePt)
           : d.exactFontSizePt,
-      colorThemeId: oneOf(p.colorThemeId, VALID_COLOR_THEMES, d.colorThemeId),
+      colorThemeId: migratedTheme,
       boldProseText: typeof p.boldProseText === "boolean" ? p.boldProseText : d.boldProseText,
       boldMathExpressions: typeof p.boldMathExpressions === "boolean" ? p.boldMathExpressions : d.boldMathExpressions,
       watermarkEnabled: typeof p.watermarkEnabled === "boolean" ? p.watermarkEnabled : d.watermarkEnabled,

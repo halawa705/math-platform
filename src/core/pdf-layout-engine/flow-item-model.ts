@@ -76,7 +76,6 @@ export type FlowItem =
       readonly span: "full";
       readonly badgeLabelAr: string;
       readonly instructionAr?: string;
-      readonly zoneVariant?: "algebra" | "geometry";
     }
   | {
       readonly id: string;

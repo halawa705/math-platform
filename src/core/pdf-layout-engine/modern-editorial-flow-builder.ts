@@ -169,11 +169,11 @@ export function buildModernEditorialFlowItems(params: {
         const geoEssays = essays.filter(hasDiagram);
         let subIdx = 0;
         if (algebraEssays.length > 0) {
-          items.push({ id: "ed-sub-alg", kind: "editorial_sub_banner", span: "full", badgeLabelAr: `السؤال ${ARABIC_ORDINALS[subIdx++] ?? subIdx}`, instructionAr: "أجب عن الأسئلة الآتية :", zoneVariant: "algebra" });
+          items.push({ id: "ed-sub-alg", kind: "editorial_sub_banner", span: "full", badgeLabelAr: `السؤال ${ARABIC_ORDINALS[subIdx++] ?? subIdx}`, instructionAr: "أجب عن الأسئلة الآتية :" });
           items.push(...packQuestionsIntoEditorialGroups({ questions: algebraEssays, columnsCount, startNumber: 1, isSolved: false, idPrefix: "ed-alg" }));
         }
         if (geoEssays.length > 0) {
-          items.push({ id: "ed-sub-geo", kind: "editorial_sub_banner", span: "full", badgeLabelAr: `السؤال ${ARABIC_ORDINALS[subIdx++] ?? subIdx}`, instructionAr: "أسئلة الهندسة والبرهان :", zoneVariant: "geometry" });
+          items.push({ id: "ed-sub-geo", kind: "editorial_sub_banner", span: "full", badgeLabelAr: `السؤال ${ARABIC_ORDINALS[subIdx++] ?? subIdx}`, instructionAr: "أسئلة الهندسة والبرهان :" });
           items.push(...packQuestionsIntoEditorialGroups({ questions: geoEssays, columnsCount, startNumber: algebraEssays.length + 1, isSolved: false, idPrefix: "ed-geo" }));
         }
       }

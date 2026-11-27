@@ -171,9 +171,21 @@ export default function MultiFormNewspaperPacker({
       }
       const decision = decideBestAutoFitRung(results.map((r) => r.probe), targetMaxPages);
       const chosen = results.find((r) => r.probe.rungIndex === decision.rungIndex) ?? results[0];
-      return { ...ff, pages: chosen.pages, formSettings: chosen.effSettings };
+      const liveMergedSettings: PDFPrintSettingsStateSSOT = {
+        ...settings,
+        exactFontSizePt: chosen.effSettings.exactFontSizePt,
+        figureScale: chosen.effSettings.figureScale,
+        compactHeader: chosen.effSettings.compactHeader,
+        hideAccreditation: chosen.effSettings.hideAccreditation,
+        essayAnswerLinesCount:
+          hasManualLines && settings.essayAnswerLinesCount !== undefined
+            ? settings.essayAnswerLinesCount
+            : chosen.effSettings.essayAnswerLinesCount,
+        answerSpaceLines: chosen.effSettings.answerSpaceLines,
+      };
+      return { ...ff, pages: chosen.pages, formSettings: liveMergedSettings };
     });
-  }, [mode, ladder.length, sweepState.phase, sweepState.cache, currentPackedForms, formFlows, effSettings, targetMaxPages]);
+  }, [mode, ladder.length, sweepState.phase, sweepState.cache, currentPackedForms, formFlows, effSettings, settings, hasManualLines, targetMaxPages]);
 
   const stableFormsRef = useRef(resolvedForms);
   if (!isSweeping || stableFormsRef.current.length === 0) stableFormsRef.current = resolvedForms;

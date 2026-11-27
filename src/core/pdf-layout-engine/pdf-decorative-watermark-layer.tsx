@@ -36,9 +36,7 @@ export function PdfDecorativeWatermarkLayer({
   const rotationDeg = Math.max(-60, Math.min(60, settings.watermarkRotationDeg ?? 0));
 
   const rawPlacement = settings.watermarkPlacement ?? "auto";
-  const isFrontOverlay =
-    rawPlacement === "front" ||
-    (rawPlacement === "auto" && settings.paperTemplateId !== "modern_editorial_handout");
+  const isFrontOverlay = rawPlacement !== "behind";
 
   const isCustomImg =
     settings.watermarkMode === "custom_image" &&
@@ -53,6 +51,7 @@ export function PdfDecorativeWatermarkLayer({
     <div
       aria-hidden="true"
       data-pdf-watermark="true"
+      data-watermark-front={isFrontOverlay ? "true" : "false"}
       style={{
         position: "absolute",
         top: "58px",
@@ -64,14 +63,14 @@ export function PdfDecorativeWatermarkLayer({
         justifyContent: "center",
         pointerEvents: "none",
         userSelect: "none",
-        zIndex: isFrontOverlay ? 30 : 1,
+        zIndex: isFrontOverlay ? 50 : 1,
+        opacity,
         mixBlendMode: isFrontOverlay ? "multiply" : undefined,
         overflow: "hidden",
       }}
     >
       <div
         style={{
-          opacity,
           transform: `scale(${scale}) rotate(${rotationDeg}deg)`,
           transformOrigin: "center center",
           width: "100%",

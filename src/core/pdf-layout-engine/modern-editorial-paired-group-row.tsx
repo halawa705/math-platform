@@ -50,9 +50,6 @@ export function ModernEditorialPairedGroupRow({
   const numeralMode = settings.numeralMode;
   const notationLanguage = settings.notationLanguage;
   const isPhotocopy = settings.colorThemeId === "photocopy_black";
-  const isGeometryGroup = slots.some((s) =>
-    Boolean(s.question.geometryFigure || s.question.graphSpec || s.question.rawSvgMarkup)
-  );
   const gridColsStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))`,
@@ -62,7 +59,7 @@ export function ModernEditorialPairedGroupRow({
     <article
       style={{
         backgroundColor: "transparent",
-        borderBottom: `1.4px solid ${isPhotocopy ? "#334155" : isGeometryGroup ? palette.primaryHex : palette.secondaryHex}77`,
+        borderBottom: `1.4px solid ${palette.primaryHex}66`,
         breakInside: "avoid",
       }}
       className="w-full min-w-0 break-inside-avoid print:break-inside-avoid text-slate-950"
@@ -141,7 +138,7 @@ export function ModernEditorialPairedGroupRow({
                       accentHex={palette.accentHex}
                       numeralMode={numeralMode}
                       notationLanguage={notationLanguage}
-                      figureScale={settings.figureScale ?? 0.96}
+                      figureScale={Math.max(0.94, settings.figureScale ?? 0.96)}
                       columnsCount={1}
                       monochromePrintSafe={isPhotocopy}
                       editorialFrameless={true}
@@ -192,7 +189,7 @@ export function ModernEditorialPairedGroupRow({
                       accentHex={palette.accentHex}
                       numeralMode={numeralMode}
                       notationLanguage={notationLanguage}
-                      figureScale={settings.figureScale ?? 0.94}
+                      figureScale={Math.max(0.92, settings.figureScale ?? 0.94)}
                       columnsCount={2}
                       monochromePrintSafe={isPhotocopy}
                       editorialFrameless={true}
