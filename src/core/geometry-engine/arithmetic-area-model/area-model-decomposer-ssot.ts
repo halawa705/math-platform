@@ -34,12 +34,6 @@ export {
 
 export type AreaModelSpec = AreaModelMultiplicationSpec | AreaModelDivisionSpec;
 
-/**
- * علامة معزولة للتنظيف المرحلي (Phase 3/4): تم استبدال القيم الافتراضية الثابتة السابقة
- * (`36`, `["40", "5"]`, `["80", "210", "56"]`) بالمحللات الحتمية المخصصة.
- */
-export const legacyFallbackAreaModelDefaults = null;
-
 const AREA_MODEL_DETECTION_RE =
   /نموذج\s*مساحة\s*المستطيل|نموذج\s*المستطيل|مستطيل\s*(?:القسمة|الضرب|مقسم\s*إلى\s*(?:خانات|أجزاء|عمودين|صفين))|المستطيل\s*مقسم\s*(?:إلى\s*(?:عمودين|صفين|خانات|أجزاء)|[0-9٠-٩]+\s*[×x*]\s*[0-9٠-٩]+)/i;
 

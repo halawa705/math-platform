@@ -159,4 +159,38 @@ describe("notebooklm-worksheet-parser", () => {
     expect(items[3].rawSvgMarkup).toContain("200");
     expect(items[3].rawSvgMarkup).toContain("6000");
   });
+
+  it("blocks answer-leaking area models on student-solve worksheet drills and renders backtick-wrapped Partial Quotients division", () => {
+    const raw = `
+=== [QUESTION: 1] | النوع: ESSAY | الدرجة: 2 ===
+النص: استخدم نموذج مساحة المستطيل لإيجاد حاصل ضرب $48 \\times 26$
+الرسم:
+الإجابة_الصحيحة: $1,248$
+البرهان_والخطوات: $800 + 240 + 160 + 48 = 1,248$
+
+=== [QUESTION: 2] | النوع: ESSAY | الدرجة: 3 ===
+النص: في عملية القسمة المقابلة باستخدام نموذج التجزئة، أوجد قيمتي $x$ و $y$ وخارج القسمة النهائي.
+الرسم: \`[رسم هندسي: المقسوم = 3,456 ; المقسوم عليه = 16 ; النواتج الجزئية جهة اليمين: الخطوة الأولى = 200 والباقي مطروحاً 3,200 فيتبقى 256 ; الخطوة الثانية = x ; الخطوة الثالثة = y ; الباقي النهائي = 0]\`
+الإجابة_الصحيحة: $216$
+البرهان_والخطوات: $x = 10$ | $y = 6$ | الناتج $= 216$
+    `;
+
+    const items = parseNotebookLMWorksheetResponse({
+      rawText: raw,
+      branchId: "numbers",
+      branchNameAr: "الأعداد والعمليات",
+      lessonTitleArabic: "ضرب وقسمة الأعداد",
+    });
+
+    expect(items).toHaveLength(2);
+    expect(items[0].rawSvgMarkup).toBeUndefined();
+    expect(items[0].geometryFigure).toBeUndefined();
+
+    expect(items[1].rawSvgMarkup).toBeDefined();
+    expect(items[1].rawSvgMarkup).toContain("3456");
+    expect(items[1].rawSvgMarkup).toContain("16");
+    expect(items[1].rawSvgMarkup).toContain("200");
+    expect(items[1].rawSvgMarkup).toContain(">x<");
+    expect(items[1].rawSvgMarkup).toContain(">y<");
+  });
 });

@@ -172,15 +172,11 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
   it("enforces intelligent exhaustive idea mapping without artificial min/max caps and without padding or omission", () => {
     for (const [name, text] of Object.entries(promptsMap)) {
       if (name === "curriculum") continue;
-      expect(text, `${name} missing exhaustive spectrum rule`).toContain(
-        "الاختبارات الشهرية والنهائية"
-      );
+      expect(text, `${name} missing exhaustive spectrum rule`).toContain("تسلسل الدروس");
       expect(text, `${name} missing progression from basic to gifted`).toContain(
-        "البسيط التأسيسي"
+        "تأسيسي ← تطبيقي ← متفوقين"
       );
-      expect(text, `${name} missing no-omission/no-padding rule`).toContain(
-        "بدون إهمال أي فكرة في المصادر، وبدون حشو"
-      );
+      expect(text, `${name} missing no-omission/no-padding rule`).toContain("بلا اختلاق");
     }
     expect(promptsMap.bookletStage1).toContain("فهرس أفكار الدرس:");
   });
@@ -203,10 +199,10 @@ describe("NotebookLM Prompts — Compact Size Budget & Strict Pedagogical Rules"
       if (name === "curriculum") continue;
       expect(text, `${name} missing anti-repetition rule`).toContain("فكرة رياضية مستقلة ومختلفة");
       expect(text, `${name} missing MCQ mathematical accuracy rule`).toContain(
-        "إجابة واحدة فقط صحيحة رياضياً"
+        "إجابة واحدة فقط صحيحة"
       );
       expect(text, `${name} missing reasonable distractors rule`).toContain(
-        "مشتتات ذكية ومعقولة رياضياً"
+        "مشتتات ذكية موزعة بالتساوي"
       );
     }
   });

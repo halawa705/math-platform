@@ -150,3 +150,23 @@ export function PdfSparkleIcon({ className }: PdfBadgeIconProps) {
     </SvgIconFrame>
   );
 }
+
+/** بديل ⏱ (ساعة زمن الاختبار) */
+export function PdfClockIcon({ className }: PdfBadgeIconProps) {
+  return (
+    <SvgIconFrame className={className}>
+      <circle cx="8" cy="8.6" r="5.4" />
+      <path d="M8 5.6v3.2l2.1 1.4" />
+      <path d="M6.2 1.8h3.6" />
+    </SvgIconFrame>
+  );
+}
+
+/** بديل 🛡️ (شعار المنصة الافتراضي) */
+export function PdfShieldIcon({ className }: PdfBadgeIconProps) {
+  return (
+    <SvgIconFrame className={className}>
+      <path d="M8 1.8l5.2 2v4.1c0 3.4-2.2 5.4-5.2 6.5-3-1.1-5.2-3.1-5.2-6.5V3.8L8 1.8z" />
+    </SvgIconFrame>
+  );
+}

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { OfficialSchoolFirstPageHeader } from "../src/core/pdf-layout-engine/official-school-exam-page-chrome";
 import {
   OfficialSchoolCornerCropMarks,
   OfficialSchoolEndWishBanner,
-  OfficialSchoolFirstPageHeader,
   OfficialSchoolPageFooterBar,
-} from "../src/core/pdf-layout-engine/official-school-exam-page-chrome";
+} from "../src/core/pdf-layout-engine/official-school-exam-frame-and-footer";
 import { PedagogicalIdeaAndRuleCapsule } from "../src/core/pdf-layout-engine/a4-pedagogical-capsule-and-key-table";
 import { QuestionCardBadgeHeader } from "../src/core/pdf-layout-engine/question-card-badge-header";
 import { StructuredStepByStepSolutionBox } from "../src/core/pdf-layout-engine/structured-step-by-step-solution-box";

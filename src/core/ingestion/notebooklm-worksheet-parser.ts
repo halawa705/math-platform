@@ -10,6 +10,8 @@ import type { MathBranchId } from "../ssot/math-branches-ssot";
 import type { PrintableMathQuestionItem } from "../pdf-layout-engine/a4-vector-html-sheet-renderer";
 import { cleanStudentFacingMathPromptSSOT } from "./notebooklm-citation-latex-sanitizer";
 import { detectAndBuildAreaModelSvg } from "../geometry-engine/arithmetic-area-model/area-model-arithmetic-svg-builder";
+import { isStudentAskedToConstructAreaModel } from "../geometry-engine/arithmetic-area-model/area-model-decomposer-ssot";
+import { detectAndBuildPartialQuotientsDivisionSvg } from "../geometry-engine/arithmetic-area-model/partial-quotients-division-svg-builder";
 import { synthesizeEmptyMcqChoices } from "./mcq-empty-choice-synthesizer";
 import { type CurriculumStageKind } from "./unsolicited-diagram-guard";
 import { resolveWorksheetItemDiagram } from "./notebooklm-worksheet-diagram-matcher";
@@ -121,7 +123,7 @@ function parseConceptExamples(raw: string): ParsedConceptExample[] {
 
     const exMatch = body.match(/المثال\s*:\s*([\s\S]*?)(?=(?:\|?\s*الرسم|\|?\s*الحل_السريع|===|$))/i);
     const prompt = (exMatch?.[1] || body).trim();
-    const diagMatch = body.match(/الرسم\s*:\s*(\[رسم هندسي:[^\]]+\])/i);
+    const diagMatch = body.match(/الرسم\s*:\s*`?[ \t]*(\[(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:[^\]]+\])[ \t]*`?/i);
     const solMatch = body.match(/الحل_السريع\s*:\s*([\s\S]*?)$/i);
     const rawSteps = solMatch?.[1]?.trim() || "";
     const steps = mergeLogicalSolutionSteps(rawSteps);
@@ -155,7 +157,7 @@ function parseQuestionsBlocks(raw: string): ParsedWorksheetQuestion[] {
 
     const promptMatch = body.match(/النص\s*:\s*([\s\S]*?)(?=(?:الرسم|البدائل|الإجابة_الصحيحة|البرهان|===|$))/i);
     let promptText = (promptMatch?.[1] || body).trim();
-    const diagMatch = body.match(/الرسم\s*:\s*(\[رسم هندسي:[^\]]+\])/i);
+    const diagMatch = body.match(/الرسم\s*:\s*`?[ \t]*(\[(?:رسم\s*(?:هندسي|توضيحي|بياني|إحصائي|احصائي)|نموذج\s*بصري)\s*:[^\]]+\])[ \t]*`?/i);
     const rawChoices = isMcq ? parseChoicesTupleFromBlock(body) : undefined;
     promptText = stripInlineChoicesFromPromptText(promptText);
 
@@ -209,9 +211,11 @@ export function parseNotebookLMWorksheetResponse(
     const isFirst = idx === 0;
     const fullPrompt = `${ex.examplePrompt} ${ex.diagramDesc || ""}`;
 
-    // فحص نموذج مساحة المستطيل أولاً لتفادي الأشكال الإقليدية الخاطئة
-    const areaModelSvg = detectAndBuildAreaModelSvg(fullPrompt);
-    const diag = !areaModelSvg
+    // فحص نماذج التجزئة ومساحة المستطيل أولاً لتفادي الأشكال الإقليدية الخاطئة
+    const arithmeticSvg =
+      detectAndBuildPartialQuotientsDivisionSvg(fullPrompt) ??
+      detectAndBuildAreaModelSvg(fullPrompt);
+    const diag = !arithmeticSvg
       ? resolveWorksheetItemDiagram({ promptText: ex.examplePrompt, diagramDesc: ex.diagramDesc, branchId, gradeId: params.gradeId, stage: params.stage, lessonTitleArabic })
       : {};
 
@@ -226,7 +230,7 @@ export function parseNotebookLMWorksheetResponse(
       solutionStepsAr: ex.quickSolutionSteps,
       citationBadgeAr: `💡 مثال محلول: ${ex.conceptTitle}`,
       isWorkedExample: true,
-      rawSvgMarkup: areaModelSvg ?? undefined,
+      rawSvgMarkup: arithmeticSvg ?? undefined,
       geometryFigure: diag.geometryFigure,
       graphSpec: diag.graphSpec,
       ideaBannerTitleAr: isFirst ? cleanTitle : undefined,
@@ -239,8 +243,18 @@ export function parseNotebookLMWorksheetResponse(
   questions.forEach((q, idx) => {
     const isFirstQuestion = conceptExamples.length === 0 && idx === 0;
     const fullPrompt = `${q.promptText} ${q.diagramDesc || ""}`;
-    const areaModelSvg = detectAndBuildAreaModelSvg(fullPrompt);
-    const diag = !areaModelSvg
+    const hasExplicitTag = Boolean(q.diagramDesc?.trim());
+    const partialQuotientsSvg =
+      hasExplicitTag || /المقابل|المقابلة/i.test(q.promptText)
+        ? detectAndBuildPartialQuotientsDivisionSvg(fullPrompt)
+        : null;
+    const areaModelSvg =
+      !partialQuotientsSvg && !isStudentAskedToConstructAreaModel(q.promptText, hasExplicitTag)
+        ? (detectAndBuildAreaModelSvg(hasExplicitTag ? q.diagramDesc! : fullPrompt) ??
+            (hasExplicitTag ? detectAndBuildAreaModelSvg(fullPrompt) : null))
+        : null;
+    const arithmeticSvg = partialQuotientsSvg ?? areaModelSvg;
+    const diag = !arithmeticSvg
       ? resolveWorksheetItemDiagram({ promptText: q.promptText, diagramDesc: q.diagramDesc, branchId, gradeId: params.gradeId, stage: params.stage, lessonTitleArabic })
       : {};
 
@@ -259,7 +273,7 @@ export function parseNotebookLMWorksheetResponse(
       modelAnswerAr: q.rawSolution || q.steps.join(" ⇐ "),
       solutionStepsAr: q.steps,
       studentDrillPromptAr: isEssay && includeAnswerLines ? "مساحة إجابة الطالب:" : undefined,
-      rawSvgMarkup: areaModelSvg ?? undefined,
+      rawSvgMarkup: arithmeticSvg ?? undefined,
       geometryFigure: diag.geometryFigure,
       graphSpec: diag.graphSpec,
       ideaBannerTitleAr: isFirstQuestion ? cleanTitle : undefined,

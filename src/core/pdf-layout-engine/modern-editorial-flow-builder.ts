@@ -14,9 +14,6 @@ import { estimateVisualChoiceLength } from "./compact-mcq-inline-prompt-renderer
 
 export const MODULE_ID_MODERN_EDITORIAL_FLOW_BUILDER = "modern_editorial_flow_builder" as const;
 
-/** علامة معزولة للتنظيف المرحلي (Phase 3/4): استُبدل الفحص السابق `essays.filter(hasDiagram)` بتمييز الهندسة الإقليدية الصرفة. */
-export const legacyHasDiagramEssaySplitter = null;
-
 const ARABIC_ORDINALS = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"] as const;
 
 const isMcqItem = (q: PrintableMathQuestionItem): boolean =>

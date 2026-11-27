@@ -11,6 +11,10 @@ import React from "react";
 import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
+import { PdfClockIcon, PdfShieldIcon } from "./pdf-inline-vector-badge-icons";
+
+const BITMAP_EMOJI_SYMBOL_REGEX =
+  /[\u{1F300}-\u{1FAFF}\u2600-\u27BF\u270D\u26A1\u2B50\u2705\u26A0\u274C\u2714\u2716]/u;
 
 export const MODULE_ID_OFFICIAL_SCHOOL_EXAM_PAGE_CHROME =
   "official_school_exam_page_chrome" as const;
@@ -76,8 +80,11 @@ export function OfficialSchoolFirstPageHeader({
                 alt={academyName}
                 className="w-full h-full object-cover"
               />
+            ) : !identity.platformLogoSymbol ||
+              BITMAP_EMOJI_SYMBOL_REGEX.test(identity.platformLogoSymbol) ? (
+              <PdfShieldIcon />
             ) : (
-              <span>{identity.platformLogoSymbol || "∑"}</span>
+              <span>{identity.platformLogoSymbol}</span>
             )}
           </span>
           <span style={{ color: primaryHex }} className="font-black truncate">
@@ -105,9 +112,10 @@ export function OfficialSchoolFirstPageHeader({
               borderRadius: "9999px",
               padding: "0.5px 7px",
             }}
-            className="font-black text-[10px] whitespace-nowrap"
+            className="font-black text-[10px] whitespace-nowrap inline-flex items-center gap-1"
           >
-            ⏱ الزمن: {formatNumeralsByModeSSOT(duration, numeralMode)}
+            <PdfClockIcon />
+            <span>الزمن: {formatNumeralsByModeSSOT(duration, numeralMode)}</span>
           </span>
         </div>
       </div>
