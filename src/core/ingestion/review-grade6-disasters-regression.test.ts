@@ -5,6 +5,10 @@ import { parseGradeRibbonInfo } from "../pdf-layout-engine/modern-editorial-page
 import { buildFlowItems } from "../pdf-layout-engine/flow-items-builder";
 import { dropTrailingAccreditationOnlyPage, type FlowPage } from "../pdf-layout-engine/flow-item-model";
 import { buildStandardDocumentTitleSSOT } from "../ssot/curriculum-document-title-builder";
+import {
+  buildFinalReviewNotebookLMPrompt,
+  extractEssayQuestionsFromReviewStage2Reply,
+} from "../prompts/final-review-prompt-builder";
 
 const SAMPLE_STAGE1_UNNUMBERED = `"### مراجعة مقرر الشهر (المرحلة ١: أسئلة اختيار من متعدد وإجاباتها)
 **الفرع:** الجبر والفترات والمتباينات | **الصف:** السادس الابتدائي (الفصل الدراسي الأول)
@@ -190,5 +194,51 @@ describe("Review Grade 6 Disasters End-to-End Regression", () => {
     };
     expect(dropTrailingAccreditationOnlyPage([basePage, loneFooterPage])).toHaveLength(1);
     expect(dropTrailingAccreditationOnlyPage([basePage, contentFooterPage])).toHaveLength(2);
+  });
+
+  it("enforces #1 numbering and lesson/difficulty ordering in review prompts and maps out-of-order #N Stage 3 solutions", () => {
+    const common = {
+      reviewScope: "monthly_revision" as const,
+      gradeNameArabic: "الصف السادس الابتدائي",
+      termNumber: 1 as const,
+      branchId: "algebra" as const,
+      coveredUnitsTitlesArabic: ["الوحدة الثالثة", "الوحدة الرابعة"],
+      totalReviewQuestionsCount: 25,
+      mcqCount: 15,
+      essayCount: 10,
+    };
+    const p1 = buildFinalReviewNotebookLMPrompt({ ...common, stageNumber: 1 });
+    const p2 = buildFinalReviewNotebookLMPrompt({ ...common, stageNumber: 2 });
+    const p3 = buildFinalReviewNotebookLMPrompt({ ...common, stageNumber: 3 });
+
+    for (const p of [p1, p2, p3]) {
+      expect(p.length).toBeLessThan(1550);
+      expect(p).toContain("تسلسل الدروس");
+    }
+    expect(p1).toContain("#1");
+    expect(p1).toContain("#15");
+    expect(p1).toContain("يُمنع [1]");
+    expect(p2).toContain("#1");
+    expect(p2).toContain("#10");
+    expect(p3).toContain("حل السؤال #1:");
+
+    const stage2Reply = "#1 أوجد قيمة x إذا كان $2x = 10$.\n\n#2 اكتب متباينة تعبر عن عدد أكبر من 4.";
+    const extracted = extractEssayQuestionsFromReviewStage2Reply(stage2Reply);
+    expect(extracted).toHaveLength(2);
+    expect(extracted[0]).toContain("#1");
+    expect(extracted[1]).toContain("#2");
+
+    const merged = mergeFinalReviewThreeStagesToPrintableItems({
+      stage1Raw: "#1 اختر: $1 + 1 =$\n(أ) $1$\n(ب) $2$\n(جـ) $3$\n(د) $4$\nالإجابة الصحيحة: (ب) $2$",
+      stage2Raw: stage2Reply,
+      stage3Raw: "#### حل السؤال #2:\n- الناتج النهائي: $x > 4$\n\n#### حل السؤال #1:\n- الناتج النهائي: $x = 5$",
+      branchId: "algebra",
+      branchNameAr: "الجبر",
+      titleArabic: "مراجعة الشهر",
+    });
+    const essays = merged.filter((q) => q.kind !== "mcq");
+    expect(essays).toHaveLength(2);
+    expect(essays[0].solutionStepsAr?.join(" ")).toContain("5");
+    expect(essays[1].solutionStepsAr?.join(" ")).toContain("4");
   });
 });

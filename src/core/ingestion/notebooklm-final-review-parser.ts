@@ -50,7 +50,7 @@ function cleanConversationalIntro(text: string): string {
 }
 
 const QUESTION_HEADER_REGEX =
-  /(?:^|\n)\s*(?=(?:#{1,6}\s*|[-•*]\s*)?(?:(?:حل|إجابة)\s+(?:السؤال|المسألة|التمرين)(?:\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+|الأولى?|الثاني?ة?|الثالثة?|الرابعة?|الخامسة?|السادسة?|السابعة?|الثامنة?|التاسعة?|العاشرة?|الحادي\s*عشر|الثاني\s*عشر)?)?|(?:حل|إجابة)\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+)|(?:السؤال|المسألة|سؤال|س)\s+(?:\[\d+\]|\(\d+\)|\d+|#\d+|الأولى?|الثاني?ة?|الثالثة?|الرابعة?|الخامسة?|السادسة?|السابعة?|الثامنة?|التاسعة?|العاشرة?|الحادي\s*عشر|الثاني\s*عشر)|===\s*\[(?:SOLUTION|حل|QUESTION|إجابة)|\[\d+\]|\(\d+\)|\d+[.)-]\s+))/i;
+  /(?:^|\n)\s*(?=(?:#{1,6}\s+|[-•*]\s+)?(?:(?:حل|إجابة)\s+(?:السؤال|المسألة|التمرين)(?:\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|#?\d+|الأولى?|الثاني?ة?|الثالثة?|الرابعة?|الخامسة?|السادسة?|السابعة?|الثامنة?|التاسعة?|العاشرة?|الحادي\s*عشر|الثاني\s*عشر)?)?|(?:حل|إجابة)\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|#?\d+)|(?:السؤال|المسألة|سؤال|س)\s+(?:\[\d+\]|\(\d+\)|#?\d+|الأولى?|الثاني?ة?|الثالثة?|الرابعة?|الخامسة?|السادسة?|السابعة?|الثامنة?|التاسعة?|العاشرة?|الحادي\s*عشر|الثاني\s*عشر)|===\s*\[(?:SOLUTION|حل|QUESTION|إجابة)|\[\d+\]|\(\d+\)|#\d+\s*[:.-]?\s+|\d+[.)-]\s+))/i;
 
 function splitStage3Blocks(cleaned: string): readonly string[] {
   let blocks = cleaned.split(QUESTION_HEADER_REGEX).map((b) => b.trim()).filter((b) => b.length > 5);
@@ -79,6 +79,7 @@ function extractStage3EssaySolutionsByNumber(
   const cleaned = cleanConversationalIntro(sanitized);
   const rawBlocks = splitStage3Blocks(cleaned);
 
+  const seqMap = new Map<number, readonly string[]>();
   let seq = 1;
   for (const block of rawBlocks) {
     const hasMathOrSolutionTags =
@@ -88,13 +89,13 @@ function extractStage3EssaySolutionsByNumber(
     }
 
     const digitMatch = block.match(
-      /^(?:#{1,6}\s*|[-•*]\s*)?(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[(\d+)\]|\((\d+)\)|(\d+))|(?:السؤال|المسألة|سؤال|س)\s*(?:\[(\d+)\]|\((\d+)\)|(\d+))|===\s*\[(?:SOLUTION|حل|QUESTION|إجابة)\s*:\s*(\d+)\]|\[(\d+)\]|\((\d+)\)|(\d+)[.)-]\s+)/i
+      /^(?:#{1,6}\s+|[-•*]\s+)?(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[(\d+)\]|\((\d+)\)|#?(\d+))|(?:السؤال|المسألة|سؤال|س)\s*(?:\[(\d+)\]|\((\d+)\)|#?(\d+))|===\s*\[(?:SOLUTION|حل|QUESTION|إجابة)\s*:\s*(\d+)\]|\[(\d+)\]|\((\d+)\)|#(\d+)\b|(\d+)[.)-]\s+)/i
     );
     const matchedDigit =
       digitMatch?.[1] || digitMatch?.[2] || digitMatch?.[3] ||
       digitMatch?.[4] || digitMatch?.[5] || digitMatch?.[6] ||
       digitMatch?.[7] || digitMatch?.[8] || digitMatch?.[9] ||
-      digitMatch?.[10];
+      digitMatch?.[10] || digitMatch?.[11];
 
     const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     const steps: string[] = [];
@@ -103,7 +104,7 @@ function extractStage3EssaySolutionsByNumber(
       line = line
         .replace(/^(?:#{1,6}\s+|[-•*]\s+)/, "")
         .replace(
-          /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|\d+|#\d+)?|===\s*\[[^\n\]]+\]|\[\d+\]|\(\d+\)|\d+[.)-]\s*)\s*[:.-]?\s*/i,
+          /^(?:(?:حل|إجابة)\s*(?:السؤال|المسألة|التمرين)?\s*[:.-]?\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|(?:السؤال|المسألة|سؤال|س)\s*(?:\[\d+\]|\(\d+\)|#?\d+)?|===\s*\[[^\n\]]+\]|\[\d+\]|\(\d+\)|#\d+\b|\d+[.)-]\s*)\s*[:.-]?\s*/i,
           ""
         )
         .trim();
@@ -125,20 +126,22 @@ function extractStage3EssaySolutionsByNumber(
 
     if (steps.length > 0) {
       const currentSeq = seq++;
-      let qNum: number;
+      seqMap.set(currentSeq, steps);
       if (matchedDigit) {
-        qNum = Number(matchedDigit);
+        map.set(Number(matchedDigit), steps);
       } else {
         const ordinalMatch = block.match(
           /^(?:(?:حل|إجابة)?\s*(?:السؤال|المسألة)\s+(الأولى|الأول|الثانية|الثاني|الثالثة|الثالث|الرابعة|الرابع|الخامسة|الخامس|السادسة|السادس|السابعة|السابع|الثامنة|الثامن|التاسعة|التاسع|العاشرة|العاشر))/i
         );
         const ordinalKey = ordinalMatch?.[1];
-        qNum = ordinalKey && ARABIC_ORDINAL_INDEX_MAP[ordinalKey] ? ARABIC_ORDINAL_INDEX_MAP[ordinalKey] : currentSeq;
+        if (ordinalKey && ARABIC_ORDINAL_INDEX_MAP[ordinalKey]) {
+          map.set(ARABIC_ORDINAL_INDEX_MAP[ordinalKey], steps);
+        }
       }
-
-      map.set(qNum, steps);
-      map.set(currentSeq, steps);
     }
+  }
+  for (const [k, v] of seqMap) {
+    if (!map.has(k)) map.set(k, v);
   }
   return map;
 }

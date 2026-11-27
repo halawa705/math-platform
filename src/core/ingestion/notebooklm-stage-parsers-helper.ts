@@ -62,7 +62,7 @@ export function parseStage3SolutionsMap(stage3Cleaned: string): {
     if (steps.length > 0) byCode.set(codeSplits[i].trim().toLowerCase(), steps);
   }
 
-  const numSplits = stage3Cleaned.split(/(?:===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\][^\n]*===|(?:#{1,6}\s*|[-•*]\s*)?حل\s+(?:السؤال|المسألة|التمرين)\s*(?:\[?(\d+)\]?)?\s*:)/i);
+  const numSplits = stage3Cleaned.split(/(?:===\s*\[(?:SOLUTION|حل|QUESTION)\s*:\s*(\d+)\][^\n]*===|(?:#{1,6}\s+|[-•*]\s+)?حل\s+(?:السؤال|المسألة|التمرين)\s*(?:#?\[?(\d+)\]?)?\s*:)/i);
   let seq = 1;
   for (let i = 1; i < numSplits.length; i += 3) {
     const qNum = Number(numSplits[i] || numSplits[i + 1]) || seq++;

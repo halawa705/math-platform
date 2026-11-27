@@ -141,8 +141,8 @@ export function buildBookletStageNotebookLMPrompt(
   if (config.stageNumber === 2) {
     const drillTemplateLines =
       drillsCount >= 2
-        ? "[1] [نص التمرين الأول] | معرف السؤال: practice-01-01\n[2] [نص التمرين الثاني] | معرف السؤال: practice-01-02"
-        : "[1] [نص التمرين] | معرف السؤال: practice-01-01";
+        ? "#1 [نص التمرين الأول] | معرف السؤال: practice-01-01\n#2 [نص التمرين الثاني] | معرف السؤال: practice-01-02"
+        : "#1 [نص التمرين] | معرف السؤال: practice-01-01";
 
     return [
       `مذكرة التدريبات والواجب (المرحلة ٢): ${branchSpec.nameArabic} | ${config.gradeNameArabic} | [${scopeText}].`,
