@@ -12,14 +12,6 @@ import type { OwnerTeacherIdentity } from "../ssot/teacher-identity-ssot";
 import { formatNumeralsByModeSSOT, type NumeralDisplayMode } from "../ssot/numeral-and-unit-ssot";
 import type { PrintThemePaletteTokens } from "./a4-vector-html-sheet-renderer";
 
-// إعادة تصدير مؤقتة للتوافق الخلفي لحين تأكيد المراجعة البشرية وحذفها (Phase 3/4)
-export {
-  OfficialSchoolCornerCropMarks,
-  OfficialSchoolPageFooterBar,
-  OfficialSchoolEndWishBanner,
-  type OfficialSchoolPageFooterBarProps,
-} from "./official-school-exam-frame-and-footer";
-
 export const MODULE_ID_OFFICIAL_SCHOOL_EXAM_PAGE_CHROME =
   "official_school_exam_page_chrome" as const;
 
